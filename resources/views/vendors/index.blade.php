@@ -23,56 +23,138 @@
 @endsection
 
 @section('content')
+<style>
+:root {
+    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --gradient-info: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    --gradient-warning: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    --gradient-danger: linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%);
+    --soft-shadow: 0 2px 15px rgba(0,0,0,0.08);
+    --soft-shadow-lg: 0 10px 40px rgba(0,0,0,0.1);
+    --border-radius-sm: 0.5rem;
+    --border-radius-md: 0.75rem;
+    --border-radius-lg: 1rem;
+    --border-radius-xl: 1.5rem;
+}
+
+.card-modern {
+    border: none;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--soft-shadow);
+    transition: all 0.3s ease;
+}
+
+.card-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--soft-shadow-lg);
+}
+
+.filter-container {
+    background: linear-gradient(135deg, #f8f9ff 0%, #e8f4fd 100%);
+    border-radius: var(--border-radius-lg);
+    padding: 1.5rem;
+    border: 1px solid rgba(255,255,255,0.8);
+    box-shadow: var(--soft-shadow);
+}
+
+.table-modern {
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    box-shadow: var(--soft-shadow);
+}
+
+.table-modern thead th {
+    background: var(--gradient-primary);
+    color: white;
+    border: none;
+    font-weight: 600;
+    padding: 1rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.status-badge {
+    padding: 0.375rem 0.75rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.btn-action {
+    border-radius: var(--border-radius-sm);
+    padding: 0.375rem 0.75rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.btn-action:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+</style>
+
 <!-- Vendor Statistics -->
 <div class="row mb-4">
     <div class="col-md-3">
-        <div class="card bg-primary text-white">
+        <div class="card card-modern text-white" style="background: var(--gradient-primary);">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h4 class="mb-0">{{ $vendors->total() }}</h4>
-                        <small>Total Vendors</small>
+                        <h4 class="mb-0 fw-bold">{{ $vendors->total() }}</h4>
+                        <small class="opacity-90">Total Vendors</small>
                     </div>
-                    <i class="fas fa-building fa-2x opacity-75"></i>
+                    <div class="p-3 rounded-circle" style="background: rgba(255,255,255,0.2);">
+                        <i class="fas fa-building fa-lg"></i>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card bg-success text-white">
+        <div class="card card-modern text-white" style="background: var(--gradient-success);">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h4 class="mb-0">{{ $vendors->sum(function($vendor) { return $vendor->assets->count(); }) }}</h4>
-                        <small>Total Assets</small>
+                        <h4 class="mb-0 fw-bold">{{ $vendors->sum(function($vendor) { return $vendor->assets->count(); }) }}</h4>
+                        <small class="opacity-90">Total Assets</small>
                     </div>
-                    <i class="fas fa-boxes fa-2x opacity-75"></i>
+                    <div class="p-3 rounded-circle" style="background: rgba(255,255,255,0.2);">
+                        <i class="fas fa-boxes fa-lg"></i>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card bg-info text-white">
+        <div class="card card-modern text-white" style="background: var(--gradient-info);">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h4 class="mb-0">{{ $vendors->filter(function($vendor) { return $vendor->assets->count() > 0; })->count() }}</h4>
-                        <small>Active Vendors</small>
+                        <h4 class="mb-0 fw-bold">{{ $vendors->filter(function($vendor) { return $vendor->assets->count() > 0; })->count() }}</h4>
+                        <small class="opacity-90">Active Vendors</small>
                     </div>
-                    <i class="fas fa-handshake fa-2x opacity-75"></i>
+                    <div class="p-3 rounded-circle" style="background: rgba(255,255,255,0.2);">
+                        <i class="fas fa-handshake fa-lg"></i>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card bg-warning text-white">
+        <div class="card card-modern text-white" style="background: var(--gradient-warning);">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h4 class="mb-0">₱{{ number_format($vendors->sum(function($vendor) { return $vendor->assets->sum('cost'); }), 0) }}</h4>
-                        <small>Total Value</small>
+                        <h4 class="mb-0 fw-bold">₱{{ number_format($vendors->sum(function($vendor) { return $vendor->assets->sum('cost'); }), 0) }}</h4>
+                        <small class="opacity-90">Total Value</small>
                     </div>
-                    <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                    <div class="p-3 rounded-circle" style="background: rgba(255,255,255,0.2);">
+                        <i class="fas fa-dollar-sign fa-lg"></i>
+                    </div>
                 </div>
             </div>
         </div>
@@ -80,58 +162,57 @@
 </div>
 
 <!-- Search and Filters -->
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="GET" action="{{ route('vendors.index') }}" id="searchForm">
-            <div class="row g-3">
-                <div class="col-md-8">
-                    <div class="input-group">
-                        <span class="input-group-text">
-                            <i class="fas fa-search"></i>
-                        </span>
-                        <input type="text" 
-                               class="form-control" 
-                               name="search" 
-                               value="{{ request('search') }}" 
-                               placeholder="Search vendors by name, contact person, email, phone, or address...">
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-outline-primary w-100">
-                        <i class="fas fa-search me-1"></i>Search
-                    </button>
-                </div>
-                <div class="col-md-2">
-                    <a href="{{ route('vendors.index') }}" class="btn btn-outline-secondary w-100">
-                        <i class="fas fa-times me-1"></i>Clear
-                    </a>
+<div class="filter-container mb-4">
+    <form method="GET" action="{{ route('vendors.index') }}" id="searchForm">
+        <div class="row g-3">
+            <div class="col-md-8">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="fas fa-search text-primary"></i>
+                    </span>
+                    <input type="text" 
+                           class="form-control border-start-0 ps-0" 
+                           name="search" 
+                           value="{{ request('search') }}" 
+                           placeholder="Search vendors by name, contact person, email, phone, or address..."
+                           style="border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0;">
                 </div>
             </div>
-        </form>
-    </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100" style="background: var(--gradient-primary); border: none; border-radius: var(--border-radius-md);">
+                    <i class="fas fa-search me-1"></i>Search
+                </button>
+            </div>
+            <div class="col-md-2">
+                <a href="{{ route('vendors.index') }}" class="btn btn-outline-secondary w-100" style="border-radius: var(--border-radius-md);">
+                    <i class="fas fa-times me-1"></i>Clear
+                </a>
+            </div>
+        </div>
+    </form>
 </div>
 
 <!-- Vendors Table -->
-<div class="card">
-    <div class="card-header">
+<div class="card card-modern">
+    <div class="card-header" style="background: linear-gradient(135deg, #f8f9ff 0%, #e8f4fd 100%); border-bottom: 1px solid #e9ecef;">
         <div class="d-flex justify-content-between align-items-center">
-            <h6 class="mb-0">All Vendors</h6>
-            <span class="badge bg-secondary">{{ $vendors->total() }} total</span>
+            <h6 class="mb-0 fw-semibold"><i class="fas fa-building me-2 text-primary"></i>All Vendors</h6>
+            <span class="status-badge" style="background: var(--gradient-primary); color: white;">{{ $vendors->total() }} total</span>
         </div>
     </div>
     <div class="card-body p-0">
         @if($vendors->count() > 0)
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
+                <table class="table table-modern table-hover mb-0">
+                    <thead>
                         <tr>
-                            <th>Vendor Name</th>
-                            <th>Contact Person</th>
-                            <th>Contact Info</th>
-                            <th>Location</th>
-                            <th>Assets</th>
-                            <th>Total Value</th>
-                            <th>Actions</th>
+                            <th><i class="fas fa-building me-2"></i>Vendor Name</th>
+                            <th><i class="fas fa-user me-2"></i>Contact Person</th>
+                            <th><i class="fas fa-address-book me-2"></i>Contact Info</th>
+                            <th><i class="fas fa-map-marker-alt me-2"></i>Location</th>
+                            <th><i class="fas fa-boxes me-2"></i>Assets</th>
+                            <th><i class="fas fa-dollar-sign me-2"></i>Total Value</th>
+                            <th><i class="fas fa-cogs me-2"></i>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -139,60 +220,65 @@
                             <tr>
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3">
+                                        <div class="avatar-sm text-white rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                             style="background: var(--gradient-primary); width: 45px; height: 45px; font-weight: 600;">
                                             {{ strtoupper(substr($vendor->name, 0, 2)) }}
                                         </div>
                                         <div>
-                                            <h6 class="mb-0">
-                                                <a href="{{ route('vendors.show', $vendor) }}" class="text-decoration-none">
+                                            <h6 class="mb-0 fw-semibold">
+                                                <a href="{{ route('vendors.show', $vendor) }}" class="text-decoration-none text-dark">
                                                     {{ $vendor->name }}
                                                 </a>
                                             </h6>
-                                            <small class="text-muted">ID: {{ $vendor->id }}</small>
+                                            <small class="status-badge" style="background: #e9ecef; color: #6c757d;">ID: {{ $vendor->id }}</small>
                                         </div>
                                     </div>
                                 </td>
                                 <td>
-                                    <div>
-                                        <strong>{{ $vendor->contact_person }}</strong>
-                                    </div>
+                                    <div class="fw-semibold">{{ $vendor->contact_person }}</div>
                                 </td>
                                 <td>
                                     <div class="small">
                                         @if($vendor->email)
                                             <div class="mb-1">
-                                                <i class="fas fa-envelope text-primary me-1"></i>
-                                                <a href="mailto:{{ $vendor->email }}" class="text-decoration-none">
-                                                    {{ $vendor->email }}
-                                                </a>
+                                                <span class="status-badge" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); color: #1976d2;">
+                                                    <i class="fas fa-envelope me-1"></i>
+                                                    <a href="mailto:{{ $vendor->email }}" class="text-decoration-none">
+                                                        {{ Str::limit($vendor->email, 20) }}
+                                                    </a>
+                                                </span>
                                             </div>
                                         @endif
                                         @if($vendor->phone)
                                             <div>
-                                                <i class="fas fa-phone text-success me-1"></i>
-                                                <a href="tel:{{ $vendor->phone }}" class="text-decoration-none">
-                                                    {{ $vendor->phone }}
-                                                </a>
+                                                <span class="status-badge" style="background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%); color: #388e3c;">
+                                                    <i class="fas fa-phone me-1"></i>
+                                                    <a href="tel:{{ $vendor->phone }}" class="text-decoration-none">
+                                                        {{ $vendor->phone }}
+                                                    </a>
+                                                </span>
                                             </div>
                                         @endif
                                     </div>
                                 </td>
                                 <td>
                                     @if($vendor->address)
-                                        <small class="text-muted">
+                                        <span class="status-badge" style="background: linear-gradient(135deg, #fff3e0 0%, #ffcc02 30%); color: #f57c00;">
                                             <i class="fas fa-map-marker-alt me-1"></i>
-                                            {{ Str::limit($vendor->address, 30) }}
-                                        </small>
+                                            {{ Str::limit($vendor->address, 25) }}
+                                        </span>
                                     @else
                                         <span class="text-muted">Not specified</span>
                                     @endif
                                 </td>
                                 <td>
-                                    <div class="d-flex align-items-center">
-                                        <span class="badge bg-info me-2">{{ $vendor->assets->count() }}</span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="status-badge" style="background: var(--gradient-info); color: white;">
+                                            <i class="fas fa-boxes me-1"></i>{{ $vendor->assets->count() }}
+                                        </span>
                                         @if($vendor->assets->count() > 0)
                                             <a href="{{ route('assets.index', ['vendor' => $vendor->id]) }}" 
-                                               class="btn btn-outline-primary btn-sm">
+                                               class="btn btn-action btn-outline-primary btn-sm">
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                         @endif
@@ -200,33 +286,33 @@
                                 </td>
                                 <td>
                                     @if($vendor->assets->sum('cost') > 0)
-                                        <strong class="text-success">
-                                            ₱{{ number_format($vendor->assets->sum('cost'), 2) }}
-                                        </strong>
+                                        <span class="status-badge" style="background: var(--gradient-success); color: white;">
+                                            <i class="fas fa-peso-sign me-1"></i>{{ number_format($vendor->assets->sum('cost'), 0) }}
+                                        </span>
                                     @else
-                                        <span class="text-muted">$0.00</span>
+                                        <span class="text-muted">₱0.00</span>
                                     @endif
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
                                         <a href="{{ route('vendors.show', $vendor) }}" 
-                                           class="btn btn-outline-primary btn-sm" 
-                                           title="View Details">
+                                           class="btn btn-action btn-outline-primary btn-sm" 
+                                           title="View Vendor Details">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                         <a href="{{ route('vendors.edit', $vendor) }}" 
-                                           class="btn btn-outline-warning btn-sm" 
-                                           title="Edit Vendor">
+                                           class="btn btn-action btn-outline-warning btn-sm" 
+                                           title="Edit Vendor Information">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         <form method="POST" 
                                               action="{{ route('vendors.destroy', $vendor) }}" 
                                               class="d-inline"
-                                              onsubmit="return confirm('Are you sure you want to delete this vendor?')">
+                                              onsubmit="return confirm('Are you sure you want to permanently delete this vendor? This action cannot be undone.')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" 
-                                                    class="btn btn-outline-danger btn-sm" 
+                                                    class="btn btn-action btn-outline-danger btn-sm" 
                                                     title="Delete Vendor"
                                                     {{ $vendor->assets->count() > 0 ? 'disabled' : '' }}>
                                                 <i class="fas fa-trash"></i>
@@ -253,19 +339,29 @@
             @endif
         @else
             <div class="text-center py-5">
-                <i class="fas fa-building fa-3x text-muted mb-3"></i>
-                <h5 class="text-muted">No Vendors Found</h5>
+                <div class="mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" 
+                         style="width: 80px; height: 80px; background: var(--gradient-primary);">
+                        <i class="fas fa-building fa-2x text-white"></i>
+                    </div>
+                </div>
+                <h5 class="text-muted mb-3">No Vendors Found</h5>
                 @if(request('search'))
-                    <p class="text-muted mb-3">No vendors match your search criteria.</p>
-                    <a href="{{ route('vendors.index') }}" class="btn btn-outline-primary me-2">
-                        <i class="fas fa-times me-2"></i>Clear Search
-                    </a>
+                    <p class="text-muted mb-4">No vendors match your search criteria "<strong>{{ request('search') }}</strong>".</p>
+                    <div class="d-flex justify-content-center gap-2 flex-wrap">
+                        <a href="{{ route('vendors.index') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i>Clear Search
+                        </a>
+                        <a href="{{ route('vendors.create') }}" class="btn btn-primary" style="background: var(--gradient-primary); border: none;">
+                            <i class="fas fa-plus me-2"></i>Add New Vendor
+                        </a>
+                    </div>
                 @else
-                    <p class="text-muted mb-3">Get started by adding your first vendor to the system.</p>
+                    <p class="text-muted mb-4">Get started by adding your first vendor to the system.</p>
+                    <a href="{{ route('vendors.create') }}" class="btn btn-primary btn-lg" style="background: var(--gradient-primary); border: none; border-radius: var(--border-radius-md);">
+                        <i class="fas fa-plus me-2"></i>Add First Vendor
+                    </a>
                 @endif
-                <a href="{{ route('vendors.create') }}" class="btn btn-primary">
-                    <i class="fas fa-plus me-2"></i>Add First Vendor
-                </a>
             </div>
         @endif
     </div>
@@ -333,29 +429,30 @@
 
 <!-- Import Modal -->
 <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="border-radius: var(--border-radius-xl); border: none; box-shadow: var(--soft-shadow-lg);">
+            <div class="modal-header" style="background: var(--gradient-primary); color: white; border-radius: var(--border-radius-xl) var(--border-radius-xl) 0 0;">
                 <h5 class="modal-title" id="importModalLabel">
                     <i class="fas fa-file-import me-2"></i>Import Vendors
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form action="{{ route('import-export.import', 'vendors') }}" method="POST" enctype="multipart/form-data">
                 @csrf
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="csv_file" class="form-label">Select CSV File</label>
-                        <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
-                        <div class="form-text">
+                <div class="modal-body" style="padding: 2rem;">
+                    <div class="mb-4">
+                        <label for="csv_file" class="form-label fw-semibold"><i class="fas fa-file-csv me-1"></i>Select CSV File</label>
+                        <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required 
+                               style="border-radius: var(--border-radius-md); padding: 0.75rem;">
+                        <div class="form-text mt-2">
                             Please upload a CSV file with the correct format. 
-                            <a href="{{ route('import-export.template', 'vendors') }}" class="text-decoration-none">
-                                Download template
+                            <a href="{{ route('import-export.template', 'vendors') }}" class="text-decoration-none fw-semibold">
+                                <i class="fas fa-download me-1"></i>Download template
                             </a> if you need the correct format.
                         </div>
                     </div>
-                    <div class="alert alert-info">
-                        <h6><i class="fas fa-info-circle me-2"></i>Import Guidelines:</h6>
+                    <div class="alert" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border: none; border-radius: var(--border-radius-md);">
+                        <h6 class="fw-semibold"><i class="fas fa-info-circle me-2"></i>Import Guidelines:</h6>
                         <ul class="mb-0">
                             <li>CSV must include: name, contact_person, email, phone, address, website</li>
                             <li>Vendor names must be unique</li>
@@ -363,9 +460,9 @@
                         </ul>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-warning">
+                <div class="modal-footer" style="border-top: 1px solid #e9ecef; background: #f8f9fa; border-radius: 0 0 var(--border-radius-xl) var(--border-radius-xl);">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: var(--border-radius-md);">Cancel</button>
+                    <button type="submit" class="btn btn-warning" style="background: var(--gradient-warning); border: none; border-radius: var(--border-radius-md);">
                         <i class="fas fa-file-import me-2"></i>Import Vendors
                     </button>
                 </div>

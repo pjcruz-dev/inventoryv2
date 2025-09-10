@@ -8,6 +8,7 @@ use App\Http\Controllers\VendorController;
 use App\Http\Controllers\ComputerController;
 use App\Http\Controllers\MonitorController;
 use App\Http\Controllers\PrinterController;
+use App\Http\Controllers\PeripheralController;
 use App\Http\Controllers\ImportExportController;
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\AssetTimelineController;
@@ -75,4 +76,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/', [AssetTimelineController::class, 'store'])->name('store');
         Route::get('/asset/{asset}', [AssetTimelineController::class, 'show'])->name('show');
     });
+    
+    // Peripheral routes
+    Route::resource('peripherals', PeripheralController::class);
 });
