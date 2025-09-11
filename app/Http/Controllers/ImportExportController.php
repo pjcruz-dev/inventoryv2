@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Models\Asset;
 use App\Models\Computer;
@@ -16,67 +17,104 @@ use App\Models\Department;
 use App\Models\Vendor;
 use App\Models\AssetCategory;
 use App\Models\Role;
+use App\Services\TemplateGenerationService;
+use Exception;
 
 class ImportExportController extends Controller
 {
-    /**
-     * Download CSV template for specified module
-     */
-    public function downloadTemplate($module)
+    protected $templateService;
+
+    public function __construct(TemplateGenerationService $templateService)
     {
-        $templates = [
-            'users' => [
-                'filename' => 'users_template.csv',
-                'headers' => ['employee_no', 'employee_id', 'first_name', 'last_name', 'email', 'department_name', 'position', 'role_name', 'status']
-            ],
-            'assets' => [
-                'filename' => 'assets_template.csv',
-                'headers' => ['asset_tag', 'category_name', 'vendor_name', 'name', 'description', 'serial_number', 'purchase_date', 'warranty_end', 'cost', 'status']
-            ],
-            'computers' => [
-                'filename' => 'computers_template.csv',
-                'headers' => ['asset_tag', 'category_name', 'vendor_name', 'name', 'description', 'serial_number', 'purchase_date', 'warranty_end', 'cost', 'status', 'processor', 'ram', 'storage', 'os']
-            ],
-            'monitors' => [
-                'filename' => 'monitors_template.csv',
-                'headers' => ['asset_tag', 'category_name', 'vendor_name', 'name', 'description', 'serial_number', 'purchase_date', 'warranty_end', 'cost', 'status', 'size', 'resolution', 'panel_type']
-            ],
-            'printers' => [
-                'filename' => 'printers_template.csv',
-                'headers' => ['asset_tag', 'category_name', 'vendor_name', 'name', 'description', 'serial_number', 'purchase_date', 'warranty_end', 'cost', 'status', 'type', 'color_support', 'duplex']
-            ],
-            'peripherals' => [
-                'filename' => 'peripherals_template.csv',
-                'headers' => ['asset_tag', 'category_name', 'vendor_name', 'name', 'description', 'serial_number', 'purchase_date', 'warranty_end', 'cost', 'status', 'type', 'interface']
-            ],
-            'departments' => [
-                'filename' => 'departments_template.csv',
-                'headers' => ['name', 'description', 'manager_email']
-            ],
-            'vendors' => [
-                'filename' => 'vendors_template.csv',
-                'headers' => ['name', 'contact_person', 'email', 'phone', 'address']
-            ]
-        ];
-
-        if (!isset($templates[$module])) {
-            return redirect()->back()->with('error', 'Invalid module specified.');
-        }
-
-        $template = $templates[$module];
-        $csvContent = implode(',', $template['headers']) . "\n";
-        
-        // Add sample data row
-        $csvContent .= $this->getSampleData($module);
-
-        return Response::make($csvContent, 200, [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $template['filename'] . '"',
-        ]);
+        $this->templateService = $templateService;
     }
 
     /**
-     * Get sample data for CSV template
+     * Download comprehensive CSV template for specified module
+     */
+    public function downloadTemplate($module)
+    {
+        $validModules = ['users', 'assets', 'computers', 'monitors', 'printers', 'peripherals', 'departments', 'vendors'];
+        
+        if (!in_array($module, $validModules)) {
+            return response()->json(['error' => 'Invalid module specified'], 400);
+        }
+
+        try {
+            // Generate comprehensive template data
+            $templateData = $this->templateService->generateTemplate($module);
+            
+            // Create CSV content with enhanced headers and validation info
+            $csvContent = $this->generateEnhancedCsvContent($templateData);
+            
+            $filename = $module . '_template_' . date('Y-m-d_H-i-s') . '.csv';
+            
+            // Log template download
+            Log::info('Template downloaded', [
+                'module' => $module,
+                'user_id' => auth()->id(),
+                'filename' => $filename,
+                'timestamp' => now()
+            ]);
+            
+            return Response::make($csvContent, 200, [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'X-Template-Version' => '2.0',
+                'X-Generated-At' => now()->toISOString()
+            ]);
+        } catch (Exception $e) {
+            Log::error('Template generation failed', [
+                'module' => $module,
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
+            ]);
+            
+            return response()->json(['error' => 'Failed to generate template'], 500);
+        }
+    }
+
+    /**
+     * Generate enhanced CSV content with validation info
+     */
+    private function generateEnhancedCsvContent($templateData)
+    {
+        $output = fopen('php://temp', 'r+');
+        
+        // Add validation info as comments
+        fwrite($output, "# Template Version: 2.0\n");
+        fwrite($output, "# Generated: " . now()->toISOString() . "\n");
+        fwrite($output, "# Required fields are marked with *\n");
+        fwrite($output, "# \n");
+        
+        // Extract header names from the template headers structure
+        $headerNames = [];
+        foreach ($templateData['headers'] as $key => $headerInfo) {
+            $headerNames[] = $headerInfo['name'] ?? $key;
+        }
+        
+        // Add headers
+        fputcsv($output, $headerNames);
+        
+        // Add sample data rows
+        foreach ($templateData['sample_data'] as $row) {
+            // Convert associative array to indexed array in correct order
+            $rowData = [];
+            foreach (array_keys($templateData['headers']) as $key) {
+                $rowData[] = $row[$key] ?? '';
+            }
+            fputcsv($output, $rowData);
+        }
+        
+        rewind($output);
+        $csv = stream_get_contents($output);
+        fclose($output);
+        
+        return $csv;
+    }
+
+    /**
+     * Get sample data for CSV template (legacy method)
      */
     private function getSampleData($module)
     {
@@ -95,15 +133,17 @@ class ImportExportController extends Controller
     }
 
     /**
-     * Import data from CSV file
+     * Import data from CSV file with comprehensive validation
      */
     public function import(Request $request, $module)
     {
         $request->validate([
-            'csv_file' => 'required|file|mimes:csv,txt|max:2048'
+            'csv_file' => 'required|file|mimes:csv,txt|max:10240', // Increased to 10MB
+            'validate_only' => 'boolean' // Option to validate without importing
         ]);
 
         $file = $request->file('csv_file');
+        $validateOnly = $request->boolean('validate_only', false);
         $path = $file->getRealPath();
         
         // Read CSV file
@@ -121,6 +161,11 @@ class ImportExportController extends Controller
         $data = array_map('str_getcsv', $csvData);
         $headers = array_shift($data);
         
+        // Clean headers (remove BOM and trim)
+        $headers = array_map(function($header) {
+            return trim(str_replace("\xEF\xBB\xBF", '', $header));
+        }, $headers);
+        
         // Validate header
         $requiredFields = $this->getRequiredFields($module);
         $missingFields = array_diff($requiredFields, $headers);
@@ -137,10 +182,138 @@ class ImportExportController extends Controller
 
         $errors = [];
         $warnings = [];
+        $duplicates = [];
         $successCount = 0;
         $totalRows = count($data);
 
+        // Pre-validation phase - check for duplicates within file
+        $serialNumbers = [];
+        $assetTags = [];
+        $emails = [];
+        
+        foreach ($data as $index => $row) {
+            $rowNumber = $index + 2;
+            $rowData = array_combine($headers, array_pad($row, count($headers), ''));
+            
+            // Check for duplicate serial numbers within file
+            if (!empty($rowData['serial_number'])) {
+                if (in_array($rowData['serial_number'], $serialNumbers)) {
+                    $duplicates[] = [
+                        'row' => $rowNumber,
+                        'field' => 'serial_number',
+                        'message' => "Duplicate serial number '{$rowData['serial_number']}' found in file",
+                        'value' => $rowData['serial_number']
+                    ];
+                } else {
+                    $serialNumbers[] = $rowData['serial_number'];
+                }
+            }
+            
+            // Check for duplicate asset tags within file
+            if (!empty($rowData['asset_tag'])) {
+                if (in_array($rowData['asset_tag'], $assetTags)) {
+                    $duplicates[] = [
+                        'row' => $rowNumber,
+                        'field' => 'asset_tag',
+                        'message' => "Duplicate asset tag '{$rowData['asset_tag']}' found in file",
+                        'value' => $rowData['asset_tag']
+                    ];
+                } else {
+                    $assetTags[] = $rowData['asset_tag'];
+                }
+            }
+            
+            // Check for duplicate emails within file
+            if (!empty($rowData['email'])) {
+                if (in_array($rowData['email'], $emails)) {
+                    $duplicates[] = [
+                        'row' => $rowNumber,
+                        'field' => 'email',
+                        'message' => "Duplicate email '{$rowData['email']}' found in file",
+                        'value' => $rowData['email']
+                    ];
+                } else {
+                    $emails[] = $rowData['email'];
+                }
+            }
+        }
+
+        // If validation only, perform validation without importing
+        if ($validateOnly) {
+            foreach ($data as $index => $row) {
+                $rowNumber = $index + 2;
+                $rowData = array_combine($headers, array_pad($row, count($headers), ''));
+                
+                // Skip empty rows
+                if (empty(array_filter($row))) {
+                    $warnings[] = [
+                        'row' => $rowNumber,
+                        'message' => 'Empty row will be skipped',
+                        'field' => 'general'
+                    ];
+                    continue;
+                }
+                
+                try {
+                    $this->validateImportRow($module, $rowData, $rowNumber);
+                } catch (\Illuminate\Validation\ValidationException $e) {
+                    foreach ($e->errors() as $field => $messages) {
+                        foreach ($messages as $message) {
+                            $errors[] = [
+                                'row' => $rowNumber,
+                                'field' => $field,
+                                'message' => $message,
+                                'value' => $rowData[$field] ?? ''
+                            ];
+                        }
+                    }
+                } catch (\Exception $e) {
+                    $errors[] = [
+                        'row' => $rowNumber,
+                        'field' => 'general',
+                        'message' => $e->getMessage(),
+                        'value' => ''
+                    ];
+                }
+            }
+            
+            $allErrors = array_merge($errors, $duplicates);
+            $summary = [
+                'total' => $totalRows,
+                'validation_only' => true,
+                'errors' => count($allErrors),
+                'warnings' => count($warnings),
+                'duplicates' => count($duplicates)
+            ];
+            
+            return redirect()->route('import-export.results')
+                ->with('import_errors', $allErrors)
+                ->with('import_warnings', $warnings)
+                ->with('import_summary', $summary)
+                ->with('validation_message', 'Validation completed. ' . (empty($allErrors) ? 'No errors found.' : count($allErrors) . ' errors found.'));
+        }
+
+        // Check for duplicates before proceeding with import
+        if (!empty($duplicates)) {
+            return redirect()->route('import-export.results')
+                ->with('import_errors', $duplicates)
+                ->with('import_summary', [
+                    'total' => $totalRows,
+                    'successful' => 0,
+                    'failed' => count($duplicates),
+                    'warnings' => 0
+                ]);
+        }
+
         DB::beginTransaction();
+        
+        // Log import start
+        Log::info('Import started', [
+            'module' => $module,
+            'user_id' => auth()->id(),
+            'total_rows' => $totalRows,
+            'filename' => $file->getClientOriginalName()
+        ]);
 
         try {
             foreach ($data as $index => $row) {
@@ -156,7 +329,7 @@ class ImportExportController extends Controller
                     continue;
                 }
                 
-                $rowData = array_combine($headers, $row);
+                $rowData = array_combine($headers, array_pad($row, count($headers), ''));
                 
                 try {
                     $this->processImportRow($module, $rowData, $rowNumber);
@@ -182,7 +355,27 @@ class ImportExportController extends Controller
                 }
             }
 
-            DB::commit();
+            if (empty($errors)) {
+                DB::commit();
+                
+                // Log successful import
+                Log::info('Import completed successfully', [
+                    'module' => $module,
+                    'user_id' => auth()->id(),
+                    'imported_records' => $successCount,
+                    'warnings' => count($warnings)
+                ]);
+            } else {
+                DB::rollback();
+                
+                // Log failed import
+                Log::error('Import failed', [
+                    'module' => $module,
+                    'user_id' => auth()->id(),
+                    'errors' => count($errors),
+                    'processed' => $successCount
+                ]);
+            }
 
             // Prepare session data
             $summary = [
@@ -211,6 +404,14 @@ class ImportExportController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
+            
+            Log::error('Import exception', [
+                'module' => $module,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return redirect()->route('import-export.results')
                 ->with('import_errors', [[
                     'row' => 0,
@@ -238,6 +439,41 @@ class ImportExportController extends Controller
         ];
 
         return $requiredFields[$module] ?? [];
+    }
+
+    /**
+     * Validate individual import row based on module
+     */
+    private function validateImportRow($module, $data, $rowNumber)
+    {
+        switch ($module) {
+            case 'users':
+                $this->validateUser($data, $rowNumber);
+                break;
+            case 'assets':
+                $this->validateAsset($data, $rowNumber);
+                break;
+            case 'computers':
+                $this->validateComputer($data, $rowNumber);
+                break;
+            case 'monitors':
+                $this->validateMonitor($data, $rowNumber);
+                break;
+            case 'printers':
+                $this->validatePrinter($data, $rowNumber);
+                break;
+            case 'peripherals':
+                $this->validatePeripheral($data, $rowNumber);
+                break;
+            case 'departments':
+                $this->validateDepartment($data, $rowNumber);
+                break;
+            case 'vendors':
+                $this->validateVendor($data, $rowNumber);
+                break;
+            default:
+                throw new \Exception('Invalid module specified.');
+        }
     }
 
     /**
@@ -365,7 +601,8 @@ class ImportExportController extends Controller
             'purchase_date' => $data['purchase_date'] ? date('Y-m-d', strtotime($data['purchase_date'])) : null,
             'warranty_end' => $data['warranty_end'] ? date('Y-m-d', strtotime($data['warranty_end'])) : null,
             'cost' => $data['cost'] ?? 0,
-            'status' => $data['status'] ?? 'Available'
+            'status' => $data['status'] ?? 'Active',
+            'movement' => 'New Arrival'
         ]);
     }
 
@@ -573,7 +810,8 @@ class ImportExportController extends Controller
             'purchase_date' => $data['purchase_date'] ? date('Y-m-d', strtotime($data['purchase_date'])) : null,
             'warranty_end' => $data['warranty_end'] ? date('Y-m-d', strtotime($data['warranty_end'])) : null,
             'cost' => $data['cost'] ?? 0,
-            'status' => $data['status'] ?? 'Available'
+            'status' => $data['status'] ?? 'Active',
+            'movement' => 'New Arrival'
         ]);
     }
 
@@ -773,6 +1011,156 @@ class ImportExportController extends Controller
         fclose($output);
         
         return $csv;
+    }
+
+    /**
+     * Validation methods for each module
+     */
+    private function validateUser($data, $rowNumber)
+    {
+        $validator = Validator::make($data, [
+            'employee_no' => 'required|unique:users,employee_no',
+            'employee_id' => 'nullable|unique:users,employee_id',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'department_name' => 'required|string'
+        ]);
+
+        if ($validator->fails()) {
+            throw new \Illuminate\Validation\ValidationException($validator);
+        }
+
+        // Check if department exists
+        $department = Department::where('name', $data['department_name'])->first();
+        if (!$department) {
+            throw new \Exception("Department '{$data['department_name']}' not found.");
+        }
+
+        // Check if role exists (if provided)
+        if (!empty($data['role_name'])) {
+            $role = Role::where('name', $data['role_name'])->first();
+            if (!$role) {
+                throw new \Exception("Role '{$data['role_name']}' not found.");
+            }
+        }
+    }
+
+    private function validateAsset($data, $rowNumber)
+    {
+        $validator = Validator::make($data, [
+            'asset_tag' => 'required|unique:assets,asset_tag',
+            'category_name' => 'required|string',
+            'vendor_name' => 'required|string',
+            'name' => 'required|string|max:255',
+            'purchase_date' => 'nullable|date',
+            'warranty_end' => 'nullable|date',
+            'cost' => 'nullable|numeric|min:0'
+        ]);
+
+        if ($validator->fails()) {
+            throw new \Illuminate\Validation\ValidationException($validator);
+        }
+
+        // Check if category exists
+        $category = AssetCategory::where('name', $data['category_name'])->first();
+        if (!$category) {
+            throw new \Exception("Category '{$data['category_name']}' not found.");
+        }
+
+        // Check if vendor exists
+        $vendor = Vendor::where('name', $data['vendor_name'])->first();
+        if (!$vendor) {
+            throw new \Exception("Vendor '{$data['vendor_name']}' not found.");
+        }
+    }
+
+    private function validateComputer($data, $rowNumber)
+    {
+        $this->validateAsset($data, $rowNumber);
+        
+        $validator = Validator::make($data, [
+            'processor' => 'required|string|max:255',
+            'ram' => 'required|string|max:255',
+            'storage' => 'required|string|max:255',
+            'os' => 'required|string|max:255'
+        ]);
+
+        if ($validator->fails()) {
+            throw new \Illuminate\Validation\ValidationException($validator);
+        }
+    }
+
+    private function validateMonitor($data, $rowNumber)
+    {
+        $this->validateAsset($data, $rowNumber);
+        
+        $validator = Validator::make($data, [
+            'size' => 'required|string|max:255',
+            'resolution' => 'required|string|max:255'
+        ]);
+
+        if ($validator->fails()) {
+            throw new \Illuminate\Validation\ValidationException($validator);
+        }
+    }
+
+    private function validatePrinter($data, $rowNumber)
+    {
+        $this->validateAsset($data, $rowNumber);
+        
+        $validator = Validator::make($data, [
+            'type' => 'required|string|max:255'
+        ]);
+
+        if ($validator->fails()) {
+            throw new \Illuminate\Validation\ValidationException($validator);
+        }
+    }
+
+    private function validatePeripheral($data, $rowNumber)
+    {
+        $this->validateAsset($data, $rowNumber);
+        
+        $validator = Validator::make($data, [
+            'type' => 'required|string|max:255',
+            'interface' => 'required|string|max:255'
+        ]);
+
+        if ($validator->fails()) {
+            throw new \Illuminate\Validation\ValidationException($validator);
+        }
+    }
+
+    private function validateDepartment($data, $rowNumber)
+    {
+        $validator = Validator::make($data, [
+            'name' => 'required|string|max:255|unique:departments,name'
+        ]);
+
+        if ($validator->fails()) {
+            throw new \Illuminate\Validation\ValidationException($validator);
+        }
+
+        // Check if manager exists (if provided)
+        if (!empty($data['manager_email'])) {
+            $manager = User::where('email', $data['manager_email'])->first();
+            if (!$manager) {
+                throw new \Exception("Manager with email '{$data['manager_email']}' not found.");
+            }
+        }
+    }
+
+    private function validateVendor($data, $rowNumber)
+    {
+        $validator = Validator::make($data, [
+            'name' => 'required|string|max:255|unique:vendors,name',
+            'email' => 'nullable|email'
+        ]);
+
+        if ($validator->fails()) {
+            throw new \Illuminate\Validation\ValidationException($validator);
+        }
     }
 
     /**

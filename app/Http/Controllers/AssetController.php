@@ -7,6 +7,9 @@ use App\Models\Asset;
 use App\Models\AssetCategory;
 use App\Models\Vendor;
 use App\Models\User;
+use App\Models\AssetAssignmentConfirmation;
+use App\Mail\AssetAssignmentConfirmation as AssetAssignmentConfirmationMail;
+use Illuminate\Support\Facades\Mail;
 
 class AssetController extends Controller
 {
@@ -38,8 +41,38 @@ class AssetController extends Controller
             });
         }
         
+        // Category filter
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
+        }
+        
+        // Status filter
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        
+        // Movement filter
+        if ($request->filled('movement')) {
+            $query->where('movement', $request->movement);
+        }
+        
+        // Assignment filter
+        if ($request->filled('assignment')) {
+            if ($request->assignment === 'assigned') {
+                $query->whereNotNull('assigned_to');
+            } elseif ($request->assignment === 'unassigned') {
+                $query->whereNull('assigned_to');
+            }
+        }
+        
         $assets = $query->paginate(15)->withQueryString();
-        return view('assets.index', compact('assets'));
+        
+        // Get filter options for the view
+        $categories = AssetCategory::orderBy('name')->get();
+        $statuses = Asset::distinct()->pluck('status')->filter()->sort()->values();
+        $movements = Asset::distinct()->pluck('movement')->filter()->sort()->values();
+        
+        return view('assets.index', compact('assets', 'categories', 'statuses', 'movements'));
     }
 
     /**
@@ -47,8 +80,8 @@ class AssetController extends Controller
      */
     public function create()
     {
-        $categories = AssetCategory::all();
-        $vendors = Vendor::all();
+        $categories = AssetCategory::orderBy('name')->get();
+        $vendors = Vendor::orderBy('name')->get();
         $users = User::where('status', 'active')
                     ->orderBy('first_name')
                     ->get();
@@ -71,8 +104,12 @@ class AssetController extends Controller
             'warranty_end' => 'nullable|date',
             'cost' => 'required|numeric|min:0',
             'status' => 'required|in:Active,Inactive,Under Maintenance,Issue Reported,Pending Confirmation,Disposed',
-            'movement' => 'required|in:New Arrival,Deployed,Returned,Transferred,Disposed'
+            'movement' => 'required|in:New Arrival,Deployed Tagged,Returned,Transferred,Disposed'
         ]);
+
+        // Set default status and movement for new assets
+        $validated['status'] = 'Active';
+        $validated['movement'] = 'New Arrival';
 
         Asset::create($validated);
         return redirect()->route('assets.index')->with('success', 'Asset created successfully.');
@@ -93,8 +130,8 @@ class AssetController extends Controller
     public function edit(Asset $asset)
     {
         $asset->load(['timeline.fromUser', 'timeline.toUser']);
-        $categories = AssetCategory::all();
-        $vendors = Vendor::all();
+        $categories = AssetCategory::orderBy('name')->get();
+        $vendors = Vendor::orderBy('name')->get();
         $users = User::where('status', 'active')
                     ->orderBy('first_name')
                     ->get();
@@ -117,7 +154,7 @@ class AssetController extends Controller
             'warranty_end' => 'nullable|date',
             'cost' => 'required|numeric|min:0',
             'status' => 'required|in:Active,Inactive,Under Maintenance,Issue Reported,Pending Confirmation,Disposed',
-            'movement' => 'required|in:New Arrival,Deployed,Returned,Transferred,Disposed'
+            'movement' => 'required|in:New Arrival,Deployed Tagged,Returned,Transferred,Disposed'
         ]);
 
         $asset->update($validated);
@@ -144,30 +181,23 @@ class AssetController extends Controller
             'notes' => 'nullable|string'
         ]);
 
+        $user = User::find($validated['assigned_to']);
+        
+        // Update asset status to Pending Confirmation
         $asset->update([
             'assigned_to' => $validated['assigned_to'],
-            'assigned_date' => $validated['assigned_date']
+            'assigned_date' => $validated['assigned_date'],
+            'status' => 'Pending Confirmation'
         ]);
 
-        // Log the assignment if notes are provided
-        if (!empty($validated['notes'])) {
-            // You can add logging functionality here if needed
-        }
-
-        return redirect()->route('assets.show', $asset)
-                        ->with('success', 'User assigned to asset successfully.');
-    }
-
-    /**
-     * Unassign a user from an asset.
-     */
-    public function unassign(Asset $asset)
-    {
-        $previousUser = $asset->assignedUser;
-        
-        $asset->update([
-            'assigned_to' => null,
-            'assigned_date' => null
+        // Create AssetAssignment record (this will automatically create confirmation via model boot method)
+        \App\Models\AssetAssignment::create([
+            'asset_id' => $asset->id,
+            'user_id' => $validated['assigned_to'],
+            'assigned_by' => auth()->id(),
+            'assigned_date' => $validated['assigned_date'],
+            'status' => 'pending',
+            'notes' => $validated['notes']
         ]);
 
         // Create audit log
@@ -177,16 +207,60 @@ class AssetController extends Controller
             'user_id' => auth()->id(),
             'role_id' => auth()->user()->role_id ?? 1,
             'department_id' => auth()->user()->department_id,
-            'event_type' => 'unassigned',
+            'event_type' => 'assigned',
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
-            'remarks' => 'Asset unassigned from ' . ($previousUser ? $previousUser->first_name . ' ' . $previousUser->last_name : 'unknown user'),
+            'remarks' => 'Asset assigned to ' . $user->first_name . ' ' . $user->last_name . 
+                        '. Confirmation email sent.' . 
+                        (!empty($validated['notes']) ? ' Notes: ' . $validated['notes'] : ''),
+            'created_at' => now()
+        ]);
+
+        return redirect()->route('assets.show', $asset)
+                        ->with('success', 'Asset assigned successfully. Confirmation email sent to user.');
+    }
+
+    /**
+     * Unassign a user from an asset (Return Process).
+     */
+    public function unassign(Asset $asset)
+    {
+        $previousUser = $asset->assignedUser;
+        
+        // Update asset status to Active and movement to Returned
+        $asset->update([
+            'assigned_to' => null,
+            'assigned_date' => null,
+            'status' => 'Active',
+            'movement' => 'Returned'
+        ]);
+
+        // Mark any pending confirmations as completed (asset returned)
+        AssetAssignmentConfirmation::where('asset_id', $asset->id)
+            ->where('status', 'pending')
+            ->update([
+                'status' => 'confirmed',
+                'confirmed_at' => now(),
+                'notes' => 'Asset returned - confirmation automatically completed'
+            ]);
+
+        // Create audit log
+        \App\Models\Log::create([
+            'category' => 'Asset',
+            'asset_id' => $asset->id,
+            'user_id' => auth()->id(),
+            'role_id' => auth()->user()->role_id ?? 1,
+            'department_id' => auth()->user()->department_id,
+            'event_type' => 'returned',
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'remarks' => 'Asset returned from ' . ($previousUser ? $previousUser->first_name . ' ' . $previousUser->last_name : 'unknown user') . '. Status updated to Active, movement to Returned.',
             'created_at' => now()
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'User unassigned from asset successfully.'
+            'message' => 'Asset returned successfully. Status updated to Active.'
         ]);
     }
 
@@ -202,11 +276,40 @@ class AssetController extends Controller
         ]);
 
         $previousUser = $asset->assignedUser;
-        $newUser = \App\Models\User::find($validated['new_assigned_to']);
+        $newUser = User::find($validated['new_assigned_to']);
         
+        // Mark any existing pending confirmations as completed
+        AssetAssignmentConfirmation::where('asset_id', $asset->id)
+            ->where('status', 'pending')
+            ->update([
+                'status' => 'confirmed',
+                'confirmed_at' => now(),
+                'notes' => 'Asset reassigned - previous confirmation automatically completed'
+            ]);
+        
+        // Mark any existing pending assignments as completed
+        \App\Models\AssetAssignment::where('asset_id', $asset->id)
+            ->where('status', 'pending')
+            ->update([
+                'status' => 'confirmed',
+                'return_date' => now()
+            ]);
+        
+        // Update asset status to Pending Confirmation for new assignment
         $asset->update([
             'assigned_to' => $validated['new_assigned_to'],
-            'assigned_date' => $validated['assigned_date']
+            'assigned_date' => $validated['assigned_date'],
+            'status' => 'Pending Confirmation'
+        ]);
+
+        // Create new AssetAssignment record (this will automatically create confirmation via model boot method)
+        \App\Models\AssetAssignment::create([
+            'asset_id' => $asset->id,
+            'user_id' => $validated['new_assigned_to'],
+            'assigned_by' => auth()->id(),
+            'assigned_date' => $validated['assigned_date'],
+            'status' => 'pending',
+            'notes' => $validated['notes']
         ]);
 
         // Create audit log for reassignment
@@ -222,11 +325,12 @@ class AssetController extends Controller
             'remarks' => 'Asset reassigned from ' . 
                            ($previousUser ? $previousUser->first_name . ' ' . $previousUser->last_name : 'unassigned') . 
                            ' to ' . $newUser->first_name . ' ' . $newUser->last_name . 
-                           (!empty($validated['notes']) ? '. Notes: ' . $validated['notes'] : ''),
+                           '. Confirmation email sent.' .
+                           (!empty($validated['notes']) ? ' Notes: ' . $validated['notes'] : ''),
             'created_at' => now()
         ]);
 
         return redirect()->route('assets.show', $asset)
-                        ->with('success', 'Asset reassigned successfully.');
+                        ->with('success', 'Asset reassigned successfully. Confirmation email sent to new user.');
     }
 }

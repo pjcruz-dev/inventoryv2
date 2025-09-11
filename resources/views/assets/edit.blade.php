@@ -51,14 +51,24 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="category_id" class="form-label">Category</label>
-                                <select class="form-select @error('category_id') is-invalid @enderror" id="category_id" name="category_id">
-                                    <option value="">Select Category</option>
-                                    @foreach($categories as $category)
-                                        <option value="{{ $category->id }}" {{ old('category_id', $asset->category_id) == $category->id ? 'selected' : '' }}>
-                                            {{ $category->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <div class="dropdown">
+                                    <input type="text" 
+                                           class="form-control @error('category_id') is-invalid @enderror" 
+                                           id="categorySearchEdit" 
+                                           placeholder="Search categories..." 
+                                           value="{{ old('category_id', $asset->category_id) ? $categories->find(old('category_id', $asset->category_id))->name ?? '' : '' }}" 
+                                           autocomplete="off">
+                                    <input type="hidden" 
+                                           name="category_id" 
+                                           id="categoryValueEdit" 
+                                           value="{{ old('category_id', $asset->category_id) }}">
+                                    <ul class="dropdown-menu w-100" id="categoryDropdownEdit">
+                                        <li><a class="dropdown-item {{ !old('category_id', $asset->category_id) ? 'active' : '' }}" href="#" data-value="">Select Category</a></li>
+                                        @foreach($categories as $category)
+                                            <li><a class="dropdown-item {{ old('category_id', $asset->category_id) == $category->id ? 'active' : '' }}" href="#" data-value="{{ $category->id }}">{{ $category->name }}</a></li>
+                                        @endforeach
+                                    </ul>
+                                </div>
                                 @error('category_id')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -359,6 +369,71 @@
 
 @section('scripts')
 <script>
-    // Add any edit-specific JavaScript here
+$(document).ready(function() {
+    // Category search functionality
+    const categorySearch = $('#categorySearchEdit');
+    const categoryValue = $('#categoryValueEdit');
+    const categoryDropdown = $('#categoryDropdownEdit');
+    
+    // Filter dropdown items based on search input
+    categorySearch.on('input', function() {
+        const searchTerm = $(this).val().toLowerCase();
+        
+        categoryDropdown.find('li').each(function() {
+            const text = $(this).find('a').text().toLowerCase();
+            if (text.includes(searchTerm)) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+        
+        // Show dropdown if not already visible
+        if (!categoryDropdown.hasClass('show')) {
+            categoryDropdown.addClass('show');
+        }
+    });
+    
+    // Handle dropdown item selection
+    categoryDropdown.on('click', 'a.dropdown-item', function(e) {
+        e.preventDefault();
+        
+        const value = $(this).data('value');
+        const text = $(this).text();
+        
+        categoryValue.val(value);
+        categorySearch.val(value ? text : '');
+        
+        // Update active state
+        categoryDropdown.find('a.dropdown-item').removeClass('active');
+        $(this).addClass('active');
+        
+        // Hide dropdown
+        categoryDropdown.removeClass('show');
+    });
+    
+    // Show all items when dropdown is opened
+    categorySearch.on('focus', function() {
+        categoryDropdown.find('li').show();
+    });
+    
+    // Hide dropdown when clicking outside
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('.dropdown').length) {
+            categoryDropdown.removeClass('show');
+        }
+    });
+    
+    // Clear search when pressing Escape
+    categorySearch.on('keydown', function(e) {
+        if (e.key === 'Escape') {
+            $(this).val('');
+            categoryValue.val('');
+            categoryDropdown.find('a.dropdown-item').removeClass('active');
+            categoryDropdown.find('a[data-value=""]').addClass('active');
+            categoryDropdown.removeClass('show');
+        }
+    });
+});
 </script>
 @endsection

@@ -67,61 +67,63 @@
 
                     <!-- Monitors Table -->
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover">
-                            <thead class="thead-dark">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-dark">
                                 <tr>
-                                    <th>Asset Tag</th>
-                                    <th>Asset Name</th>
-                                    <th>Size</th>
-                                    <th>Resolution</th>
-                                    <th>Panel Type</th>
-                                    <th>Status</th>
-                                    <th>Movement</th>
-                                    <th>Actions</th>
+                                    <th class="fw-semibold">Asset Tag</th>
+                                    <th class="fw-semibold">Asset Name</th>
+                                    <th class="fw-semibold">Size</th>
+                                    <th class="fw-semibold">Resolution</th>
+                                    <th class="fw-semibold">Panel Type</th>
+                                    <th class="fw-semibold">Status</th>
+                                    <th class="fw-semibold">Movement</th>
+                                    <th class="fw-semibold text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($monitors as $monitor)
-                                    <tr>
+                                    <tr class="border-bottom">
+                                        <td class="fw-bold text-primary">{{ $monitor->asset->asset_tag }}</td>
                                         <td>
-                                            <span class="badge badge-secondary">{{ $monitor->asset->asset_tag }}</span>
+                                            <div>
+                                                <div class="fw-semibold text-dark">{{ $monitor->asset->name }}</div>
+                                                @if($monitor->asset->assignedUser)
+                                                    <small class="text-muted">Assigned to: {{ $monitor->asset->assignedUser->name }}</small>
+                                                @endif
+                                            </div>
                                         </td>
                                         <td>
-                                            <strong>{{ $monitor->asset->name }}</strong>
-                                            @if($monitor->asset->assignedUser)
-                                                <br><small class="text-muted">Assigned to: {{ $monitor->asset->assignedUser->name }}</small>
-                                            @endif
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-tv text-info me-2"></i>
+                                                <span class="fw-medium">{{ $monitor->size }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="fw-medium">{{ $monitor->resolution }}</td>
+                                        <td>
+                                            <span class="badge badge-enhanced bg-info">{{ $monitor->panel_type }}</span>
                                         </td>
                                         <td>
-                                            <i class="fas fa-tv"></i> {{ $monitor->size }}
-                                        </td>
-                                        <td>{{ $monitor->resolution }}</td>
-                                        <td>
-                                            <span class="badge badge-info">{{ $monitor->panel_type }}</span>
-                                        </td>
-                                        <td>
-                                            <span class="badge badge-{{ $monitor->asset->status == 'Available' ? 'success' : ($monitor->asset->status == 'In Use' ? 'primary' : 'warning') }}">
+                                            <span class="badge badge-enhanced bg-{{ $monitor->asset->status == 'Available' ? 'success' : ($monitor->asset->status == 'In Use' ? 'primary' : 'warning') }}">
                                                 {{ $monitor->asset->status }}
                                             </span>
                                         </td>
                                         <td>
-                                            <span class="badge badge-info">
-                                                {{ $monitor->asset->movement }}
+                                            <span class="badge badge-enhanced bg-secondary">
+                                                {{ $monitor->asset->movement === 'Deployed Tagged' ? 'Deployed' : $monitor->asset->movement }}
                                             </span>
                                         </td>
                                         <td>
-                                            <div class="btn-group" role="group">
-                                                <a href="{{ route('monitors.show', $monitor) }}" class="btn btn-sm btn-outline-info" title="View">
+                                            <div class="d-flex justify-content-center gap-1">
+                                                <a href="{{ route('monitors.show', $monitor) }}" class="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center" title="View Monitor" style="width: 32px; height: 32px;">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <a href="{{ route('monitors.edit', $monitor) }}" class="btn btn-sm btn-outline-warning" title="Edit">
+                                                <a href="{{ route('monitors.edit', $monitor) }}" class="btn btn-sm btn-outline-warning d-flex align-items-center justify-content-center" title="Edit Monitor" style="width: 32px; height: 32px;">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <form action="{{ route('monitors.destroy', $monitor) }}" method="POST" class="d-inline" 
-                                                      onsubmit="return confirm('Are you sure you want to delete this monitor?')">
+                                                <form action="{{ route('monitors.destroy', $monitor) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this monitor? This action cannot be undone.')">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center" title="Delete Monitor" style="width: 32px; height: 32px;">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
                                                 </form>
@@ -144,9 +146,18 @@
                     </div>
 
                     <!-- Pagination -->
-                    <div class="d-flex justify-content-center">
-                        {{ $monitors->appends(request()->query())->links() }}
-                    </div>
+                    @if($monitors->hasPages())
+                        <div class="pagination-wrapper">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="pagination-info">
+                                    Showing {{ $monitors->firstItem() }} to {{ $monitors->lastItem() }} of {{ $monitors->total() }} monitors
+                                </div>
+                                <div>
+                                    {{ $monitors->appends(request()->query())->links() }}
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

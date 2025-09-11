@@ -14,6 +14,8 @@ use App\Http\Controllers\LogController;
 use App\Http\Controllers\AssetTimelineController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\AssetConfirmationController;
+use App\Http\Controllers\NotificationController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -47,20 +49,8 @@ Route::middleware('auth')->group(function () {
     // Dashboard route
     Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
     
-    // Import/Export routes
-    Route::prefix('import-export')->name('import-export.')->group(function () {
-        // Template downloads
-        Route::get('template/{module}', [ImportExportController::class, 'downloadTemplate'])->name('template');
-        
-        // Data imports
-        Route::post('import/{module}', [ImportExportController::class, 'import'])->name('import');
-        
-        // Data exports
-        Route::get('export/{module}', [ImportExportController::class, 'export'])->name('export');
-        
-        // Import results page
-        Route::get('results', [ImportExportController::class, 'showResults'])->name('results');
-    });
+    // Import/Export routes - Enhanced with comprehensive security
+    require __DIR__.'/import-export.php';
     
     // Activity Logs routes
     Route::prefix('logs')->name('logs.')->group(function () {
@@ -77,4 +67,22 @@ Route::middleware('auth')->group(function () {
         Route::post('/', [AssetTimelineController::class, 'store'])->name('store');
         Route::get('/asset/{asset}', [AssetTimelineController::class, 'show'])->name('show');
     });
+    
+    // Notification routes
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/unread', [NotificationController::class, 'getUnread'])->name('unread');
+        Route::get('/all', [NotificationController::class, 'getAll'])->name('all');
+        Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('read');
+        Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+        Route::delete('/{id}', [NotificationController::class, 'delete'])->name('delete');
+    });
+});
+
+// Asset Confirmation routes (public - no auth required)
+Route::prefix('asset-confirmation')->name('asset-confirmation.')->group(function () {
+    Route::get('/show/{token}', [AssetConfirmationController::class, 'show'])->name('show');
+    Route::get('/confirm/{token}', [AssetConfirmationController::class, 'confirm'])->name('confirm');
+    Route::get('/decline/{token}', [AssetConfirmationController::class, 'decline'])->name('decline');
+    Route::get('/decline-form/{token}', [AssetConfirmationController::class, 'showDeclineForm'])->name('decline-form');
+    Route::post('/decline/{token}', [AssetConfirmationController::class, 'processDecline'])->name('process-decline');
 });

@@ -1,0 +1,67 @@
+<?php
+
+namespace App\Mail;
+
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Queue\SerializesModels;
+use App\Models\Asset;
+use App\Models\User;
+
+class AssetAssignmentConfirmation extends Mailable
+{
+    use Queueable, SerializesModels;
+
+    public $asset;
+    public $user;
+    public $confirmationToken;
+    public $isFollowUp;
+
+    /**
+     * Create a new message instance.
+     */
+    public function __construct(Asset $asset, User $user, string $confirmationToken, bool $isFollowUp = false)
+    {
+        $this->asset = $asset;
+        $this->user = $user;
+        $this->confirmationToken = $confirmationToken;
+        $this->isFollowUp = $isFollowUp;
+    }
+
+    /**
+     * Get the message envelope.
+     */
+    public function envelope(): Envelope
+    {
+        $subject = $this->isFollowUp 
+            ? 'Follow-up: Asset Assignment Confirmation Required'
+            : 'Asset Assignment Confirmation Required';
+            
+        return new Envelope(
+            subject: $subject,
+        );
+    }
+
+    /**
+     * Get the message content definition.
+     */
+    public function content(): Content
+    {
+        return new Content(
+            view: 'emails.asset-assignment-confirmation',
+        );
+    }
+
+    /**
+     * Get the attachments for the message.
+     *
+     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     */
+    public function attachments(): array
+    {
+        return [];
+    }
+}

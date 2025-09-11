@@ -82,96 +82,103 @@
 
                     <!-- Printers Table -->
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover">
-                            <thead class="thead-dark">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-dark">
                                 <tr>
-                                    <th>Asset Tag</th>
-                                    <th>Name</th>
-                                    <th>Type</th>
-                                    <th>Color Support</th>
-                                    <th>Network Enabled</th>
-                                    <th>Duplex Printing</th>
-                                    <th>Status</th>
-                                    <th>Movement</th>
-                                    <th>Actions</th>
+                                    <th class="fw-semibold">Asset Tag</th>
+                                    <th class="fw-semibold">Name</th>
+                                    <th class="fw-semibold">Type</th>
+                                    <th class="fw-semibold">Color Support</th>
+                                    <th class="fw-semibold">Network Enabled</th>
+                                    <th class="fw-semibold">Duplex Printing</th>
+                                    <th class="fw-semibold">Status</th>
+                                    <th class="fw-semibold">Movement</th>
+                                    <th class="fw-semibold text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($printers as $printer)
-                                    <tr>
+                                    <tr class="border-bottom">
                                         <td>
-                                            <span class="badge badge-secondary">{{ $printer->asset->asset_tag }}</span>
+                                            <span class="badge bg-secondary text-white fw-bold px-2 py-1">{{ $printer->asset->asset_tag }}</span>
                                         </td>
                                         <td>
-                                            <strong>{{ $printer->asset->name }}</strong>
+                                            <div class="fw-semibold text-dark">{{ $printer->asset->name }}</div>
                                             @if($printer->asset->user)
-                                                <br><small class="text-muted">
-                                                    <i class="fas fa-user"></i> {{ $printer->asset->user->name }}
+                                                <small class="text-muted d-block mt-1">
+                                                    <i class="fas fa-user me-1"></i>{{ $printer->asset->user->name }}
                                                 </small>
                                             @endif
                                         </td>
                                         <td>
-                                            <span class="badge badge-info">{{ $printer->type }}</span>
+                                            <span class="badge bg-info text-white px-2 py-1">{{ $printer->type }}</span>
                                         </td>
                                         <td>
                                             @if($printer->color_support)
-                                                <span class="badge badge-success">
-                                                    <i class="fas fa-palette"></i> Color
+                                                <span class="badge bg-success text-white px-2 py-1">
+                                                    <i class="fas fa-palette me-1"></i>Color
                                                 </span>
                                             @else
-                                                <span class="badge badge-secondary">
-                                                    <i class="fas fa-circle"></i> Monochrome
+                                                <span class="badge bg-secondary text-white px-2 py-1">
+                                                    <i class="fas fa-circle me-1"></i>Monochrome
                                                 </span>
                                             @endif
                                         </td>
                                         <td>
                                             @if($printer->network_enabled)
-                                                <span class="badge badge-success">
-                                                    <i class="fas fa-wifi"></i> Yes
+                                                <span class="badge bg-success text-white px-2 py-1">
+                                                    <i class="fas fa-wifi me-1"></i>Yes
                                                 </span>
                                             @else
-                                                <span class="badge badge-secondary">
-                                                    <i class="fas fa-times"></i> No
+                                                <span class="badge bg-secondary text-white px-2 py-1">
+                                                    <i class="fas fa-times me-1"></i>No
                                                 </span>
                                             @endif
                                         </td>
                                         <td>
                                             @if($printer->duplex_printing)
-                                                <span class="badge badge-success">
-                                                    <i class="fas fa-copy"></i> Yes
+                                                <span class="badge bg-success text-white px-2 py-1">
+                                                    <i class="fas fa-copy me-1"></i>Yes
                                                 </span>
                                             @else
-                                                <span class="badge badge-secondary">
-                                                    <i class="fas fa-times"></i> No
+                                                <span class="badge bg-secondary text-white px-2 py-1">
+                                                    <i class="fas fa-times me-1"></i>No
                                                 </span>
                                             @endif
                                         </td>
                                         <td>
-                                            <span class="badge badge-{{ $printer->asset->status == 'Available' ? 'success' : ($printer->asset->status == 'In Use' ? 'primary' : 'warning') }}">
+                                            <span class="badge bg-{{ $printer->asset->status == 'Available' ? 'success' : ($printer->asset->status == 'In Use' ? 'primary' : 'warning') }} px-2 py-1">
                                                 {{ $printer->asset->status }}
                                             </span>
                                         </td>
                                         <td>
-                                            <span class="badge badge-info">
-                                                {{ $printer->asset->movement }}
+                                            <span class="badge bg-info text-white px-2 py-1">
+                                                {{ str_replace('Deployed Tagged', 'Deployed', $printer->asset->movement) }}
                                             </span>
                                         </td>
                                         <td>
-                                            <div class="btn-group" role="group">
+                                            <div class="d-flex justify-content-center gap-1">
                                                 <a href="{{ route('printers.show', $printer) }}" 
-                                                   class="btn btn-info btn-sm" title="View">
+                                                   class="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center" 
+                                                   style="width: 32px; height: 32px;" 
+                                                   title="View Printer Details">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                                 <a href="{{ route('printers.edit', $printer) }}" 
-                                                   class="btn btn-warning btn-sm" title="Edit">
+                                                   class="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center" 
+                                                   style="width: 32px; height: 32px;" 
+                                                   title="Edit Printer">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                                 <form action="{{ route('printers.destroy', $printer) }}" 
                                                       method="POST" class="d-inline"
-                                                      onsubmit="return confirm('Are you sure you want to delete this printer?')">
+                                                      onsubmit="return confirm('Are you sure you want to permanently delete this printer? This action cannot be undone.')">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm" title="Delete">
+                                                    <button type="submit" 
+                                                            class="btn btn-outline-danger btn-sm d-flex align-items-center justify-content-center" 
+                                                            style="width: 32px; height: 32px;" 
+                                                            title="Delete Printer">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
                                                 </form>
@@ -200,14 +207,14 @@
 
                     <!-- Pagination -->
                     @if($printers->hasPages())
-                        <div class="d-flex justify-content-between align-items-center mt-4">
-                            <div>
-                                <p class="text-muted mb-0">
-                                    Showing {{ $printers->firstItem() }} to {{ $printers->lastItem() }} of {{ $printers->total() }} results
-                                </p>
-                            </div>
-                            <div>
-                                {{ $printers->appends(request()->query())->links() }}
+                        <div class="pagination-wrapper">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="pagination-info">
+                                    Showing {{ $printers->firstItem() }} to {{ $printers->lastItem() }} of {{ $printers->total() }} printers
+                                </div>
+                                <div>
+                                    {{ $printers->appends(request()->query())->links() }}
+                                </div>
                             </div>
                         </div>
                     @endif

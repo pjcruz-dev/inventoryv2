@@ -109,9 +109,18 @@
                     </div>
                     
                     <!-- Pagination -->
-                    <div class="d-flex justify-content-center mt-4">
-                        {{ $permissions->links() }}
-                    </div>
+                    @if($permissions->hasPages())
+                        <div class="pagination-wrapper">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="pagination-info">
+                                    Showing {{ $permissions->firstItem() }} to {{ $permissions->lastItem() }} of {{ $permissions->total() }} permissions
+                                </div>
+                                <div>
+                                    {{ $permissions->appends(request()->query())->links() }}
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                 @else
                     <div class="text-center py-4">
                         <i class="fas fa-key fa-3x text-muted mb-3"></i>

@@ -65,57 +65,68 @@
 
                     <!-- Computers Table -->
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover">
-                            <thead class="thead-dark">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-dark">
                                 <tr>
-                                    <th>Asset Tag</th>
-                                    <th>Asset Name</th>
-                                    <th>Processor</th>
-                                    <th>Memory</th>
-                                    <th>Storage</th>
-                                    <th>Status</th>
-                                    <th>Movement</th>
-                                    <th>Actions</th>
+                                    <th class="fw-semibold">Asset Tag</th>
+                                    <th class="fw-semibold">Asset Name</th>
+                                    <th class="fw-semibold">Processor</th>
+                                    <th class="fw-semibold">Memory</th>
+                                    <th class="fw-semibold">Storage</th>
+                                    <th class="fw-semibold">Status</th>
+                                    <th class="fw-semibold">Movement</th>
+                                    <th class="fw-semibold text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($computers as $computer)
-                                    <tr>
+                                    <tr class="border-bottom">
                                         <td>
-                                            <span class="badge badge-secondary">{{ $computer->asset->asset_tag }}</span>
+                                            <span class="badge bg-secondary text-white fw-bold px-2 py-1">{{ $computer->asset->asset_tag }}</span>
                                         </td>
                                         <td>
-                                            <strong>{{ $computer->asset->name }}</strong>
+                                            <div class="fw-semibold text-dark">{{ $computer->asset->name }}</div>
                                             @if($computer->asset->user)
-                                                <br><small class="text-muted">Assigned to: {{ $computer->asset->user->name }}</small>
+                                                <small class="text-muted d-block mt-1">
+                                                    <i class="fas fa-user me-1"></i>{{ $computer->asset->user->name }}
+                                                </small>
                                             @endif
                                         </td>
-                                        <td>{{ $computer->processor }}</td>
-                                        <td>{{ $computer->memory }}</td>
-                                        <td>{{ $computer->storage }}</td>
+                                        <td class="text-muted">{{ $computer->processor }}</td>
+                                        <td class="text-muted">{{ $computer->memory }}</td>
+                                        <td class="text-muted">{{ $computer->storage }}</td>
                                         <td>
-                                            <span class="badge badge-{{ $computer->asset->status == 'Available' ? 'success' : ($computer->asset->status == 'In Use' ? 'primary' : 'warning') }}">
+                                            <span class="badge bg-{{ $computer->asset->status == 'Available' ? 'success' : ($computer->asset->status == 'In Use' ? 'primary' : 'warning') }} px-2 py-1">
                                                 {{ $computer->asset->status }}
                                             </span>
                                         </td>
                                         <td>
-                                            <span class="badge badge-info">
-                                                {{ $computer->asset->movement }}
+                                            <span class="badge bg-info text-white px-2 py-1">
+                                                {{ str_replace('Deployed Tagged', 'Deployed', $computer->asset->movement) }}
                                             </span>
                                         </td>
                                         <td>
-                                            <div class="btn-group" role="group">
-                                                <a href="{{ route('computers.show', $computer) }}" class="btn btn-sm btn-outline-info" title="View">
+                                            <div class="d-flex justify-content-center gap-1">
+                                                <a href="{{ route('computers.show', $computer) }}" 
+                                                   class="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center" 
+                                                   style="width: 32px; height: 32px;" 
+                                                   title="View Computer Details">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <a href="{{ route('computers.edit', $computer) }}" class="btn btn-sm btn-outline-warning" title="Edit">
+                                                <a href="{{ route('computers.edit', $computer) }}" 
+                                                   class="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center" 
+                                                   style="width: 32px; height: 32px;" 
+                                                   title="Edit Computer">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                                 <form action="{{ route('computers.destroy', $computer) }}" method="POST" class="d-inline" 
-                                                      onsubmit="return confirm('Are you sure you want to delete this computer?')">
+                                                      onsubmit="return confirm('Are you sure you want to permanently delete this computer? This action cannot be undone.')">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                    <button type="submit" 
+                                                            class="btn btn-outline-danger btn-sm d-flex align-items-center justify-content-center" 
+                                                            style="width: 32px; height: 32px;" 
+                                                            title="Delete Computer">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
                                                 </form>
@@ -138,9 +149,18 @@
                     </div>
 
                     <!-- Pagination -->
-                    <div class="d-flex justify-content-center">
-                        {{ $computers->appends(request()->query())->links() }}
-                    </div>
+                    @if($computers->hasPages())
+                        <div class="pagination-wrapper">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="pagination-info">
+                                    Showing {{ $computers->firstItem() }} to {{ $computers->lastItem() }} of {{ $computers->total() }} computers
+                                </div>
+                                <div>
+                                    {{ $computers->appends(request()->query())->links() }}
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
