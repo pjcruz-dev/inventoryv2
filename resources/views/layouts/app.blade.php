@@ -461,6 +461,13 @@
                                 </a>
                             </li>
                             
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('peripherals.*') ? 'active' : '' }}" href="{{ route('peripherals.index') }}">
+                                    <i class="fas fa-mouse"></i>
+                                    Peripherals
+                                </a>
+                            </li>
+                            
                             <li class="nav-item mt-3">
                                 <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-white-50">
                                     <span>ORGANIZATION</span>
