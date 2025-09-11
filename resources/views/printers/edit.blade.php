@@ -40,7 +40,7 @@
                             <label for="asset_id" class="required">Asset <span class="text-danger">*</span></label>
                             <select name="asset_id" id="asset_id" class="form-control @error('asset_id') is-invalid @enderror" required>
                                 <option value="">Select an Asset</option>
-                                @foreach($availableAssets as $asset)
+                                @foreach($assets as $asset)
                                     <option value="{{ $asset->id }}" 
                                             {{ (old('asset_id', $printer->asset_id) == $asset->id) ? 'selected' : '' }}>
                                         {{ $asset->asset_tag }} - {{ $asset->name }}

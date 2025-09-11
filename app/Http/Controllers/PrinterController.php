@@ -51,7 +51,7 @@ class PrinterController extends Controller
                       ->where('category_id', function($query) {
                           $query->select('id')
                                 ->from('asset_categories')
-                                ->where('name', 'Printer')
+                                ->where('name', 'Printers & Scanners')
                                 ->limit(1);
                       })
                       ->get();
@@ -93,12 +93,14 @@ class PrinterController extends Controller
     public function edit(Printer $printer)
     {
         $assets = Asset::where('id', $printer->asset_id)
-                      ->orWhereDoesntHave('printer')
-                      ->where('category_id', function($query) {
-                          $query->select('id')
-                                ->from('asset_categories')
-                                ->where('name', 'Printer')
-                                ->limit(1);
+                      ->orWhere(function($query) {
+                          $query->whereDoesntHave('printer')
+                                ->where('category_id', function($subQuery) {
+                                    $subQuery->select('id')
+                                            ->from('asset_categories')
+                                            ->where('name', 'Printers & Scanners')
+                                            ->limit(1);
+                                });
                       })
                       ->get();
         

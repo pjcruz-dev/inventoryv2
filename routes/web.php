@@ -8,6 +8,7 @@ use App\Http\Controllers\VendorController;
 use App\Http\Controllers\ComputerController;
 use App\Http\Controllers\MonitorController;
 use App\Http\Controllers\PrinterController;
+use App\Http\Controllers\PeripheralController;
 use App\Http\Controllers\ImportExportController;
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\AssetTimelineController;
@@ -32,6 +33,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('computers', ComputerController::class);
     Route::resource('monitors', MonitorController::class);
     Route::resource('printers', PrinterController::class);
+    Route::resource('peripherals', PeripheralController::class);
     
     // User and organization management
     Route::resource('users', UserController::class);
