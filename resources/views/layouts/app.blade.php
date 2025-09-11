@@ -188,6 +188,56 @@
             height: 1px;
             background: linear-gradient(to right, rgba(255,255,255,0.3), transparent);
         }
+        
+        /* Mobile Responsive Sidebar */
+        @media (max-width: 767.98px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: -100%;
+                width: 280px;
+                height: 100vh;
+                z-index: 1040;
+                transition: left 0.3s ease-in-out;
+                overflow-y: auto;
+            }
+            
+            .sidebar.show {
+                left: 0;
+            }
+            
+            .main-content {
+                margin-left: 0 !important;
+                padding-top: 60px;
+            }
+            
+            /* Backdrop for mobile sidebar */
+            .sidebar-backdrop {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 1039;
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+            }
+            
+            .sidebar-backdrop.show {
+                opacity: 1;
+                visibility: visible;
+            }
+            
+            #sidebarMenu.show {
+                transform: translateX(0);
+            }
+            
+            body.sidebar-open {
+                overflow: hidden;
+            }
+        }
         .main-content {
             background-color: #f8f9fa;
             min-height: 100vh;
@@ -411,8 +461,13 @@
         <!-- Authenticated layout with sidebar -->
         <div class="container-fluid">
             <div class="row">
+                <!-- Mobile Navigation Toggle -->
+                <button class="navbar-toggler d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation" style="position: fixed; top: 10px; left: 10px; z-index: 1050; background: rgba(102, 126, 234, 0.9); border: none; border-radius: 8px; padding: 8px 12px;">
+                    <span class="navbar-toggler-icon" style="background-image: url('data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 30 30%27%3e%3cpath stroke=%27rgba%28255, 255, 255, 1%29%27 stroke-linecap=%27round%27 stroke-miterlimit=%2710%27 stroke-width=%272%27 d=%27M4 7h22M4 15h22M4 23h22%27/%3e%3c/svg%3e'); width: 20px; height: 20px;"></span>
+                </button>
+
                 <!-- Sidebar -->
-                <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse" id="sidebarMenu">
                     <div class="position-sticky pt-3">
                         <div class="text-center mb-4">
                             <h4 class="navbar-brand">{{ config('app.name', 'Inventory') }}</h4>
@@ -458,6 +513,13 @@
                                 <a class="nav-link {{ request()->routeIs('printers.*') ? 'active' : '' }}" href="{{ route('printers.index') }}">
                                     <i class="fas fa-print"></i>
                                     Printers
+                                </a>
+                            </li>
+                            
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('peripherals.*') ? 'active' : '' }}" href="{{ route('peripherals.index') }}">
+                                    <i class="fas fa-mouse"></i>
+                                    Peripherals
                                 </a>
                             </li>
                             
@@ -627,6 +689,9 @@
                 </main>
             </div>
         </div>
+        
+        <!-- Mobile Sidebar Backdrop -->
+        <div class="sidebar-backdrop d-md-none" id="sidebarBackdrop"></div>
     @endguest
     
     <!-- Dark Mode Toggle Button -->
@@ -878,6 +943,49 @@
     </script>
     @endif
     @endauth
+    
+    <!-- Mobile Sidebar JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebarMenu');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            
+            if (sidebarToggle && sidebar && backdrop) {
+                // Toggle sidebar on button click
+                sidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('show');
+                    backdrop.classList.toggle('show');
+                    document.body.classList.toggle('sidebar-open');
+                });
+                
+                // Close sidebar when clicking backdrop
+                backdrop.addEventListener('click', function() {
+                    sidebar.classList.remove('show');
+                    backdrop.classList.remove('show');
+                    document.body.classList.remove('sidebar-open');
+                });
+                
+                // Close sidebar on window resize if screen becomes larger
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth >= 768) {
+                        sidebar.classList.remove('show');
+                        backdrop.classList.remove('show');
+                        document.body.classList.remove('sidebar-open');
+                    }
+                });
+                
+                // Close sidebar on escape key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('show')) {
+                        sidebar.classList.remove('show');
+                        backdrop.classList.remove('show');
+                        document.body.classList.remove('sidebar-open');
+                    }
+                });
+            }
+        });
+    </script>
     
     @yield('scripts')
 </body>
