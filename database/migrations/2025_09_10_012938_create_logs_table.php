@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('category', 50); // System, Asset
             $table->unsignedBigInteger('asset_id')->nullable();
             $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('role_id');
+            $table->unsignedBigInteger('role_id')->nullable();
             $table->unsignedBigInteger('permission_id')->nullable();
             $table->unsignedBigInteger('department_id')->nullable();
             $table->string('event_type', 100);

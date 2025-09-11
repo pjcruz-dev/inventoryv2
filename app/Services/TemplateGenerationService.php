@@ -73,6 +73,62 @@ class TemplateGenerationService
                 'position' => ['name' => 'Position', 'required' => false, 'type' => 'string', 'max_length' => 255, 'description' => 'Job title/position'],
                 'role_name' => ['name' => 'Role', 'required' => false, 'type' => 'string', 'description' => 'System role (must exist in system)'],
                 'status' => ['name' => 'Status', 'required' => false, 'type' => 'enum', 'options' => ['active', 'inactive'], 'default' => 'active', 'description' => 'Employee status']
+            ],
+            'departments' => [
+                'name' => ['name' => 'Department Name', 'required' => true, 'type' => 'string', 'max_length' => 255, 'unique' => true, 'description' => 'Department name'],
+                'description' => ['name' => 'Description', 'required' => false, 'type' => 'text', 'description' => 'Department description'],
+                'email' => ['name' => 'Email', 'required' => false, 'type' => 'email', 'description' => 'Department contact email']
+            ],
+            'vendors' => [
+                'name' => ['name' => 'Vendor Name', 'required' => true, 'type' => 'string', 'max_length' => 255, 'unique' => true, 'description' => 'Vendor/supplier name'],
+                'contact_person' => ['name' => 'Contact Person', 'required' => false, 'type' => 'string', 'max_length' => 255, 'description' => 'Primary contact person'],
+                'email' => ['name' => 'Email', 'required' => false, 'type' => 'email', 'description' => 'Vendor contact email'],
+                'phone' => ['name' => 'Phone', 'required' => false, 'type' => 'string', 'max_length' => 50, 'description' => 'Vendor contact phone'],
+                'address' => ['name' => 'Address', 'required' => false, 'type' => 'text', 'description' => 'Vendor address']
+            ],
+            'monitors' => [
+                'asset_tag' => ['name' => 'Asset Tag', 'required' => true, 'type' => 'string', 'max_length' => 50, 'description' => 'Unique asset identifier'],
+                'category_name' => ['name' => 'Category Name', 'required' => true, 'type' => 'string', 'description' => 'Asset category (must exist in system)'],
+                'vendor_name' => ['name' => 'Vendor Name', 'required' => true, 'type' => 'string', 'description' => 'Vendor/supplier name (must exist in system)'],
+                'name' => ['name' => 'Monitor Name', 'required' => true, 'type' => 'string', 'max_length' => 255, 'description' => 'Monitor model/name'],
+                'description' => ['name' => 'Description', 'required' => false, 'type' => 'text', 'description' => 'Detailed monitor description'],
+                'serial_number' => ['name' => 'Serial Number', 'required' => false, 'type' => 'string', 'max_length' => 100, 'unique' => true, 'description' => 'Manufacturer serial number'],
+                'purchase_date' => ['name' => 'Purchase Date', 'required' => false, 'type' => 'date', 'format' => 'YYYY-MM-DD', 'description' => 'Date of purchase'],
+                'warranty_end' => ['name' => 'Warranty End Date', 'required' => false, 'type' => 'date', 'format' => 'YYYY-MM-DD', 'description' => 'Warranty expiration date'],
+                'cost' => ['name' => 'Cost', 'required' => false, 'type' => 'decimal', 'min' => 0, 'description' => 'Purchase cost in local currency'],
+                'status' => ['name' => 'Status', 'required' => false, 'type' => 'enum', 'options' => ['Available', 'Active', 'Inactive', 'Under Maintenance', 'Issue Reported', 'Pending Confirmation', 'Disposed'], 'default' => 'Available', 'description' => 'Current asset status'],
+                'screen_size' => ['name' => 'Screen Size', 'required' => false, 'type' => 'string', 'max_length' => 50, 'description' => 'Monitor screen size (e.g., 24")'],
+                'resolution' => ['name' => 'Resolution', 'required' => false, 'type' => 'string', 'max_length' => 50, 'description' => 'Monitor resolution (e.g., 1920x1080)'],
+                'panel_type' => ['name' => 'Panel Type', 'required' => false, 'type' => 'string', 'max_length' => 50, 'description' => 'Panel type (e.g., IPS, TN, VA)']
+            ],
+            'printers' => [
+                'asset_tag' => ['name' => 'Asset Tag', 'required' => true, 'type' => 'string', 'max_length' => 50, 'description' => 'Unique asset identifier'],
+                'category_name' => ['name' => 'Category Name', 'required' => true, 'type' => 'string', 'description' => 'Asset category (must exist in system)'],
+                'vendor_name' => ['name' => 'Vendor Name', 'required' => true, 'type' => 'string', 'description' => 'Vendor/supplier name (must exist in system)'],
+                'name' => ['name' => 'Printer Name', 'required' => true, 'type' => 'string', 'max_length' => 255, 'description' => 'Printer model/name'],
+                'description' => ['name' => 'Description', 'required' => false, 'type' => 'text', 'description' => 'Detailed printer description'],
+                'serial_number' => ['name' => 'Serial Number', 'required' => false, 'type' => 'string', 'max_length' => 100, 'unique' => true, 'description' => 'Manufacturer serial number'],
+                'purchase_date' => ['name' => 'Purchase Date', 'required' => false, 'type' => 'date', 'format' => 'YYYY-MM-DD', 'description' => 'Date of purchase'],
+                'warranty_end' => ['name' => 'Warranty End Date', 'required' => false, 'type' => 'date', 'format' => 'YYYY-MM-DD', 'description' => 'Warranty expiration date'],
+                'cost' => ['name' => 'Cost', 'required' => false, 'type' => 'decimal', 'min' => 0, 'description' => 'Purchase cost in local currency'],
+                'status' => ['name' => 'Status', 'required' => false, 'type' => 'enum', 'options' => ['Available', 'Active', 'Inactive', 'Under Maintenance', 'Issue Reported', 'Pending Confirmation', 'Disposed'], 'default' => 'Available', 'description' => 'Current asset status'],
+                'printer_type' => ['name' => 'Printer Type', 'required' => false, 'type' => 'string', 'max_length' => 50, 'description' => 'Printer type (e.g., Laser, Inkjet)'],
+                'color_support' => ['name' => 'Color Support', 'required' => false, 'type' => 'boolean', 'description' => 'Whether printer supports color printing'],
+                'duplex_support' => ['name' => 'Duplex Support', 'required' => false, 'type' => 'boolean', 'description' => 'Whether printer supports duplex printing']
+            ],
+            'peripherals' => [
+                'asset_tag' => ['name' => 'Asset Tag', 'required' => true, 'type' => 'string', 'max_length' => 50, 'description' => 'Unique asset identifier'],
+                'category_name' => ['name' => 'Category Name', 'required' => true, 'type' => 'string', 'description' => 'Asset category (must exist in system)'],
+                'vendor_name' => ['name' => 'Vendor Name', 'required' => true, 'type' => 'string', 'description' => 'Vendor/supplier name (must exist in system)'],
+                'name' => ['name' => 'Peripheral Name', 'required' => true, 'type' => 'string', 'max_length' => 255, 'description' => 'Peripheral model/name'],
+                'description' => ['name' => 'Description', 'required' => false, 'type' => 'text', 'description' => 'Detailed peripheral description'],
+                'serial_number' => ['name' => 'Serial Number', 'required' => false, 'type' => 'string', 'max_length' => 100, 'unique' => true, 'description' => 'Manufacturer serial number'],
+                'purchase_date' => ['name' => 'Purchase Date', 'required' => false, 'type' => 'date', 'format' => 'YYYY-MM-DD', 'description' => 'Date of purchase'],
+                'warranty_end' => ['name' => 'Warranty End Date', 'required' => false, 'type' => 'date', 'format' => 'YYYY-MM-DD', 'description' => 'Warranty expiration date'],
+                'cost' => ['name' => 'Cost', 'required' => false, 'type' => 'decimal', 'min' => 0, 'description' => 'Purchase cost in local currency'],
+                'status' => ['name' => 'Status', 'required' => false, 'type' => 'enum', 'options' => ['Available', 'Active', 'Inactive', 'Under Maintenance', 'Issue Reported', 'Pending Confirmation', 'Disposed'], 'default' => 'Available', 'description' => 'Current asset status'],
+                'peripheral_type' => ['name' => 'Peripheral Type', 'required' => false, 'type' => 'string', 'max_length' => 100, 'description' => 'Type of peripheral (e.g., Mouse, Keyboard, Webcam)'],
+                'connectivity' => ['name' => 'Connectivity', 'required' => false, 'type' => 'string', 'max_length' => 50, 'description' => 'Connection type (e.g., USB, Wireless, Bluetooth)']
             ]
         ];
 
@@ -91,6 +147,16 @@ class TemplateGenerationService
                 return $this->generateComputerSampleData();
             case 'users':
                 return $this->generateUserSampleData();
+            case 'departments':
+                return $this->generateDepartmentSampleData();
+            case 'vendors':
+                return $this->generateVendorSampleData();
+            case 'monitors':
+                return $this->generateMonitorSampleData();
+            case 'printers':
+                return $this->generatePrinterSampleData();
+            case 'peripherals':
+                return $this->generatePeripheralSampleData();
             default:
                 return [];
         }
@@ -250,6 +316,36 @@ class TemplateGenerationService
                 'position' => 'nullable|string|max:255',
                 'role_name' => 'nullable|string|exists:roles,name',
                 'status' => 'nullable|in:active,inactive'
+            ],
+            'departments' => [
+                'name' => 'required|string|max:255|unique:departments,name',
+                'description' => 'nullable|string'
+            ],
+            'vendors' => [
+                'name' => 'required|string|max:255|unique:vendors,name',
+                'contact_person' => 'nullable|string|max:255',
+                'email' => 'nullable|email|max:255',
+                'phone' => 'nullable|string|max:20'
+            ],
+            'monitors' => [
+                'asset_tag' => 'required|string|max:50|unique:assets,asset_tag',
+                'brand' => 'required|string|max:255',
+                'model' => 'required|string|max:255',
+                'size' => 'nullable|string|max:50',
+                'resolution' => 'nullable|string|max:50'
+            ],
+            'printers' => [
+                'asset_tag' => 'required|string|max:50|unique:assets,asset_tag',
+                'brand' => 'required|string|max:255',
+                'model' => 'required|string|max:255',
+                'type' => 'nullable|string|max:50',
+                'color' => 'nullable|string|max:10'
+            ],
+            'peripherals' => [
+                'asset_tag' => 'required|string|max:50|unique:assets,asset_tag',
+                'type' => 'required|string|max:255',
+                'brand' => 'required|string|max:255',
+                'model' => 'required|string|max:255'
             ]
         ];
 
@@ -273,7 +369,12 @@ class TemplateGenerationService
             'users' => [
                 'department_name' => ['table' => 'departments', 'field' => 'name', 'target' => 'department_id'],
                 'role_name' => ['table' => 'roles', 'field' => 'name', 'target' => 'role_id']
-            ]
+            ],
+            'departments' => [],
+            'vendors' => [],
+            'monitors' => [],
+            'printers' => [],
+            'peripherals' => []
         ];
 
         return $mappings[$module] ?? [];
@@ -295,6 +396,13 @@ class TemplateGenerationService
             case 'users':
                 $data['departments'] = Department::pluck('name', 'id')->toArray();
                 $data['roles'] = DB::table('roles')->pluck('name', 'id')->toArray();
+                break;
+            case 'departments':
+            case 'vendors':
+            case 'monitors':
+            case 'printers':
+            case 'peripherals':
+                // No auto-populated data needed for these modules
                 break;
         }
 
@@ -360,6 +468,66 @@ class TemplateGenerationService
         $nextNumber = $lastNumber + 1;
 
         return $prefix . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Generate department sample data
+     */
+    private function generateDepartmentSampleData(): array
+    {
+        return [
+            ['name' => 'Information Technology', 'description' => 'IT department managing technology infrastructure'],
+            ['name' => 'Human Resources', 'description' => 'HR department handling employee relations'],
+            ['name' => 'Finance', 'description' => 'Finance department managing company finances']
+        ];
+    }
+
+    /**
+     * Generate vendor sample data
+     */
+    private function generateVendorSampleData(): array
+    {
+        return [
+            ['name' => 'Dell Technologies', 'contact_person' => 'John Smith', 'email' => 'john.smith@dell.com', 'phone' => '+1-555-0123'],
+            ['name' => 'HP Inc', 'contact_person' => 'Sarah Johnson', 'email' => 'sarah.johnson@hp.com', 'phone' => '+1-555-0124'],
+            ['name' => 'Lenovo Group', 'contact_person' => 'Mike Chen', 'email' => 'mike.chen@lenovo.com', 'phone' => '+1-555-0125']
+        ];
+    }
+
+    /**
+     * Generate monitor sample data
+     */
+    private function generateMonitorSampleData(): array
+    {
+        return [
+            ['asset_tag' => 'MON001', 'brand' => 'Dell', 'model' => 'UltraSharp U2720Q', 'size' => '27"', 'resolution' => '3840x2160'],
+            ['asset_tag' => 'MON002', 'brand' => 'Samsung', 'model' => 'Odyssey G7', 'size' => '32"', 'resolution' => '2560x1440'],
+            ['asset_tag' => 'MON003', 'brand' => 'LG', 'model' => '27UK850-W', 'size' => '27"', 'resolution' => '3840x2160']
+        ];
+    }
+
+    /**
+     * Generate printer sample data
+     */
+    private function generatePrinterSampleData(): array
+    {
+        return [
+            ['asset_tag' => 'PRT001', 'brand' => 'HP', 'model' => 'LaserJet Pro M404n', 'type' => 'Laser', 'color' => 'No'],
+            ['asset_tag' => 'PRT002', 'brand' => 'Canon', 'model' => 'PIXMA TR8620', 'type' => 'Inkjet', 'color' => 'Yes'],
+            ['asset_tag' => 'PRT003', 'brand' => 'Brother', 'model' => 'HL-L3270CDW', 'type' => 'Laser', 'color' => 'Yes']
+        ];
+    }
+
+    /**
+     * Generate peripheral sample data
+     */
+    private function generatePeripheralSampleData(): array
+    {
+        return [
+            ['asset_tag' => 'PER001', 'type' => 'Keyboard', 'brand' => 'Logitech', 'model' => 'MX Keys'],
+            ['asset_tag' => 'PER002', 'type' => 'Mouse', 'brand' => 'Logitech', 'model' => 'MX Master 3'],
+            ['asset_tag' => 'PER003', 'type' => 'Webcam', 'brand' => 'Logitech', 'model' => 'C920 HD Pro']
+        ];
     }
 
     /**

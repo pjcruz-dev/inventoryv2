@@ -304,6 +304,13 @@ $(document).ready(function() {
     // Show all items when dropdown is opened
     categorySearch.on('focus', function() {
         categoryDropdown.find('li').show();
+        categoryDropdown.addClass('show');
+    });
+    
+    // Also show dropdown when clicking on the input
+    categorySearch.on('click', function() {
+        categoryDropdown.find('li').show();
+        categoryDropdown.addClass('show');
     });
     
     // Hide dropdown when clicking outside

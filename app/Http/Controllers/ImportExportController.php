@@ -75,6 +75,51 @@ class ImportExportController extends Controller
     }
 
     /**
+     * Download public template (no authentication required)
+     */
+    public function downloadPublicTemplate($module)
+    {
+        $validModules = ['users', 'assets', 'computers', 'monitors', 'printers', 'peripherals', 'departments', 'vendors'];
+        
+        if (!in_array($module, $validModules)) {
+            return response()->json(['error' => 'Invalid module specified'], 400);
+        }
+
+        try {
+            // Generate comprehensive template data
+            $templateData = $this->templateService->generateTemplate($module);
+            
+            // Create CSV content with enhanced headers and validation info
+            $csvContent = $this->generateEnhancedCsvContent($templateData);
+            
+            $filename = $module . '_template_' . date('Y-m-d_H-i-s') . '.csv';
+            
+            // Log public template download (no user_id since not authenticated)
+            Log::info('Public template downloaded', [
+                'module' => $module,
+                'filename' => $filename,
+                'timestamp' => now(),
+                'ip_address' => request()->ip()
+            ]);
+            
+            return Response::make($csvContent, 200, [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'X-Template-Version' => '2.0',
+                'X-Generated-At' => now()->toISOString()
+            ]);
+        } catch (Exception $e) {
+            Log::error('Public template generation failed', [
+                'module' => $module,
+                'error' => $e->getMessage(),
+                'ip_address' => request()->ip()
+            ]);
+            
+            return response()->json(['error' => 'Failed to generate template'], 500);
+        }
+    }
+
+    /**
      * Generate enhanced CSV content with validation info
      */
     private function generateEnhancedCsvContent($templateData)
@@ -87,20 +132,17 @@ class ImportExportController extends Controller
         fwrite($output, "# Required fields are marked with *\n");
         fwrite($output, "# \n");
         
-        // Extract header names from the template headers structure
-        $headerNames = [];
-        foreach ($templateData['headers'] as $key => $headerInfo) {
-            $headerNames[] = $headerInfo['name'] ?? $key;
-        }
+        // Extract field keys from the template headers structure
+        $headerNames = array_keys($templateData['headers']);
         
-        // Add headers
+        // Add headers - ensure they match exactly what validation expects
         fputcsv($output, $headerNames);
         
         // Add sample data rows
         foreach ($templateData['sample_data'] as $row) {
             // Convert associative array to indexed array in correct order
             $rowData = [];
-            foreach (array_keys($templateData['headers']) as $key) {
+            foreach ($headerNames as $key) {
                 $rowData[] = $row[$key] ?? '';
             }
             fputcsv($output, $rowData);
@@ -146,25 +188,113 @@ class ImportExportController extends Controller
         $validateOnly = $request->boolean('validate_only', false);
         $path = $file->getRealPath();
         
-        // Read CSV file
-        $csvData = file($path);
-        if (empty($csvData)) {
+        // Validate file exists and is readable
+        if (!file_exists($path) || !is_readable($path)) {
             return redirect()->route('import-export.results')
                 ->with('import_errors', [[
                     'row' => 1,
                     'field' => 'file',
-                    'message' => 'CSV file is empty or could not be read.',
+                    'message' => 'File does not exist or is not readable.',
+                    'value' => ''
+                ]]);
+        }
+        
+        // Read CSV file with error handling
+        try {
+            $csvData = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            if ($csvData === false || empty($csvData)) {
+                return redirect()->route('import-export.results')
+                    ->with('import_errors', [[
+                        'row' => 1,
+                        'field' => 'file',
+                        'message' => 'CSV file is empty or could not be read.',
+                        'value' => ''
+                    ]]);
+            }
+            
+            // Filter out comment lines (lines starting with #)
+            $csvData = array_filter($csvData, function($line) {
+                return !empty(trim($line)) && !str_starts_with(trim($line), '#');
+            });
+            
+            // Reindex array after filtering
+            $csvData = array_values($csvData);
+            
+            if (empty($csvData)) {
+                return redirect()->route('import-export.results')
+                    ->with('import_errors', [[
+                        'row' => 1,
+                        'field' => 'file',
+                        'message' => 'No valid CSV data found after filtering comments.',
+                        'value' => ''
+                    ]]);
+            }
+        } catch (\Exception $e) {
+            return redirect()->route('import-export.results')
+                ->with('import_errors', [[
+                    'row' => 1,
+                    'field' => 'file',
+                    'message' => 'Error reading CSV file: ' . $e->getMessage(),
                     'value' => ''
                 ]]);
         }
 
-        $data = array_map('str_getcsv', $csvData);
-        $headers = array_shift($data);
+        // Parse CSV data with error handling
+        try {
+            $data = [];
+            foreach ($csvData as $lineNumber => $line) {
+                $parsedLine = str_getcsv($line);
+                if ($parsedLine === false) {
+                    return redirect()->route('import-export.results')
+                        ->with('import_errors', [[
+                            'row' => $lineNumber + 1,
+                            'field' => 'csv_parsing',
+                            'message' => 'Error parsing CSV line.',
+                            'value' => substr($line, 0, 100) . '...'
+                        ]]);
+                }
+                $data[] = $parsedLine;
+            }
+            
+            if (empty($data)) {
+                return redirect()->route('import-export.results')
+                    ->with('import_errors', [[
+                        'row' => 1,
+                        'field' => 'file',
+                        'message' => 'No valid CSV data found.',
+                        'value' => ''
+                    ]]);
+            }
+            
+            $headers = array_shift($data);
+        } catch (\Exception $e) {
+            return redirect()->route('import-export.results')
+                ->with('import_errors', [[
+                    'row' => 1,
+                    'field' => 'csv_parsing',
+                    'message' => 'Error parsing CSV data: ' . $e->getMessage(),
+                    'value' => ''
+                ]]);
+        }
         
         // Clean headers (remove BOM and trim)
         $headers = array_map(function($header) {
-            return trim(str_replace("\xEF\xBB\xBF", '', $header));
+            // Remove various BOM types
+            $header = str_replace(["\xEF\xBB\xBF", "\xFF\xFE", "\xFE\xFF"], '', $header);
+            // Trim whitespace and normalize
+            return trim($header);
         }, $headers);
+        
+        // Validate headers are not empty
+        if (empty($headers) || empty(array_filter($headers))) {
+            return redirect()->route('import-export.results')
+                ->with('import_errors', [[
+                    'row' => 1,
+                    'field' => 'header',
+                    'message' => 'CSV headers are missing or empty.',
+                    'value' => ''
+                ]]);
+        }
         
         // Validate header
         $requiredFields = $this->getRequiredFields($module);
@@ -425,6 +555,188 @@ class ImportExportController extends Controller
     /**
      * Get required fields for module validation
      */
+
+    /**
+     * Get template preview for specified module
+     */
+    public function getTemplatePreview($module)
+    {
+        try {
+            $headers = $this->getRequiredFields($module);
+            $sampleData = $this->getSampleData($module);
+            
+            return response()->json([
+                'success' => true,
+                'headers' => $headers,
+                'sample_data' => $sampleData,
+                'module' => $module
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error generating template preview: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Bulk export multiple modules
+     */
+    public function bulkExport(Request $request)
+    {
+        $request->validate([
+            'modules' => 'required|array',
+            'modules.*' => 'string|in:users,assets,computers,monitors,printers,peripherals,departments,vendors'
+        ]);
+
+        try {
+            $modules = $request->input('modules');
+            $exportData = [];
+            
+            foreach ($modules as $module) {
+                $data = $this->getExportData($module);
+                $exportData[$module] = $data;
+            }
+            
+            // Create a zip file with multiple CSV files
+            $zipFileName = 'bulk_export_' . date('Y-m-d_H-i-s') . '.zip';
+            $zipPath = storage_path('app/temp/' . $zipFileName);
+            
+            // Ensure temp directory exists
+            if (!file_exists(dirname($zipPath))) {
+                mkdir(dirname($zipPath), 0755, true);
+            }
+            
+            $zip = new \ZipArchive();
+            if ($zip->open($zipPath, \ZipArchive::CREATE) === TRUE) {
+                foreach ($exportData as $module => $data) {
+                    $csvContent = $this->arrayToCsv($data);
+                    $zip->addFromString($module . '_export.csv', $csvContent);
+                }
+                $zip->close();
+                
+                return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
+            } else {
+                throw new \Exception('Could not create zip file');
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bulk export failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get import status for ongoing imports
+     */
+    public function getImportStatus(Request $request)
+    {
+        try {
+            // This would typically check a job queue or cache for import progress
+            // For now, return a simple status
+            return response()->json([
+                'success' => true,
+                'status' => 'completed',
+                'message' => 'Import status check completed'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error checking import status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get import history for the current user
+     */
+    public function getImportHistory(Request $request)
+    {
+        try {
+            // This would typically fetch from a database table storing import history
+            // For now, return empty history
+            return response()->json([
+                'success' => true,
+                'history' => [],
+                'message' => 'Import history retrieved successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error retrieving import history: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Convert array data to CSV format
+     */
+    private function arrayToCsv($data)
+    {
+        if (empty($data)) {
+            return '';
+        }
+        
+        $output = fopen('php://temp', 'r+');
+        
+        // Add headers
+        fputcsv($output, array_keys($data[0]));
+        
+        // Add data rows
+        foreach ($data as $row) {
+            fputcsv($output, $row);
+        }
+        
+        rewind($output);
+        $csv = stream_get_contents($output);
+        fclose($output);
+        
+        return $csv;
+    }
+
+    /**
+     * Safely parse date string to Y-m-d format
+     * 
+     * @param string|null $dateString
+     * @return string|null
+     */
+    private function parseDate($dateString)
+    {
+        if (empty($dateString)) {
+            return null;
+        }
+
+        // Try to parse the date
+        $timestamp = strtotime($dateString);
+        
+        // If strtotime fails, try common date formats
+        if ($timestamp === false) {
+            $formats = [
+                'Y-m-d',
+                'd/m/Y',
+                'm/d/Y',
+                'd-m-Y',
+                'm-d-Y',
+                'Y/m/d',
+                'd.m.Y',
+                'm.d.Y'
+            ];
+            
+            foreach ($formats as $format) {
+                $date = \DateTime::createFromFormat($format, $dateString);
+                if ($date && $date->format($format) === $dateString) {
+                    return $date->format('Y-m-d');
+                }
+            }
+            
+            // If all parsing attempts fail, return null
+            return null;
+        }
+        
+        return date('Y-m-d', $timestamp);
+    }
+
     private function getRequiredFields($module)
     {
         $requiredFields = [
@@ -516,13 +828,37 @@ class ImportExportController extends Controller
      */
     private function importUser($data, $rowNumber)
     {
-        // Validate required fields
+        // Check for existing users with same employee_no, employee_id, or email
+        $existingUser = null;
+        
+        if (!empty($data['employee_no'])) {
+            $existingUser = User::where('employee_no', $data['employee_no'])->first();
+            if ($existingUser) {
+                throw new \Exception("User with employee number '{$data['employee_no']}' already exists. Skipping duplicate entry.");
+            }
+        }
+        
+        if (!empty($data['employee_id'])) {
+            $existingUser = User::where('employee_id', $data['employee_id'])->first();
+            if ($existingUser) {
+                throw new \Exception("User with employee ID '{$data['employee_id']}' already exists. Skipping duplicate entry.");
+            }
+        }
+        
+        if (!empty($data['email'])) {
+            $existingUser = User::where('email', $data['email'])->first();
+            if ($existingUser) {
+                throw new \Exception("User with email '{$data['email']}' already exists. Skipping duplicate entry.");
+            }
+        }
+
+        // Validate required fields (removed unique constraints since we handle them above)
         $validator = Validator::make($data, [
-            'employee_no' => 'required|unique:users,employee_no',
-            'employee_id' => 'nullable|unique:users,employee_id',
+            'employee_no' => 'required|string|max:255',
+            'employee_id' => 'nullable|string|max:255',
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
+            'email' => 'required|email|max:255',
             'department_name' => 'required|string'
         ]);
 
@@ -564,9 +900,17 @@ class ImportExportController extends Controller
      */
     private function importAsset($data, $rowNumber)
     {
-        // Validate required fields
+        // Check if asset with this tag already exists
+        $existingAsset = Asset::where('asset_tag', $data['asset_tag'])->first();
+        
+        if ($existingAsset) {
+            // Skip duplicate asset tags with a warning
+            throw new \Exception("Asset with tag '{$data['asset_tag']}' already exists. Skipping duplicate entry.");
+        }
+
+        // Validate required fields (removed unique constraint since we handle it above)
         $validator = Validator::make($data, [
-            'asset_tag' => 'required|unique:assets,asset_tag',
+            'asset_tag' => 'required|string|max:255',
             'category_name' => 'required|string',
             'vendor_name' => 'required|string',
             'name' => 'required|string|max:255',
@@ -598,8 +942,8 @@ class ImportExportController extends Controller
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
             'serial_number' => $data['serial_number'] ?? null,
-            'purchase_date' => $data['purchase_date'] ? date('Y-m-d', strtotime($data['purchase_date'])) : null,
-            'warranty_end' => $data['warranty_end'] ? date('Y-m-d', strtotime($data['warranty_end'])) : null,
+            'purchase_date' => $this->parseDate($data['purchase_date'] ?? null),
+            'warranty_end' => $this->parseDate($data['warranty_end'] ?? null),
             'cost' => $data['cost'] ?? 0,
             'status' => $data['status'] ?? 'Active',
             'movement' => 'New Arrival'
@@ -720,9 +1064,17 @@ class ImportExportController extends Controller
      */
     private function importDepartment($data, $rowNumber)
     {
-        // Validate required fields
+        // Check if department with this name already exists
+        $existingDepartment = Department::where('name', $data['name'])->first();
+        
+        if ($existingDepartment) {
+            // Skip duplicate department names with a warning
+            throw new \Exception("Department with name '{$data['name']}' already exists. Skipping duplicate entry.");
+        }
+
+        // Validate required fields (removed unique constraint since we handle it above)
         $validator = Validator::make($data, [
-            'name' => 'required|string|max:255|unique:departments,name'
+            'name' => 'required|string|max:255'
         ]);
 
         if ($validator->fails()) {
@@ -749,9 +1101,17 @@ class ImportExportController extends Controller
      */
     private function importVendor($data, $rowNumber)
     {
-        // Validate required fields
+        // Check if vendor with this name already exists
+        $existingVendor = Vendor::where('name', $data['name'])->first();
+        
+        if ($existingVendor) {
+            // Skip duplicate vendor names with a warning
+            throw new \Exception("Vendor with name '{$data['name']}' already exists. Skipping duplicate entry.");
+        }
+
+        // Validate required fields (removed unique constraint since we handle it above)
         $validator = Validator::make($data, [
-            'name' => 'required|string|max:255|unique:vendors,name',
+            'name' => 'required|string|max:255',
             'email' => 'nullable|email'
         ]);
 
@@ -773,9 +1133,17 @@ class ImportExportController extends Controller
      */
     private function createAssetFromData($data, $rowNumber)
     {
-        // Validate required fields
+        // Check if asset with this tag already exists
+        $existingAsset = Asset::where('asset_tag', $data['asset_tag'])->first();
+        
+        if ($existingAsset) {
+            // Skip duplicate asset tags with a warning
+            throw new \Exception("Asset with tag '{$data['asset_tag']}' already exists. Skipping duplicate entry.");
+        }
+
+        // Validate required fields (removed unique constraint since we handle it above)
         $validator = Validator::make($data, [
-            'asset_tag' => 'required|unique:assets,asset_tag',
+            'asset_tag' => 'required|string|max:255',
             'category_name' => 'required|string',
             'vendor_name' => 'required|string',
             'name' => 'required|string|max:255',
@@ -807,8 +1175,8 @@ class ImportExportController extends Controller
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
             'serial_number' => $data['serial_number'] ?? null,
-            'purchase_date' => $data['purchase_date'] ? date('Y-m-d', strtotime($data['purchase_date'])) : null,
-            'warranty_end' => $data['warranty_end'] ? date('Y-m-d', strtotime($data['warranty_end'])) : null,
+            'purchase_date' => $this->parseDate($data['purchase_date'] ?? null),
+            'warranty_end' => $this->parseDate($data['warranty_end'] ?? null),
             'cost' => $data['cost'] ?? 0,
             'status' => $data['status'] ?? 'Active',
             'movement' => 'New Arrival'
@@ -987,43 +1355,43 @@ class ImportExportController extends Controller
         }
     }
 
-    /**
-     * Convert array to CSV format
-     */
-    private function arrayToCsv($data)
-    {
-        if (empty($data)) {
-            return '';
-        }
 
-        $output = fopen('php://temp', 'r+');
-        
-        // Add headers
-        fputcsv($output, array_keys($data[0]));
-        
-        // Add data rows
-        foreach ($data as $row) {
-            fputcsv($output, $row);
-        }
-        
-        rewind($output);
-        $csv = stream_get_contents($output);
-        fclose($output);
-        
-        return $csv;
-    }
 
     /**
      * Validation methods for each module
      */
     private function validateUser($data, $rowNumber)
     {
+        // Check for existing users with same employee_no, employee_id, or email
+        $existingUser = null;
+        
+        if (!empty($data['employee_no'])) {
+            $existingUser = User::where('employee_no', $data['employee_no'])->first();
+            if ($existingUser) {
+                throw new \Exception("User with employee number '{$data['employee_no']}' already exists. Skipping duplicate entry.");
+            }
+        }
+        
+        if (!empty($data['employee_id'])) {
+            $existingUser = User::where('employee_id', $data['employee_id'])->first();
+            if ($existingUser) {
+                throw new \Exception("User with employee ID '{$data['employee_id']}' already exists. Skipping duplicate entry.");
+            }
+        }
+        
+        if (!empty($data['email'])) {
+            $existingUser = User::where('email', $data['email'])->first();
+            if ($existingUser) {
+                throw new \Exception("User with email '{$data['email']}' already exists. Skipping duplicate entry.");
+            }
+        }
+
         $validator = Validator::make($data, [
-            'employee_no' => 'required|unique:users,employee_no',
-            'employee_id' => 'nullable|unique:users,employee_id',
+            'employee_no' => 'required|string|max:255',
+            'employee_id' => 'nullable|string|max:255',
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
+            'email' => 'required|email|max:255',
             'department_name' => 'required|string'
         ]);
 
@@ -1048,8 +1416,16 @@ class ImportExportController extends Controller
 
     private function validateAsset($data, $rowNumber)
     {
+        // Check if asset with this tag already exists
+        $existingAsset = Asset::where('asset_tag', $data['asset_tag'])->first();
+        
+        if ($existingAsset) {
+            // Skip duplicate asset tags with a warning
+            throw new \Exception("Asset with tag '{$data['asset_tag']}' already exists. Skipping duplicate entry.");
+        }
+
         $validator = Validator::make($data, [
-            'asset_tag' => 'required|unique:assets,asset_tag',
+            'asset_tag' => 'required|string|max:255',
             'category_name' => 'required|string',
             'vendor_name' => 'required|string',
             'name' => 'required|string|max:255',
@@ -1134,8 +1510,16 @@ class ImportExportController extends Controller
 
     private function validateDepartment($data, $rowNumber)
     {
+        // Check if department with this name already exists
+        $existingDepartment = Department::where('name', $data['name'])->first();
+        
+        if ($existingDepartment) {
+            // Skip duplicate department names with a warning
+            throw new \Exception("Department with name '{$data['name']}' already exists. Skipping duplicate entry.");
+        }
+
         $validator = Validator::make($data, [
-            'name' => 'required|string|max:255|unique:departments,name'
+            'name' => 'required|string|max:255'
         ]);
 
         if ($validator->fails()) {
@@ -1153,14 +1537,139 @@ class ImportExportController extends Controller
 
     private function validateVendor($data, $rowNumber)
     {
+        // Check if vendor with this name already exists
+        $existingVendor = Vendor::where('name', $data['name'])->first();
+        
+        if ($existingVendor) {
+            // Skip duplicate vendor names with a warning
+            throw new \Exception("Vendor with name '{$data['name']}' already exists. Skipping duplicate entry.");
+        }
+
         $validator = Validator::make($data, [
-            'name' => 'required|string|max:255|unique:vendors,name',
+            'name' => 'required|string|max:255',
             'email' => 'nullable|email'
         ]);
 
         if ($validator->fails()) {
             throw new \Illuminate\Validation\ValidationException($validator);
         }
+    }
+
+    /**
+     * Validate import data without importing
+     */
+    public function validateImport(Request $request, $module)
+    {
+        $request->validate([
+            'csv_file' => 'required|file|mimes:csv,txt|max:10240'
+        ]);
+
+        $file = $request->file('csv_file');
+        $path = $file->getRealPath();
+        
+        // Read CSV file with error handling
+        try {
+            $csvData = file($path);
+            if (empty($csvData)) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => [[
+                        'row' => 1,
+                        'field' => 'file',
+                        'message' => 'CSV file is empty or could not be read.',
+                        'value' => ''
+                    ]]
+                ]);
+            }
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'errors' => [[
+                    'row' => 1,
+                    'field' => 'file',
+                    'message' => 'Failed to read CSV file: ' . $e->getMessage(),
+                    'value' => ''
+                ]]
+            ]);
+        }
+
+        $data = array_map('str_getcsv', $csvData);
+        $headers = array_shift($data);
+        
+        // Clean headers (remove BOM and trim)
+        $headers = array_map(function($header) {
+            return trim(str_replace("\xEF\xBB\xBF", '', $header));
+        }, $headers);
+        
+        // Validate header
+        $requiredFields = $this->getRequiredFields($module);
+        $missingFields = array_diff($requiredFields, $headers);
+        
+        if (!empty($missingFields)) {
+            return response()->json([
+                'success' => false,
+                'errors' => [[
+                    'row' => 1,
+                    'field' => 'header',
+                    'message' => 'Missing required columns: ' . implode(', ', $missingFields),
+                    'value' => implode(', ', $headers)
+                ]]
+            ]);
+        }
+
+        $errors = [];
+        $warnings = [];
+        $totalRows = count($data);
+
+        // Validate each row
+        foreach ($data as $index => $row) {
+            $rowNumber = $index + 2;
+            
+            // Skip empty rows
+            if (empty(array_filter($row))) {
+                $warnings[] = [
+                    'row' => $rowNumber,
+                    'message' => 'Empty row will be skipped',
+                    'field' => 'general'
+                ];
+                continue;
+            }
+            
+            $rowData = array_combine($headers, array_pad($row, count($headers), ''));
+            
+            try {
+                $this->validateImportRow($module, $rowData, $rowNumber);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                foreach ($e->errors() as $field => $messages) {
+                    foreach ($messages as $message) {
+                        $errors[] = [
+                            'row' => $rowNumber,
+                            'field' => $field,
+                            'message' => $message,
+                            'value' => $rowData[$field] ?? ''
+                        ];
+                    }
+                }
+            } catch (\Exception $e) {
+                $errors[] = [
+                    'row' => $rowNumber,
+                    'field' => 'general',
+                    'message' => $e->getMessage(),
+                    'value' => ''
+                ];
+            }
+        }
+
+        return response()->json([
+            'success' => empty($errors),
+            'summary' => [
+                'total' => $totalRows,
+                'errors' => count($errors),
+                'warnings' => count($warnings)
+            ],
+            'errors' => $errors,
+            'warnings' => $warnings
+        ]);
     }
 
     /**
