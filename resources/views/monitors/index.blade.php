@@ -76,6 +76,7 @@
                                     <th>Resolution</th>
                                     <th>Panel Type</th>
                                     <th>Status</th>
+                                    <th>Movement</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -104,6 +105,11 @@
                                             </span>
                                         </td>
                                         <td>
+                                            <span class="badge badge-info">
+                                                {{ $monitor->asset->movement }}
+                                            </span>
+                                        </td>
+                                        <td>
                                             <div class="btn-group" role="group">
                                                 <a href="{{ route('monitors.show', $monitor) }}" class="btn btn-sm btn-outline-info" title="View">
                                                     <i class="fas fa-eye"></i>
@@ -124,7 +130,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center py-4">
+                                        <td colspan="8" class="text-center py-4">
                                             <i class="fas fa-tv fa-3x text-muted mb-3"></i>
                                             <p class="text-muted">No monitors found.</p>
                                             <a href="{{ route('monitors.create') }}" class="btn btn-primary">

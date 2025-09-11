@@ -4146,38 +4146,38 @@
                                                 <div class="card-body p-3">
                                                     <div class="row g-2">
                                                         <div class="col-6">
-                                                            <div class="status-metric-card bg-success-subtle border border-success rounded p-2 text-center drill-down" data-status="deployed" data-period="Week {{ $week }} ({{ $monthName }})" data-bs-toggle="tooltip" title="Click to view deployed assets">
+                                                            <div class="status-metric-card bg-success-subtle border border-success rounded p-2 text-center drill-down" data-status="Deployed" data-period="Week {{ $week }} ({{ $monthName }})" data-bs-toggle="tooltip" title="Click to view deployed assets">
                                                                 <div class="text-success fw-bold small">✅ Deployed</div>
-                                                                <div class="h5 mb-0 text-success fw-bold">{{ $monthData["Week $week"]['deployed'] ?? 0 }}</div>
+                                                                <div class="h5 mb-0 text-success fw-bold">{{ $monthData["Week $week"]['Deployed'] ?? 0 }}</div>
                                                                 <div class="progress-mini mt-1">
-                                                                    <div class="progress-bar bg-success" style="width: {{ array_sum($monthData["Week $week"] ?? []) > 0 ? round(($monthData["Week $week"]['deployed'] ?? 0) / array_sum($monthData["Week $week"] ?? []) * 100) : 0 }}%"></div>
+                                                                    <div class="progress-bar bg-success" style="width: {{ array_sum($monthData["Week $week"] ?? []) > 0 ? round(($monthData["Week $week"]['Deployed'] ?? 0) / array_sum($monthData["Week $week"] ?? []) * 100) : 0 }}%"></div>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                         <div class="col-6">
-                                                            <div class="status-metric-card bg-danger-subtle border border-danger rounded p-2 text-center drill-down" data-status="problematic" data-period="Week {{ $week }} ({{ $monthName }})" data-bs-toggle="tooltip" title="Click to view problematic assets">
-                                                                <div class="text-danger fw-bold small">⚠️ Issues</div>
-                                                                <div class="h5 mb-0 text-danger fw-bold">{{ $monthData["Week $week"]['problematic'] ?? 0 }}</div>
+                                                            <div class="status-metric-card bg-danger-subtle border border-danger rounded p-2 text-center drill-down" data-status="Disposed" data-period="Week {{ $week }} ({{ $monthName }})" data-bs-toggle="tooltip" title="Click to view disposed assets">
+                                                                <div class="text-danger fw-bold small">🗑️ Disposed</div>
+                                                                <div class="h5 mb-0 text-danger fw-bold">{{ $monthData["Week $week"]['Disposed'] ?? 0 }}</div>
                                                                 <div class="progress-mini mt-1">
-                                                                    <div class="progress-bar bg-danger" style="width: {{ array_sum($monthData["Week $week"] ?? []) > 0 ? round(($monthData["Week $week"]['problematic'] ?? 0) / array_sum($monthData["Week $week"] ?? []) * 100) : 0 }}%"></div>
+                                                                    <div class="progress-bar bg-danger" style="width: {{ array_sum($monthData["Week $week"] ?? []) > 0 ? round(($monthData["Week $week"]['Disposed'] ?? 0) / array_sum($monthData["Week $week"] ?? []) * 100) : 0 }}%"></div>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                         <div class="col-6">
-                                                            <div class="status-metric-card bg-warning-subtle border border-warning rounded p-2 text-center drill-down" data-status="pending_confirm" data-period="Week {{ $week }} ({{ $monthName }})" data-bs-toggle="tooltip" title="Click to view pending assets">
-                                                                <div class="text-warning fw-bold small">⏳ Pending</div>
-                                                                <div class="h5 mb-0 text-warning fw-bold">{{ $monthData["Week $week"]['pending_confirm'] ?? 0 }}</div>
+                                                            <div class="status-metric-card bg-warning-subtle border border-warning rounded p-2 text-center drill-down" data-status="New Arrival" data-period="Week {{ $week }} ({{ $monthName }})" data-bs-toggle="tooltip" title="Click to view new arrivals">
+                                                                <div class="text-warning fw-bold small">📦 New Arrival</div>
+                                                                <div class="h5 mb-0 text-warning fw-bold">{{ $monthData["Week $week"]['New Arrival'] ?? 0 }}</div>
                                                                 <div class="progress-mini mt-1">
-                                                                    <div class="progress-bar bg-warning" style="width: {{ array_sum($monthData["Week $week"] ?? []) > 0 ? round(($monthData["Week $week"]['pending_confirm'] ?? 0) / array_sum($monthData["Week $week"] ?? []) * 100) : 0 }}%"></div>
+                                                                    <div class="progress-bar bg-warning" style="width: {{ array_sum($monthData["Week $week"] ?? []) > 0 ? round(($monthData["Week $week"]['New Arrival'] ?? 0) / array_sum($monthData["Week $week"] ?? []) * 100) : 0 }}%"></div>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                         <div class="col-6">
-                                                            <div class="status-metric-card bg-info-subtle border border-info rounded p-2 text-center drill-down" data-status="returned" data-period="Week {{ $week }} ({{ $monthName }})" data-bs-toggle="tooltip" title="Click to view returned assets">
+                                                            <div class="status-metric-card bg-info-subtle border border-info rounded p-2 text-center drill-down" data-status="Returned" data-period="Week {{ $week }} ({{ $monthName }})" data-bs-toggle="tooltip" title="Click to view returned assets">
                                                                 <div class="text-info fw-bold small">🔄 Returned</div>
-                                                                <div class="h5 mb-0 text-info fw-bold">{{ $monthData["Week $week"]['returned'] ?? 0 }}</div>
+                                                                <div class="h5 mb-0 text-info fw-bold">{{ $monthData["Week $week"]['Returned'] ?? 0 }}</div>
                                                                 <div class="progress-mini mt-1">
-                                                                    <div class="progress-bar bg-info" style="width: {{ array_sum($monthData["Week $week"] ?? []) > 0 ? round(($monthData["Week $week"]['returned'] ?? 0) / array_sum($monthData["Week $week"] ?? []) * 100) : 0 }}%"></div>
+                                                                    <div class="progress-bar bg-info" style="width: {{ array_sum($monthData["Week $week"] ?? []) > 0 ? round(($monthData["Week $week"]['Returned'] ?? 0) / array_sum($monthData["Week $week"] ?? []) * 100) : 0 }}%"></div>
                                                                 </div>
                                                             </div>
                                                         </div>

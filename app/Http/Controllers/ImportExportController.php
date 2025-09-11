@@ -649,6 +649,7 @@ class ImportExportController extends Controller
                             'warranty_end' => $computer->asset->warranty_end ? $computer->asset->warranty_end->format('Y-m-d') : '',
                             'cost' => $computer->asset->cost,
                             'status' => $computer->asset->status,
+                            'movement' => $computer->asset->movement,
                             'processor' => $computer->processor,
                             'ram' => $computer->ram,
                             'storage' => $computer->storage,
@@ -671,6 +672,7 @@ class ImportExportController extends Controller
                             'warranty_end' => $monitor->asset->warranty_end ? $monitor->asset->warranty_end->format('Y-m-d') : '',
                             'cost' => $monitor->asset->cost,
                             'status' => $monitor->asset->status,
+                            'movement' => $monitor->asset->movement,
                             'size' => $monitor->size,
                             'resolution' => $monitor->resolution,
                             'panel_type' => $monitor->panel_type
@@ -692,6 +694,7 @@ class ImportExportController extends Controller
                             'warranty_end' => $printer->asset->warranty_end ? $printer->asset->warranty_end->format('Y-m-d') : '',
                             'cost' => $printer->asset->cost,
                             'status' => $printer->asset->status,
+                            'movement' => $printer->asset->movement,
                             'type' => $printer->type,
                             'color_support' => $printer->color_support ? '1' : '0',
                             'duplex' => $printer->duplex ? '1' : '0'

@@ -70,7 +70,7 @@ class DashboardController extends Controller
      */
     private function getWeeklyBreakdown($filterMonth = null, $filterYear = null)
     {
-        $statuses = ['deployed', 'problematic', 'pending_confirm', 'returned', 'disposed', 'new_arrived'];
+        $statuses = ['Deployed', 'Disposed', 'New Arrival', 'Returned', 'Transferred'];
         $months = [];
         
         if ($filterMonth && $filterYear) {
@@ -92,15 +92,15 @@ class DashboardController extends Controller
                 
                 $weekData = [];
                 foreach ($statuses as $status) {
-                    // Count assets that changed to this status during this week
+                    // Count assets that changed to this movement during this week
                     $count = \App\Models\AssetTimeline::where('action', 'updated')
-                        ->whereJsonContains('new_values->status', $status)
+                        ->whereJsonContains('new_values->movement', $status)
                         ->whereBetween('performed_at', [$weekStart, $weekEnd])
                         ->distinct('asset_id')
                         ->count('asset_id');
                     
-                    // Also count assets created with this status during this week
-                    $createdCount = \App\Models\Asset::where('status', $status)
+                    // Also count assets created with this movement during this week
+                    $createdCount = \App\Models\Asset::where('movement', $status)
                         ->whereBetween('created_at', [$weekStart, $weekEnd])
                         ->count();
                     
@@ -131,15 +131,15 @@ class DashboardController extends Controller
                     
                     $weekData = [];
                     foreach ($statuses as $status) {
-                        // Count assets that changed to this status during this week
+                        // Count assets that changed to this movement during this week
                         $count = \App\Models\AssetTimeline::where('action', 'updated')
-                            ->whereJsonContains('new_values->status', $status)
+                            ->whereJsonContains('new_values->movement', $status)
                             ->whereBetween('performed_at', [$weekStart, $weekEnd])
                             ->distinct('asset_id')
                             ->count('asset_id');
                         
-                        // Also count assets created with this status during this week
-                        $createdCount = \App\Models\Asset::where('status', $status)
+                        // Also count assets created with this movement during this week
+                        $createdCount = \App\Models\Asset::where('movement', $status)
                             ->whereBetween('created_at', [$weekStart, $weekEnd])
                             ->count();
                         

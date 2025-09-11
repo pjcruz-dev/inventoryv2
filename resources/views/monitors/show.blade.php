@@ -48,6 +48,14 @@
                                             </td>
                                         </tr>
                                         <tr>
+                                            <td><strong>Movement:</strong></td>
+                                            <td>
+                                                <span class="badge badge-info badge-lg">
+                                                    {{ $monitor->asset->movement }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr>
                                             <td><strong>Purchase Date:</strong></td>
                                             <td>{{ $monitor->asset->purchase_date ? $monitor->asset->purchase_date->format('M d, Y') : 'N/A' }}</td>
                                         </tr>

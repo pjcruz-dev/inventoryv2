@@ -1,0 +1,334 @@
+<svg width="1400" height="1000" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .table-box { fill: #f8f9fa; stroke: #343a40; stroke-width: 2; }
+      .table-header { fill: #007bff; }
+      .table-title { fill: white; font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; }
+      .field-text { fill: #343a40; font-family: Arial, sans-serif; font-size: 11px; }
+      .pk-field { fill: #dc3545; font-weight: bold; }
+      .fk-field { fill: #28a745; }
+      .relationship-line { stroke: #6c757d; stroke-width: 2; fill: none; }
+      .relationship-arrow { fill: #6c757d; }
+    </style>
+  </defs>
+  
+  <!-- Title -->
+  <text x="700" y="30" text-anchor="middle" class="table-title" font-size="20">Inventory Management System - Database Schema</text>
+  
+  <!-- Users Table -->
+  <g transform="translate(50, 60)">
+    <rect class="table-box" width="200" height="220"/>
+    <rect class="table-header" width="200" height="30"/>
+    <text x="100" y="20" text-anchor="middle" class="table-title">users</text>
+    <text x="10" y="50" class="field-text pk-field">id (PK)</text>
+    <text x="10" y="65" class="field-text">employee_no</text>
+    <text x="10" y="80" class="field-text">first_name</text>
+    <text x="10" y="95" class="field-text">last_name</text>
+    <text x="10" y="110" class="field-text fk-field">department_id (FK)</text>
+    <text x="10" y="125" class="field-text">position</text>
+    <text x="10" y="140" class="field-text">email</text>
+    <text x="10" y="155" class="field-text">password</text>
+    <text x="10" y="170" class="field-text fk-field">role_id (FK)</text>
+    <text x="10" y="185" class="field-text">status</text>
+    <text x="10" y="200" class="field-text">created_at</text>
+    <text x="10" y="215" class="field-text">updated_at</text>
+  </g>
+  
+  <!-- Departments Table -->
+  <g transform="translate(300, 60)">
+    <rect class="table-box" width="180" height="150"/>
+    <rect class="table-header" width="180" height="30"/>
+    <text x="90" y="20" text-anchor="middle" class="table-title">departments</text>
+    <text x="10" y="50" class="field-text pk-field">id (PK)</text>
+    <text x="10" y="65" class="field-text fk-field">parent_id (FK)</text>
+    <text x="10" y="80" class="field-text">name</text>
+    <text x="10" y="95" class="field-text">description</text>
+    <text x="10" y="110" class="field-text fk-field">manager_id (FK)</text>
+    <text x="10" y="125" class="field-text">created_at</text>
+    <text x="10" y="140" class="field-text">updated_at</text>
+  </g>
+  
+  <!-- Roles Table -->
+  <g transform="translate(520, 60)">
+    <rect class="table-box" width="160" height="120"/>
+    <rect class="table-header" width="160" height="30"/>
+    <text x="80" y="20" text-anchor="middle" class="table-title">roles</text>
+    <text x="10" y="50" class="field-text pk-field">id (PK)</text>
+    <text x="10" y="65" class="field-text">name</text>
+    <text x="10" y="80" class="field-text">description</text>
+    <text x="10" y="95" class="field-text">guard_name</text>
+    <text x="10" y="110" class="field-text">created_at</text>
+  </g>
+  
+  <!-- Permissions Table -->
+  <g transform="translate(720, 60)">
+    <rect class="table-box" width="160" height="120"/>
+    <rect class="table-header" width="160" height="30"/>
+    <text x="80" y="20" text-anchor="middle" class="table-title">permissions</text>
+    <text x="10" y="50" class="field-text pk-field">id (PK)</text>
+    <text x="10" y="65" class="field-text">name</text>
+    <text x="10" y="80" class="field-text">description</text>
+    <text x="10" y="95" class="field-text">guard_name</text>
+    <text x="10" y="110" class="field-text">created_at</text>
+  </g>
+  
+  <!-- Assets Table (Central) -->
+  <g transform="translate(50, 320)">
+    <rect class="table-box" width="220" height="280"/>
+    <rect class="table-header" width="220" height="30"/>
+    <text x="110" y="20" text-anchor="middle" class="table-title">assets</text>
+    <text x="10" y="50" class="field-text pk-field">id (PK)</text>
+    <text x="10" y="65" class="field-text">asset_tag</text>
+    <text x="10" y="80" class="field-text fk-field">category_id (FK)</text>
+    <text x="10" y="95" class="field-text fk-field">vendor_id (FK)</text>
+    <text x="10" y="110" class="field-text">name</text>
+    <text x="10" y="125" class="field-text">description</text>
+    <text x="10" y="140" class="field-text">serial_number</text>
+    <text x="10" y="155" class="field-text">purchase_date</text>
+    <text x="10" y="170" class="field-text">warranty_end</text>
+    <text x="10" y="185" class="field-text">cost</text>
+    <text x="10" y="200" class="field-text">status</text>
+    <text x="10" y="215" class="field-text">movement</text>
+    <text x="10" y="230" class="field-text fk-field">assigned_to (FK)</text>
+    <text x="10" y="245" class="field-text fk-field">department_id (FK)</text>
+    <text x="10" y="260" class="field-text">assigned_date</text>
+    <text x="10" y="275" class="field-text">created_at</text>
+  </g>
+  
+  <!-- Asset Categories Table -->
+  <g transform="translate(320, 320)">
+    <rect class="table-box" width="180" height="120"/>
+    <rect class="table-header" width="180" height="30"/>
+    <text x="90" y="20" text-anchor="middle" class="table-title">asset_categories</text>
+    <text x="10" y="50" class="field-text pk-field">id (PK)</text>
+    <text x="10" y="65" class="field-text">name</text>
+    <text x="10" y="80" class="field-text">description</text>
+    <text x="10" y="95" class="field-text">created_at</text>
+    <text x="10" y="110" class="field-text">updated_at</text>
+  </g>
+  
+  <!-- Vendors Table -->
+  <g transform="translate(320, 470)">
+    <rect class="table-box" width="180" height="150"/>
+    <rect class="table-header" width="180" height="30"/>
+    <text x="90" y="20" text-anchor="middle" class="table-title">vendors</text>
+    <text x="10" y="50" class="field-text pk-field">id (PK)</text>
+    <text x="10" y="65" class="field-text">name</text>
+    <text x="10" y="80" class="field-text">contact_person</text>
+    <text x="10" y="95" class="field-text">phone</text>
+    <text x="10" y="110" class="field-text">email</text>
+    <text x="10" y="125" class="field-text">address</text>
+    <text x="10" y="140" class="field-text">created_at</text>
+  </g>
+  
+  <!-- Computers Table -->
+  <g transform="translate(550, 320)">
+    <rect class="table-box" width="160" height="150"/>
+    <rect class="table-header" width="160" height="30"/>
+    <text x="80" y="20" text-anchor="middle" class="table-title">computers</text>
+    <text x="10" y="50" class="field-text pk-field">id (PK)</text>
+    <text x="10" y="65" class="field-text fk-field">asset_id (FK)</text>
+    <text x="10" y="80" class="field-text">processor</text>
+    <text x="10" y="95" class="field-text">ram</text>
+    <text x="10" y="110" class="field-text">storage</text>
+    <text x="10" y="125" class="field-text">os</text>
+    <text x="10" y="140" class="field-text">created_at</text>
+  </g>
+  
+  <!-- Monitors Table -->
+  <g transform="translate(750, 320)">
+    <rect class="table-box" width="160" height="150"/>
+    <rect class="table-header" width="160" height="30"/>
+    <text x="80" y="20" text-anchor="middle" class="table-title">monitors</text>
+    <text x="10" y="50" class="field-text pk-field">id (PK)</text>
+    <text x="10" y="65" class="field-text fk-field">asset_id (FK)</text>
+    <text x="10" y="80" class="field-text">size</text>
+    <text x="10" y="95" class="field-text">resolution</text>
+    <text x="10" y="110" class="field-text">panel_type</text>
+    <text x="10" y="125" class="field-text">created_at</text>
+    <text x="10" y="140" class="field-text">updated_at</text>
+  </g>
+  
+  <!-- Printers Table -->
+  <g transform="translate(950, 320)">
+    <rect class="table-box" width="160" height="150"/>
+    <rect class="table-header" width="160" height="30"/>
+    <text x="80" y="20" text-anchor="middle" class="table-title">printers</text>
+    <text x="10" y="50" class="field-text pk-field">id (PK)</text>
+    <text x="10" y="65" class="field-text fk-field">asset_id (FK)</text>
+    <text x="10" y="80" class="field-text">type</text>
+    <text x="10" y="95" class="field-text">color_support</text>
+    <text x="10" y="110" class="field-text">duplex</text>
+    <text x="10" y="125" class="field-text">created_at</text>
+    <text x="10" y="140" class="field-text">updated_at</text>
+  </g>
+  
+  <!-- Peripherals Table -->
+  <g transform="translate(1150, 320)">
+    <rect class="table-box" width="160" height="135"/>
+    <rect class="table-header" width="160" height="30"/>
+    <text x="80" y="20" text-anchor="middle" class="table-title">peripherals</text>
+    <text x="10" y="50" class="field-text pk-field">id (PK)</text>
+    <text x="10" y="65" class="field-text fk-field">asset_id (FK)</text>
+    <text x="10" y="80" class="field-text">type</text>
+    <text x="10" y="95" class="field-text">interface</text>
+    <text x="10" y="110" class="field-text">created_at</text>
+    <text x="10" y="125" class="field-text">updated_at</text>
+  </g>
+  
+  <!-- Asset Timeline Table -->
+  <g transform="translate(50, 650)">
+    <rect class="table-box" width="220" height="250"/>
+    <rect class="table-header" width="220" height="30"/>
+    <text x="110" y="20" text-anchor="middle" class="table-title">asset_timeline</text>
+    <text x="10" y="50" class="field-text pk-field">id (PK)</text>
+    <text x="10" y="65" class="field-text fk-field">asset_id (FK)</text>
+    <text x="10" y="80" class="field-text">action</text>
+    <text x="10" y="95" class="field-text fk-field">from_user_id (FK)</text>
+    <text x="10" y="110" class="field-text fk-field">to_user_id (FK)</text>
+    <text x="10" y="125" class="field-text fk-field">from_department_id (FK)</text>
+    <text x="10" y="140" class="field-text fk-field">to_department_id (FK)</text>
+    <text x="10" y="155" class="field-text">notes</text>
+    <text x="10" y="170" class="field-text">old_values</text>
+    <text x="10" y="185" class="field-text">new_values</text>
+    <text x="10" y="200" class="field-text fk-field">performed_by (FK)</text>
+    <text x="10" y="215" class="field-text">performed_at</text>
+    <text x="10" y="230" class="field-text">created_at</text>
+  </g>
+  
+  <!-- Transfers Table -->
+  <g transform="translate(320, 650)">
+    <rect class="table-box" width="180" height="200"/>
+    <rect class="table-header" width="180" height="30"/>
+    <text x="90" y="20" text-anchor="middle" class="table-title">transfers</text>
+    <text x="10" y="50" class="field-text pk-field">id (PK)</text>
+    <text x="10" y="65" class="field-text fk-field">asset_id (FK)</text>
+    <text x="10" y="80" class="field-text fk-field">from_user_id (FK)</text>
+    <text x="10" y="95" class="field-text fk-field">to_user_id (FK)</text>
+    <text x="10" y="110" class="field-text">from_department</text>
+    <text x="10" y="125" class="field-text">to_department</text>
+    <text x="10" y="140" class="field-text">transfer_date</text>
+    <text x="10" y="155" class="field-text">remarks</text>
+    <text x="10" y="170" class="field-text">created_at</text>
+  </g>
+  
+  <!-- Maintenance Table -->
+  <g transform="translate(550, 650)">
+    <rect class="table-box" width="180" height="220"/>
+    <rect class="table-header" width="180" height="30"/>
+    <text x="90" y="20" text-anchor="middle" class="table-title">maintenance</text>
+    <text x="10" y="50" class="field-text pk-field">id (PK)</text>
+    <text x="10" y="65" class="field-text fk-field">asset_id (FK)</text>
+    <text x="10" y="80" class="field-text fk-field">vendor_id (FK)</text>
+    <text x="10" y="95" class="field-text">issue_reported</text>
+    <text x="10" y="110" class="field-text">repair_action</text>
+    <text x="10" y="125" class="field-text">cost</text>
+    <text x="10" y="140" class="field-text">start_date</text>
+    <text x="10" y="155" class="field-text">end_date</text>
+    <text x="10" y="170" class="field-text">status</text>
+    <text x="10" y="185" class="field-text">remarks</text>
+    <text x="10" y="200" class="field-text">created_at</text>
+  </g>
+  
+  <!-- Disposals Table -->
+  <g transform="translate(780, 650)">
+    <rect class="table-box" width="180" height="180"/>
+    <rect class="table-header" width="180" height="30"/>
+    <text x="90" y="20" text-anchor="middle" class="table-title">disposals</text>
+    <text x="10" y="50" class="field-text pk-field">id (PK)</text>
+    <text x="10" y="65" class="field-text fk-field">asset_id (FK)</text>
+    <text x="10" y="80" class="field-text">disposal_date</text>
+    <text x="10" y="95" class="field-text">disposal_type</text>
+    <text x="10" y="110" class="field-text">disposal_value</text>
+    <text x="10" y="125" class="field-text fk-field">approved_by (FK)</text>
+    <text x="10" y="140" class="field-text">remarks</text>
+    <text x="10" y="155" class="field-text">created_at</text>
+  </g>
+  
+  <!-- Logs Table -->
+  <g transform="translate(1000, 650)">
+    <rect class="table-box" width="180" height="250"/>
+    <rect class="table-header" width="180" height="30"/>
+    <text x="90" y="20" text-anchor="middle" class="table-title">logs</text>
+    <text x="10" y="50" class="field-text pk-field">id (PK)</text>
+    <text x="10" y="65" class="field-text">category</text>
+    <text x="10" y="80" class="field-text fk-field">asset_id (FK)</text>
+    <text x="10" y="95" class="field-text fk-field">user_id (FK)</text>
+    <text x="10" y="110" class="field-text fk-field">role_id (FK)</text>
+    <text x="10" y="125" class="field-text fk-field">permission_id (FK)</text>
+    <text x="10" y="140" class="field-text fk-field">department_id (FK)</text>
+    <text x="10" y="155" class="field-text">event_type</text>
+    <text x="10" y="170" class="field-text">ip_address</text>
+    <text x="10" y="185" class="field-text">user_agent</text>
+    <text x="10" y="200" class="field-text">remarks</text>
+    <text x="10" y="215" class="field-text">created_at</text>
+    <text x="10" y="230" class="field-text">updated_at</text>
+  </g>
+  
+  <!-- Role Permissions Junction Table -->
+  <g transform="translate(920, 60)">
+    <rect class="table-box" width="180" height="120"/>
+    <rect class="table-header" width="180" height="30"/>
+    <text x="90" y="20" text-anchor="middle" class="table-title">role_permissions</text>
+    <text x="10" y="50" class="field-text pk-field">id (PK)</text>
+    <text x="10" y="65" class="field-text fk-field">role_id (FK)</text>
+    <text x="10" y="80" class="field-text fk-field">permission_id (FK)</text>
+    <text x="10" y="95" class="field-text">created_at</text>
+    <text x="10" y="110" class="field-text">updated_at</text>
+  </g>
+  
+  <!-- Relationship Lines -->
+  <!-- Users to Departments -->
+  <line class="relationship-line" x1="250" y1="170" x2="300" y2="135"/>
+  
+  <!-- Users to Roles -->
+  <line class="relationship-line" x1="250" y1="230" x2="520" y2="120"/>
+  
+  <!-- Assets to Categories -->
+  <line class="relationship-line" x1="270" y1="400" x2="320" y2="380"/>
+  
+  <!-- Assets to Vendors -->
+  <line class="relationship-line" x1="270" y1="415" x2="320" y2="545"/>
+  
+  <!-- Assets to Users (assigned_to) -->
+  <line class="relationship-line" x1="160" y1="320" x2="160" y2="280"/>
+  
+  <!-- Assets to Computers -->
+  <line class="relationship-line" x1="270" y1="380" x2="550" y2="385"/>
+  
+  <!-- Assets to Monitors -->
+  <line class="relationship-line" x1="270" y1="380" x2="750" y2="385"/>
+  
+  <!-- Assets to Printers -->
+  <line class="relationship-line" x1="270" y1="380" x2="950" y2="385"/>
+  
+  <!-- Assets to Peripherals -->
+  <line class="relationship-line" x1="270" y1="380" x2="1150" y2="385"/>
+  
+  <!-- Assets to Timeline -->
+  <line class="relationship-line" x1="160" y1="600" x2="160" y2="650"/>
+  
+  <!-- Assets to Transfers -->
+  <line class="relationship-line" x1="270" y1="600" x2="410" y2="650"/>
+  
+  <!-- Assets to Maintenance -->
+  <line class="relationship-line" x1="270" y1="600" x2="640" y2="650"/>
+  
+  <!-- Assets to Disposals -->
+  <line class="relationship-line" x1="270" y1="600" x2="870" y2="650"/>
+  
+  <!-- Roles to Role Permissions -->
+  <line class="relationship-line" x1="680" y1="120" x2="920" y2="120"/>
+  
+  <!-- Permissions to Role Permissions -->
+  <line class="relationship-line" x1="880" y1="120" x2="920" y2="120"/>
+  
+  <!-- Legend -->
+  <g transform="translate(50, 920)">
+    <text x="0" y="0" class="field-text" font-weight="bold">Legend:</text>
+    <text x="0" y="20" class="field-text pk-field">PK = Primary Key</text>
+    <text x="150" y="20" class="field-text fk-field">FK = Foreign Key</text>
+    <line class="relationship-line" x1="300" y1="15" x2="350" y2="15"/>
+    <text x="360" y="20" class="field-text">Relationship</text>
+  </g>
+</svg>

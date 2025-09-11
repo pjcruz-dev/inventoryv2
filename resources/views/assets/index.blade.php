@@ -76,19 +76,19 @@
                                 @endif
                             </td>
                             <td>
-                                <span class="badge bg-{{ 
-                                    $asset->status === 'active' ? 'success' : 
-                                    ($asset->status === 'deployed' ? 'primary' : 
-                                    ($asset->status === 'inactive' ? 'danger' : 
-                                    ($asset->status === 'problematic' ? 'danger' : 
-                                    ($asset->status === 'disposed' ? 'dark' : 
-                                    ($asset->status === 'maintenance' ? 'warning' : 
-                                    ($asset->status === 'pending_confirm' ? 'info' : 
-                                    ($asset->status === 'returned' ? 'secondary' : 
-                                    ($asset->status === 'new_arrived' ? 'success' : 'warning'))))))))
-                                }}">
-                                    {{ ucfirst(str_replace('_', ' ', $asset->status)) }}
-                                </span>
+                                <div class="d-flex flex-column gap-1">
+                                    <span class="badge bg-{{ 
+                                        $asset->status === 'Active' ? 'success' : 
+                                        ($asset->status === 'Inactive' ? 'danger' : 
+                                        ($asset->status === 'Under Maintenance' ? 'warning' : 
+                                        ($asset->status === 'Issue Reported' ? 'danger' : 
+                                        ($asset->status === 'Pending Confirmation' ? 'info' : 
+                                        ($asset->status === 'Disposed' ? 'dark' : 'secondary')))))
+                                    }}">
+                                        {{ $asset->status }}
+                                    </span>
+                                    <small class="text-muted">{{ $asset->movement ?? 'New Arrival' }}</small>
+                                </div>
                             </td>
                             <td>
                                 @if($asset->assigned_to)

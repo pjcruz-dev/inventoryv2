@@ -48,6 +48,14 @@
                                             </td>
                                         </tr>
                                         <tr>
+                                            <td><strong>Movement:</strong></td>
+                                            <td>
+                                                <span class="badge badge-info badge-lg">
+                                                    {{ $computer->asset->movement }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr>
                                             <td><strong>Purchase Date:</strong></td>
                                             <td>{{ $computer->asset->purchase_date ? $computer->asset->purchase_date->format('M d, Y') : 'N/A' }}</td>
                                         </tr>

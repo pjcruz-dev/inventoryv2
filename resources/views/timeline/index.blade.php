@@ -63,20 +63,20 @@
                             <div class="timeline-item mb-4">
                                 <div class="row">
                                     <div class="col-md-2 text-center">
-                                        <div class="timeline-badge bg-{{ $entry->action == 'created' ? 'success' : ($entry->action == 'assigned' ? 'primary' : ($entry->action == 'transferred' ? 'warning' : 'secondary')) }}">
-                                            <i class="fas fa-{{ $entry->action == 'created' ? 'plus' : ($entry->action == 'assigned' ? 'user-plus' : ($entry->action == 'transferred' ? 'exchange-alt' : 'edit')) }}"></i>
+                                        <div class="timeline-badge bg-{{ $entry->action == 'created' ? 'success' : ($entry->action == 'assigned' ? 'primary' : ($entry->action == 'transferred' ? 'warning' : ($entry->action == 'unassigned' ? 'danger' : ($entry->action == 'updated' ? 'info' : 'secondary')))) }}">
+                                            <i class="fas fa-{{ $entry->action == 'created' ? 'plus' : ($entry->action == 'assigned' ? 'user-plus' : ($entry->action == 'transferred' ? 'exchange-alt' : ($entry->action == 'unassigned' ? 'user-minus' : ($entry->action == 'updated' ? 'edit' : 'cog')))) }}"></i>
                                         </div>
                                         <small class="text-muted">{{ $entry->performed_at->format('M d, Y') }}</small><br>
                                         <small class="text-muted">{{ $entry->performed_at->format('h:i A') }}</small>
                                     </div>
                                     <div class="col-md-10">
-                                        <div class="card border-left-{{ $entry->action == 'created' ? 'success' : ($entry->action == 'assigned' ? 'primary' : ($entry->action == 'transferred' ? 'warning' : 'secondary')) }}">
+                                        <div class="card border-left-{{ $entry->action == 'created' ? 'success' : ($entry->action == 'assigned' ? 'primary' : ($entry->action == 'transferred' ? 'warning' : ($entry->action == 'unassigned' ? 'danger' : ($entry->action == 'updated' ? 'info' : 'secondary')))) }}">
                                             <div class="card-body">
                                                 <h6 class="card-title">
                                                     <a href="{{ route('timeline.show', $entry->asset) }}" class="text-decoration-none">
                                                         {{ $entry->asset->name }} ({{ $entry->asset->asset_tag }})
                                                     </a>
-                                                    <span class="badge bg-{{ $entry->action == 'created' ? 'success' : ($entry->action == 'assigned' ? 'primary' : ($entry->action == 'transferred' ? 'warning' : 'secondary')) }} ms-2">
+                                                    <span class="badge bg-{{ $entry->action == 'created' ? 'success' : ($entry->action == 'assigned' ? 'primary' : ($entry->action == 'transferred' ? 'warning' : ($entry->action == 'unassigned' ? 'danger' : ($entry->action == 'updated' ? 'info' : 'secondary')))) }} ms-2">
                                                         {{ ucfirst($entry->action) }}
                                                     </span>
                                                 </h6>

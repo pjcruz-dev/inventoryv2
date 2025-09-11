@@ -62,19 +62,34 @@
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="status" class="form-label">Current Status <span class="text-danger">*</span></label>
+                                <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
                                 <select class="form-select @error('status') is-invalid @enderror" id="status" name="status" required>
-                                    <option value="active" {{ old('status') == 'active' ? 'selected' : '' }}>Active</option>
-                                    <option value="inactive" {{ old('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
-                                    <option value="maintenance" {{ old('status') == 'maintenance' ? 'selected' : '' }}>Maintenance</option>
-                                    <option value="deployed" {{ old('status') == 'deployed' ? 'selected' : '' }}>Deployed</option>
-                                    <option value="problematic" {{ old('status') == 'problematic' ? 'selected' : '' }}>Problematic</option>
-                                    <option value="pending_confirm" {{ old('status') == 'pending_confirm' ? 'selected' : '' }}>Pending Confirm</option>
-                                    <option value="returned" {{ old('status') == 'returned' ? 'selected' : '' }}>Returned</option>
-                                    <option value="disposed" {{ old('status') == 'disposed' ? 'selected' : '' }}>Disposed</option>
-                                    <option value="new_arrived" {{ old('status') == 'new_arrived' ? 'selected' : '' }}>New Arrived</option>
+                                    <option value="Active" {{ old('status') == 'Active' ? 'selected' : '' }}>Active</option>
+                                    <option value="Inactive" {{ old('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                                    <option value="Under Maintenance" {{ old('status') == 'Under Maintenance' ? 'selected' : '' }}>Under Maintenance</option>
+                                    <option value="Issue Reported" {{ old('status') == 'Issue Reported' ? 'selected' : '' }}>Issue Reported</option>
+                                    <option value="Pending Confirmation" {{ old('status') == 'Pending Confirmation' ? 'selected' : '' }}>Pending Confirmation</option>
+                                    <option value="Disposed" {{ old('status') == 'Disposed' ? 'selected' : '' }}>Disposed</option>
                                 </select>
                                 @error('status')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="movement" class="form-label">Movement</label>
+                                <select class="form-select @error('movement') is-invalid @enderror" id="movement" name="movement">
+                                    <option value="New Arrival" {{ old('movement') == 'New Arrival' ? 'selected' : '' }}>New Arrival</option>
+                                    <option value="Deployed" {{ old('movement') == 'Deployed' ? 'selected' : '' }}>Deployed</option>
+                                    <option value="Returned" {{ old('movement') == 'Returned' ? 'selected' : '' }}>Returned</option>
+                                    <option value="Transferred" {{ old('movement') == 'Transferred' ? 'selected' : '' }}>Transferred</option>
+                                    <option value="Disposed" {{ old('movement') == 'Disposed' ? 'selected' : '' }}>Disposed</option>
+                                </select>
+                                @error('movement')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>

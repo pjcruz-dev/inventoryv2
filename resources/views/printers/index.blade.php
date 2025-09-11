@@ -92,6 +92,7 @@
                                     <th>Network Enabled</th>
                                     <th>Duplex Printing</th>
                                     <th>Status</th>
+                                    <th>Movement</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -151,6 +152,11 @@
                                             </span>
                                         </td>
                                         <td>
+                                            <span class="badge badge-info">
+                                                {{ $printer->asset->movement }}
+                                            </span>
+                                        </td>
+                                        <td>
                                             <div class="btn-group" role="group">
                                                 <a href="{{ route('printers.show', $printer) }}" 
                                                    class="btn btn-info btn-sm" title="View">
@@ -174,7 +180,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-center py-4">
+                                        <td colspan="9" class="text-center py-4">
                                             <div class="text-muted">
                                                 <i class="fas fa-print fa-3x mb-3"></i>
                                                 <h5>No printers found</h5>

@@ -70,7 +70,8 @@ class AssetController extends Controller
             'purchase_date' => 'required|date',
             'warranty_end' => 'nullable|date',
             'cost' => 'required|numeric|min:0',
-            'status' => 'required|in:deployed,problematic,pending_confirm,returned,disposed,new_arrived'
+            'status' => 'required|in:Active,Inactive,Under Maintenance,Issue Reported,Pending Confirmation,Disposed',
+            'movement' => 'required|in:New Arrival,Deployed,Returned,Transferred,Disposed'
         ]);
 
         Asset::create($validated);
@@ -91,6 +92,7 @@ class AssetController extends Controller
      */
     public function edit(Asset $asset)
     {
+        $asset->load(['timeline.fromUser', 'timeline.toUser']);
         $categories = AssetCategory::all();
         $vendors = Vendor::all();
         $users = User::where('status', 'active')
@@ -114,7 +116,8 @@ class AssetController extends Controller
             'purchase_date' => 'required|date',
             'warranty_end' => 'nullable|date',
             'cost' => 'required|numeric|min:0',
-            'status' => 'required|in:deployed,problematic,pending_confirm,returned,disposed,new_arrived'
+            'status' => 'required|in:Active,Inactive,Under Maintenance,Issue Reported,Pending Confirmation,Disposed',
+            'movement' => 'required|in:New Arrival,Deployed,Returned,Transferred,Disposed'
         ]);
 
         $asset->update($validated);

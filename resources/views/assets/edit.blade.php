@@ -66,19 +66,34 @@
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="status" class="form-label">Current Status <span class="text-danger">*</span></label>
+                                <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
                                 <select class="form-select @error('status') is-invalid @enderror" id="status" name="status" required>
-                                    <option value="active" {{ old('status', $asset->status) == 'active' ? 'selected' : '' }}>Active</option>
-                                    <option value="inactive" {{ old('status', $asset->status) == 'inactive' ? 'selected' : '' }}>Inactive</option>
-                                    <option value="maintenance" {{ old('status', $asset->status) == 'maintenance' ? 'selected' : '' }}>Maintenance</option>
-                                    <option value="deployed" {{ old('status', $asset->status) == 'deployed' ? 'selected' : '' }}>Deployed</option>
-                                    <option value="problematic" {{ old('status', $asset->status) == 'problematic' ? 'selected' : '' }}>Problematic</option>
-                                    <option value="pending_confirm" {{ old('status', $asset->status) == 'pending_confirm' ? 'selected' : '' }}>Pending Confirm</option>
-                                    <option value="returned" {{ old('status', $asset->status) == 'returned' ? 'selected' : '' }}>Returned</option>
-                                    <option value="disposed" {{ old('status', $asset->status) == 'disposed' ? 'selected' : '' }}>Disposed</option>
-                                    <option value="new_arrived" {{ old('status', $asset->status) == 'new_arrived' ? 'selected' : '' }}>New Arrived</option>
+                                    <option value="Active" {{ old('status', $asset->status) == 'Active' ? 'selected' : '' }}>Active</option>
+                                    <option value="Inactive" {{ old('status', $asset->status) == 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                                    <option value="Under Maintenance" {{ old('status', $asset->status) == 'Under Maintenance' ? 'selected' : '' }}>Under Maintenance</option>
+                                    <option value="Issue Reported" {{ old('status', $asset->status) == 'Issue Reported' ? 'selected' : '' }}>Issue Reported</option>
+                                    <option value="Pending Confirmation" {{ old('status', $asset->status) == 'Pending Confirmation' ? 'selected' : '' }}>Pending Confirmation</option>
+                                    <option value="Disposed" {{ old('status', $asset->status) == 'Disposed' ? 'selected' : '' }}>Disposed</option>
                                 </select>
                                 @error('status')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="movement" class="form-label">Movement</label>
+                                <select class="form-select @error('movement') is-invalid @enderror" id="movement" name="movement">
+                                    <option value="New Arrival" {{ old('movement', $asset->movement) == 'New Arrival' ? 'selected' : '' }}>New Arrival</option>
+                                    <option value="Deployed" {{ old('movement', $asset->movement) == 'Deployed' ? 'selected' : '' }}>Deployed</option>
+                                    <option value="Returned" {{ old('movement', $asset->movement) == 'Returned' ? 'selected' : '' }}>Returned</option>
+                                    <option value="Transferred" {{ old('movement', $asset->movement) == 'Transferred' ? 'selected' : '' }}>Transferred</option>
+                                    <option value="Disposed" {{ old('movement', $asset->movement) == 'Disposed' ? 'selected' : '' }}>Disposed</option>
+                                </select>
+                                @error('movement')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -232,6 +247,9 @@
                     <a href="{{ route('assets.show', $asset) }}" class="btn btn-outline-info btn-sm">
                         <i class="fas fa-eye me-2"></i>View Details
                     </a>
+                    <a href="{{ route('timeline.show', $asset) }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-history me-2"></i>View Full Timeline
+                    </a>
                     <form method="POST" action="{{ route('assets.destroy', $asset) }}" 
                           onsubmit="return confirm('Are you sure you want to delete this asset? This action cannot be undone.')">
                         @csrf
@@ -243,8 +261,100 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Asset Timeline -->
+        <div class="card mt-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Recent Timeline</h6>
+                <a href="{{ route('timeline.show', $asset) }}" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-external-link-alt me-1"></i>View All
+                </a>
+            </div>
+            <div class="card-body">
+                @if($asset->timeline && $asset->timeline->count() > 0)
+                    <div class="timeline">
+                        @foreach($asset->timeline->take(3) as $entry)
+                            <div class="timeline-item mb-3">
+                                <div class="d-flex">
+                                    <div class="timeline-badge bg-{{ $entry->action == 'created' ? 'success' : ($entry->action == 'assigned' ? 'primary' : ($entry->action == 'transferred' ? 'warning' : ($entry->action == 'unassigned' ? 'danger' : ($entry->action == 'updated' ? 'info' : 'secondary')))) }} me-3">
+                                        <i class="fas fa-{{ $entry->action == 'created' ? 'plus' : ($entry->action == 'assigned' ? 'user-plus' : ($entry->action == 'transferred' ? 'exchange-alt' : ($entry->action == 'unassigned' ? 'user-minus' : ($entry->action == 'updated' ? 'edit' : 'cog')))) }}"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">
+                                                    <span class="badge bg-{{ $entry->action == 'created' ? 'success' : ($entry->action == 'assigned' ? 'primary' : ($entry->action == 'transferred' ? 'warning' : ($entry->action == 'unassigned' ? 'danger' : ($entry->action == 'updated' ? 'info' : 'secondary')))) }}">
+                                                        {{ ucfirst($entry->action) }}
+                                                    </span>
+                                                </h6>
+                                                @if($entry->notes)
+                                                    <p class="text-muted mb-1 small">{{ $entry->notes }}</p>
+                                                @endif
+                                                @if($entry->fromUser || $entry->toUser)
+                                                    <div class="small text-muted">
+                                                        @if($entry->fromUser)
+                                                            <span><strong>From:</strong> {{ $entry->fromUser->name }}</span>
+                                                        @endif
+                                                        @if($entry->toUser)
+                                                            @if($entry->fromUser) | @endif
+                                                            <span><strong>To:</strong> {{ $entry->toUser->name }}</span>
+                                                        @endif
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            <small class="text-muted">{{ $entry->performed_at->diffForHumans() }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-history fa-2x mb-2"></i>
+                        <p class="mb-0">No timeline entries found</p>
+                    </div>
+                @endif
+            </div>
+        </div>
     </div>
 </div>
+@endsection
+
+@section('styles')
+<style>
+.timeline-badge {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.timeline-item {
+    position: relative;
+}
+
+.timeline-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 17px;
+    top: 45px;
+    width: 2px;
+    height: calc(100% - 35px);
+    background-color: #dee2e6;
+    z-index: 0;
+}
+
+.timeline-badge {
+    position: relative;
+    z-index: 1;
+}
+</style>
 @endsection
 
 @section('scripts')

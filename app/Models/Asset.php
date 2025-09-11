@@ -19,6 +19,7 @@ class Asset extends Model
         'warranty_end',
         'cost',
         'status',
+        'movement',
         'assigned_to',
         'assigned_date',
         'department_id',
@@ -127,6 +128,26 @@ class Asset extends Model
                     $action,
                     $fromUserId,
                     $toUserId,
+                    $notes,
+                    $original,
+                    $asset->getAttributes()
+                );
+            } else {
+                // Log all other asset updates to timeline
+                $changedFields = array_keys($changes);
+                $fieldNames = implode(', ', $changedFields);
+                
+                $notes = 'Asset updated: ' . $fieldNames;
+                
+                // If asset is unassigned, specifically mention it
+                if (!$asset->assigned_to) {
+                    $notes .= ' (unassigned asset)';
+                }
+                
+                $asset->createTimelineEntry(
+                    'updated',
+                    null,
+                    null,
                     $notes,
                     $original,
                     $asset->getAttributes()
