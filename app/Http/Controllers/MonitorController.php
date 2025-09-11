@@ -49,7 +49,7 @@ class MonitorController extends Controller
                       ->where('category_id', function($query) {
                           $query->select('id')
                                 ->from('asset_categories')
-                                ->where('name', 'Monitor')
+                                ->where('name', 'Monitors & Displays')
                                 ->limit(1);
                       })
                       ->get();
@@ -91,12 +91,14 @@ class MonitorController extends Controller
     public function edit(Monitor $monitor)
     {
         $assets = Asset::where('id', $monitor->asset_id)
-                      ->orWhereDoesntHave('monitor')
-                      ->where('category_id', function($query) {
-                          $query->select('id')
-                                ->from('asset_categories')
-                                ->where('name', 'Monitor')
-                                ->limit(1);
+                      ->orWhere(function($query) {
+                          $query->whereDoesntHave('monitor')
+                                ->where('category_id', function($subQuery) {
+                                    $subQuery->select('id')
+                                            ->from('asset_categories')
+                                            ->where('name', 'Monitors & Displays')
+                                            ->limit(1);
+                                });
                       })
                       ->get();
         

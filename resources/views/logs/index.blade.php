@@ -128,22 +128,22 @@
         <!-- Logs Table -->
         @if($logs->count() > 0)
             <div class="table-responsive">
-                <table class="table table-striped table-hover">
+                <table class="table table-hover align-middle">
                     <thead class="table-dark">
                         <tr>
-                            <th>Date/Time</th>
-                            <th>Category</th>
-                            <th>Event</th>
-                            <th>User</th>
-                            <th>Asset</th>
-                            <th>Department</th>
-                            <th>IP Address</th>
-                            <th>Actions</th>
+                            <th class="fw-semibold">Date/Time</th>
+                            <th class="fw-semibold">Category</th>
+                            <th class="fw-semibold">Event</th>
+                            <th class="fw-semibold">User</th>
+                            <th class="fw-semibold">Asset</th>
+                            <th class="fw-semibold">Department</th>
+                            <th class="fw-semibold">IP Address</th>
+                            <th class="fw-semibold text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($logs as $log)
-                            <tr>
+                            <tr class="border-bottom">
                                 <td>
                                     <small class="text-muted">
                                         {{ $log->created_at ? $log->created_at->format('M d, Y') : 'N/A' }}<br>
@@ -151,16 +151,16 @@
                                     </small>
                                 </td>
                                 <td>
-                                    <span class="badge bg-secondary">{{ $log->category }}</span>
+                                    <span class="badge badge-enhanced bg-secondary px-2 py-1">{{ $log->category }}</span>
                                 </td>
                                 <td>
-                                    <span class="badge 
+                                    <span class="badge badge-enhanced
                                         @if(str_contains(strtolower($log->event_type), 'create')) bg-success
                                         @elseif(str_contains(strtolower($log->event_type), 'update') || str_contains(strtolower($log->event_type), 'edit')) bg-warning
                                         @elseif(str_contains(strtolower($log->event_type), 'delete')) bg-danger
                                         @elseif(str_contains(strtolower($log->event_type), 'assign')) bg-info
                                         @else bg-primary
-                                        @endif">
+                                        @endif px-2 py-1">
                                         {{ $log->event_type }}
                                     </span>
                                 </td>
@@ -195,9 +195,11 @@
                                     <small class="text-muted">{{ $log->ip_address ?: '-' }}</small>
                                 </td>
                                 <td>
-                                    <a href="{{ route('logs.show', $log) }}" class="btn btn-sm btn-outline-primary" title="View Details">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
+                                    <div class="d-flex justify-content-center">
+                                        <a href="{{ route('logs.show', $log) }}" class="btn btn-outline-primary btn-sm d-flex align-items-center justify-content-center" title="View Details" style="width: 32px; height: 32px;">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
@@ -206,9 +208,18 @@
             </div>
             
             <!-- Pagination -->
-            <div class="d-flex justify-content-center">
-                {{ $logs->links() }}
-            </div>
+            @if($logs->hasPages())
+                <div class="pagination-wrapper">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="pagination-info">
+                            Showing {{ $logs->firstItem() }} to {{ $logs->lastItem() }} of {{ $logs->total() }} logs
+                        </div>
+                        <div>
+                            {{ $logs->links() }}
+                        </div>
+                    </div>
+                </div>
+            @endif
         @else
             <div class="text-center py-5">
                 <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>

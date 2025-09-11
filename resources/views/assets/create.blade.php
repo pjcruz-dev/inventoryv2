@@ -46,15 +46,25 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="category_id" class="form-label">Category</label>
-                                <select class="form-select @error('category_id') is-invalid @enderror" id="category_id" name="category_id">
-                                    <option value="">Select Category</option>
-                                    @foreach($categories as $category)
-                                        <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                                            {{ $category->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <label for="category_id" class="form-label">Category <span class="text-danger">*</span></label>
+                                <div class="dropdown">
+                                    <input type="text" 
+                                           class="form-control dropdown-toggle @error('category_id') is-invalid @enderror" 
+                                           id="categorySearchCreate" 
+                                           placeholder="Search and select category..." 
+                                           data-bs-toggle="dropdown" 
+                                           autocomplete="off"
+                                           value="{{ $categories->where('id', old('category_id'))->first()->name ?? '' }}">
+                                    <input type="hidden" name="category_id" id="categoryValueCreate" value="{{ old('category_id') }}">
+                                    <ul class="dropdown-menu w-100" id="categoryDropdownCreate">
+                                        <li><a class="dropdown-item" href="#" data-value="">Select Category</a></li>
+                                        @foreach($categories as $category)
+                                            <li><a class="dropdown-item {{ old('category_id') == $category->id ? 'active' : '' }}" 
+                                                   href="#" 
+                                                   data-value="{{ $category->id }}">{{ $category->name }}</a></li>
+                                        @endforeach
+                                    </ul>
+                                </div>
                                 @error('category_id')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -243,18 +253,90 @@
 
 @section('scripts')
 <script>
+$(document).ready(function() {
+    // Category search functionality
+    const categorySearch = $('#categorySearchCreate');
+    const categoryValue = $('#categoryValueCreate');
+    const categoryDropdown = $('#categoryDropdownCreate');
+    
+    // Filter dropdown items based on search input
+    categorySearch.on('input', function() {
+        const searchTerm = $(this).val().toLowerCase();
+        
+        categoryDropdown.find('li').each(function() {
+            const text = $(this).find('a').text().toLowerCase();
+            if (text.includes(searchTerm)) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+        
+        // Show dropdown if not already visible
+        if (!categoryDropdown.hasClass('show')) {
+            categoryDropdown.addClass('show');
+        }
+    });
+    
+    // Handle dropdown item selection
+    categoryDropdown.on('click', 'a.dropdown-item', function(e) {
+        e.preventDefault();
+        
+        const value = $(this).data('value');
+        const text = $(this).text();
+        
+        categoryValue.val(value);
+        categorySearch.val(value ? text : '');
+        
+        // Update active state
+        categoryDropdown.find('a.dropdown-item').removeClass('active');
+        $(this).addClass('active');
+        
+        // Hide dropdown
+        categoryDropdown.removeClass('show');
+        
+        // Trigger asset tag generation
+        if (value) {
+            generateAssetTag(text);
+        }
+    });
+    
+    // Show all items when dropdown is opened
+    categorySearch.on('focus', function() {
+        categoryDropdown.find('li').show();
+    });
+    
+    // Hide dropdown when clicking outside
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('.dropdown').length) {
+            categoryDropdown.removeClass('show');
+        }
+    });
+    
+    // Clear search when pressing Escape
+    categorySearch.on('keydown', function(e) {
+        if (e.key === 'Escape') {
+            $(this).val('');
+            categoryValue.val('');
+            categoryDropdown.find('a.dropdown-item').removeClass('active');
+            categoryDropdown.find('a[data-value=""]').addClass('active');
+            categoryDropdown.removeClass('show');
+        }
+    });
+    
     // Auto-generate asset tag based on category and current date
-    document.getElementById('category_id').addEventListener('change', function() {
+    function generateAssetTag(categoryText) {
         const assetTagField = document.getElementById('asset_tag');
-        if (!assetTagField.value && this.value) {
-            const categoryText = this.options[this.selectedIndex].text.substring(0, 3).toUpperCase();
+        if (!assetTagField.value) {
+            const categoryPrefix = categoryText.substring(0, 3).toUpperCase();
             const date = new Date();
             const timestamp = date.getFullYear().toString().substr(-2) + 
                             String(date.getMonth() + 1).padStart(2, '0') + 
                             String(date.getDate()).padStart(2, '0');
             const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-            assetTagField.value = categoryText + '-' + timestamp + '-' + random;
+            assetTagField.value = categoryPrefix + '-' + timestamp + '-' + random;
         }
-    });
+    }
+});
 </script>
 @endsection

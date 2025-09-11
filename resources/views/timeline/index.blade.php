@@ -127,9 +127,18 @@
                     </div>
                     
                     <!-- Pagination -->
-                    <div class="d-flex justify-content-center">
-                        {{ $timeline->appends(request()->query())->links() }}
-                    </div>
+                    @if($timeline->hasPages())
+                        <div class="pagination-wrapper">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="pagination-info">
+                                    Showing {{ $timeline->firstItem() }} to {{ $timeline->lastItem() }} of {{ $timeline->total() }} timeline entries
+                                </div>
+                                <div>
+                                    {{ $timeline->appends(request()->query())->links() }}
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

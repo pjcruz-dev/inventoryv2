@@ -165,11 +165,15 @@
             
             @if($departments->hasPages())
                 <div class="card-footer">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="text-muted small">
-                            Showing {{ $departments->firstItem() }} to {{ $departments->lastItem() }} of {{ $departments->total() }} departments
+                    <div class="pagination-wrapper">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="pagination-info">
+                                Showing {{ $departments->firstItem() }} to {{ $departments->lastItem() }} of {{ $departments->total() }} departments
+                            </div>
+                            <div>
+                                {{ $departments->links() }}
+                            </div>
                         </div>
-                        {{ $departments->links() }}
                     </div>
                 </div>
             @endif

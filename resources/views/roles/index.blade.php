@@ -102,9 +102,18 @@
                     </div>
                     
                     <!-- Pagination -->
-                    <div class="d-flex justify-content-center mt-4">
-                        {{ $roles->links() }}
-                    </div>
+                    @if($roles->hasPages())
+                        <div class="pagination-wrapper">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="pagination-info">
+                                    Showing {{ $roles->firstItem() }} to {{ $roles->lastItem() }} of {{ $roles->total() }} roles
+                                </div>
+                                <div>
+                                    {{ $roles->links() }}
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                 @else
                     <div class="text-center py-4">
                         <i class="fas fa-user-tag fa-3x text-muted mb-3"></i>

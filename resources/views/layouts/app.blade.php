@@ -274,6 +274,113 @@
             transform: translateY(-1px);
             box-shadow: 0 4px 8px rgba(203, 12, 159, 0.2);
         }
+        
+        /* Enhanced Badge Styling for Better Visibility */
+        .badge-enhanced {
+            font-weight: 600;
+            font-size: 0.75rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* High Contrast Badge Variants */
+        .badge-enhanced.bg-success {
+            background-color: rgba(25, 135, 84, 0.25) !important;
+            color: #0d5132 !important;
+            border-color: rgba(25, 135, 84, 0.5) !important;
+        }
+        
+        .badge-enhanced.bg-danger {
+            background-color: rgba(220, 53, 69, 0.25) !important;
+            color: #842029 !important;
+            border-color: rgba(220, 53, 69, 0.5) !important;
+        }
+        
+        .badge-enhanced.bg-warning {
+            background-color: rgba(255, 193, 7, 0.25) !important;
+            color: #664d03 !important;
+            border-color: rgba(255, 193, 7, 0.5) !important;
+        }
+        
+        .badge-enhanced.bg-info {
+            background-color: rgba(13, 202, 240, 0.25) !important;
+            color: #055160 !important;
+            border-color: rgba(13, 202, 240, 0.5) !important;
+        }
+        
+        .badge-enhanced.bg-primary {
+            background-color: rgba(13, 110, 253, 0.25) !important;
+            color: #052c65 !important;
+            border-color: rgba(13, 110, 253, 0.5) !important;
+        }
+        
+        .badge-enhanced.bg-secondary {
+            background-color: rgba(108, 117, 125, 0.25) !important;
+            color: #41464b !important;
+            border-color: rgba(108, 117, 125, 0.5) !important;
+        }
+        
+        .badge-enhanced.bg-dark {
+            background-color: rgba(33, 37, 41, 0.25) !important;
+            color: #000 !important;
+            border-color: rgba(33, 37, 41, 0.5) !important;
+        }
+        
+        /* Override low opacity badges for better visibility */
+        .badge.bg-opacity-10,
+        .badge.bg-opacity-15 {
+            background-color: rgba(var(--bs-bg-opacity-rgb), 0.25) !important;
+            font-weight: 600 !important;
+        }
+        
+        /* Ensure text contrast for all badge variants */
+        .badge.text-success { color: #0d5132 !important; }
+        .badge.text-danger { color: #842029 !important; }
+        .badge.text-warning { color: #664d03 !important; }
+        .badge.text-info { color: #055160 !important; }
+        .badge.text-primary { color: #052c65 !important; }
+        .badge.text-secondary { color: #41464b !important; }
+        .badge.text-dark { color: #000 !important; }
+        
+        /* Standardized pagination styles */
+        .pagination-wrapper {
+            margin-top: 1.5rem;
+            padding: 1rem 0;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .pagination-info {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin: 0;
+        }
+        
+        .pagination .page-link {
+            color: #0d6efd;
+            border-color: #dee2e6;
+            padding: 0.5rem 0.75rem;
+        }
+        
+        .pagination .page-link:hover {
+            color: #0a58ca;
+            background-color: #e9ecef;
+            border-color: #dee2e6;
+        }
+        
+        .pagination .page-item.active .page-link {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+            color: #fff;
+        }
+        
+        .pagination .page-item.disabled .page-link {
+            color: #6c757d;
+            background-color: #fff;
+            border-color: #dee2e6;
+        }
     </style>
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
 </head>
@@ -442,24 +549,48 @@
                             <div class="btn-group me-2">
                                 @yield('page-actions')
                             </div>
-                            <div class="dropdown">
-                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                    <i class="fas fa-user"></i> {{ Auth::user()->first_name ?? Auth::user()->name ?? 'User' }}
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="#">Profile</a></li>
-                                    <li><a class="dropdown-item" href="#">Settings</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <a class="dropdown-item" href="{{ route('logout') }}"
-                                           onclick="event.preventDefault(); document.getElementById('logout-form-2').submit();">
-                                            Logout
-                                        </a>
-                                        <form id="logout-form-2" action="{{ route('logout') }}" method="POST" class="d-none">
-                                            @csrf
-                                        </form>
-                                    </li>
-                                </ul>
+                            <div class="d-flex align-items-center">
+                                <!-- Notification Bell - Only visible to IT Department -->
+                                @if(auth()->user()->department && auth()->user()->department->name === 'Information Technology')
+                                <div class="dropdown me-3">
+                                    <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="notificationBell">
+                                        <i class="fas fa-bell" style="font-size: 1.2rem; color: #6c757d;"></i>
+                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationCount" style="display: none; font-size: 0.7rem;">0</span>
+                                    </a>
+                                    <div class="dropdown-menu dropdown-menu-end" style="width: 350px; max-height: 400px; overflow-y: auto;" id="notificationDropdown">
+                                        <div class="dropdown-header d-flex justify-content-between align-items-center">
+                                            <span>Notifications</span>
+                                            <button class="btn btn-sm btn-link text-primary p-0" id="markAllRead" style="display: none;">Mark all read</button>
+                                        </div>
+                                        <div id="notificationList">
+                                            <div class="dropdown-item text-center text-muted py-3">
+                                                <i class="fas fa-bell-slash me-2"></i>No notifications
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                @endif
+                                
+                                <!-- User Dropdown -->
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-user"></i> {{ Auth::user()->first_name ?? Auth::user()->name ?? 'User' }}
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#">Profile</a></li>
+                                        <li><a class="dropdown-item" href="#">Settings</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <a class="dropdown-item" href="{{ route('logout') }}"
+                                               onclick="event.preventDefault(); document.getElementById('logout-form-2').submit();">
+                                                Logout
+                                            </a>
+                                            <form id="logout-form-2" action="{{ route('logout') }}" method="POST" class="d-none">
+                                                @csrf
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -590,6 +721,162 @@
             document.body.style.transition = 'background-color 0.3s ease, color 0.3s ease';
         });
     </script>
+    
+    <!-- Notification System JavaScript - Only for IT Department -->
+    @auth
+    @if(auth()->user()->department && auth()->user()->department->name === 'Information Technology')
+    <script>
+        class NotificationSystem {
+            constructor() {
+                this.notificationBell = document.getElementById('notificationBell');
+                this.notificationCount = document.getElementById('notificationCount');
+                this.notificationList = document.getElementById('notificationList');
+                this.markAllReadBtn = document.getElementById('markAllRead');
+                this.csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                
+                this.init();
+            }
+            
+            init() {
+                // Load notifications on page load
+                this.loadNotifications();
+                
+                // Set up periodic refresh
+                setInterval(() => this.loadNotifications(), 30000); // Every 30 seconds
+                
+                // Mark all as read button
+                this.markAllReadBtn?.addEventListener('click', () => this.markAllAsRead());
+                
+                // Ensure dropdown functionality works
+                if (this.notificationBell) {
+                    // Initialize Bootstrap dropdown explicitly
+                    const dropdown = new bootstrap.Dropdown(this.notificationBell);
+                    
+                    // Add click event listener to ensure dropdown opens
+                    this.notificationBell.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dropdown.toggle();
+                    });
+                }
+            }
+            
+            async loadNotifications() {
+                try {
+                    const response = await fetch('/notifications/unread');
+                    const data = await response.json();
+                    
+                    this.updateNotificationUI(data.notifications, data.count);
+                } catch (error) {
+                    console.error('Error loading notifications:', error);
+                }
+            }
+            
+            updateNotificationUI(notifications, count) {
+                // Update count badge
+                if (count > 0) {
+                    this.notificationCount.textContent = count > 99 ? '99+' : count;
+                    this.notificationCount.style.display = 'block';
+                    this.markAllReadBtn.style.display = 'block';
+                } else {
+                    this.notificationCount.style.display = 'none';
+                    this.markAllReadBtn.style.display = 'none';
+                }
+                
+                // Update notification list
+                if (notifications.length === 0) {
+                    this.notificationList.innerHTML = `
+                        <div class="dropdown-item text-center text-muted py-3">
+                            <i class="fas fa-bell-slash me-2"></i>No notifications
+                        </div>
+                    `;
+                } else {
+                    this.notificationList.innerHTML = notifications.map(notification => 
+                        this.createNotificationHTML(notification)
+                    ).join('');
+                    
+                    // Add click handlers for individual notifications
+                    this.notificationList.querySelectorAll('.notification-item').forEach(item => {
+                        item.addEventListener('click', (e) => {
+                            const notificationId = e.currentTarget.dataset.notificationId;
+                            this.markAsRead(notificationId);
+                        });
+                    });
+                }
+            }
+            
+            createNotificationHTML(notification) {
+                const timeAgo = this.timeAgo(new Date(notification.created_at));
+                const iconClass = notification.type === 'asset_confirmed' ? 'fa-check-circle text-success' : 'fa-times-circle text-danger';
+                
+                return `
+                    <div class="dropdown-item notification-item" data-notification-id="${notification.id}" style="cursor: pointer; border-left: 3px solid ${notification.type === 'asset_confirmed' ? '#28a745' : '#dc3545'}; white-space: normal;">
+                        <div class="d-flex align-items-start">
+                            <i class="fas ${iconClass} me-2 mt-1"></i>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold text-dark">${notification.title}</div>
+                                <div class="text-muted small">${notification.message}</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">${timeAgo}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            async markAsRead(notificationId) {
+                try {
+                    const response = await fetch(`/notifications/${notificationId}/read`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': this.csrfToken
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        this.loadNotifications(); // Refresh notifications
+                    }
+                } catch (error) {
+                    console.error('Error marking notification as read:', error);
+                }
+            }
+            
+            async markAllAsRead() {
+                try {
+                    const response = await fetch('/notifications/mark-all-read', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': this.csrfToken
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        this.loadNotifications(); // Refresh notifications
+                    }
+                } catch (error) {
+                    console.error('Error marking all notifications as read:', error);
+                }
+            }
+            
+            timeAgo(date) {
+                const now = new Date();
+                const diffInSeconds = Math.floor((now - date) / 1000);
+                
+                if (diffInSeconds < 60) return 'Just now';
+                if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+                if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+                return `${Math.floor(diffInSeconds / 86400)}d ago`;
+            }
+        }
+        
+        // Initialize notification system when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new NotificationSystem();
+        });
+    </script>
+    @endif
+    @endauth
     
     @yield('scripts')
 </body>

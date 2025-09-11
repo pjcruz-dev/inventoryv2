@@ -49,7 +49,7 @@ class ComputerController extends Controller
                       ->where('category_id', function($query) {
                           $query->select('id')
                                 ->from('asset_categories')
-                                ->where('name', 'Computer')
+                                ->where('name', 'Computer Hardware')
                                 ->limit(1);
                       })
                       ->get();
@@ -93,12 +93,14 @@ class ComputerController extends Controller
     public function edit(Computer $computer)
     {
         $assets = Asset::where('id', $computer->asset_id)
-                      ->orWhereDoesntHave('computer')
-                      ->where('category_id', function($query) {
-                          $query->select('id')
-                                ->from('asset_categories')
-                                ->where('name', 'Computer')
-                                ->limit(1);
+                      ->orWhere(function($query) {
+                          $query->whereDoesntHave('computer')
+                                ->where('category_id', function($subQuery) {
+                                    $subQuery->select('id')
+                                            ->from('asset_categories')
+                                            ->where('name', 'Computer Hardware')
+                                            ->limit(1);
+                                });
                       })
                       ->get();
         
