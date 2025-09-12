@@ -17,12 +17,12 @@ return new class extends Migration
             $table->datetime('disposal_date');
             $table->string('disposal_type', 50);
             $table->decimal('disposal_value', 12, 2)->nullable();
-            $table->unsignedBigInteger('approved_by');
+
             $table->text('remarks')->nullable();
             $table->timestamps();
             
             $table->foreign('asset_id')->references('id')->on('assets');
-            $table->foreign('approved_by')->references('id')->on('users');
+
         });
     }
 

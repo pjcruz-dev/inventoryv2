@@ -47,7 +47,8 @@ class AssetAssignment extends Model
 
     public function confirmation()
     {
-        return $this->hasOne(AssetAssignmentConfirmation::class, 'assignment_id');
+        return $this->hasOne(AssetAssignmentConfirmation::class, 'asset_id', 'asset_id')
+                    ->where('user_id', $this->user_id);
     }
 
     // Boot method to handle model events
@@ -58,13 +59,11 @@ class AssetAssignment extends Model
         static::created(function ($assignment) {
             // Create confirmation record
             $confirmation = AssetAssignmentConfirmation::create([
-                'assignment_id' => $assignment->id,
                 'asset_id' => $assignment->asset_id,
                 'user_id' => $assignment->user_id,
                 'confirmation_token' => Str::random(64),
                 'status' => 'pending',
-                'assigned_at' => $assignment->assigned_date,
-                'expires_at' => now()->addDays(7)
+                'assigned_at' => $assignment->assigned_date
             ]);
 
             // Send confirmation email

@@ -23,6 +23,60 @@
             <i class="fas fa-plus me-2"></i>Add New Asset
         </a>
     </div>
+<script>
+// Function to set label dimensions for bulk print modal
+function setBulkLabelDimensions() {
+    const preset = document.getElementById('bulk_label_preset');
+    const selectedOption = preset.options[preset.selectedIndex];
+    const widthInput = document.getElementById('bulk_label_width');
+    const heightInput = document.getElementById('bulk_label_height');
+    
+    if (selectedOption.value !== 'custom') {
+        const width = selectedOption.getAttribute('data-width');
+        const height = selectedOption.getAttribute('data-height');
+        
+        if (width && height) {
+            widthInput.value = width;
+            heightInput.value = height;
+            widthInput.readOnly = true;
+            heightInput.readOnly = true;
+        }
+    } else {
+        widthInput.readOnly = false;
+        heightInput.readOnly = false;
+    }
+}
+
+// Function to set label dimensions for print all modal
+function setLabelDimensions() {
+    const preset = document.getElementById('label_preset');
+    const selectedOption = preset.options[preset.selectedIndex];
+    const widthInput = document.getElementById('label_width');
+    const heightInput = document.getElementById('label_height');
+    
+    if (selectedOption.value !== 'custom') {
+        const width = selectedOption.getAttribute('data-width');
+        const height = selectedOption.getAttribute('data-height');
+        
+        if (width && height) {
+            widthInput.value = width;
+            heightInput.value = height;
+            widthInput.readOnly = true;
+            heightInput.readOnly = true;
+        }
+    } else {
+        widthInput.readOnly = false;
+        heightInput.readOnly = false;
+    }
+}
+
+// Initialize preset dimensions on page load
+document.addEventListener('DOMContentLoaded', function() {
+    setBulkLabelDimensions();
+    setLabelDimensions();
+});
+</script>
+
 @endsection
 
 @section('content')
@@ -132,10 +186,43 @@
     </div>
     <div class="card-body">
         @if($assets->count() > 0)
+            <!-- Print All Assets Section -->
+            <div class="mb-3">
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#printAllModal">
+                    <i class="fas fa-print me-1"></i>Print All Assets ({{ $assets->total() }})
+                </button>
+                @if($assets->total() < 200)
+                    <small class="text-muted ms-2">
+                        <i class="fas fa-info-circle"></i>
+                        Filters are active. <a href="{{ route('assets.index') }}" class="text-decoration-none">Clear filters</a> to print all 200 assets.
+                    </small>
+                @endif
+            </div>
+
+            <!-- Bulk Actions Toolbar -->
+            <div id="bulkActionsToolbar" class="alert alert-info d-none mb-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-info-circle me-2"></i>
+                        <span id="selectedCount">0</span> asset(s) selected
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-primary btn-sm me-2" onclick="openBulkPrintModal()">
+                            <i class="fas fa-print me-1"></i>Print Labels
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearSelection()">
+                            <i class="fas fa-times me-1"></i>Clear Selection
+                        </button>
+                    </div>
+                </div>
+            </div>
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
                     <thead class="table-dark">
                         <tr>
+                            <th class="fw-semibold" style="width: 50px;">
+                                <input type="checkbox" id="selectAll" class="form-check-input">
+                            </th>
                             <th class="fw-semibold">Asset Tag</th>
                             <th class="fw-semibold">Name</th>
                             <th class="fw-semibold">Category</th>
@@ -148,6 +235,9 @@
                     <tbody>
                         @foreach($assets as $asset)
                         <tr class="border-bottom">
+                            <td>
+                                <input type="checkbox" name="asset_ids[]" value="{{ $asset->id }}" class="form-check-input asset-checkbox">
+                            </td>
                             <td class="fw-bold text-primary">{{ $asset->asset_tag }}</td>
                             <td>
                                 <div>
@@ -339,6 +429,71 @@ $(document).ready(function() {
         $('#filterForm').submit();
     });
     
+    // Bulk selection functionality
+    function initializeBulkSelection() {
+        const selectAllCheckbox = $('#selectAll');
+        const assetCheckboxes = $('.asset-checkbox');
+        const bulkActionsToolbar = $('#bulkActionsToolbar');
+        const selectedCountSpan = $('#selectedCount');
+        const selectedAssetIdsDiv = $('#selectedAssetIds');
+        
+        // Handle "Select All" checkbox
+        selectAllCheckbox.on('change', function() {
+            const isChecked = $(this).is(':checked');
+            assetCheckboxes.prop('checked', isChecked);
+            updateBulkActions();
+        });
+        
+        // Handle individual asset checkboxes
+        assetCheckboxes.on('change', function() {
+            updateSelectAllState();
+            updateBulkActions();
+        });
+        
+        function updateSelectAllState() {
+            const totalCheckboxes = assetCheckboxes.length;
+            const checkedCheckboxes = assetCheckboxes.filter(':checked').length;
+            
+            if (checkedCheckboxes === 0) {
+                selectAllCheckbox.prop('indeterminate', false);
+                selectAllCheckbox.prop('checked', false);
+            } else if (checkedCheckboxes === totalCheckboxes) {
+                selectAllCheckbox.prop('indeterminate', false);
+                selectAllCheckbox.prop('checked', true);
+            } else {
+                selectAllCheckbox.prop('indeterminate', true);
+                selectAllCheckbox.prop('checked', false);
+            }
+        }
+        
+        function updateBulkActions() {
+            const checkedCheckboxes = assetCheckboxes.filter(':checked');
+            const selectedCount = checkedCheckboxes.length;
+            
+            if (selectedCount > 0) {
+                bulkActionsToolbar.removeClass('d-none');
+                selectedCountSpan.text(selectedCount);
+                
+                // Update hidden inputs for selected asset IDs
+                selectedAssetIdsDiv.empty();
+                checkedCheckboxes.each(function() {
+                    selectedAssetIdsDiv.append(
+                        $('<input>').attr({
+                            type: 'hidden',
+                            name: 'asset_ids[]',
+                            value: $(this).val()
+                        })
+                    );
+                });
+            } else {
+                bulkActionsToolbar.addClass('d-none');
+            }
+        }
+    }
+    
+    // Initialize bulk selection after DOM is ready
+    initializeBulkSelection();
+    
     // Show all items when dropdown is opened
     categorySearch.on('focus', function() {
         categoryDropdown.find('li').show();
@@ -362,5 +517,162 @@ $(document).ready(function() {
         }
     });
 });
+
+// Clear selection function (called from toolbar button)
+function clearSelection() {
+    $('.asset-checkbox').prop('checked', false);
+    $('#selectAll').prop('checked', false).prop('indeterminate', false);
+    $('#bulkActionsToolbar').addClass('d-none');
+}
+
+// Open bulk print modal with selected assets
+function openBulkPrintModal() {
+    const selectedAssets = $('.asset-checkbox:checked');
+    if (selectedAssets.length === 0) {
+        alert('Please select at least one asset to print.');
+        return;
+    }
+    
+    // Clear previous asset IDs
+    $('#bulkPrintAssetIds').empty();
+    
+    // Add selected asset IDs to the form
+    selectedAssets.each(function() {
+        $('#bulkPrintAssetIds').append(
+            '<input type="hidden" name="asset_ids[]" value="' + $(this).val() + '">'
+        );
+    });
+    
+    // Show the modal
+    $('#bulkPrintModal').modal('show');
+}
 </script>
+
+<!-- Bulk Print Selected Assets Modal -->
+<div class="modal fade" id="bulkPrintModal" tabindex="-1" aria-labelledby="bulkPrintModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bulkPrintModalLabel">Print Selected Assets Labels</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ route('assets.bulk-print-labels') }}" target="_blank">
+                @csrf
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <span id="bulkPrintCount">This will print labels for the selected assets.</span>
+                    </div>
+                    
+                    <div id="bulkPrintAssetIds"></div>
+                    
+                    <!-- Label Size Presets -->
+                    <div class="mb-3">
+                        <label for="bulk_label_preset" class="form-label">Label Size Preset</label>
+                        <select class="form-select" id="bulk_label_preset" onchange="setBulkLabelDimensions()">
+                            <option value="custom">Custom Size</option>
+                            <option value="small" data-width="72" data-height="144">0.75" × 1.5" (Small items - laptops, tools)</option>
+                            <option value="medium1" data-width="192" data-height="72">2" × 0.75" (Equipment with text)</option>
+                            <option value="medium2" data-width="192" data-height="96">2" × 1" (Equipment with logos)</option>
+                            <option value="default" data-width="320" data-height="200" selected>Default (3.33" × 2.08")</option>
+                        </select>
+                        <div class="form-text">Choose a preset size or select "Custom Size" for manual input</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="bulk_label_width" class="form-label">Label Width (px)</label>
+                            <input type="number" class="form-control" id="bulk_label_width" name="label_width" value="320" min="50" max="800">
+                            <div class="form-text">Width in pixels (96 DPI)</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="bulk_label_height" class="form-label">Label Height (px)</label>
+                            <input type="number" class="form-control" id="bulk_label_height" name="label_height" value="200" min="50" max="400">
+                            <div class="form-text">Height in pixels (96 DPI)</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-print me-1"></i>Print Selected Labels
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Print All Assets Modal -->
+<div class="modal fade" id="printAllModal" tabindex="-1" aria-labelledby="printAllModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="printAllModalLabel">Print All Assets Labels</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="GET" action="{{ route('assets.print-all-labels') }}" target="_blank">
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        This will print labels for {{ $assets->total() }} assets matching your current filters.
+                        @if($assets->total() < 200)
+                            <br><strong>Note:</strong> You have filters active. <a href="{{ route('assets.index') }}" target="_blank" class="text-decoration-none">Clear all filters</a> to print all 200 assets.
+                        @endif
+                    </div>
+                    
+                    <!-- Pass current filters -->
+                    @if(request('search'))
+                        <input type="hidden" name="search" value="{{ request('search') }}">
+                    @endif
+                    @if(request('category'))
+                        <input type="hidden" name="category" value="{{ request('category') }}">
+                    @endif
+                    @if(request('status'))
+                        <input type="hidden" name="status" value="{{ request('status') }}">
+                    @endif
+                    @if(request('movement'))
+                        <input type="hidden" name="movement" value="{{ request('movement') }}">
+                    @endif
+                    @if(request('assignment'))
+                        <input type="hidden" name="assignment" value="{{ request('assignment') }}">
+                    @endif
+                    
+                    <!-- Label Size Presets -->
+                    <div class="mb-3">
+                        <label for="label_preset" class="form-label">Label Size Preset</label>
+                        <select class="form-select" id="label_preset" onchange="setLabelDimensions()">
+                            <option value="custom">Custom Size</option>
+                            <option value="small" data-width="72" data-height="144">0.75" × 1.5" (Small items - laptops, tools)</option>
+                            <option value="medium1" data-width="192" data-height="72">2" × 0.75" (Equipment with text)</option>
+                            <option value="medium2" data-width="192" data-height="96">2" × 1" (Equipment with logos)</option>
+                            <option value="default" data-width="320" data-height="200" selected>Default (3.33" × 2.08")</option>
+                        </select>
+                        <div class="form-text">Choose a preset size or select "Custom Size" for manual input</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="label_width" class="form-label">Label Width (px)</label>
+                            <input type="number" class="form-control" id="label_width" name="label_width" value="320" min="50" max="800">
+                            <div class="form-text">Width in pixels (96 DPI)</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="label_height" class="form-label">Label Height (px)</label>
+                            <input type="number" class="form-control" id="label_height" name="label_height" value="200" min="50" max="400">
+                            <div class="form-text">Height in pixels (96 DPI)</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-print me-1"></i>Print All Labels
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @endsection

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Label Size Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .small-test-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+            gap: 4px;
+            margin-bottom: 30px;
+            max-width: 600px;
+        }
+        .label {
+            border: 2px solid #000;
+            background: white;
+            text-align: center;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .small-label {
+            width: 72px;
+            height: 144px;
+            padding: 8px;
+        }
+        .medium1-label {
+            width: 192px;
+            height: 72px;
+            padding: 8px;
+        }
+        .medium2-label {
+            width: 192px;
+            height: 96px;
+            padding: 12px;
+        }
+        .default-label {
+            width: 320px;
+            height: 200px;
+            padding: 20px;
+        }
+        .small-label .asset-tag {
+            font-size: 14px;
+            margin-bottom: 4px;
+            padding-bottom: 2px;
+        }
+        .medium1-label .asset-tag, .medium2-label .asset-tag {
+            font-size: 18px;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+        }
+        .default-label .asset-tag {
+            font-size: 24px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+        }
+        .asset-tag {
+            font-weight: bold;
+            color: #333;
+            border-bottom: 1px solid #ddd;
+            word-wrap: break-word;
+        }
+        .small-label .asset-name {
+            font-size: 10px;
+            margin-bottom: 4px;
+        }
+        .medium1-label .asset-name, .medium2-label .asset-name {
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+        .default-label .asset-name {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        .asset-name {
+            color: #555;
+            font-weight: 600;
+            word-wrap: break-word;
+        }
+        .small-label .asset-details {
+            font-size: 8px;
+        }
+        .medium1-label .asset-details, .medium2-label .asset-details {
+            font-size: 10px;
+        }
+        .default-label .asset-details {
+            font-size: 12px;
+        }
+        .asset-details {
+            color: #666;
+            line-height: 1.2;
+            word-wrap: break-word;
+        }
+        .category-badge {
+            display: inline-block;
+            background-color: #e9ecef;
+            color: #495057;
+            border-radius: 12px;
+            font-weight: bold;
+            word-wrap: break-word;
+        }
+        .small-label .category-badge {
+            padding: 1px 4px;
+            font-size: 7px;
+            margin-top: 2px;
+        }
+        .medium1-label .category-badge, .medium2-label .category-badge {
+            padding: 2px 6px;
+            font-size: 9px;
+            margin-top: 4px;
+        }
+        .default-label .category-badge {
+            padding: 2px 8px;
+            font-size: 10px;
+            margin-top: 8px;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .size-info {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Asset Label Size Comparison</h1>
+    
+    <div class="size-info">
+        <h2>0.75" × 1.5" (72px × 144px) - Maximized for paper efficiency</h2>
+        <p><strong>Optimizations:</strong> Reduced margins (0.25in vs 0.5in), smaller gaps (4px vs 20px), compact padding</p>
+        <div class="small-test-container">
+            <div class="label small-label">
+                <div class="asset-tag">LPT001</div>
+                <div class="asset-name">Dell Laptop</div>
+                <div class="asset-details">
+                    <strong>S/N:</strong> DL123456<br>
+                    <strong>Dept:</strong> IT
+                </div>
+                <div class="category-badge">Laptop</div>
+            </div>
+            <div class="label small-label">
+                <div class="asset-tag">MON002</div>
+                <div class="asset-name">HP Monitor</div>
+                <div class="asset-details">
+                    <strong>S/N:</strong> HP789012<br>
+                    <strong>Dept:</strong> HR
+                </div>
+                <div class="category-badge">Monitor</div>
+            </div>
+            <div class="label small-label">
+                <div class="asset-tag">KBD003</div>
+                <div class="asset-name">Logitech KB</div>
+                <div class="asset-details">
+                    <strong>S/N:</strong> LG345678<br>
+                    <strong>Dept:</strong> Sales
+                </div>
+                <div class="category-badge">Keyboard</div>
+            </div>
+            <div class="label small-label">
+                <div class="asset-tag">MSE004</div>
+                <div class="asset-name">Wireless Mouse</div>
+                <div class="asset-details">
+                    <strong>S/N:</strong> WM901234<br>
+                    <strong>Dept:</strong> IT
+                </div>
+                <div class="category-badge">Mouse</div>
+            </div>
+            <div class="label small-label">
+                <div class="asset-tag">TAB005</div>
+                <div class="asset-name">iPad Pro</div>
+                <div class="asset-details">
+                    <strong>S/N:</strong> IP567890<br>
+                    <strong>Dept:</strong> Design
+                </div>
+                <div class="category-badge">Tablet</div>
+            </div>
+            <div class="label small-label">
+                <div class="asset-tag">CAM006</div>
+                <div class="asset-name">Webcam HD</div>
+                <div class="asset-details">
+                    <strong>S/N:</strong> WC123789<br>
+                    <strong>Dept:</strong> Marketing
+                </div>
+                <div class="category-badge">Camera</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="size-info">
+        <h2>2" × 0.75" (192px × 72px) - Equipment with text</h2>
+        <div class="test-container">
+            <div class="label medium1-label">
+                <div class="asset-tag">EQP001</div>
+                <div class="asset-name">Network Switch</div>
+                <div class="asset-details"><strong>Model:</strong> Cisco 2960 | <strong>Dept:</strong> IT</div>
+                <div class="category-badge">Network</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="size-info">
+        <h2>2" × 1" (192px × 96px) - Equipment with logos</h2>
+        <div class="test-container">
+            <div class="label medium2-label">
+                <div class="asset-tag">PRT001</div>
+                <div class="asset-name">HP LaserJet Pro</div>
+                <div class="asset-details">
+                    <strong>Model:</strong> M404dn<br>
+                    <strong>S/N:</strong> HP987654<br>
+                    <strong>Location:</strong> Office 201
+                </div>
+                <div class="category-badge">Printer</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="size-info">
+        <h2>Default (320px × 200px) - Standard size</h2>
+        <div class="test-container">
+            <div class="label default-label">
+                <div class="asset-tag">DSK001</div>
+                <div class="asset-name">Dell OptiPlex 7090</div>
+                <div class="asset-details">
+                    <strong>Model:</strong> OptiPlex 7090<br>
+                    <strong>S/N:</strong> DELL123456789<br>
+                    <strong>Location:</strong> Office 101<br>
+                    <strong>Assigned to:</strong> John Smith<br>
+                    <strong>Department:</strong> Finance
+                </div>
+                <div class="category-badge">Desktop</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

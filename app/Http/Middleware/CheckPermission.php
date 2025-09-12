@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response;
 use App\Models\Log;
+use App\Models\AssetTimeline;
+use App\Models\Asset;
 
 class CheckPermission
 {
@@ -139,6 +141,7 @@ class CheckPermission
     private function logUnauthorizedAccess($user, string $permission, Request $request): void
     {
         try {
+            // Log to activity logs
             Log::create([
                 'category' => 'Security',
                 'user_id' => $user->id,
@@ -148,8 +151,74 @@ class CheckPermission
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent()
             ]);
+            
+            // Log to asset timeline for maintenance and disposal operations
+            $this->logToAssetTimeline($user, $permission, $request);
+            
         } catch (\Exception $e) {
             // Silently fail if logging fails
+        }
+    }
+    
+    /**
+     * Log unauthorized access attempts to asset timeline for maintenance and disposal
+     */
+    private function logToAssetTimeline($user, string $permission, Request $request): void
+    {
+        try {
+            // Check if this is a maintenance or disposal related permission
+            $maintenancePermissions = ['view_maintenance', 'create_maintenance', 'edit_maintenance', 'delete_maintenance'];
+            $disposalPermissions = ['view_disposal', 'create_disposal', 'edit_disposal', 'delete_disposal'];
+            
+            if (in_array($permission, $maintenancePermissions) || in_array($permission, $disposalPermissions)) {
+                $assetId = null;
+                $action = '';
+                $notes = '';
+                
+                // Try to extract asset ID from the request
+                if ($request->route('maintenance')) {
+                    $maintenance = $request->route('maintenance');
+                    $assetId = $maintenance->asset_id ?? null;
+                    $action = 'unauthorized_maintenance_access';
+                    $notes = "Unauthorized attempt to access maintenance record (Permission: {$permission})";
+                } elseif ($request->route('disposal')) {
+                    $disposal = $request->route('disposal');
+                    $assetId = $disposal->asset_id ?? null;
+                    $action = 'unauthorized_disposal_access';
+                    $notes = "Unauthorized attempt to access disposal record (Permission: {$permission})";
+                } elseif ($request->has('asset_id')) {
+                    $assetId = $request->input('asset_id');
+                    $action = in_array($permission, $maintenancePermissions) ? 'unauthorized_maintenance_access' : 'unauthorized_disposal_access';
+                    $notes = "Unauthorized attempt to access " . (in_array($permission, $maintenancePermissions) ? 'maintenance' : 'disposal') . " operation (Permission: {$permission})";
+                } else {
+                    // General unauthorized access for maintenance/disposal modules
+                    $action = in_array($permission, $maintenancePermissions) ? 'unauthorized_maintenance_access' : 'unauthorized_disposal_access';
+                    $notes = "Unauthorized attempt to access " . (in_array($permission, $maintenancePermissions) ? 'maintenance' : 'disposal') . " module (Permission: {$permission})";
+                }
+                
+                // If we have a specific asset, log to its timeline
+                if ($assetId && Asset::find($assetId)) {
+                    AssetTimeline::create([
+                        'asset_id' => $assetId,
+                        'action' => $action,
+                        'from_user_id' => null,
+                        'to_user_id' => null,
+                        'from_department_id' => null,
+                        'to_department_id' => null,
+                        'notes' => $notes,
+                        'old_values' => null,
+                        'new_values' => json_encode([
+                            'blocked_permission' => $permission,
+                            'ip_address' => $request->ip(),
+                            'user_agent' => $request->userAgent()
+                        ]),
+                        'performed_by' => $user->id,
+                        'performed_at' => now()
+                    ]);
+                }
+            }
+        } catch (\Exception $e) {
+            // Silently fail if asset timeline logging fails
         }
     }
     
