@@ -10,9 +10,22 @@ use App\Models\User;
 use App\Models\AssetAssignmentConfirmation;
 use App\Mail\AssetAssignmentConfirmation as AssetAssignmentConfirmationMail;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class AssetController extends Controller
 {
+    use AuthorizesRequests;
+    
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('throttle:60,1')->only(['store', 'update', 'destroy']);
+        $this->middleware('permission:view_assets')->only(['index', 'show']);
+        $this->middleware('permission:create_assets')->only(['create', 'store']);
+        $this->middleware('permission:edit_assets')->only(['edit', 'update']);
+        $this->middleware('permission:delete_assets')->only(['destroy']);
+    }
     /**
      * Display a listing of the resource.
      */
@@ -93,19 +106,9 @@ class AssetController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'asset_tag' => 'required|string|max:50|unique:assets',
-            'category_id' => 'required|exists:asset_categories,id',
-            'vendor_id' => 'required|exists:vendors,id',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'serial_number' => 'required|string|max:100|unique:assets',
-            'purchase_date' => 'required|date',
-            'warranty_end' => 'nullable|date',
-            'cost' => 'required|numeric|min:0',
-            'status' => 'required|in:Active,Inactive,Under Maintenance,Issue Reported,Pending Confirmation,Disposed',
-            'movement' => 'required|in:New Arrival,Deployed Tagged,Returned,Transferred,Disposed'
-        ]);
+        $this->authorize('create', Asset::class);
+        
+        $validated = $request->validate(Asset::validationRules());
 
         // Set default status and movement for new assets
         $validated['status'] = 'Active';
@@ -143,19 +146,9 @@ class AssetController extends Controller
      */
     public function update(Request $request, Asset $asset)
     {
-        $validated = $request->validate([
-            'asset_tag' => 'required|string|max:50|unique:assets,asset_tag,' . $asset->id,
-            'category_id' => 'required|exists:asset_categories,id',
-            'vendor_id' => 'required|exists:vendors,id',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'serial_number' => 'required|string|max:100|unique:assets,serial_number,' . $asset->id,
-            'purchase_date' => 'required|date',
-            'warranty_end' => 'nullable|date',
-            'cost' => 'required|numeric|min:0',
-            'status' => 'required|in:Active,Inactive,Under Maintenance,Issue Reported,Pending Confirmation,Disposed',
-            'movement' => 'required|in:New Arrival,Deployed Tagged,Returned,Transferred,Disposed'
-        ]);
+        $this->authorize('update', $asset);
+        
+        $validated = $request->validate(Asset::updateValidationRules($asset->id));
 
         $asset->update($validated);
         return redirect()->route('assets.index')->with('success', 'Asset updated successfully.');
@@ -166,6 +159,14 @@ class AssetController extends Controller
      */
     public function destroy(Asset $asset)
     {
+        $this->authorize('delete', $asset);
+        
+        // Check if asset is assigned before deletion
+        if ($asset->assigned_to) {
+            return redirect()->route('assets.index')
+                ->with('error', 'Cannot delete asset that is currently assigned to a user.');
+        }
+        
         $asset->delete();
         return redirect()->route('assets.index')->with('success', 'Asset deleted successfully.');
     }
@@ -175,6 +176,8 @@ class AssetController extends Controller
      */
     public function assign(Request $request, Asset $asset)
     {
+        $this->authorize('assign', $asset);
+        
         $validated = $request->validate([
             'assigned_to' => 'required|exists:users,id',
             'assigned_date' => 'required|date',
@@ -225,6 +228,8 @@ class AssetController extends Controller
      */
     public function unassign(Asset $asset)
     {
+        $this->authorize('unassign', $asset);
+        
         $previousUser = $asset->assignedUser;
         
         // Update asset status to Active and movement to Returned
@@ -269,6 +274,8 @@ class AssetController extends Controller
      */
     public function reassign(Request $request, Asset $asset)
     {
+        $this->authorize('reassign', $asset);
+        
         $validated = $request->validate([
             'new_assigned_to' => 'required|exists:users,id',
             'assigned_date' => 'required|date',
@@ -332,5 +339,49 @@ class AssetController extends Controller
 
         return redirect()->route('assets.show', $asset)
                         ->with('success', 'Asset reassigned successfully. Confirmation email sent to new user.');
+    }
+
+    /**
+     * Generate a printable report of assets assigned to employees.
+     */
+    public function printEmployeeAssets()
+    {
+        $users = User::with([
+            'assignedAssets.category',
+            'assignedAssets.vendor',
+            'assignedAssets.computer',
+            'department'
+        ])->whereHas('assignedAssets')->get();
+
+        $totalUsers = $users->count();
+        $totalAssets = $users->sum(function($user) {
+            return $user->assignedAssets->count();
+        });
+        
+        $assetsByCategory = $users->flatMap(function($user) {
+            return $user->assignedAssets;
+        })->groupBy('category.name')->map(function($assets) {
+            return $assets->count();
+        });
+
+        return view('assets.print-employee-assets', compact('users', 'totalUsers', 'totalAssets', 'assetsByCategory'));
+    }
+
+    public function printSingleEmployeeAssets(User $user)
+    {
+        $user->load([
+            'assignedAssets.category',
+            'assignedAssets.vendor',
+            'assignedAssets.computer',
+            'department'
+        ]);
+
+        $totalAssets = $user->assignedAssets->count();
+        
+        $assetsByCategory = $user->assignedAssets->groupBy('category.name')->map(function($assets) {
+            return $assets->count();
+        });
+
+        return view('assets.print-single-employee-assets', compact('user', 'totalAssets', 'assetsByCategory'));
     }
 }

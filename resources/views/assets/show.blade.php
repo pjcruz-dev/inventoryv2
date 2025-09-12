@@ -301,7 +301,7 @@
                         <label for="assigned_to" class="form-label">Select User</label>
                         <select class="form-select" id="assigned_to" name="assigned_to" required>
                             <option value="">Choose a user...</option>
-                            @foreach(\App\Models\User::where('status', 'active')->orderBy('first_name')->get() as $user)
+                            @foreach(\App\Models\User::where('status', 1)->orderBy('first_name')->get() as $user)
                                 <option value="{{ $user->id }}">{{ $user->first_name }} {{ $user->last_name }} ({{ $user->department->name ?? 'No Department' }})</option>
                             @endforeach
                         </select>
@@ -351,7 +351,7 @@
                         <label for="new_assigned_to" class="form-label">Select New User</label>
                         <select class="form-select" id="new_assigned_to" name="new_assigned_to" required>
                             <option value="">Choose a user...</option>
-                            @foreach(\App\Models\User::where('status', 'active')->orderBy('first_name')->get() as $user)
+                            @foreach(\App\Models\User::where('status', 1)->orderBy('first_name')->get() as $user)
                                 <option value="{{ $user->id }}">{{ $user->first_name }} {{ $user->last_name }} ({{ $user->department->name ?? 'No Department' }})</option>
                             @endforeach
                         </select>

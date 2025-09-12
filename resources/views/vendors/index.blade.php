@@ -244,14 +244,7 @@
             @if($vendors->hasPages())
                 <div class="card-footer">
                     <div class="pagination-wrapper">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="pagination-info">
-                                Showing {{ $vendors->firstItem() }} to {{ $vendors->lastItem() }} of {{ $vendors->total() }} vendors
-                            </div>
-                            <div>
-                                {{ $vendors->appends(request()->query())->links() }}
-                            </div>
-                        </div>
+                        {{ $vendors->appends(request()->query())->links('pagination.custom') }}
                     </div>
                 </div>
             @endif

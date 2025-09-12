@@ -4,12 +4,19 @@
 @section('page-title', $user->first_name . ' ' . $user->last_name)
 
 @section('page-actions')
-    <a href="{{ route('users.edit', $user) }}" class="btn btn-primary me-2">
-        <i class="fas fa-edit me-2"></i>Edit User
-    </a>
-    <a href="{{ route('users.index') }}" class="btn btn-secondary">
-        <i class="fas fa-arrow-left me-2"></i>Back to Users
-    </a>
+    <div class="d-flex gap-2">
+        @if($user->assignedAssets->count() > 0)
+            <a href="{{ route('assets.print-single-employee-assets', $user) }}" class="btn btn-outline-info btn-sm" target="_blank">
+                <i class="fas fa-print me-1"></i>Print Assets
+            </a>
+        @endif
+        <a href="{{ route('users.edit', $user) }}" class="btn btn-primary">
+            <i class="fas fa-edit me-2"></i>Edit User
+        </a>
+        <a href="{{ route('users.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Users
+        </a>
+    </div>
 @endsection
 
 @section('content')
@@ -19,8 +26,16 @@
             <div class="card-header">
                 <div class="d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">User Information</h5>
-                    <span class="badge bg-{{ $user->status === 'active' ? 'success' : 'danger' }} fs-6">
-                        {{ ucfirst($user->status) }}
+                    @php
+                        $statusConfig = [
+                            1 => ['label' => 'Active', 'class' => 'success'],
+                            0 => ['label' => 'Inactive', 'class' => 'danger'],
+                            2 => ['label' => 'Suspended', 'class' => 'warning']
+                        ];
+                        $config = $statusConfig[$user->status] ?? ['label' => 'Unknown', 'class' => 'secondary'];
+                    @endphp
+                    <span class="badge bg-{{ $config['class'] }} fs-6">
+                        {{ $config['label'] }}
                     </span>
                 </div>
             </div>
@@ -255,8 +270,8 @@
                         <i class="fas fa-edit me-2"></i>Edit User
                     </a>
                     
-                    @if($user->status === 'active')
-                        <button class="btn btn-outline-warning" onclick="changeUserStatus('inactive')">
+                    @if($user->status === 1)
+                        <button class="btn btn-outline-warning" onclick="changeUserStatus('0')">
                             <i class="fas fa-user-slash me-2"></i>Deactivate User
                         </button>
                     @else

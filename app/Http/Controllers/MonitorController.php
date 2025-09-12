@@ -12,6 +12,10 @@ class MonitorController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+        $this->middleware('permission:view_assets')->only(['index', 'show']);
+        $this->middleware('permission:create_assets')->only(['create', 'store']);
+        $this->middleware('permission:edit_assets')->only(['edit', 'update']);
+        $this->middleware('permission:delete_assets')->only(['destroy']);
     }
 
     /**

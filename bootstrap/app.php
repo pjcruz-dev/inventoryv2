@@ -22,8 +22,42 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.import.export.permission' => \App\Http\Middleware\CheckImportExportPermission::class,
             'check.permission' => \App\Http\Middleware\CheckPermission::class,
             'validate.csrf' => \App\Http\Middleware\ValidateCSRF::class,
+            'role.hierarchy' => \App\Http\Middleware\RoleHierarchy::class,
+            'route.access.control' => \App\Http\Middleware\RouteAccessControl::class,
+            'session.security' => \App\Http\Middleware\SessionSecurity::class,
+            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+        ]);
+        
+        // Apply global middleware for authenticated routes
+        $middleware->web(append: [
+            \App\Http\Middleware\SessionSecurity::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Register custom exception handling
+        $exceptions->render(function (\App\Exceptions\AccessDeniedException $e, \Illuminate\Http\Request $request) {
+            return $e->render($request);
+        });
+        
+        // Handle authentication exceptions with proper logging
+        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, \Illuminate\Http\Request $request) {
+            \Illuminate\Support\Facades\Log::info('Authentication required', [
+                'url' => $request->fullUrl(),
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'timestamp' => now()
+            ]);
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Authentication required',
+                    'error_code' => 'AUTHENTICATION_REQUIRED'
+                ], 401);
+            }
+            
+            return redirect()->guest(route('login'));
+        });
     })->create();

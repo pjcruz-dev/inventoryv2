@@ -220,6 +220,63 @@ class AssetConfirmationController extends Controller
     }
 
     /**
+     * Categorize decline reason
+     */
+    private function categorizeDeclineReason($reason)
+    {
+        $categories = [
+            'delivery_issues' => ['never_delivered', 'delivery_location', 'incomplete_delivery'],
+            'asset_issues' => ['wrong_asset', 'damaged_asset', 'incompatible_asset'],
+            'personal_reasons' => ['no_longer_needed', 'personal_preference', 'temporary_unavailable'],
+            'technical_issues' => ['technical_problems', 'software_incompatibility'],
+            'other' => ['other_reason']
+        ];
+
+        foreach ($categories as $category => $reasons) {
+            if (in_array($reason, $reasons)) {
+                return $category;
+            }
+        }
+
+        return 'other';
+    }
+
+    /**
+     * Determine severity based on decline reason
+     */
+    private function determineSeverity($reason)
+    {
+        $highSeverity = ['never_delivered', 'damaged_asset', 'wrong_asset'];
+        $mediumSeverity = ['incomplete_delivery', 'delivery_location', 'technical_problems'];
+        
+        if (in_array($reason, $highSeverity)) {
+            return 'high';
+        } elseif (in_array($reason, $mediumSeverity)) {
+            return 'medium';
+        }
+        
+        return 'low';
+    }
+
+    /**
+     * Generate follow-up actions based on decline reason
+     */
+    private function generateFollowUpActions($reason)
+    {
+        $actions = [
+            'never_delivered' => ['Investigate delivery status', 'Contact delivery team', 'Reschedule delivery'],
+            'wrong_asset' => ['Verify asset requirements', 'Arrange correct asset', 'Return incorrect asset'],
+            'damaged_asset' => ['Inspect asset condition', 'Arrange repair or replacement', 'Document damage'],
+            'incomplete_delivery' => ['Check missing items', 'Complete delivery', 'Update inventory'],
+            'delivery_location' => ['Verify delivery address', 'Reschedule delivery', 'Update location preferences']
+        ];
+
+        return $actions[$reason] ?? ['Review decline reason', 'Contact user for clarification'];
+    }
+
+
+
+    /**
      * Show confirmation form with reason (for declines)
      */
     public function showDeclineForm($token)
@@ -236,12 +293,18 @@ class AssetConfirmationController extends Controller
     }
 
     /**
-     * Process decline with reason
+     * Process decline with enhanced details
      */
     public function processDecline(Request $request, $token)
     {
         $request->validate([
-            'reason' => 'required|string|max:500'
+            'reason' => 'required|string|max:500',
+            'comments' => 'nullable|string|max:1000',
+            'contact_preference' => 'nullable|string|in:email,phone,in_person',
+            'follow_up_actions' => 'nullable|array',
+            'follow_up_actions.*' => 'string|max:255',
+            'follow_up_date' => 'nullable|date|after:today',
+            'severity' => 'nullable|string|in:low,medium,high'
         ]);
 
         $confirmation = AssetAssignmentConfirmation::where('confirmation_token', $token)
@@ -253,12 +316,38 @@ class AssetConfirmationController extends Controller
                 ->with('error', 'Unable to process decline.');
         }
 
-        // Mark confirmation as declined with reason
-        $confirmation->update([
-            'status' => 'declined',
-            'confirmed_at' => now(),
-            'notes' => 'Declined by user. Reason: ' . $request->reason
+        // Determine follow-up requirements based on reason
+        $followUpRequired = in_array($request->reason, [
+            'never_delivered', 'wrong_asset', 'damaged_asset', 
+            'incomplete_delivery', 'delivery_location'
         ]);
+
+        // Determine severity based on reason
+        $severity = $request->severity ?? $this->determineSeverity($request->reason);
+
+        // Prepare follow-up actions
+        $followUpActions = [];
+        if ($followUpRequired) {
+            $followUpActions = $this->generateFollowUpActions($request->reason);
+            if ($request->follow_up_actions) {
+                $followUpActions = array_merge($followUpActions, $request->follow_up_actions);
+            }
+        }
+
+        // Prepare decline data
+        $declineData = [
+            'decline_category' => $this->categorizeDeclineReason($request->reason),
+            'decline_reason' => $request->reason,
+            'decline_comments' => $request->comments,
+            'contact_preference' => $request->contact_preference ?? 'email',
+            'follow_up_required' => $followUpRequired,
+            'follow_up_actions' => !empty($followUpActions) ? implode('|', $followUpActions) : null,
+            'follow_up_date' => $request->follow_up_date ?? ($followUpRequired ? now()->addDays(3) : null),
+            'decline_severity' => $severity
+        ];
+
+        // Mark confirmation as declined with enhanced details
+        $confirmation->markAsDeclined($declineData);
 
         // Update asset status back to Active and unassign
         $confirmation->asset->update([
@@ -268,7 +357,20 @@ class AssetConfirmationController extends Controller
             'movement' => 'Returned'
         ]);
 
-        // Create audit log
+        // Create enhanced audit log
+        $remarks = sprintf(
+            'Asset assignment declined by user: %s %s. Reason: %s. Severity: %s. Follow-up required: %s.',
+            $confirmation->user->first_name,
+            $confirmation->user->last_name,
+            $confirmation->getFormattedDeclineReason(),
+            ucfirst($severity),
+            $followUpRequired ? 'Yes' : 'No'
+        );
+
+        if ($request->comments) {
+            $remarks .= ' Comments: ' . $request->comments;
+        }
+
         Log::create([
             'category' => 'Asset',
             'asset_id' => $confirmation->asset->id,
@@ -278,9 +380,39 @@ class AssetConfirmationController extends Controller
             'event_type' => 'declined',
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
-            'remarks' => 'Asset assignment declined by user: ' . $confirmation->user->first_name . ' ' . $confirmation->user->last_name . '. Reason: ' . $request->reason . '. Asset returned to available status.',
+            'remarks' => $remarks,
             'created_at' => now()
         ]);
+
+        // Create enhanced notification
+        $notificationData = [
+            'type' => 'asset_declined',
+            'title' => 'Asset Assignment Declined - ' . ucfirst($severity) . ' Priority',
+            'message' => sprintf(
+                'Asset %s (%s) assignment declined by %s %s. Reason: %s. Follow-up required: %s.',
+                $confirmation->asset->asset_tag,
+                $confirmation->asset->asset_name,
+                $confirmation->user->first_name,
+                $confirmation->user->last_name,
+                $confirmation->getFormattedDeclineReason(),
+                $followUpRequired ? 'Yes' : 'No'
+            ),
+            'data' => [
+                'asset_tag' => $confirmation->asset->asset_tag,
+                'asset_name' => $confirmation->asset->asset_name,
+                'confirmation_id' => $confirmation->id,
+                'declined_at' => now()->toISOString(),
+                'decline_reason' => $confirmation->getFormattedDeclineReason(),
+                'severity' => $severity,
+                'follow_up_required' => $followUpRequired,
+                'follow_up_date' => $confirmation->follow_up_date?->toISOString()
+            ]
+        ];
+        
+        Notification::create(array_merge($notificationData, ['user_id' => $confirmation->user_id]));
+        
+        // Create identical notification for super administrator
+        $this->notifySuperAdmin($notificationData);
 
         return view('asset-confirmation.success', [
             'confirmation' => $confirmation,

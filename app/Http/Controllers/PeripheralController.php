@@ -44,7 +44,7 @@ class PeripheralController extends Controller
         $request->validate([
             'asset_id' => 'required|exists:assets,id|unique:peripherals,asset_id',
             'type' => 'required|in:Mouse,Keyboard,Webcam,Headset,Speaker,Microphone,USB Hub,External Drive,Other',
-            'connectivity' => 'required|in:USB,Bluetooth,Wireless,Wired',
+            'interface' => 'required|in:USB,Bluetooth,Wireless,Wired',
         ]);
         
         Peripheral::create($request->all());
@@ -91,7 +91,7 @@ class PeripheralController extends Controller
         $request->validate([
             'asset_id' => 'required|exists:assets,id|unique:peripherals,asset_id,' . $peripheral->id,
             'type' => 'required|in:Mouse,Keyboard,Webcam,Headset,Speaker,Microphone,USB Hub,External Drive,Other',
-            'connectivity' => 'required|in:USB,Bluetooth,Wireless,Wired',
+            'interface' => 'required|in:USB,Bluetooth,Wireless,Wired',
         ]);
         
         $peripheral->update($request->all());

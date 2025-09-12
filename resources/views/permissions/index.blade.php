@@ -110,15 +110,8 @@
                     
                     <!-- Pagination -->
                     @if($permissions->hasPages())
-                        <div class="pagination-wrapper">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="pagination-info">
-                                    Showing {{ $permissions->firstItem() }} to {{ $permissions->lastItem() }} of {{ $permissions->total() }} permissions
-                                </div>
-                                <div>
-                                    {{ $permissions->appends(request()->query())->links() }}
-                                </div>
-                            </div>
+                        <div class="pagination-wrapper mt-3">
+                            {{ $permissions->appends(request()->query())->links('pagination.custom') }}
                         </div>
                     @endif
                 @else

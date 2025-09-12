@@ -21,14 +21,24 @@ class AssetAssignmentConfirmation extends Model
         'confirmed_at',
         'notes',
         'last_reminder_sent_at',
-        'reminder_count'
+        'reminder_count',
+        'decline_category',
+        'decline_reason',
+        'decline_comments',
+        'contact_preference',
+        'follow_up_required',
+        'follow_up_actions',
+        'follow_up_date',
+        'decline_severity'
     ];
 
     protected $casts = [
         'assigned_at' => 'datetime',
         'confirmed_at' => 'datetime',
         'last_reminder_sent_at' => 'datetime',
-        'reminder_count' => 'integer'
+        'reminder_count' => 'integer',
+        'follow_up_required' => 'boolean',
+        'follow_up_date' => 'datetime'
     ];
 
     /**
@@ -120,23 +130,54 @@ class AssetAssignmentConfirmation extends Model
     }
 
     /**
-     * Mark the confirmation as declined
+     * Mark the confirmation as declined with enhanced details
      */
-    public function markAsDeclined(string $reason = null, string $comments = null): void
+    public function markAsDeclined(array $declineData = []): void
     {
-        $notes = [];
-        if ($reason) {
-            $notes[] = 'Reason: ' . $reason;
+        $updateData = [
+            'status' => 'declined',
+            'confirmed_at' => now()
+        ];
+
+        // Handle enhanced decline data
+        if (!empty($declineData['decline_category'])) {
+            $updateData['decline_category'] = $declineData['decline_category'];
         }
-        if ($comments) {
-            $notes[] = 'Comments: ' . $comments;
+        if (!empty($declineData['decline_reason'])) {
+            $updateData['decline_reason'] = $declineData['decline_reason'];
+        }
+        if (!empty($declineData['decline_comments'])) {
+            $updateData['decline_comments'] = $declineData['decline_comments'];
+        }
+        if (!empty($declineData['contact_preference'])) {
+            $updateData['contact_preference'] = $declineData['contact_preference'];
+        }
+        if (isset($declineData['follow_up_required'])) {
+            $updateData['follow_up_required'] = $declineData['follow_up_required'];
+        }
+        if (!empty($declineData['follow_up_actions'])) {
+            $updateData['follow_up_actions'] = $declineData['follow_up_actions'];
+        }
+        if (!empty($declineData['follow_up_date'])) {
+            $updateData['follow_up_date'] = $declineData['follow_up_date'];
+        }
+        if (!empty($declineData['decline_severity'])) {
+            $updateData['decline_severity'] = $declineData['decline_severity'];
         }
 
-        $this->update([
-            'status' => 'declined',
-            'confirmed_at' => now(),
-            'notes' => implode(' | ', $notes)
-        ]);
+        // Maintain backward compatibility with notes
+        $notes = [];
+        if (!empty($declineData['decline_reason'])) {
+            $notes[] = 'Reason: ' . $declineData['decline_reason'];
+        }
+        if (!empty($declineData['decline_comments'])) {
+            $notes[] = 'Comments: ' . $declineData['decline_comments'];
+        }
+        if (!empty($notes)) {
+            $updateData['notes'] = implode(' | ', $notes);
+        }
+
+        $this->update($updateData);
     }
 
     /**
@@ -147,5 +188,66 @@ class AssetAssignmentConfirmation extends Model
         $this->update([
             'status' => 'completed'
         ]);
+    }
+
+    /**
+     * Get formatted decline reason
+     */
+    public function getFormattedDeclineReason(): string
+    {
+        if (!$this->decline_reason) {
+            return 'No reason provided';
+        }
+
+        $reasons = [
+            'never_delivered' => 'Asset was never delivered',
+            'wrong_asset' => 'Wrong asset was delivered',
+            'damaged_asset' => 'Asset was damaged upon delivery',
+            'incomplete_delivery' => 'Incomplete delivery (missing accessories/parts)',
+            'delivery_location' => 'Delivered to wrong location',
+            'timing_issue' => 'Delivery timing issue',
+            'other' => 'Other reason'
+        ];
+
+        return $reasons[$this->decline_reason] ?? $this->decline_reason;
+    }
+
+    /**
+     * Get formatted follow-up actions
+     */
+    public function getFormattedFollowUpActions(): array
+    {
+        if (!$this->follow_up_actions) {
+            return [];
+        }
+
+        return explode('|', $this->follow_up_actions);
+    }
+
+    /**
+     * Get decline severity badge class
+     */
+    public function getDeclineSeverityBadgeClass(): string
+    {
+        switch ($this->decline_severity) {
+            case 'high':
+                return 'bg-danger';
+            case 'medium':
+                return 'bg-warning';
+            case 'low':
+                return 'bg-info';
+            default:
+                return 'bg-secondary';
+        }
+    }
+
+    /**
+     * Check if follow-up is overdue
+     */
+    public function isFollowUpOverdue(): bool
+    {
+        return $this->follow_up_required && 
+               $this->follow_up_date && 
+               $this->follow_up_date->isPast();
     }
 }

@@ -166,14 +166,7 @@
             @if($departments->hasPages())
                 <div class="card-footer">
                     <div class="pagination-wrapper">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="pagination-info">
-                                Showing {{ $departments->firstItem() }} to {{ $departments->lastItem() }} of {{ $departments->total() }} departments
-                            </div>
-                            <div>
-                                {{ $departments->links() }}
-                            </div>
-                        </div>
+                        {{ $departments->links('pagination.custom') }}
                     </div>
                 </div>
             @endif
@@ -231,7 +224,7 @@
             <div class="card text-center">
                 <div class="card-body">
                     <i class="fas fa-check-circle fa-2x text-warning mb-2"></i>
-                    <h4 class="mb-0">{{ $departments->where('status', 'active')->count() }}</h4>
+                    <h4 class="mb-0">{{ $departments->count() }}</h4>
                     <small class="text-muted">Active Departments</small>
                 </div>
             </div>

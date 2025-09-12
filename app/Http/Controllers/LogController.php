@@ -14,6 +14,7 @@ class LogController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+        $this->middleware('permission:view_logs')->only(['index', 'show']);
     }
 
     /**

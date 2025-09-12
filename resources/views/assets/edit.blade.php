@@ -28,8 +28,17 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="asset_tag" class="form-label">Asset Tag <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('asset_tag') is-invalid @enderror" 
-                                       id="asset_tag" name="asset_tag" value="{{ old('asset_tag', $asset->asset_tag) }}" required>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-warning text-dark">
+                                        <i class="fas fa-lock" title="Asset tag should remain unchanged"></i>
+                                    </span>
+                                    <input type="text" class="form-control @error('asset_tag') is-invalid @enderror" 
+                                           id="asset_tag" name="asset_tag" value="{{ old('asset_tag', $asset->asset_tag) }}" required>
+                                </div>
+                                <small class="text-warning">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    <strong>Important:</strong> Asset tag should remain unchanged to maintain asset history and tracking.
+                                </small>
                                 @error('asset_tag')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -432,6 +441,53 @@ $(document).ready(function() {
             categoryDropdown.find('a.dropdown-item').removeClass('active');
             categoryDropdown.find('a[data-value=""]').addClass('active');
             categoryDropdown.removeClass('show');
+        }
+    });
+    
+    // Asset tag protection - warn user if they try to modify it
+    const originalAssetTag = $('#asset_tag').val();
+    let assetTagWarningShown = false;
+    
+    $('#asset_tag').on('input', function() {
+        const currentValue = $(this).val();
+        
+        if (currentValue !== originalAssetTag && !assetTagWarningShown) {
+            assetTagWarningShown = true;
+            
+            const confirmChange = confirm(
+                'WARNING: Changing the asset tag may affect asset tracking and history.\n\n' +
+                'Asset tags are typically permanent identifiers that should remain unchanged.\n\n' +
+                'Are you sure you want to modify this asset tag?'
+            );
+            
+            if (!confirmChange) {
+                $(this).val(originalAssetTag);
+                assetTagWarningShown = false;
+            }
+        }
+        
+        // Reset warning flag if user reverts to original value
+        if (currentValue === originalAssetTag) {
+            assetTagWarningShown = false;
+        }
+    });
+    
+    // Additional warning on form submission
+    $('form').on('submit', function(e) {
+        const currentAssetTag = $('#asset_tag').val();
+        
+        if (currentAssetTag !== originalAssetTag) {
+            const confirmSubmit = confirm(
+                'FINAL WARNING: You are about to change the asset tag from "' + originalAssetTag + '" to "' + currentAssetTag + '".\n\n' +
+                'This change may affect asset tracking, reports, and historical data.\n\n' +
+                'Do you want to proceed with this change?'
+            );
+            
+            if (!confirmSubmit) {
+                e.preventDefault();
+                $('#asset_tag').focus();
+                return false;
+            }
         }
     });
 });

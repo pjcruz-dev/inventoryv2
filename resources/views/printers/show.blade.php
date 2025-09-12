@@ -448,7 +448,7 @@
                         <input type="text" class="form-control mb-2" id="userFilter" placeholder="Search users by name or department..." onkeyup="filterUsers()">
                         <select class="form-select" id="assigned_to" name="assigned_to" required size="6" style="height: 150px;">
                             <option value="">Choose a user...</option>
-                            @foreach(\App\Models\User::where('status', 'active')->orderBy('first_name')->get() as $user)
+                            @foreach(\App\Models\User::where('status', 1)->orderBy('first_name')->get() as $user)
                                 <option value="{{ $user->id }}" data-name="{{ strtolower($user->first_name . ' ' . $user->last_name) }}" data-department="{{ strtolower($user->department->name ?? '') }}">{{ $user->first_name }} {{ $user->last_name }} ({{ $user->department->name ?? 'No Department' }})</option>
                             @endforeach
                         </select>
@@ -492,7 +492,7 @@
                         <input type="text" class="form-control mb-2" id="reassignUserFilter" placeholder="Search users by name or department..." onkeyup="filterReassignUsers()">
                         <select class="form-select" id="new_assigned_to" name="new_assigned_to" required size="6" style="height: 150px;">
                             <option value="">Choose a user...</option>
-                            @foreach(\App\Models\User::where('status', 'active')->where('id', '!=', $printer->asset->assigned_to)->orderBy('first_name')->get() as $user)
+                            @foreach(\App\Models\User::where('status', 1)->where('id', '!=', $printer->asset->assigned_to)->orderBy('first_name')->get() as $user)
                                 <option value="{{ $user->id }}" data-name="{{ strtolower($user->first_name . ' ' . $user->last_name) }}" data-department="{{ strtolower($user->department->name ?? '') }}">{{ $user->first_name }} {{ $user->last_name }} ({{ $user->department->name ?? 'No Department' }})</option>
                             @endforeach
                         </select>

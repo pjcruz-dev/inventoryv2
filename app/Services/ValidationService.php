@@ -349,7 +349,7 @@ class ValidationService
 
         // Validate role exists (if provided)
         if (!empty($data['role_name'])) {
-            $role = \DB::table('roles')->where('name', $data['role_name'])->first();
+            $role = \App\Models\Role::where('name', $data['role_name'])->first();
             if (!$role) {
                 $result['valid'] = false;
                 $result['errors'][] = "Role '{$data['role_name']}' does not exist.";

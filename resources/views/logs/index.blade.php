@@ -209,15 +209,8 @@
             
             <!-- Pagination -->
             @if($logs->hasPages())
-                <div class="pagination-wrapper">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="pagination-info">
-                            Showing {{ $logs->firstItem() }} to {{ $logs->lastItem() }} of {{ $logs->total() }} logs
-                        </div>
-                        <div>
-                            {{ $logs->links() }}
-                        </div>
-                    </div>
+                <div class="pagination-wrapper mt-3">
+                    {{ $logs->links('pagination.custom') }}
                 </div>
             @endif
         @else

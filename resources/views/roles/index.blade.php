@@ -103,15 +103,8 @@
                     
                     <!-- Pagination -->
                     @if($roles->hasPages())
-                        <div class="pagination-wrapper">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="pagination-info">
-                                    Showing {{ $roles->firstItem() }} to {{ $roles->lastItem() }} of {{ $roles->total() }} roles
-                                </div>
-                                <div>
-                                    {{ $roles->links() }}
-                                </div>
-                            </div>
+                        <div class="pagination-wrapper mt-3">
+                            {{ $roles->links('pagination.custom') }}
                         </div>
                     @endif
                 @else

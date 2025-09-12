@@ -24,7 +24,7 @@ class UserSeeder extends Seeder
                 'email' => 'admin@company.com',
                 'password' => Hash::make('password123'),
                 'role_id' => 1, // Super Admin
-                'status' => 'active'
+                'status' => 1
             ],
             [
                 'employee_no' => 'EMP002',
@@ -35,7 +35,7 @@ class UserSeeder extends Seeder
                 'email' => 'john.manager@company.com',
                 'password' => Hash::make('password123'),
                 'role_id' => 2, // Admin
-                'status' => 'active'
+                'status' => 1
             ],
             [
                 'employee_no' => 'EMP003',
@@ -46,7 +46,7 @@ class UserSeeder extends Seeder
                 'email' => 'jane.smith@company.com',
                 'password' => Hash::make('password123'),
                 'role_id' => 4, // User
-                'status' => 'active'
+                'status' => 1
             ],
             [
                 'employee_no' => 'EMP004',
@@ -57,7 +57,7 @@ class UserSeeder extends Seeder
                 'email' => 'mike.support@company.com',
                 'password' => Hash::make('password123'),
                 'role_id' => 5, // IT Support
-                'status' => 'active'
+                'status' => 1
             ],
             [
                 'employee_no' => 'EMP005',
@@ -68,7 +68,7 @@ class UserSeeder extends Seeder
                 'email' => 'sarah.finance@company.com',
                 'password' => Hash::make('password123'),
                 'role_id' => 3, // Manager
-                'status' => 'active'
+                'status' => 1
             ]
         ];
 

@@ -16,6 +16,9 @@
                 <i class="fas fa-file-import me-1"></i>Import
             </button>
         </div>
+        <a href="{{ route('assets.print-employee-assets') }}" class="btn btn-outline-secondary btn-sm" target="_blank">
+            <i class="fas fa-print me-1"></i>Employee Assets Report
+        </a>
         <a href="{{ route('assets.create') }}" class="btn btn-primary">
             <i class="fas fa-plus me-2"></i>Add New Asset
         </a>
@@ -226,15 +229,8 @@
             
             <!-- Pagination -->
             @if($assets->hasPages())
-                <div class="pagination-wrapper">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="pagination-info">
-                            Showing {{ $assets->firstItem() }} to {{ $assets->lastItem() }} of {{ $assets->total() }} assets
-                        </div>
-                        <div>
-                            {{ $assets->appends(request()->query())->links() }}
-                        </div>
-                    </div>
+                <div class="pagination-wrapper mt-3">
+                    {{ $assets->appends(request()->query())->links('pagination.custom') }}
                 </div>
             @endif
         @else

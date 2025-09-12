@@ -31,6 +31,56 @@ class Asset extends Model
         'assigned_date' => 'date',
         'cost' => 'decimal:2',
     ];
+    
+    /**
+     * Validation rules for asset creation
+     */
+    public static function validationRules(): array
+    {
+        return [
+            'asset_tag' => 'required|string|max:50|unique:assets,asset_tag|regex:/^[A-Z0-9\-_]+$/',
+            'category_id' => 'required|exists:asset_categories,id',
+            'vendor_id' => 'required|exists:vendors,id',
+            'name' => 'required|string|max:255|regex:/^[a-zA-Z0-9\s\-_\.]+$/',
+            'description' => 'nullable|string|max:1000',
+            'serial_number' => 'required|string|max:100|unique:assets,serial_number',
+            'model' => 'nullable|string|max:100',
+            'purchase_date' => 'required|date|before_or_equal:today',
+            'warranty_end' => 'nullable|date|after:purchase_date',
+            'cost' => 'required|numeric|min:0|max:999999.99',
+            'location' => 'nullable|string|max:255',
+            'status' => 'required|in:Active,Inactive,Under Maintenance,Issue Reported,Pending Confirmation,Disposed',
+            'movement' => 'required|in:New Arrival,Deployed Tagged,Returned,Transferred,Disposed',
+            'assigned_to' => 'nullable|exists:users,id',
+            'assigned_date' => 'nullable|date|required_with:assigned_to',
+            'department_id' => 'nullable|exists:departments,id'
+        ];
+    }
+    
+    /**
+     * Validation rules for asset update
+     */
+    public static function updateValidationRules($assetId): array
+    {
+        return [
+            'asset_tag' => 'required|string|max:50|unique:assets,asset_tag,' . $assetId . '|regex:/^[A-Z0-9\-_]+$/',
+            'category_id' => 'required|exists:asset_categories,id',
+            'vendor_id' => 'required|exists:vendors,id',
+            'name' => 'required|string|max:255|regex:/^[a-zA-Z0-9\s\-_\.]+$/',
+            'description' => 'nullable|string|max:1000',
+            'serial_number' => 'required|string|max:100|unique:assets,serial_number,' . $assetId,
+            'model' => 'nullable|string|max:100',
+            'purchase_date' => 'required|date|before_or_equal:today',
+            'warranty_end' => 'nullable|date|after:purchase_date',
+            'cost' => 'required|numeric|min:0|max:999999.99',
+            'location' => 'nullable|string|max:255',
+            'status' => 'required|in:Active,Inactive,Under Maintenance,Issue Reported,Pending Confirmation,Disposed',
+            'movement' => 'required|in:New Arrival,Deployed Tagged,Returned,Transferred,Disposed',
+            'assigned_to' => 'nullable|exists:users,id',
+            'assigned_date' => 'nullable|date|required_with:assigned_to',
+            'department_id' => 'nullable|exists:departments,id'
+        ];
+    }
 
     // Relationships
     public function category()
