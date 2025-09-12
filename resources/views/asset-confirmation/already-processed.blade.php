@@ -69,6 +69,52 @@
             padding: 0.5rem 1rem;
         }
         
+        .severity-indicator {
+            font-size: 0.8rem;
+            color: #6c757d;
+            font-weight: normal;
+            margin-left: 0.5rem;
+        }
+        
+        .decline-details-section,
+        .follow-up-details-section {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 0.375rem;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .follow-up-details-section {
+            border-left-color: #0dcaf0;
+        }
+        
+        .decline-details-section h5,
+        .follow-up-details-section h5 {
+            margin-bottom: 1rem;
+            color: #495057;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .decline-details-section h5 i {
+            margin-right: 0.5rem;
+        }
+        
+        .follow-up-details-section h5 i {
+            margin-right: 0.5rem;
+        }
+        
+        .follow-up-actions-list {
+            margin: 0;
+            padding-left: 1.25rem;
+        }
+        
+        .follow-up-actions-list li {
+            margin-bottom: 0.25rem;
+            color: #495057;
+        }
+        
         .btn-home {
             background: linear-gradient(45deg, #667eea, #764ba2);
             border: none;
@@ -141,6 +187,9 @@
                             <span class="badge bg-success status-badge">Confirmed</span>
                         @else
                             <span class="badge bg-danger status-badge">Declined</span>
+                            @if($confirmation->decline_severity)
+                                <span class="severity-indicator">({{ ucfirst($confirmation->decline_severity) }} Priority)</span>
+                            @endif
                         @endif
                     </span>
                 </div>
@@ -152,9 +201,82 @@
                 </div>
                 @endif
                 
+                @if($status === 'declined')
+                    <!-- Enhanced Decline Details -->
+                    @if($confirmation->decline_category || $confirmation->decline_reason)
+                        <div class="decline-details-section">
+                            <h5><i class="fas fa-exclamation-triangle text-warning"></i> Decline Information</h5>
+                            
+                            @if($confirmation->decline_category)
+                                <div class="detail-row">
+                                    <span class="detail-label">Category:</span>
+                                    <span class="detail-value">{{ ucwords(str_replace('_', ' ', $confirmation->decline_category)) }}</span>
+                                </div>
+                            @endif
+                            
+                            @if($confirmation->decline_reason)
+                                <div class="detail-row">
+                                    <span class="detail-label">Reason:</span>
+                                    <span class="detail-value">{{ $confirmation->getFormattedDeclineReason() }}</span>
+                                </div>
+                            @endif
+                            
+                            @if($confirmation->decline_comments)
+                                <div class="detail-row">
+                                    <span class="detail-label">Comments:</span>
+                                    <span class="detail-value">{{ $confirmation->decline_comments }}</span>
+                                </div>
+                            @endif
+                            
+                            @if($confirmation->contact_preference)
+                                <div class="detail-row">
+                                    <span class="detail-label">Contact Preference:</span>
+                                    <span class="detail-value">{{ ucfirst($confirmation->contact_preference) }}</span>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+                    
+                    @if($confirmation->follow_up_required)
+                        <div class="follow-up-details-section">
+                            <h5><i class="fas fa-tasks text-info"></i> Follow-up Information</h5>
+                            
+                            <div class="detail-row">
+                                <span class="detail-label">Follow-up Required:</span>
+                                <span class="detail-value">
+                                    <span class="badge bg-info">Yes</span>
+                                    @if($confirmation->isFollowUpOverdue())
+                                        <span class="badge bg-warning ms-2">Overdue</span>
+                                    @endif
+                                </span>
+                            </div>
+                            
+                            @if($confirmation->follow_up_date)
+                                <div class="detail-row">
+                                    <span class="detail-label">Follow-up Date:</span>
+                                    <span class="detail-value">{{ $confirmation->follow_up_date->format('F j, Y') }}</span>
+                                </div>
+                            @endif
+                            
+                            @if($confirmation->follow_up_actions)
+                                <div class="detail-row">
+                                    <span class="detail-label">Planned Actions:</span>
+                                    <div class="detail-value">
+                                        <ul class="follow-up-actions-list">
+                                            @foreach($confirmation->getFormattedFollowUpActions() as $action)
+                                                <li>{{ $action }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+                @endif
+                
                 @if($confirmation->notes)
                 <div class="detail-row">
-                    <span class="detail-label">Notes:</span>
+                    <span class="detail-label">Legacy Notes:</span>
                     <span class="detail-value">{{ $confirmation->notes }}</span>
                 </div>
                 @endif

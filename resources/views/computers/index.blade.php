@@ -150,15 +150,8 @@
 
                     <!-- Pagination -->
                     @if($computers->hasPages())
-                        <div class="pagination-wrapper">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="pagination-info">
-                                    Showing {{ $computers->firstItem() }} to {{ $computers->lastItem() }} of {{ $computers->total() }} computers
-                                </div>
-                                <div>
-                                    {{ $computers->appends(request()->query())->links() }}
-                                </div>
-                            </div>
+                        <div class="pagination-wrapper mt-3">
+                            {{ $computers->appends(request()->query())->links('pagination.custom') }}
                         </div>
                     @endif
                 </div>

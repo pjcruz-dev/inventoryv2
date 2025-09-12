@@ -5,12 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Permission;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use App\Models\Log;
+use Illuminate\Support\Facades\Auth;
 
 class PermissionController extends Controller
 {
     public function __construct()
     {
         $this->middleware('auth');
+        $this->middleware('permission:manage_permissions');
     }
 
     /**
@@ -39,7 +42,8 @@ class PermissionController extends Controller
      */
     public function create()
     {
-        return view('permissions.create');
+        $roles = \App\Models\Role::orderBy('name')->get();
+        return view('permissions.create', compact('roles'));
     }
 
     /**
@@ -49,13 +53,25 @@ class PermissionController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:permissions,name',
-            'description' => 'nullable|string|max:500'
+            'description' => 'nullable|string|max:500',
+            'guard_name' => 'required|string|in:web,api'
         ]);
         
-        Permission::create([
+        $permission = Permission::create([
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
-            'guard_name' => 'web'
+            'guard_name' => $validated['guard_name']
+        ]);
+        
+        // Log the permission creation
+        Log::create([
+            'category' => 'System',
+            'user_id' => Auth::id(),
+            'event_type' => 'create',
+            'description' => "Created permission '{$permission->name}' with guard '{$permission->guard_name}'",
+            'remarks' => "Permission creation completed successfully",
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent()
         ]);
         
         return redirect()->route('permissions.index')
@@ -76,7 +92,8 @@ class PermissionController extends Controller
      */
     public function edit(Permission $permission)
     {
-        return view('permissions.edit', compact('permission'));
+        $roles = \App\Models\Role::orderBy('name')->get();
+        return view('permissions.edit', compact('permission', 'roles'));
     }
 
     /**
@@ -86,12 +103,28 @@ class PermissionController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('permissions')->ignore($permission->id)],
-            'description' => 'nullable|string|max:500'
+            'description' => 'nullable|string|max:500',
+            'guard_name' => 'required|string|in:web,api'
         ]);
+        
+        $oldName = $permission->name;
+        $oldGuard = $permission->guard_name;
         
         $permission->update([
             'name' => $validated['name'],
-            'description' => $validated['description'] ?? null
+            'description' => $validated['description'] ?? null,
+            'guard_name' => $validated['guard_name']
+        ]);
+        
+        // Log the permission update
+        Log::create([
+            'category' => 'System',
+            'user_id' => Auth::id(),
+            'event_type' => 'update',
+            'description' => "Updated permission from '{$oldName}' to '{$permission->name}', guard changed from '{$oldGuard}' to '{$permission->guard_name}'",
+            'remarks' => "Permission update completed successfully",
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent()
         ]);
         
         return redirect()->route('permissions.index')
@@ -115,7 +148,22 @@ class PermissionController extends Controller
                             ->with('error', 'Cannot delete system permissions.');
         }
         
+        $permissionName = $permission->name;
+        $guardName = $permission->guard_name;
+        $roleCount = $permission->roles->count();
+        
         $permission->delete();
+        
+        // Log the permission deletion
+        Log::create([
+            'category' => 'System',
+            'user_id' => Auth::id(),
+            'event_type' => 'delete',
+            'description' => "Deleted permission '{$permissionName}' with guard '{$guardName}' that was assigned to {$roleCount} roles",
+            'remarks' => "Permission deletion completed successfully",
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent()
+        ]);
         
         return redirect()->route('permissions.index')
                         ->with('success', 'Permission deleted successfully.');

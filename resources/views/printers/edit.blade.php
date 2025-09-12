@@ -100,96 +100,37 @@
                             @enderror
                         </div>
 
-                        <!-- Network Enabled -->
-                        <div class="form-group">
-                            <label class="required">Network Connectivity <span class="text-danger">*</span></label>
-                            <div class="form-check-container mt-2">
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input @error('network_enabled') is-invalid @enderror" 
-                                           type="radio" name="network_enabled" id="network_yes" value="1" 
-                                           {{ old('network_enabled', $printer->network_enabled) == '1' ? 'checked' : '' }} required>
-                                    <label class="form-check-label" for="network_yes">
-                                        <i class="fas fa-wifi text-success"></i> Network Enabled
-                                    </label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input @error('network_enabled') is-invalid @enderror" 
-                                           type="radio" name="network_enabled" id="network_no" value="0" 
-                                           {{ old('network_enabled', $printer->network_enabled) == '0' ? 'checked' : '' }} required>
-                                    <label class="form-check-label" for="network_no">
-                                        <i class="fas fa-times text-secondary"></i> Local Connection Only
-                                    </label>
-                                </div>
-                            </div>
-                            @error('network_enabled')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-                        </div>
+
 
                         <!-- Duplex Printing -->
                         <div class="form-group">
                             <label class="required">Duplex Printing <span class="text-danger">*</span></label>
                             <div class="form-check-container mt-2">
                                 <div class="form-check form-check-inline">
-                                    <input class="form-check-input @error('duplex_printing') is-invalid @enderror" 
-                                           type="radio" name="duplex_printing" id="duplex_yes" value="1" 
-                                           {{ old('duplex_printing', $printer->duplex_printing) == '1' ? 'checked' : '' }} required>
+                                    <input class="form-check-input @error('duplex') is-invalid @enderror" 
+                                           type="radio" name="duplex" id="duplex_yes" value="1" 
+                                           {{ old('duplex', $printer->duplex) == '1' ? 'checked' : '' }} required>
                                     <label class="form-check-label" for="duplex_yes">
                                         <i class="fas fa-copy text-success"></i> Duplex Supported
                                     </label>
                                 </div>
                                 <div class="form-check form-check-inline">
-                                    <input class="form-check-input @error('duplex_printing') is-invalid @enderror" 
-                                           type="radio" name="duplex_printing" id="duplex_no" value="0" 
-                                           {{ old('duplex_printing', $printer->duplex_printing) == '0' ? 'checked' : '' }} required>
+                                    <input class="form-check-input @error('duplex') is-invalid @enderror" 
+                                           type="radio" name="duplex" id="duplex_no" value="0" 
+                                           {{ old('duplex', $printer->duplex) == '0' ? 'checked' : '' }} required>
                                     <label class="form-check-label" for="duplex_no">
                                         <i class="fas fa-times text-secondary"></i> Single-sided Only
                                     </label>
                                 </div>
                             </div>
-                            @error('duplex_printing')
+                            @error('duplex')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
 
-                        <!-- Print Speed -->
-                        <div class="form-group">
-                            <label for="print_speed">Print Speed (pages per minute)</label>
-                            <div class="input-group">
-                                <input type="number" name="print_speed" id="print_speed" 
-                                       class="form-control @error('print_speed') is-invalid @enderror" 
-                                       value="{{ old('print_speed', $printer->print_speed) }}" min="1" max="1000" step="1"
-                                       placeholder="e.g., 20">
-                                <div class="input-group-append">
-                                    <span class="input-group-text">ppm</span>
-                                </div>
-                                @error('print_speed')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <small class="form-text text-muted">
-                                Optional: Specify the printer's speed in pages per minute.
-                            </small>
-                        </div>
 
-                        <!-- Max Paper Size -->
-                        <div class="form-group">
-                            <label for="max_paper_size">Maximum Paper Size</label>
-                            <select name="max_paper_size" id="max_paper_size" class="form-control @error('max_paper_size') is-invalid @enderror">
-                                <option value="">Select Maximum Paper Size</option>
-                                <option value="A4" {{ old('max_paper_size', $printer->max_paper_size) == 'A4' ? 'selected' : '' }}>A4</option>
-                                <option value="A3" {{ old('max_paper_size', $printer->max_paper_size) == 'A3' ? 'selected' : '' }}>A3</option>
-                                <option value="Letter" {{ old('max_paper_size', $printer->max_paper_size) == 'Letter' ? 'selected' : '' }}>Letter</option>
-                                <option value="Legal" {{ old('max_paper_size', $printer->max_paper_size) == 'Legal' ? 'selected' : '' }}>Legal</option>
-                                <option value="Tabloid" {{ old('max_paper_size', $printer->max_paper_size) == 'Tabloid' ? 'selected' : '' }}>Tabloid</option>
-                                <option value="A2" {{ old('max_paper_size', $printer->max_paper_size) == 'A2' ? 'selected' : '' }}>A2</option>
-                                <option value="A1" {{ old('max_paper_size', $printer->max_paper_size) == 'A1' ? 'selected' : '' }}>A1</option>
-                                <option value="A0" {{ old('max_paper_size', $printer->max_paper_size) == 'A0' ? 'selected' : '' }}>A0</option>
-                            </select>
-                            @error('max_paper_size')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+
+
 
                         <!-- Form Actions -->
                         <div class="form-group mb-0">

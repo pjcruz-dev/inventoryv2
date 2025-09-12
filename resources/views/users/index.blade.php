@@ -49,8 +49,9 @@
                     
                     <select name="status" class="form-select form-select-sm" style="width: 120px;">
                         <option value="">All Status</option>
-                        <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
-                        <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                        <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Active</option>
+                        <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Inactive</option>
+                        <option value="2" {{ request('status') == '2' ? 'selected' : '' }}>Suspended</option>
                     </select>
                     
                     @if(request()->hasAny(['search', 'department', 'status']))
@@ -112,8 +113,16 @@
                                 </td>
                                 <td>{{ $user->job_title ?? '-' }}</td>
                                 <td>
-                                    <span class="badge bg-{{ $user->status === 'active' ? 'success' : 'danger' }}">
-                                        {{ ucfirst($user->status) }}
+                                    @php
+                                        $statusConfig = [
+                                            1 => ['label' => 'Active', 'class' => 'success'],
+                                            0 => ['label' => 'Inactive', 'class' => 'danger'],
+                                            2 => ['label' => 'Suspended', 'class' => 'warning']
+                                        ];
+                                        $config = $statusConfig[$user->status] ?? ['label' => 'Unknown', 'class' => 'secondary'];
+                                    @endphp
+                                    <span class="badge bg-{{ $config['class'] }}">
+                                        {{ $config['label'] }}
                                     </span>
                                 </td>
                                 <td>
@@ -125,6 +134,12 @@
                                            class="btn btn-outline-primary" title="View">
                                             <i class="fas fa-eye"></i>
                                         </a>
+                                        @if($user->assignedAssets()->count() > 0)
+                                            <a href="{{ route('assets.print-single-employee-assets', $user) }}" 
+                                               class="btn btn-outline-info" title="Print Assets" target="_blank">
+                                                <i class="fas fa-print"></i>
+                                            </a>
+                                        @endif
                                         <a href="{{ route('users.edit', $user) }}" 
                                            class="btn btn-outline-secondary" title="Edit">
                                             <i class="fas fa-edit"></i>
@@ -148,11 +163,8 @@
             
             @if($users->hasPages())
                 <div class="card-footer">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="text-muted small">
-                            Showing {{ $users->firstItem() }} to {{ $users->lastItem() }} of {{ $users->total() }} users
-                        </div>
-                        {{ $users->appends(request()->query())->links() }}
+                    <div class="pagination-wrapper">
+                        {{ $users->appends(request()->query())->links('pagination.custom') }}
                     </div>
                 </div>
             @endif

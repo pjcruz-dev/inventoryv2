@@ -183,7 +183,7 @@ class SerialNumberService
         
         // Check computers table if it exists separately
         if (DB::getSchemaBuilder()->hasTable('computers')) {
-            $computerQuery = DB::table('computers')->where('serial_number', $serialNumber);
+            $computerQuery = \App\Models\Computer::where('serial_number', $serialNumber);
             if ($excludeAssetId) {
                 $computerQuery->where('asset_id', '!=', $excludeAssetId);
             }
@@ -197,7 +197,26 @@ class SerialNumberService
         $assetTables = ['monitors', 'printers', 'peripherals'];
         foreach ($assetTables as $table) {
             if (DB::getSchemaBuilder()->hasTable($table)) {
-                $query = DB::table($table)->where('serial_number', $serialNumber);
+                // Use appropriate model based on table name
+        switch ($table) {
+            case 'assets':
+                $query = \App\Models\Asset::where('serial_number', $serialNumber);
+                break;
+            case 'computers':
+                $query = \App\Models\Computer::where('serial_number', $serialNumber);
+                break;
+            case 'monitors':
+                $query = \App\Models\Monitor::where('serial_number', $serialNumber);
+                break;
+            case 'printers':
+                $query = \App\Models\Printer::where('serial_number', $serialNumber);
+                break;
+            case 'peripherals':
+                $query = \App\Models\Peripheral::where('serial_number', $serialNumber);
+                break;
+            default:
+                return false;
+        }
                 if ($excludeAssetId) {
                     $query->where('asset_id', '!=', $excludeAssetId);
                 }

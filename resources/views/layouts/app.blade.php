@@ -482,6 +482,7 @@
                                 </a>
                             </li>
                             
+                            @if(auth()->user()->can('view_assets'))
                             <li class="nav-item mt-3">
                                 <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-white-50">
                                     <span>ASSET MANAGEMENT</span>
@@ -522,67 +523,86 @@
                                     Peripherals
                                 </a>
                             </li>
+                            @endif
                             
+                            @if(auth()->user()->can('view_users') || auth()->user()->can('view_assets'))
                             <li class="nav-item mt-3">
                                 <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-white-50">
                                     <span>ORGANIZATION</span>
                                 </h6>
                             </li>
+                            @endif
                             
+                            @can('view_users')
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">
                                     <i class="fas fa-users"></i>
                                     Users
                                 </a>
                             </li>
+                            @endcan
                             
+                            @can('view_users')
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('departments.*') ? 'active' : '' }}" href="{{ route('departments.index') }}">
                                     <i class="fas fa-building"></i>
                                     Departments
                                 </a>
                             </li>
+                            @endcan
                             
+                            @can('view_assets')
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('vendors.*') ? 'active' : '' }}" href="{{ route('vendors.index') }}">
                                     <i class="fas fa-truck"></i>
                                     Vendors
                                 </a>
                             </li>
+                            @endcan
                             
+                            @if(auth()->user()->can('view_logs') || auth()->user()->can('view_assets') || auth()->user()->can('view_roles') || auth()->user()->can('view_permissions'))
                             <li class="nav-item mt-3">
                                 <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-white-50">
                                     <span>SYSTEM</span>
                                 </h6>
                             </li>
+                            @endif
                             
+                            @can('view_logs')
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('logs.*') ? 'active' : '' }}" href="{{ route('logs.index') }}">
                                     <i class="fas fa-clipboard-list"></i>
                                     Activity Logs
                                 </a>
                             </li>
+                            @endcan
                             
+                            @can('view_assets')
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('timeline.*') ? 'active' : '' }}" href="{{ route('timeline.index') }}">
                                     <i class="fas fa-history"></i>
                                     Asset Timeline
                                 </a>
                             </li>
+                            @endcan
                             
+                            @can('view_roles')
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('roles.*') ? 'active' : '' }}" href="{{ route('roles.index') }}">
                                     <i class="fas fa-user-tag"></i>
                                     Roles
                                 </a>
                             </li>
+                            @endcan
                             
+                            @can('view_permissions')
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('permissions.*') ? 'active' : '' }}" href="{{ route('permissions.index') }}">
                                     <i class="fas fa-key"></i>
                                     Permissions
                                 </a>
                             </li>
+                            @endcan
                         </ul>
                         
                         <hr class="my-3" style="border-color: rgba(255,255,255,0.2);">

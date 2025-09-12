@@ -126,22 +126,40 @@
                     
                     <div class="form-group">
                         <label for="reason" class="form-label">
-                            <i class="fas fa-question-circle icon"></i>Reason for not receiving the asset *
+                            <i class="fas fa-comment-alt"></i> Reason for Declining *
                         </label>
-                        <select class="form-select @error('reason') is-invalid @enderror" id="reason" name="reason" required>
+                        <select class="form-control @error('reason') is-invalid @enderror" id="reason" name="reason" required>
                             <option value="">Please select a reason...</option>
-                            <option value="never_delivered" {{ old('reason') == 'never_delivered' ? 'selected' : '' }}>Asset was never delivered to me</option>
-                            <option value="wrong_asset" {{ old('reason') == 'wrong_asset' ? 'selected' : '' }}>Wrong asset was delivered</option>
-                            <option value="damaged_asset" {{ old('reason') == 'damaged_asset' ? 'selected' : '' }}>Asset was damaged upon delivery</option>
-                            <option value="incomplete_delivery" {{ old('reason') == 'incomplete_delivery' ? 'selected' : '' }}>Incomplete delivery (missing accessories/parts)</option>
-                            <option value="delivery_location" {{ old('reason') == 'delivery_location' ? 'selected' : '' }}>Delivered to wrong location</option>
-                            <option value="timing_issue" {{ old('reason') == 'timing_issue' ? 'selected' : '' }}>Delivery timing issue (I was not available)</option>
-                            <option value="other" {{ old('reason') == 'other' ? 'selected' : '' }}>Other (please specify in comments)</option>
+                            
+                            <optgroup label="Delivery Issues">
+                                <option value="never_delivered" {{ old('reason') == 'never_delivered' ? 'selected' : '' }}>Asset was never delivered to me</option>
+                                <option value="delivery_location" {{ old('reason') == 'delivery_location' ? 'selected' : '' }}>Delivered to wrong location</option>
+                                <option value="incomplete_delivery" {{ old('reason') == 'incomplete_delivery' ? 'selected' : '' }}>Incomplete delivery (missing items/accessories)</option>
+                            </optgroup>
+                            
+                            <optgroup label="Asset Issues">
+                                <option value="wrong_asset" {{ old('reason') == 'wrong_asset' ? 'selected' : '' }}>This is not the correct asset for me</option>
+                                <option value="damaged_asset" {{ old('reason') == 'damaged_asset' ? 'selected' : '' }}>Asset appears to be damaged</option>
+                                <option value="incompatible_asset" {{ old('reason') == 'incompatible_asset' ? 'selected' : '' }}>Asset is incompatible with my requirements</option>
+                            </optgroup>
+                            
+                            <optgroup label="Personal Reasons">
+                                <option value="no_longer_needed" {{ old('reason') == 'no_longer_needed' ? 'selected' : '' }}>I no longer need this asset</option>
+                                <option value="personal_preference" {{ old('reason') == 'personal_preference' ? 'selected' : '' }}>Personal preference for different asset</option>
+                                <option value="temporary_unavailable" {{ old('reason') == 'temporary_unavailable' ? 'selected' : '' }}>I'm temporarily unavailable to receive it</option>
+                            </optgroup>
+                            
+                            <optgroup label="Technical Issues">
+                                <option value="technical_problems" {{ old('reason') == 'technical_problems' ? 'selected' : '' }}>Technical problems with the asset</option>
+                                <option value="software_incompatibility" {{ old('reason') == 'software_incompatibility' ? 'selected' : '' }}>Software incompatibility issues</option>
+                            </optgroup>
+                            
+                            <optgroup label="Other">
+                                <option value="other_reason" {{ old('reason') == 'other_reason' ? 'selected' : '' }}>Other reason (please specify below)</option>
+                            </optgroup>
                         </select>
                         @error('reason')
-                            <div class="invalid-feedback">
-                                {{ $message }}
-                            </div>
+                            <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
@@ -150,8 +168,9 @@
                             <i class="fas fa-comment icon"></i>Additional Comments
                         </label>
                         <textarea class="form-control @error('comments') is-invalid @enderror" id="comments" name="comments" rows="4" 
+                                  maxlength="1000"
                                   placeholder="Please provide any additional details that might help us resolve this issue...">{{ old('comments') }}</textarea>
-                        <small class="form-text text-muted">Optional: Provide more details about the situation</small>
+                        <small class="form-text text-muted">Optional: Provide more details about the situation (max 1000 characters)</small>
                         @error('comments')
                             <div class="invalid-feedback">
                                 {{ $message }}
@@ -163,11 +182,54 @@
                         <label for="contact_preference" class="form-label">
                             <i class="fas fa-phone icon"></i>Preferred Contact Method
                         </label>
-                        <select class="form-select" id="contact_preference" name="contact_preference">
-                            <option value="email">Email</option>
-                            <option value="phone">Phone</option>
-                            <option value="in_person">In Person</option>
+                        <select class="form-control @error('contact_preference') is-invalid @enderror" id="contact_preference" name="contact_preference">
+                            <option value="email" {{ old('contact_preference', 'email') == 'email' ? 'selected' : '' }}>Email</option>
+                            <option value="phone" {{ old('contact_preference') == 'phone' ? 'selected' : '' }}>Phone</option>
+                            <option value="in_person" {{ old('contact_preference') == 'in_person' ? 'selected' : '' }}>In Person</option>
                         </select>
+                        @error('contact_preference')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <small class="form-text text-muted">How would you prefer to be contacted for follow-up?</small>
+                    </div>
+
+                    <div class="form-group" id="follow-up-section" style="display: none;">
+                        <label class="form-label">
+                            <i class="fas fa-tasks icon"></i>Additional Follow-up Actions Needed
+                        </label>
+                        <div class="follow-up-options">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="follow_up_actions[]" value="Schedule replacement delivery" id="action1">
+                                <label class="form-check-label" for="action1">Schedule replacement delivery</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="follow_up_actions[]" value="Arrange asset pickup" id="action2">
+                                <label class="form-check-label" for="action2">Arrange asset pickup</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="follow_up_actions[]" value="Technical support consultation" id="action3">
+                                <label class="form-check-label" for="action3">Technical support consultation</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="follow_up_actions[]" value="Asset requirement review" id="action4">
+                                <label class="form-check-label" for="action4">Asset requirement review</label>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">Select any additional actions you think might be needed</small>
+                    </div>
+
+                    <div class="form-group" id="follow-up-date-section" style="display: none;">
+                        <label for="follow_up_date" class="form-label">
+                            <i class="fas fa-calendar icon"></i>Preferred Follow-up Date
+                        </label>
+                        <input type="date" class="form-control @error('follow_up_date') is-invalid @enderror" 
+                               id="follow_up_date" name="follow_up_date" 
+                               min="{{ date('Y-m-d', strtotime('+1 day')) }}"
+                               value="{{ old('follow_up_date') }}">
+                        @error('follow_up_date')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <small class="form-text text-muted">When would be a good time for us to follow up?</small>
                     </div>
 
                     <div class="alert alert-info">
@@ -202,10 +264,66 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Auto-expand textarea based on content
+        // Auto-resize textarea
         document.getElementById('comments').addEventListener('input', function() {
             this.style.height = 'auto';
-            this.style.height = (this.scrollHeight) + 'px';
+            this.style.height = this.scrollHeight + 'px';
+        });
+
+        // Show/hide follow-up sections based on decline reason
+        document.getElementById('reason').addEventListener('change', function() {
+            const reason = this.value;
+            const followUpSection = document.getElementById('follow-up-section');
+            const followUpDateSection = document.getElementById('follow-up-date-section');
+            
+            // Reasons that require follow-up
+            const followUpReasons = [
+                'never_delivered', 
+                'wrong_asset', 
+                'damaged_asset', 
+                'incomplete_delivery', 
+                'delivery_location',
+                'technical_problems',
+                'software_incompatibility'
+            ];
+            
+            if (followUpReasons.includes(reason)) {
+                followUpSection.style.display = 'block';
+                followUpDateSection.style.display = 'block';
+            } else {
+                followUpSection.style.display = 'none';
+                followUpDateSection.style.display = 'none';
+                // Clear follow-up selections when hidden
+                const checkboxes = followUpSection.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(cb => cb.checked = false);
+                document.getElementById('follow_up_date').value = '';
+            }
+        });
+
+        // Character counter for comments
+        document.getElementById('comments').addEventListener('input', function() {
+            const maxLength = 1000;
+            const currentLength = this.value.length;
+            const remaining = maxLength - currentLength;
+            
+            let counter = document.getElementById('char-counter');
+            if (!counter) {
+                counter = document.createElement('small');
+                counter.id = 'char-counter';
+                counter.className = 'form-text';
+                this.parentNode.appendChild(counter);
+            }
+            
+            counter.textContent = `${remaining} characters remaining`;
+            counter.className = remaining < 100 ? 'form-text text-warning' : 'form-text text-muted';
+        });
+
+        // Trigger change event on page load to handle old values
+        document.addEventListener('DOMContentLoaded', function() {
+            const reasonSelect = document.getElementById('reason');
+            if (reasonSelect.value) {
+                reasonSelect.dispatchEvent(new Event('change'));
+            }
         });
     </script>
 </body>

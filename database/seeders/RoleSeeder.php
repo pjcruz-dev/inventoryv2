@@ -38,8 +38,8 @@ class RoleSeeder extends Seeder
 
         foreach ($roles as $role) {
             Role::firstOrCreate(
-                ['name' => $role['name']],
-                $role
+                ['name' => $role['name'], 'guard_name' => 'web'],
+                array_merge($role, ['guard_name' => 'web'])
             );
         }
     }

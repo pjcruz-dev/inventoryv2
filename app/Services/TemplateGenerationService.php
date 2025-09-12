@@ -395,7 +395,7 @@ class TemplateGenerationService
                 break;
             case 'users':
                 $data['departments'] = Department::pluck('name', 'id')->toArray();
-                $data['roles'] = DB::table('roles')->pluck('name', 'id')->toArray();
+                $data['roles'] = \App\Models\Role::pluck('name', 'id')->toArray();
                 break;
             case 'departments':
             case 'vendors':
@@ -433,7 +433,7 @@ class TemplateGenerationService
             case 'assets':
                 return Asset::count();
             case 'computers':
-                return DB::table('computers')->count();
+                return \App\Models\Computer::count();
             case 'users':
                 return User::count();
             default:

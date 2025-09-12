@@ -53,6 +53,69 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    
+    /**
+     * Validation rules for user creation
+     */
+    public static function validationRules(): array
+    {
+        return [
+            'employee_id' => 'required|string|max:50|unique:users,employee_id',
+            'first_name' => 'required|string|max:100|regex:/^[a-zA-Z\s]+$/',
+            'last_name' => 'required|string|max:100|regex:/^[a-zA-Z\s]+$/',
+            'email' => 'required|email|max:150|unique:users,email',
+            'password' => 'required|string|min:8|confirmed|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/',
+            'phone' => 'nullable|string|max:20|regex:/^[+]?[0-9\s\-\(\)]+$/',
+            'department_id' => 'required|exists:departments,id',
+            'role_id' => 'required|exists:roles,id',
+            'job_title' => 'nullable|string|max:100',
+            'status' => 'required|integer|in:0,1,2'
+        ];
+    }
+    
+    /**
+     * Validation rules for user update
+     */
+    public static function updateValidationRules($userId): array
+    {
+        return [
+            'employee_id' => 'required|string|max:50|unique:users,employee_id,' . $userId,
+            'first_name' => 'required|string|max:100|regex:/^[a-zA-Z\s]+$/',
+            'last_name' => 'required|string|max:100|regex:/^[a-zA-Z\s]+$/',
+            'email' => 'required|email|max:150|unique:users,email,' . $userId,
+            'password' => 'nullable|string|min:8|confirmed|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/',
+            'phone' => 'nullable|string|max:20|regex:/^[+]?[0-9\s\-\(\)]+$/',
+            'department_id' => 'required|exists:departments,id',
+            'role_id' => 'required|exists:roles,id',
+            'job_title' => 'nullable|string|max:100',
+            'status' => 'required|integer|in:0,1,2'
+        ];
+    }
+    
+    /**
+     * Boot the model
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        
+        static::creating(function ($user) {
+            // Ensure email is lowercase
+            $user->email = strtolower($user->email);
+            
+            // Generate employee_id if not provided
+            if (empty($user->employee_id)) {
+                $user->employee_id = 'EMP' . str_pad(User::count() + 1, 4, '0', STR_PAD_LEFT);
+            }
+        });
+        
+        static::updating(function ($user) {
+            // Ensure email is lowercase
+            if ($user->isDirty('email')) {
+                $user->email = strtolower($user->email);
+            }
+        });
+    }
 
     // Accessors
     public function getNameAttribute()

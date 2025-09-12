@@ -147,15 +147,8 @@
 
                     <!-- Pagination -->
                     @if($monitors->hasPages())
-                        <div class="pagination-wrapper">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="pagination-info">
-                                    Showing {{ $monitors->firstItem() }} to {{ $monitors->lastItem() }} of {{ $monitors->total() }} monitors
-                                </div>
-                                <div>
-                                    {{ $monitors->appends(request()->query())->links() }}
-                                </div>
-                            </div>
+                        <div class="pagination-wrapper mt-3">
+                            {{ $monitors->appends(request()->query())->links('pagination.custom') }}
                         </div>
                     @endif
                 </div>

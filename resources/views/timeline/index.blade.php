@@ -128,15 +128,8 @@
                     
                     <!-- Pagination -->
                     @if($timeline->hasPages())
-                        <div class="pagination-wrapper">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="pagination-info">
-                                    Showing {{ $timeline->firstItem() }} to {{ $timeline->lastItem() }} of {{ $timeline->total() }} timeline entries
-                                </div>
-                                <div>
-                                    {{ $timeline->appends(request()->query())->links() }}
-                                </div>
-                            </div>
+                        <div class="pagination-wrapper mt-3">
+                            {{ $timeline->appends(request()->query())->links('pagination.custom') }}
                         </div>
                     @endif
                 </div>

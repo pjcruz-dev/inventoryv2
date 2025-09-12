@@ -125,8 +125,9 @@
                                 <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
                                 <select class="form-select @error('status') is-invalid @enderror" 
                                         id="status" name="status" required>
-                                    <option value="active" {{ old('status', $user->status) == 'active' ? 'selected' : '' }}>Active</option>
-                                    <option value="inactive" {{ old('status', $user->status) == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                                    <option value="1" {{ old('status', $user->status) == '1' ? 'selected' : '' }}>Active</option>
+                                    <option value="0" {{ old('status', $user->status) == '0' ? 'selected' : '' }}>Inactive</option>
+                                    <option value="2" {{ old('status', $user->status) == '2' ? 'selected' : '' }}>Suspended</option>
                                 </select>
                                 @error('status')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -134,6 +135,28 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="role_id" class="form-label">Role</label>
+                                <select class="form-select @error('role_id') is-invalid @enderror" 
+                                        id="role_id" name="role_id">
+                                    <option value="">Select Role</option>
+                                    @foreach($roles as $role)
+                                        <option value="{{ $role->id }}" 
+                                                {{ old('role_id', $user->roles->first()?->id) == $role->id ? 'selected' : '' }}>
+                                            {{ $role->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('role_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <div class="form-text">Assign a role to define user permissions</div>
+                            </div>
+                        </div>
+                    </div>"}]}}}
                     
                     <hr>
                     
@@ -199,8 +222,16 @@
                         </span>
                     </div>
                     <h6 class="mb-1">{{ $user->first_name }} {{ $user->last_name }}</h6>
-                    <span class="badge bg-{{ $user->status === 'active' ? 'success' : 'danger' }}">
-                        {{ ucfirst($user->status) }}
+                    @php
+                        $statusConfig = [
+                            1 => ['label' => 'Active', 'class' => 'success'],
+                            0 => ['label' => 'Inactive', 'class' => 'danger'],
+                            2 => ['label' => 'Suspended', 'class' => 'warning']
+                        ];
+                        $config = $statusConfig[$user->status] ?? ['label' => 'Unknown', 'class' => 'secondary'];
+                    @endphp
+                    <span class="badge bg-{{ $config['class'] }}">
+                        {{ $config['label'] }}
                     </span>
                 </div>
                 

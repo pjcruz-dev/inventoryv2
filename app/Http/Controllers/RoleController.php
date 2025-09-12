@@ -6,12 +6,15 @@ use App\Models\Role;
 use App\Models\Permission;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use App\Models\Log;
+use Illuminate\Support\Facades\Auth;
 
 class RoleController extends Controller
 {
     public function __construct()
     {
         $this->middleware('auth');
+        $this->middleware('permission:manage_roles');
     }
 
     /**
@@ -63,8 +66,21 @@ class RoleController extends Controller
         ]);
         
         if (isset($validated['permissions'])) {
-            $role->syncPermissions($validated['permissions']);
+            // Convert permission IDs to permission names
+            $permissionNames = Permission::whereIn('id', $validated['permissions'])->pluck('name')->toArray();
+            $role->syncPermissions($permissionNames);
         }
+        
+        // Log the role creation
+        Log::create([
+            'category' => 'System',
+            'user_id' => Auth::id(),
+            'event_type' => 'create',
+            'description' => "Created role '{$role->name}' with " . count($validated['permissions'] ?? []) . " permissions",
+            'remarks' => "Role creation completed successfully",
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent()
+        ]);
         
         return redirect()->route('roles.index')
                         ->with('success', 'Role created successfully.');
@@ -101,16 +117,34 @@ class RoleController extends Controller
             'permissions.*' => 'exists:permissions,id'
         ]);
         
+        $oldName = $role->name;
+        $oldPermissions = $role->permissions->pluck('id')->toArray();
+        
         $role->update([
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null
         ]);
         
         if (isset($validated['permissions'])) {
-            $role->syncPermissions($validated['permissions']);
+            // Convert permission IDs to permission names
+            $permissionNames = Permission::whereIn('id', $validated['permissions'])->pluck('name')->toArray();
+            $role->syncPermissions($permissionNames);
         } else {
             $role->syncPermissions([]);
         }
+        
+        $newPermissions = $validated['permissions'] ?? [];
+        
+        // Log the role update
+        Log::create([
+            'category' => 'System',
+            'user_id' => Auth::id(),
+            'event_type' => 'update',
+            'description' => "Updated role from '{$oldName}' to '{$role->name}'. Permissions changed from " . count($oldPermissions) . " to " . count($newPermissions),
+            'remarks' => "Role update completed successfully",
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent()
+        ]);
         
         return redirect()->route('roles.index')
                         ->with('success', 'Role updated successfully.');
@@ -127,7 +161,21 @@ class RoleController extends Controller
                             ->with('error', 'Cannot delete system roles.');
         }
         
+        $roleName = $role->name;
+        $permissionCount = $role->permissions->count();
+        
         $role->delete();
+        
+        // Log the role deletion
+        Log::create([
+            'category' => 'System',
+            'user_id' => Auth::id(),
+            'event_type' => 'delete',
+            'description' => "Deleted role '{$roleName}' which had {$permissionCount} permissions",
+            'remarks' => "Role deletion completed successfully",
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent()
+        ]);
         
         return redirect()->route('roles.index')
                         ->with('success', 'Role deleted successfully.');

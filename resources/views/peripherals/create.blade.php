@@ -62,18 +62,18 @@
                         </div>
 
                         <div class="row mb-3">
-                            <label for="connectivity" class="col-md-4 col-form-label text-md-end">{{ __('Connectivity') }}</label>
+                            <label for="interface" class="col-md-4 col-form-label text-md-end">{{ __('Interface') }}</label>
 
                             <div class="col-md-6">
-                                <select id="connectivity" class="form-control @error('connectivity') is-invalid @enderror" name="connectivity" required>
-                                    <option value="">Select Connectivity</option>
-                                    <option value="USB" {{ old('connectivity') == 'USB' ? 'selected' : '' }}>USB</option>
-                                    <option value="Bluetooth" {{ old('connectivity') == 'Bluetooth' ? 'selected' : '' }}>Bluetooth</option>
-                                    <option value="Wireless" {{ old('connectivity') == 'Wireless' ? 'selected' : '' }}>Wireless</option>
-                                    <option value="Wired" {{ old('connectivity') == 'Wired' ? 'selected' : '' }}>Wired</option>
+                                <select id="interface" class="form-control @error('interface') is-invalid @enderror" name="interface" required>
+                                    <option value="">Select Interface</option>
+                                    <option value="USB" {{ old('interface') == 'USB' ? 'selected' : '' }}>USB</option>
+                                    <option value="Bluetooth" {{ old('interface') == 'Bluetooth' ? 'selected' : '' }}>Bluetooth</option>
+                                    <option value="Wireless" {{ old('interface') == 'Wireless' ? 'selected' : '' }}>Wireless</option>
+                                    <option value="Wired" {{ old('interface') == 'Wired' ? 'selected' : '' }}>Wired</option>
                                 </select>
 
-                                @error('connectivity')
+                                @error('interface')
                                     <span class="invalid-feedback" role="alert">
                                         <strong>{{ $message }}</strong>
                                     </span>

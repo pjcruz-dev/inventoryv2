@@ -12,9 +12,11 @@ class Computer extends Model
     protected $fillable = [
         'asset_id',
         'processor',
-        'ram',
+        'memory',
         'storage',
-        'os',
+        'operating_system',
+        'graphics_card',
+        'computer_type',
     ];
 
     // Relationships

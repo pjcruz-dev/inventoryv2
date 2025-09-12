@@ -24,8 +24,16 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="asset_tag" class="form-label">Asset Tag <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('asset_tag') is-invalid @enderror" 
-                                       id="asset_tag" name="asset_tag" value="{{ old('asset_tag') }}" required>
+                                <div class="input-group">
+                                    <input type="text" class="form-control @error('asset_tag') is-invalid @enderror" 
+                                           id="asset_tag" name="asset_tag" value="{{ old('asset_tag') }}" required
+                                           placeholder="Will be auto-generated when category is selected">
+                                    <button type="button" class="btn btn-outline-secondary" id="generateTagBtn" 
+                                            title="Generate new asset tag" style="display: none;">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted">Asset tag will be automatically generated when you select a category</small>
                                 @error('asset_tag')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -332,9 +340,12 @@ $(document).ready(function() {
     });
     
     // Auto-generate asset tag based on category and current date
-    function generateAssetTag(categoryText) {
+    function generateAssetTag(categoryText, forceGenerate = false) {
         const assetTagField = document.getElementById('asset_tag');
-        if (!assetTagField.value) {
+        const generateBtn = document.getElementById('generateTagBtn');
+        
+        // Only generate if field is empty or force generation is requested
+        if (!assetTagField.value || forceGenerate) {
             const categoryPrefix = categoryText.substring(0, 3).toUpperCase();
             const date = new Date();
             const timestamp = date.getFullYear().toString().substr(-2) + 
@@ -342,8 +353,43 @@ $(document).ready(function() {
                             String(date.getDate()).padStart(2, '0');
             const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
             assetTagField.value = categoryPrefix + '-' + timestamp + '-' + random;
+            
+            // Add visual feedback
+            assetTagField.classList.add('border-success');
+            setTimeout(() => {
+                assetTagField.classList.remove('border-success');
+            }, 2000);
+        }
+        
+        // Show generate button if category is selected and field has value
+        if (categoryText && assetTagField.value) {
+            generateBtn.style.display = 'block';
         }
     }
+    
+    // Manual asset tag generation
+    $('#generateTagBtn').on('click', function() {
+        const categorySearch = $('#categorySearchCreate');
+        const categoryText = categorySearch.val();
+        
+        if (categoryText) {
+            generateAssetTag(categoryText, true);
+        } else {
+            alert('Please select a category first.');
+        }
+    });
+    
+    // Show/hide generate button based on asset tag field content
+    $('#asset_tag').on('input', function() {
+        const generateBtn = document.getElementById('generateTagBtn');
+        const categorySearch = $('#categorySearchCreate');
+        
+        if ($(this).val() && categorySearch.val()) {
+            generateBtn.style.display = 'block';
+        } else {
+            generateBtn.style.display = 'none';
+        }
+    });
 });
 </script>
 @endsection

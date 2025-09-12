@@ -32,6 +32,8 @@ Route::middleware('auth')->group(function () {
     Route::post('assets/{asset}/assign', [AssetController::class, 'assign'])->name('assets.assign');
     Route::post('assets/{asset}/unassign', [AssetController::class, 'unassign'])->name('assets.unassign');
     Route::post('assets/{asset}/reassign', [AssetController::class, 'reassign'])->name('assets.reassign');
+    Route::get('assets/reports/employee-assets', [AssetController::class, 'printEmployeeAssets'])->name('assets.print-employee-assets');
+    Route::get('assets/reports/employee-assets/{user}', [AssetController::class, 'printSingleEmployeeAssets'])->name('assets.print-single-employee-assets');
     Route::resource('computers', ComputerController::class);
     Route::resource('monitors', MonitorController::class);
     Route::resource('printers', PrinterController::class);
@@ -41,6 +43,25 @@ Route::middleware('auth')->group(function () {
     Route::resource('users', UserController::class);
     Route::resource('departments', DepartmentController::class);
     Route::resource('vendors', VendorController::class);
+    
+    // User role management routes
+    Route::prefix('users')->name('users.')->group(function () {
+        Route::get('/role-management', [UserController::class, 'roleManagement'])
+            ->name('role-management')
+            ->middleware('check.permission:manage_user_roles');
+        Route::post('/{user}/assign-role', [UserController::class, 'assignRole'])
+            ->name('assign-role')
+            ->middleware('check.permission:assign_roles');
+        Route::post('/{user}/remove-role', [UserController::class, 'removeRole'])
+            ->name('remove-role')
+            ->middleware('check.permission:remove_roles');
+        Route::post('/bulk-assign-roles', [UserController::class, 'bulkAssignRoles'])
+            ->name('bulk-assign-roles')
+            ->middleware('check.permission:bulk_assign_roles');
+        Route::get('/{user}/roles', [UserController::class, 'getUserRoles'])
+             ->name('get-roles')
+             ->middleware('check.permission:view_user_roles');
+     });
     
     // Roles and permissions management
     Route::resource('roles', RoleController::class);

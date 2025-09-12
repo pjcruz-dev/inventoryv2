@@ -12,6 +12,10 @@ class DepartmentController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+        $this->middleware('permission:view_users')->only(['index', 'show']);
+        $this->middleware('permission:create_users')->only(['create', 'store']);
+        $this->middleware('permission:edit_users')->only(['edit', 'update']);
+        $this->middleware('permission:delete_users')->only(['destroy']);
     }
 
     /**

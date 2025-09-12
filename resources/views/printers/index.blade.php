@@ -207,15 +207,8 @@
 
                     <!-- Pagination -->
                     @if($printers->hasPages())
-                        <div class="pagination-wrapper">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="pagination-info">
-                                    Showing {{ $printers->firstItem() }} to {{ $printers->lastItem() }} of {{ $printers->total() }} printers
-                                </div>
-                                <div>
-                                    {{ $printers->appends(request()->query())->links() }}
-                                </div>
-                            </div>
+                        <div class="pagination-wrapper mt-3">
+                            {{ $printers->appends(request()->query())->links('pagination.custom') }}
                         </div>
                     @endif
                 </div>

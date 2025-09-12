@@ -88,6 +88,21 @@
                             @enderror
                         </div>
 
+                        <!-- Computer Type -->
+                        <div class="form-group">
+                            <label for="computer_type" class="form-label">Computer Type <span class="text-danger">*</span></label>
+                            <select name="computer_type" id="computer_type" class="form-control @error('computer_type') is-invalid @enderror" required>
+                                <option value="">Select Computer Type</option>
+                                <option value="Desktop" {{ old('computer_type') == 'Desktop' ? 'selected' : '' }}>Desktop</option>
+                                <option value="Laptop" {{ old('computer_type') == 'Laptop' ? 'selected' : '' }}>Laptop</option>
+                                <option value="Server" {{ old('computer_type') == 'Server' ? 'selected' : '' }}>Server</option>
+                                <option value="Workstation" {{ old('computer_type') == 'Workstation' ? 'selected' : '' }}>Workstation</option>
+                            </select>
+                            @error('computer_type')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
                         <!-- Operating System -->
                         <div class="form-group">
                             <label for="operating_system" class="form-label">Operating System</label>

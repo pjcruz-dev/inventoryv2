@@ -8,14 +8,48 @@
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
     
     :root {
-        /* Professional Color Palette - Enhanced for Better Accessibility */
+        /* Soft UI Color Palette - Neumorphic Design */
+        --soft-primary: #cb0c9f;
+        --soft-primary-light: #e91e63;
+        --soft-primary-dark: #ad0e4e;
+        --soft-secondary: #8392ab;
+        --soft-secondary-light: #a8b5c8;
+        --soft-secondary-dark: #6c7b8a;
+        --soft-success: #82d616;
+        --soft-success-light: #9ee547;
+        --soft-success-dark: #6bb012;
+        --soft-info: #17c1e8;
+        --soft-info-light: #4dd0ea;
+        --soft-info-dark: #139bb5;
+        --soft-warning: #fbcf33;
+        --soft-warning-light: #fcd85a;
+        --soft-warning-dark: #d4a829;
+        --soft-danger: #ea0606;
+        --soft-danger-light: #f04444;
+        --soft-danger-dark: #c20505;
+        --soft-light: #e9ecef;
+        --soft-dark: #344767;
+        --soft-white: #ffffff;
+        
+        /* Neumorphic Background Colors */
+        --soft-bg: #f8f9fa;
+        --soft-bg-secondary: #e9ecef;
+        --soft-card-bg: #ffffff;
+        
+        /* Soft Shadows for Neumorphic Effect */
+        --soft-shadow-light: 20px 20px 60px #d1d9e6, -20px -20px 60px #ffffff;
+        --soft-shadow-dark: inset 20px 20px 60px #d1d9e6, inset -20px -20px 60px #ffffff;
+        --soft-shadow-sm: 5px 5px 15px #d1d9e6, -5px -5px 15px #ffffff;
+        --soft-shadow-lg: 25px 25px 75px #d1d9e6, -25px -25px 75px #ffffff;
+        
+        /* Legacy Variables for Backward Compatibility */
         --primary-50: #f0f4ff;
         --primary-100: #e0e7ff;
         --primary-200: #c7d2fe;
         --primary-300: #a5b4fc;
         --primary-400: #818cf8;
-        --primary-500: #6366f1;
-        --primary-600: #4f46e5;
+        --primary-500: var(--soft-primary);
+        --primary-600: var(--soft-primary-dark);
         --primary-700: #4338ca;
         --primary-800: #3730a3;
         --primary-900: #312e81;
@@ -246,7 +280,7 @@
         transition: none !important;
     }
     
-    /* Mobile-First Responsive Design */
+    /* Soft UI Mobile-First Responsive Design */
     @media (max-width: 576px) {
         .dashboard-header {
             padding: 1rem !important;
@@ -263,10 +297,12 @@
         
         .dashboard-card {
             margin-bottom: 1rem;
+            border-radius: 15px !important;
         }
         
         .stat-card {
-            padding: 1rem !important;
+            padding: 1.5rem !important;
+            border-radius: 15px !important;
         }
         
         .display-6 {
@@ -274,27 +310,41 @@
         }
         
         .quick-filter {
-            padding: 0.5rem 1rem !important;
-            font-size: 0.75rem !important;
+            padding: 0.75rem 1rem !important;
+            font-size: 0.875rem !important;
             margin-bottom: 0.5rem;
+            border-radius: 12px !important;
         }
         
         .modern-select, .modern-btn {
-            padding: 0.625rem 1rem !important;
-            font-size: 0.8rem !important;
+            padding: 0.75rem 1rem !important;
+            font-size: 0.875rem !important;
+            border-radius: 12px !important;
+            min-height: 44px;
         }
         
         .btn-group {
             flex-direction: column;
             width: 100%;
+            gap: 0.5rem;
         }
         
         .btn-group .quick-filter {
-            border-radius: 0.5rem !important;
-            margin-bottom: 0.25rem;
+            border-radius: 12px !important;
+            margin-bottom: 0;
+        }
+        
+        .table-modern {
+            border-radius: 15px !important;
+        }
+        
+        .section-header {
+            border-radius: 15px 15px 0 0 !important;
+            padding: 1rem !important;
         }
     }
     
+    /* Soft UI Tablet Responsive Design */
     @media (max-width: 768px) {
         .row.g-3 > .col-md-3 {
             margin-bottom: 1rem;
@@ -302,55 +352,118 @@
         
         .filter-container {
             padding: 1rem;
+            border-radius: 15px;
+        }
+        
+        .dashboard-card {
+            border-radius: 18px;
         }
         
         .dashboard-card:hover {
-            transform: translateY(-4px) scale(1.01) !important;
+            transform: translateY(-3px) !important;
         }
         
-        .clickable-card:hover {
-            transform: translateY(-6px) scale(1.02) !important;
+        .stat-card {
+            border-radius: 18px;
+            padding: 1.75rem;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-3px) !important;
+        }
+        
+        .modern-btn {
+            border-radius: 14px;
+        }
+        
+        .modern-select {
+            border-radius: 14px;
+        }
+        
+        .table-modern {
+            border-radius: 18px;
+        }
+        
+        .section-header {
+            border-radius: 18px 18px 0 0;
         }
     }
     
+    /* Soft UI Large Tablet Design */
     @media (min-width: 769px) and (max-width: 1024px) {
         .dashboard-title {
             font-size: 2.25rem;
         }
         
         .stat-card {
-            padding: 1.25rem;
-        }
-    }
-    
-    @media (min-width: 1025px) {
-        .dashboard-card:hover {
-            transform: translateY(-8px) scale(1.02);
+            padding: 2rem;
+            border-radius: 20px;
         }
         
-        .clickable-card:hover {
-            transform: translateY(-12px) scale(1.03);
+        .dashboard-card {
+            border-radius: 20px;
+        }
+        
+        .modern-btn {
+            border-radius: 15px;
+        }
+        
+        .modern-select {
+            border-radius: 15px;
         }
     }
     
-    /* Touch-friendly interactions */
+    /* Soft UI Desktop Design */
+    @media (min-width: 1025px) {
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .modern-btn:hover {
+            transform: translateY(-3px);
+        }
+        
+        .modern-select:hover {
+            transform: translateY(-2px);
+        }
+    }
+    
+    /* Soft UI Touch-friendly interactions */
     @media (hover: none) and (pointer: coarse) {
         .dashboard-card:hover,
-        .clickable-card:hover,
+        .stat-card:hover,
         .quick-filter:hover,
-        .modern-btn:hover {
+        .modern-btn:hover,
+        .modern-select:hover {
             transform: none !important;
         }
         
         .dashboard-card:active,
-        .clickable-card:active {
+        .stat-card:active {
             transform: scale(0.98);
             transition: transform 0.1s ease;
+            box-shadow: var(--soft-shadow-dark);
+        }
+        
+        .modern-btn:active {
+            transform: scale(0.95);
+            box-shadow: var(--soft-shadow-dark);
         }
         
         .quick-filter,
-        .modern-btn {
+        .modern-btn,
+        .modern-select {
             min-height: 44px; /* Touch target size */
+            border-radius: 12px;
+        }
+        
+        /* Ensure proper spacing for touch targets */
+        .btn-group .quick-filter {
+            margin-bottom: 0.5rem;
         }
     }
     
@@ -416,38 +529,26 @@
         margin: 0 auto;
     }
     
+    /* Soft UI Dashboard Cards - Neumorphic Design */
     .dashboard-card {
-        border: 1px solid var(--soft-gray-100);
-        border-radius: var(--border-radius-3xl);
-        box-shadow: var(--soft-shadow-lg);
-        transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        overflow: hidden;
         background: var(--soft-card-bg);
+        border: none;
+        border-radius: 20px;
+        box-shadow: var(--soft-shadow-light);
+        transition: all 0.3s ease;
+        overflow: hidden;
         position: relative;
         backdrop-filter: blur(10px);
     }
     
-    .dashboard-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
-        transition: left 0.5s;
-        z-index: 1;
-        border-radius: 1.5rem;
-    }
-    
-    .dashboard-card:hover::before {
-        left: 100%;
-    }
-    
     .dashboard-card:hover {
-        transform: translateY(-12px) scale(1.02);
-        box-shadow: var(--soft-shadow-xl), var(--soft-glow-primary);
-        border-color: var(--soft-primary-light);
+        transform: translateY(-5px);
+        box-shadow: var(--soft-shadow-lg);
+    }
+    
+    .dashboard-card:active {
+        box-shadow: var(--soft-shadow-dark);
+        transform: translateY(2px);
     }
     
     /* Staggered Animation for Cards */
@@ -471,44 +572,54 @@
         animation: fadeInUp 0.6s ease-out both;
     }
     
-    .dashboard-card:hover {
-        transform: translateY(-12px) scale(1.02);
-        box-shadow: var(--soft-shadow-xl), var(--soft-glow-primary);
-        border-color: var(--soft-primary-light);
-    }
-    
+    /* Soft UI Stat Cards - Neumorphic Design */
     .stat-card {
-        background: linear-gradient(135deg, var(--soft-primary) 0%, var(--soft-primary-dark) 100%);
-        color: white;
+        background: var(--soft-card-bg);
+        color: var(--soft-text-primary);
         position: relative;
-        border-radius: var(--border-radius-3xl);
-        box-shadow: var(--soft-shadow-lg), var(--soft-shadow-primary);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        box-shadow: var(--soft-shadow-light);
+        border: none;
         backdrop-filter: blur(10px);
         overflow: hidden;
+        transition: all 0.3s ease;
+        cursor: pointer;
     }
     
-    .stat-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-        pointer-events: none;
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--soft-shadow-lg);
+    }
+    
+    .stat-card:active {
+        box-shadow: var(--soft-shadow-dark);
+        transform: translateY(2px);
+    }
+    
+    /* Soft UI Stat Card Color Variants */
+    .stat-card.primary {
+        background: linear-gradient(135deg, var(--soft-primary-light), var(--soft-primary));
+        color: white;
     }
     
     .stat-card.success {
-        background: linear-gradient(135deg, var(--soft-success) 0%, var(--soft-success-light) 100%);
+        background: linear-gradient(135deg, var(--soft-success-light), var(--soft-success));
+        color: white;
     }
     
     .stat-card.info {
-        background: linear-gradient(135deg, var(--soft-info) 0%, var(--soft-primary-light) 100%);
+        background: linear-gradient(135deg, var(--soft-info-light), var(--soft-info));
+        color: white;
     }
     
     .stat-card.warning {
-        background: linear-gradient(135deg, var(--soft-warning) 0%, #f57c00 100%);
+        background: linear-gradient(135deg, var(--soft-warning-light), var(--soft-warning));
+        color: white;
+    }
+    
+    .stat-card.danger {
+        background: linear-gradient(135deg, var(--soft-danger-light), var(--soft-danger));
+        color: white;
     }
     
     .stat-icon {
@@ -520,101 +631,120 @@
         font-size: 3rem;
     }
     
+    /* Soft UI Form Elements */
     .modern-select {
-        border: 1px solid var(--soft-gray-300);
-        border-radius: 0.75rem;
+        border: none;
+        border-radius: 15px;
         padding: 0.75rem 1rem;
-        background: var(--soft-white);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: var(--soft-card-bg);
+        transition: all 0.3s ease;
         font-weight: 400;
-        box-shadow: var(--soft-shadow);
+        box-shadow: var(--soft-shadow-light);
         position: relative;
+        color: var(--soft-text-primary);
     }
     
     .modern-select:focus {
-        border-color: var(--soft-primary);
-        box-shadow: 0 0 0 2px rgba(203, 12, 159, 0.25), var(--soft-shadow-lg);
+        box-shadow: var(--soft-shadow-lg);
         outline: none;
-        transform: translateY(-1px) scale(1.01);
-        background: linear-gradient(135deg, var(--soft-white) 0%, rgba(203, 12, 159, 0.02) 100%);
+        transform: translateY(-2px);
+        background: var(--soft-card-bg);
     }
     
     .modern-select:hover {
-        border-color: var(--soft-primary);
-        transform: translateY(-1px);
+        transform: translateY(-2px);
         box-shadow: var(--soft-shadow-lg);
     }
     
+    /* Soft UI Buttons */
     .modern-btn {
-        border-radius: 0.75rem;
+        border-radius: 15px;
         padding: 0.75rem 1.5rem;
         font-weight: 600;
         text-transform: none;
         letter-spacing: 0.025rem;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.3s ease;
         border: none;
-        box-shadow: var(--soft-shadow);
-        background: linear-gradient(310deg, var(--soft-primary) 0%, #ad1457 100%);
-        color: var(--soft-white);
+        box-shadow: var(--soft-shadow-light);
+        background: linear-gradient(135deg, var(--soft-primary-light), var(--soft-primary));
+        color: white;
         position: relative;
-        overflow: hidden;
-    }
-    
-    .modern-btn::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
-        transition: all 0.4s ease;
-        transform: translate(-50%, -50%);
-        border-radius: 50%;
-    }
-    
-    .modern-btn:hover::before {
-        width: 300px;
-        height: 300px;
+        cursor: pointer;
     }
     
     .modern-btn:hover {
-        transform: translateY(-3px) scale(1.02);
-        box-shadow: var(--soft-shadow-xl);
+        transform: translateY(-3px);
+        box-shadow: var(--soft-shadow-lg);
     }
     
     .modern-btn:active {
-        transform: translateY(-1px) scale(1.01);
+        transform: translateY(1px);
+        box-shadow: var(--soft-shadow-dark);
         transition: all 0.1s ease;
     }
     
-    .modern-btn i {
-        position: relative;
-        z-index: 1;
-        transition: transform 0.3s ease;
+    .modern-btn.btn-secondary {
+        background: var(--soft-card-bg);
+        color: var(--soft-text-primary);
+        box-shadow: var(--soft-shadow-light);
     }
     
-    .modern-btn:hover i {
-        transform: scale(1.1);
+    .modern-btn.btn-success {
+        background: linear-gradient(135deg, var(--soft-success-light), var(--soft-success));
     }
     
+    .modern-btn.btn-danger {
+        background: linear-gradient(135deg, var(--soft-danger-light), var(--soft-danger));
+    }
+    
+    /* Soft UI Section Headers */
     .section-header {
-        background: linear-gradient(310deg, var(--soft-dark) 0%, #263238 100%);
-        color: white;
-        border-radius: 1rem 1rem 0 0;
+        background: var(--soft-card-bg);
+        color: var(--soft-text-primary);
+        border-radius: 20px 20px 0 0;
         padding: 1.5rem;
-        box-shadow: var(--soft-shadow);
+        box-shadow: var(--soft-shadow-light);
+        border-bottom: 1px solid var(--soft-gray-100);
     }
     
+    /* Soft UI Tables */
     .table-modern {
-        border-radius: 1rem;
+        border-radius: 20px;
         overflow: hidden;
-        box-shadow: var(--soft-shadow);
-        background: var(--soft-white);
+        box-shadow: var(--soft-shadow-light);
+        background: var(--soft-card-bg);
+        border: none;
     }
     
     .table-modern thead {
-        background: linear-gradient(310deg, var(--soft-gray-100) 0%, var(--soft-gray-200) 100%);
+        background: var(--soft-gray-50);
+    }
+    
+    .table-modern th {
+        border: none;
+        padding: 1rem;
+        font-weight: 600;
+        color: var(--soft-text-secondary);
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+    }
+    
+    .table-modern td {
+        border: none;
+        padding: 1rem;
+        color: var(--soft-text-primary);
+        border-bottom: 1px solid var(--soft-gray-100);
+    }
+    
+    .table-modern tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .table-modern tbody tr:hover {
+        background: var(--soft-gray-50);
+        transform: translateY(-1px);
+        transition: all 0.2s ease;
     }
     
     .table-modern th {
@@ -2712,8 +2842,139 @@
         font-size: var(--text-sm);
         font-weight: var(--font-medium);
         color: var(--neutral-600);
-        line-height: var(--leading-normal);
-        margin-bottom: 0.75rem;
+        line-height: var(--leading-relaxed);
+        margin-bottom: 1rem;
+    }
+
+    /* Modern Table Styles for Weekly Breakdown */
+    .table-modern {
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: none;
+    }
+
+    .table-modern thead th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 1rem;
+        border: none;
+        position: relative;
+        font-size: 0.875rem;
+    }
+
+    .table-modern tbody tr {
+        transition: all 0.3s ease;
+        border: none;
+    }
+
+    .table-modern tbody tr:hover {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .table-modern tbody td {
+        padding: 1rem;
+        border: none;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        vertical-align: middle;
+    }
+
+    .table-row-hover {
+        cursor: pointer;
+    }
+
+    .status-cell {
+        position: relative;
+    }
+
+    .status-cell .badge {
+        transition: all 0.3s ease;
+        cursor: pointer;
+        min-width: 60px;
+        font-weight: 600;
+    }
+
+    .status-cell .badge:hover {
+        transform: scale(1.1);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .week-indicator {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        font-weight: 700;
+    }
+
+    .total-cell .badge {
+        font-size: 1.1rem;
+        padding: 0.75rem 1rem;
+        font-weight: 700;
+    }
+
+    .progress {
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(0, 0, 0, 0.1);
+    }
+
+    .progress-bar {
+        border-radius: 2px;
+        transition: width 0.6s ease;
+    }
+
+    /* View Toggle Buttons */
+    .btn-group .btn {
+        border-radius: 10px;
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    .btn-group .btn.active {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-color: #667eea;
+        color: white;
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-group .btn:not(.active) {
+        background: rgba(102, 126, 234, 0.1);
+        border-color: rgba(102, 126, 234, 0.3);
+        color: #667eea;
+    }
+
+    .btn-group .btn:not(.active):hover {
+        background: rgba(102, 126, 234, 0.2);
+        transform: translateY(-2px);
+    }
+
+    /* Month Section Headers */
+    .month-section h6 {
+        font-size: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .month-section .badge {
+        font-size: 0.875rem;
+        padding: 0.5rem 1rem;
+    }
+
+    /* Table Summary Row */
+    .table-info {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)) !important;
+    }
+
+    .table-info td {
+        font-weight: 600;
+        border-top: 2px solid rgba(102, 126, 234, 0.2);
     }
     
     .card-text {
@@ -3532,311 +3793,7 @@
         }
      }
      
-     /* Dark Mode Theme System */
-     [data-theme="dark"] {
-         /* Dark Mode Color Palette */
-         --primary-50: #1e293b;
-         --primary-100: #334155;
-         --primary-200: #475569;
-         --primary-300: #64748b;
-         --primary-400: #94a3b8;
-         --primary-500: #cbd5e1;
-         --primary-600: #e2e8f0;
-         --primary-700: #f1f5f9;
-         --primary-800: #f8fafc;
-         --primary-900: #ffffff;
-         
-         --secondary-50: #1a1a2e;
-         --secondary-100: #16213e;
-         --secondary-200: #0f3460;
-         --secondary-300: #533483;
-         --secondary-400: #7209b7;
-         --secondary-500: #a663cc;
-         --secondary-600: #c084fc;
-         --secondary-700: #ddd6fe;
-         --secondary-800: #ede9fe;
-         --secondary-900: #f5f3ff;
-         
-         --success-50: #0c1f17;
-         --success-100: #14532d;
-         --success-200: #166534;
-         --success-300: #15803d;
-         --success-400: #16a34a;
-         --success-500: #22c55e;
-         --success-600: #4ade80;
-         --success-700: #86efac;
-         --success-800: #bbf7d0;
-         --success-900: #dcfce7;
-         
-         --warning-50: #1c1917;
-         --warning-100: #451a03;
-         --warning-200: #78350f;
-         --warning-300: #a16207;
-         --warning-400: #ca8a04;
-         --warning-500: #eab308;
-         --warning-600: #facc15;
-         --warning-700: #fde047;
-         --warning-800: #fef08a;
-         --warning-900: #fefce8;
-         
-         --danger-50: #1f1315;
-         --danger-100: #450a0a;
-         --danger-200: #7f1d1d;
-         --danger-300: #b91c1c;
-         --danger-400: #dc2626;
-         --danger-500: #ef4444;
-         --danger-600: #f87171;
-         --danger-700: #fca5a5;
-         --danger-800: #fecaca;
-         --danger-900: #fef2f2;
-         
-         --info-50: #0c1426;
-         --info-100: #0c4a6e;
-         --info-200: #075985;
-         --info-300: #0369a1;
-         --info-400: #0284c7;
-         --info-500: #0ea5e9;
-         --info-600: #38bdf8;
-         --info-700: #7dd3fc;
-         --info-800: #bae6fd;
-         --info-900: #e0f2fe;
-         
-         --neutral-50: #0f172a;
-         --neutral-100: #1e293b;
-         --neutral-200: #334155;
-         --neutral-300: #475569;
-         --neutral-400: #64748b;
-         --neutral-500: #94a3b8;
-         --neutral-600: #cbd5e1;
-         --neutral-700: #e2e8f0;
-         --neutral-800: #f1f5f9;
-         --neutral-900: #f8fafc;
-         
-         /* Dark Mode Backgrounds */
-         --soft-bg: #0f172a;
-         --soft-bg-secondary: #1e293b;
-         --card-bg: #1e293b;
-         --card-bg-hover: #334155;
-         
-         /* Dark Mode Shadows */
-         --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-         --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-         --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
-         --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
-         --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
-         
-         /* Dark Mode Text Colors */
-         color: var(--neutral-800);
-         background-color: var(--soft-bg);
-     }
-     
-     /* Dark Mode Specific Overrides */
-     [data-theme="dark"] .card {
-         background-color: var(--card-bg);
-         border-color: var(--neutral-300);
-         color: var(--neutral-800);
-     }
-     
-     [data-theme="dark"] .card:hover {
-         background-color: var(--card-bg-hover);
-     }
-     
-     [data-theme="dark"] .kpi-card {
-         background: linear-gradient(135deg, var(--card-bg) 0%, var(--card-bg-hover) 100%);
-         border-color: var(--neutral-300);
-     }
-     
-     [data-theme="dark"] .kpi-card:hover {
-         background: linear-gradient(135deg, var(--card-bg-hover) 0%, var(--neutral-200) 100%);
-         transform: translateY(-2px);
-     }
-     
-     [data-theme="dark"] .btn-primary {
-         background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%);
-         color: var(--neutral-50);
-     }
-     
-     [data-theme="dark"] .btn-primary:hover {
-         background: linear-gradient(135deg, var(--primary-700) 0%, var(--primary-800) 100%);
-         color: var(--neutral-50);
-     }
-     
-     [data-theme="dark"] .form-control {
-         background-color: var(--card-bg);
-         border-color: var(--neutral-300);
-         color: var(--neutral-800);
-     }
-     
-     [data-theme="dark"] .form-control:focus {
-         background-color: var(--card-bg);
-         border-color: var(--primary-500);
-         color: var(--neutral-800);
-     }
-     
-     [data-theme="dark"] .form-control::placeholder {
-         color: var(--neutral-400);
-     }
-     
-     [data-theme="dark"] .table {
-         color: var(--neutral-800);
-     }
-     
-     [data-theme="dark"] .table th {
-         color: var(--neutral-600);
-         border-color: var(--neutral-300);
-     }
-     
-     [data-theme="dark"] .table td {
-         color: var(--neutral-700);
-         border-color: var(--neutral-300);
-     }
-     
-     /* Dark Mode Toggle Button */
-     .theme-toggle {
-         position: fixed;
-         top: 20px;
-         right: 20px;
-         z-index: 1000;
-         background: var(--card-bg);
-         border: 1px solid var(--neutral-300);
-         border-radius: var(--border-radius-full);
-         width: 3rem;
-         height: 3rem;
-         display: flex;
-         align-items: center;
-         justify-content: center;
-         cursor: pointer;
-         transition: all 0.3s ease;
-         box-shadow: var(--shadow-lg);
-         color: var(--neutral-700);
-     }
-     
-     .theme-toggle:hover {
-         background: var(--card-bg-hover);
-         transform: scale(1.05);
-         box-shadow: var(--shadow-xl);
-     }
-     
-     .theme-toggle svg {
-         width: 1.25rem;
-         height: 1.25rem;
-         transition: all 0.3s ease;
-     }
-     
-     /* Hide/Show icons based on theme */
-     [data-theme="light"] .theme-toggle .moon-icon {
-         display: block;
-     }
-     
-     [data-theme="light"] .theme-toggle .sun-icon {
-         display: none;
-     }
-     
-     [data-theme="dark"] .theme-toggle .moon-icon {
-         display: none;
-     }
-     
-     [data-theme="dark"] .theme-toggle .sun-icon {
-         display: block;
-     }
-     
-     /* Smooth theme transition */
-     * {
-         transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-     }
-     
-     /* Dark mode navbar and sidebar adjustments */
-     [data-theme="dark"] .navbar {
-         background-color: var(--card-bg) !important;
-         border-color: var(--neutral-300);
-     }
-     
-     [data-theme="dark"] .navbar-brand,
-     [data-theme="dark"] .navbar-nav .nav-link {
-         color: var(--neutral-800) !important;
-     }
-     
-     [data-theme="dark"] .sidebar {
-         background-color: var(--card-bg) !important;
-         border-color: var(--neutral-300);
-     }
-     
-     [data-theme="dark"] .sidebar .nav-link {
-         color: var(--neutral-700) !important;
-     }
-     
-     [data-theme="dark"] .sidebar .nav-link:hover {
-         background-color: var(--card-bg-hover) !important;
-         color: var(--neutral-800) !important;
-     }
-     
-     [data-theme="dark"] .sidebar .nav-link.active {
-         background-color: var(--primary-600) !important;
-         color: var(--neutral-50) !important;
-     }
-     
-     /* Dark mode dropdown menus */
-     [data-theme="dark"] .dropdown-menu {
-         background-color: var(--card-bg);
-         border-color: var(--neutral-300);
-         box-shadow: var(--shadow-lg);
-     }
-     
-     [data-theme="dark"] .dropdown-item {
-         color: var(--neutral-700);
-     }
-     
-     [data-theme="dark"] .dropdown-item:hover {
-         background-color: var(--card-bg-hover);
-         color: var(--neutral-800);
-     }
-     
-     /* Dark mode modal adjustments */
-     [data-theme="dark"] .modal-content {
-         background-color: var(--card-bg);
-         border-color: var(--neutral-300);
-     }
-     
-     [data-theme="dark"] .modal-header {
-         border-color: var(--neutral-300);
-     }
-     
-     [data-theme="dark"] .modal-footer {
-         border-color: var(--neutral-300);
-     }
-     
-     [data-theme="dark"] .modal-title {
-         color: var(--neutral-800);
-     }
-     
-     /* Dark mode alert adjustments */
-     [data-theme="dark"] .alert {
-         border-color: var(--neutral-300);
-     }
-     
-     [data-theme="dark"] .alert-primary {
-         background-color: rgba(var(--primary-600-rgb), 0.1);
-         border-color: var(--primary-600);
-         color: var(--primary-700);
-     }
-     
-     [data-theme="dark"] .alert-success {
-         background-color: rgba(var(--success-600-rgb), 0.1);
-         border-color: var(--success-600);
-         color: var(--success-700);
-     }
-     
-     [data-theme="dark"] .alert-warning {
-         background-color: rgba(var(--warning-600-rgb), 0.1);
-         border-color: var(--warning-600);
-         color: var(--warning-700);
-     }
-     
-     [data-theme="dark"] .alert-danger {
-         background-color: rgba(var(--danger-600-rgb), 0.1);
-         border-color: var(--danger-600);
-         color: var(--danger-700);
-     }
+
 </style>
 @endpush
 
@@ -4124,6 +4081,18 @@
                         </div>
                     </div>
                 </div>
+                <!-- View Toggle Buttons -->
+                <div class="mb-4">
+                    <div class="btn-group" role="group" aria-label="View toggle">
+                        <button type="button" class="btn btn-outline-primary active" id="gridViewBtn">
+                            <i class="fas fa-th me-2"></i>Grid View
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" id="tableViewBtn">
+                            <i class="fas fa-table me-2"></i>Table View
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Enhanced Grid Layout for Weekly Breakdown -->
                 <div id="weeklyGridView">
                     @if(!empty($weeklyBreakdown['months']))
@@ -4212,6 +4181,220 @@
                             <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
                             <h5 class="text-muted">No breakdown data available</h5>
                             <p class="text-muted">Weekly breakdown data will appear here once assets are tracked.</p>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- Table View for Weekly Breakdown (Hidden by default) -->
+                <div id="weeklyTableView" style="display: none;">
+                    @if(!empty($weeklyBreakdown['months']))
+                        @foreach($weeklyBreakdown['months'] as $monthName => $monthData)
+                            <div class="month-section mb-5">
+                                <h6 class="fw-bold text-primary mb-3 d-flex align-items-center">
+                                    <i class="fas fa-calendar-alt me-2"></i>{{ $monthName }}
+                                    <span class="badge bg-primary ms-2">{{ array_sum(array_map('array_sum', array_values($monthData))) }} Total Assets</span>
+                                </h6>
+                                
+                                <!-- Asset Lifecycle Status Table -->
+                                <div class="table-responsive">
+                                    <table class="table table-modern table-hover align-middle">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th scope="col" class="fw-bold">
+                                                    <i class="fas fa-calendar-week me-2"></i>Week
+                                                </th>
+                                                <th scope="col" class="text-center fw-bold">
+                                                    <i class="fas fa-check-circle me-2 text-success"></i>Deployed
+                                                </th>
+                                                <th scope="col" class="text-center fw-bold">
+                                                    <i class="fas fa-trash me-2 text-danger"></i>Disposed
+                                                </th>
+                                                <th scope="col" class="text-center fw-bold">
+                                                    <i class="fas fa-box me-2 text-warning"></i>New Arrival
+                                                </th>
+                                                <th scope="col" class="text-center fw-bold">
+                                                    <i class="fas fa-undo me-2 text-info"></i>Returned
+                                                </th>
+                                                <th scope="col" class="text-center fw-bold">
+                                                    <i class="fas fa-calculator me-2 text-secondary"></i>Total
+                                                </th>
+                                                <th scope="col" class="text-center fw-bold">
+                                                    <i class="fas fa-chart-pie me-2 text-primary"></i>Actions
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @for($week = 1; $week <= 4; $week++)
+                                                @php
+                                                    $weekData = $monthData["Week $week"] ?? [];
+                                                    $deployed = $weekData['Deployed'] ?? 0;
+                                                    $disposed = $weekData['Disposed'] ?? 0;
+                                                    $newArrival = $weekData['New Arrival'] ?? 0;
+                                                    $returned = $weekData['Returned'] ?? 0;
+                                                    $total = $deployed + $disposed + $newArrival + $returned;
+                                                @endphp
+                                                <tr class="table-row-hover" data-week="{{ $week }}" data-month="{{ $monthName }}">
+                                                    <td class="fw-semibold">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="week-indicator bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 35px; height: 35px; font-size: 0.875rem; font-weight: 600;">
+                                                                {{ $week }}
+                                                            </div>
+                                                            <div>
+                                                                <div class="fw-bold">Week {{ $week }}</div>
+                                                                <small class="text-muted">{{ $monthName }}</small>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <div class="status-cell">
+                                                            <span class="badge bg-success-subtle text-success border border-success px-3 py-2 fs-6 fw-bold drill-down" 
+                                                                  data-status="Deployed" data-period="Week {{ $week }} ({{ $monthName }})" 
+                                                                  data-bs-toggle="tooltip" title="Click to view deployed assets">
+                                                                {{ number_format($deployed) }}
+                                                            </span>
+                                                            @if($total > 0)
+                                                                <div class="progress mt-1" style="height: 4px;">
+                                                                    <div class="progress-bar bg-success" style="width: {{ round($deployed / $total * 100) }}%"></div>
+                                                                </div>
+                                                                <small class="text-muted">{{ round($deployed / $total * 100) }}%</small>
+                                                            @endif
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <div class="status-cell">
+                                                            <span class="badge bg-danger-subtle text-danger border border-danger px-3 py-2 fs-6 fw-bold drill-down" 
+                                                                  data-status="Disposed" data-period="Week {{ $week }} ({{ $monthName }})" 
+                                                                  data-bs-toggle="tooltip" title="Click to view disposed assets">
+                                                                {{ number_format($disposed) }}
+                                                            </span>
+                                                            @if($total > 0)
+                                                                <div class="progress mt-1" style="height: 4px;">
+                                                                    <div class="progress-bar bg-danger" style="width: {{ round($disposed / $total * 100) }}%"></div>
+                                                                </div>
+                                                                <small class="text-muted">{{ round($disposed / $total * 100) }}%</small>
+                                                            @endif
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <div class="status-cell">
+                                                            <span class="badge bg-warning-subtle text-warning border border-warning px-3 py-2 fs-6 fw-bold drill-down" 
+                                                                  data-status="New Arrival" data-period="Week {{ $week }} ({{ $monthName }})" 
+                                                                  data-bs-toggle="tooltip" title="Click to view new arrivals">
+                                                                {{ number_format($newArrival) }}
+                                                            </span>
+                                                            @if($total > 0)
+                                                                <div class="progress mt-1" style="height: 4px;">
+                                                                    <div class="progress-bar bg-warning" style="width: {{ round($newArrival / $total * 100) }}%"></div>
+                                                                </div>
+                                                                <small class="text-muted">{{ round($newArrival / $total * 100) }}%</small>
+                                                            @endif
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <div class="status-cell">
+                                                            <span class="badge bg-info-subtle text-info border border-info px-3 py-2 fs-6 fw-bold drill-down" 
+                                                                  data-status="Returned" data-period="Week {{ $week }} ({{ $monthName }})" 
+                                                                  data-bs-toggle="tooltip" title="Click to view returned assets">
+                                                                {{ number_format($returned) }}
+                                                            </span>
+                                                            @if($total > 0)
+                                                                <div class="progress mt-1" style="height: 4px;">
+                                                                    <div class="progress-bar bg-info" style="width: {{ round($returned / $total * 100) }}%"></div>
+                                                                </div>
+                                                                <small class="text-muted">{{ round($returned / $total * 100) }}%</small>
+                                                            @endif
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <div class="total-cell">
+                                                            <span class="badge bg-secondary-subtle text-secondary border border-secondary px-3 py-2 fs-5 fw-bold">
+                                                                {{ number_format($total) }}
+                                                            </span>
+                                                            <div class="mt-1">
+                                                                <small class="text-muted">Total Assets</small>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <div class="btn-group btn-group-sm" role="group">
+                                                            <button type="button" class="btn btn-outline-primary btn-sm drill-down" 
+                                                                    data-status="all" data-period="Week {{ $week }} ({{ $monthName }})" 
+                                                                    data-bs-toggle="tooltip" title="View all assets for this week">
+                                                                <i class="fas fa-eye"></i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-outline-info btn-sm" 
+                                                                    data-bs-toggle="tooltip" title="Export week data">
+                                                                <i class="fas fa-download"></i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-outline-success btn-sm" 
+                                                                    data-bs-toggle="tooltip" title="Generate report">
+                                                                <i class="fas fa-chart-bar"></i>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            @endfor
+                                            <!-- Summary Row -->
+                                            <tr class="table-info fw-bold">
+                                                <td class="fw-bold">
+                                                    <i class="fas fa-calculator me-2"></i>Monthly Total
+                                                </td>
+                                                @php
+                                                    $monthlyDeployed = 0;
+                                                    $monthlyDisposed = 0;
+                                                    $monthlyNewArrival = 0;
+                                                    $monthlyReturned = 0;
+                                                    for($w = 1; $w <= 4; $w++) {
+                                                        $weekData = $monthData["Week $w"] ?? [];
+                                                        $monthlyDeployed += $weekData['Deployed'] ?? 0;
+                                                        $monthlyDisposed += $weekData['Disposed'] ?? 0;
+                                                        $monthlyNewArrival += $weekData['New Arrival'] ?? 0;
+                                                        $monthlyReturned += $weekData['Returned'] ?? 0;
+                                                    }
+                                                    $monthlyTotal = $monthlyDeployed + $monthlyDisposed + $monthlyNewArrival + $monthlyReturned;
+                                                @endphp
+                                                <td class="text-center">
+                                                    <span class="badge bg-success text-white px-3 py-2 fs-6 fw-bold">
+                                                        {{ number_format($monthlyDeployed) }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-danger text-white px-3 py-2 fs-6 fw-bold">
+                                                        {{ number_format($monthlyDisposed) }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-warning text-white px-3 py-2 fs-6 fw-bold">
+                                                        {{ number_format($monthlyNewArrival) }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-info text-white px-3 py-2 fs-6 fw-bold">
+                                                        {{ number_format($monthlyReturned) }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-dark text-white px-3 py-2 fs-5 fw-bold">
+                                                        {{ number_format($monthlyTotal) }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <button type="button" class="btn btn-primary btn-sm" 
+                                                            data-bs-toggle="tooltip" title="View monthly summary">
+                                                        <i class="fas fa-chart-line me-1"></i>Summary
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="text-center py-5">
+                            <i class="fas fa-table fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No table data available</h5>
+                            <p class="text-muted">Weekly breakdown table will appear here once assets are tracked.</p>
                         </div>
                     @endif
                 </div>
@@ -5006,70 +5189,121 @@ document.addEventListener('visibilitychange', () => {
     }
 });
 
-</script>
-@endpush
-
-
-
-@section('scripts')
-<script>
-    // Add any dashboard-specific JavaScript here
+    // Add dashboard-specific functionality
     console.log('Dashboard loaded successfully');
     
     // View type toggle functionality for grid layout
-    document.getElementById('viewType').addEventListener('change', function() {
-        const viewType = this.value;
-        const weeklyGridView = document.getElementById('weeklyGridView');
-        const monthlyGridView = document.getElementById('monthlyGridView');
-        const periodHeader = document.getElementById('periodHeader');
-        
-        if (viewType === 'weekly') {
-            weeklyGridView.style.display = 'block';
-            monthlyGridView.style.display = 'none';
-            periodHeader.textContent = 'Week';
+    const viewTypeElement = document.getElementById('viewType');
+    if (viewTypeElement) {
+        viewTypeElement.addEventListener('change', function() {
+            const viewType = this.value;
+            const weeklyGridView = document.getElementById('weeklyGridView');
+            const monthlyGridView = document.getElementById('monthlyGridView');
+            const periodHeader = document.getElementById('periodHeader');
             
-            // Add fade-in animation
+            if (viewType === 'weekly') {
+                weeklyGridView.style.display = 'block';
+                monthlyGridView.style.display = 'none';
+                periodHeader.textContent = 'Week';
+                
+                // Add fade-in animation
+                weeklyGridView.style.opacity = '0';
+                setTimeout(() => {
+                    weeklyGridView.style.transition = 'opacity 0.3s ease';
+                    weeklyGridView.style.opacity = '1';
+                }, 50);
+            } else {
+                weeklyGridView.style.display = 'none';
+                monthlyGridView.style.display = 'block';
+                periodHeader.textContent = 'Month';
+                
+                // Add fade-in animation
+                monthlyGridView.style.opacity = '0';
+                setTimeout(() => {
+                    monthlyGridView.style.transition = 'opacity 0.3s ease';
+                    monthlyGridView.style.opacity = '1';
+                }, 50);
+            }
+        });
+    }
+
+    // Grid/Table view toggle functionality for Weekly Breakdown
+    const gridViewBtn = document.getElementById('gridViewBtn');
+    const tableViewBtn = document.getElementById('tableViewBtn');
+    const weeklyGridView = document.getElementById('weeklyGridView');
+    const weeklyTableView = document.getElementById('weeklyTableView');
+
+    if (gridViewBtn && tableViewBtn && weeklyGridView && weeklyTableView) {
+        // Set initial state - Grid view active
+        gridViewBtn.classList.add('active');
+        weeklyGridView.style.display = 'block';
+        weeklyTableView.style.display = 'none';
+
+        // Grid view button click
+        gridViewBtn.addEventListener('click', function() {
+            // Update button states
+            gridViewBtn.classList.add('active');
+            tableViewBtn.classList.remove('active');
+            
+            // Show grid view with animation
+            weeklyTableView.style.opacity = '0';
+            setTimeout(() => {
+                weeklyTableView.style.display = 'none';
+                weeklyGridView.style.display = 'block';
+                weeklyGridView.style.opacity = '0';
+                setTimeout(() => {
+                    weeklyGridView.style.transition = 'opacity 0.3s ease';
+                    weeklyGridView.style.opacity = '1';
+                }, 50);
+            }, 150);
+        });
+
+        // Table view button click
+        tableViewBtn.addEventListener('click', function() {
+            // Update button states
+            tableViewBtn.classList.add('active');
+            gridViewBtn.classList.remove('active');
+            
+            // Show table view with animation
             weeklyGridView.style.opacity = '0';
             setTimeout(() => {
-                weeklyGridView.style.transition = 'opacity 0.3s ease';
-                weeklyGridView.style.opacity = '1';
-            }, 50);
-        } else {
-            weeklyGridView.style.display = 'none';
-            monthlyGridView.style.display = 'block';
-            periodHeader.textContent = 'Month';
-            
-            // Add fade-in animation
-            monthlyGridView.style.opacity = '0';
-            setTimeout(() => {
-                monthlyGridView.style.transition = 'opacity 0.3s ease';
-                monthlyGridView.style.opacity = '1';
-            }, 50);
-        }
-    });
+                weeklyGridView.style.display = 'none';
+                weeklyTableView.style.display = 'block';
+                weeklyTableView.style.opacity = '0';
+                setTimeout(() => {
+                    weeklyTableView.style.transition = 'opacity 0.3s ease';
+                    weeklyTableView.style.opacity = '1';
+                }, 50);
+            }, 150);
+        });
+    }
     
     // Filter functionality
-     document.getElementById('applyFilter').addEventListener('click', function() {
-         const month = document.getElementById('monthFilter').value;
-         const year = document.getElementById('yearFilter').value;
-         
-         // Build URL with filter parameters
-         let url = '{{ route("dashboard") }}';
-         const params = new URLSearchParams();
-         
-         if (month && month !== 'all') {
-             params.append('month', month);
-         }
-         if (year && year !== 'all') {
-             params.append('year', year);
-         }
-         
-         if (params.toString()) {
-             url += '?' + params.toString();
-         }
-         
-         // Redirect to filtered dashboard
-         window.location.href = url;
-     });
+    const applyFilterElement = document.getElementById('applyFilter');
+    if (applyFilterElement) {
+        applyFilterElement.addEventListener('click', function() {
+            const month = document.getElementById('monthFilter').value;
+            const year = document.getElementById('yearFilter').value;
+            
+            // Build URL with filter parameters
+            let url = '{{ route("dashboard") }}';
+            const params = new URLSearchParams();
+            
+            if (month && month !== 'all') {
+                params.append('month', month);
+            }
+            if (year && year !== 'all') {
+                params.append('year', year);
+            }
+            
+            if (params.toString()) {
+                url += '?' + params.toString();
+            }
+            
+            // Redirect to filtered dashboard
+            window.location.href = url;
+        });
+    }
+
 </script>
-@endsection
+@endpush
