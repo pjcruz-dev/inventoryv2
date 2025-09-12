@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Http\Request;
 use Illuminate\Cache\RateLimiting\Limit;
 
@@ -23,6 +24,18 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureRateLimiting();
+        $this->registerBladeDirectives();
+    }
+
+    /**
+     * Register custom Blade directives.
+     */
+    protected function registerBladeDirectives(): void
+    {
+        // Currency formatting directive
+        Blade::directive('currency', function ($expression) {
+            return "<?php echo '₱' . number_format($expression, 2, '.', ','); ?>";
+        });
     }
 
     /**

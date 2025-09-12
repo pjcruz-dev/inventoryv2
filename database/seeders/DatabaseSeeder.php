@@ -15,21 +15,37 @@ class DatabaseSeeder extends Seeder
     {
         // Seed in order of dependencies
         $this->call([
+            // Core system data
             RoleSeeder::class,
             PermissionSeeder::class,
             RolePermissionSeeder::class,
             DepartmentSeeder::class,
+            
+            // User data
             UserSeeder::class,
+            
+            // Asset foundation data
             AssetCategorySeeder::class,
             VendorSeeder::class,
+            
+            // Asset data
             AssetSeeder::class,
-            ComputerSeeder::class,
-            MonitorSeeder::class,
-            PrinterSeeder::class,
-            PeripheralSeeder::class,
+            
+            // Asset relationships and activities
+            AssetAssignmentSeeder::class,
+            AssetTimelineSeeder::class,
+            MaintenanceSeeder::class,
+            DisposalSeeder::class,
+            
+            // Activity logs (must be last to capture all activities)
             LogSeeder::class,
-            // Note: Other seeders (Transfer, Maintenance, Disposal)
-            // can be added here when sample data is needed
         ]);
+        
+        $this->command->info('\n=== Database Seeding Completed Successfully! ===');
+        $this->command->info('✓ 100 Users created with proper role assignments');
+        $this->command->info('✓ 200 Assets created across 5 categories');
+        $this->command->info('✓ Asset assignments and timeline events generated');
+        $this->command->info('✓ Comprehensive activity logs created');
+        $this->command->info('✓ All relationships and dependencies established');
     }
 }

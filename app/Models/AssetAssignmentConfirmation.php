@@ -12,7 +12,6 @@ class AssetAssignmentConfirmation extends Model
     use HasFactory;
 
     protected $fillable = [
-        'assignment_id',
         'asset_id',
         'user_id',
         'confirmation_token',
@@ -21,15 +20,7 @@ class AssetAssignmentConfirmation extends Model
         'confirmed_at',
         'notes',
         'last_reminder_sent_at',
-        'reminder_count',
-        'decline_category',
-        'decline_reason',
-        'decline_comments',
-        'contact_preference',
-        'follow_up_required',
-        'follow_up_actions',
-        'follow_up_date',
-        'decline_severity'
+        'reminder_count'
     ];
 
     protected $casts = [

@@ -226,6 +226,7 @@
                     <th>Asset Name</th>
                     <th>Category</th>
                     <th>Vendor</th>
+                    <th>Serial Number</th>
                     <th>Computer Info</th>
                     <th>Assigned Date</th>
                     <th>Status</th>
@@ -235,9 +236,10 @@
                 @foreach($user->assignedAssets as $asset)
                 <tr>
                     <td>{{ $asset->asset_tag }}</td>
-                    <td>{{ $asset->asset_name }}</td>
+                    <td>{{ $asset->name }}</td>
                     <td>{{ $asset->category->name ?? 'N/A' }}</td>
                     <td>{{ $asset->vendor->name ?? 'N/A' }}</td>
+                    <td>{{ $asset->serial_number ?? 'N/A' }}</td>
                     <td>
                         @if($asset->computer)
                             {{ $asset->computer->brand }} {{ $asset->computer->model }}

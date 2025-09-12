@@ -74,7 +74,19 @@ class PermissionSeeder extends Seeder
             ['name' => 'import_progress', 'description' => 'View import progress'],
             
             // Admin Access
-            ['name' => 'admin_access', 'description' => 'Administrative access to system management']
+            ['name' => 'admin_access', 'description' => 'Administrative access to system management'],
+            
+            // Maintenance Management
+            ['name' => 'view_maintenance', 'description' => 'View maintenance records'],
+            ['name' => 'create_maintenance', 'description' => 'Create new maintenance records'],
+            ['name' => 'edit_maintenance', 'description' => 'Edit existing maintenance records'],
+            ['name' => 'delete_maintenance', 'description' => 'Delete maintenance records'],
+            
+            // Disposal Management
+            ['name' => 'view_disposal', 'description' => 'View disposal records'],
+            ['name' => 'create_disposal', 'description' => 'Create new disposal records'],
+            ['name' => 'edit_disposal', 'description' => 'Edit existing disposal records'],
+            ['name' => 'delete_disposal', 'description' => 'Delete disposal records']
         ];
 
         foreach ($permissions as $permission) {

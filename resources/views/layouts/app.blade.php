@@ -525,6 +525,32 @@
                             </li>
                             @endif
                             
+                            @if(auth()->user()->can('view_maintenance') || auth()->user()->can('view_disposal'))
+                            <li class="nav-item mt-3">
+                                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-white-50">
+                                    <span>ASSET LIFECYCLE</span>
+                                </h6>
+                            </li>
+                            @endif
+                            
+                            @can('view_maintenance')
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('maintenance.*') ? 'active' : '' }}" href="{{ route('maintenance.index') }}">
+                                    <i class="fas fa-tools"></i>
+                                    Maintenance
+                                </a>
+                            </li>
+                            @endcan
+                            
+                            @can('view_disposal')
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('disposal.*') ? 'active' : '' }}" href="{{ route('disposal.index') }}">
+                                    <i class="fas fa-trash-alt"></i>
+                                    Disposal
+                                </a>
+                            </li>
+                            @endcan
+                            
                             @if(auth()->user()->can('view_users') || auth()->user()->can('view_assets'))
                             <li class="nav-item mt-3">
                                 <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-white-50">

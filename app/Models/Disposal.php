@@ -11,7 +11,6 @@ class Disposal extends Model
         'disposal_date',
         'disposal_type',
         'disposal_value',
-        'approved_by',
         'remarks',
     ];
 
@@ -26,8 +25,5 @@ class Disposal extends Model
         return $this->belongsTo(Asset::class);
     }
 
-    public function approvedBy()
-    {
-        return $this->belongsTo(User::class, 'approved_by');
-    }
+
 }

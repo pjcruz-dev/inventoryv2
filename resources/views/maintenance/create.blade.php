@@ -1,0 +1,183 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-plus me-2"></i>Add New Maintenance Record
+                    </h3>
+                </div>
+                
+                <div class="card-body">
+                    <form action="{{ route('maintenance.store') }}" method="POST">
+                        @csrf
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="asset_id" class="form-label">Asset <span class="text-danger">*</span></label>
+                                    <select class="form-select @error('asset_id') is-invalid @enderror" 
+                                            id="asset_id" name="asset_id" required>
+                                        <option value="">Select Asset</option>
+                                        @foreach($assets as $asset)
+                                            <option value="{{ $asset->id }}" {{ old('asset_id') == $asset->id ? 'selected' : '' }}>
+                                                {{ $asset->name }} ({{ $asset->asset_tag }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('asset_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="vendor_id" class="form-label">Vendor</label>
+                                    <select class="form-select @error('vendor_id') is-invalid @enderror" 
+                                            id="vendor_id" name="vendor_id">
+                                        <option value="">Select Vendor (Optional)</option>
+                                        @foreach($vendors as $vendor)
+                                            <option value="{{ $vendor->id }}" {{ old('vendor_id') == $vendor->id ? 'selected' : '' }}>
+                                                {{ $vendor->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('vendor_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="issue_reported" class="form-label">Issue Reported <span class="text-danger">*</span></label>
+                            <textarea class="form-control @error('issue_reported') is-invalid @enderror" 
+                                      id="issue_reported" name="issue_reported" rows="3" 
+                                      placeholder="Describe the issue that needs maintenance..." required>{{ old('issue_reported') }}</textarea>
+                            @error('issue_reported')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="repair_action" class="form-label">Repair Action</label>
+                            <textarea class="form-control @error('repair_action') is-invalid @enderror" 
+                                      id="repair_action" name="repair_action" rows="3" 
+                                      placeholder="Describe the repair action taken or planned...">{{ old('repair_action') }}</textarea>
+                            @error('repair_action')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="cost" class="form-label">Cost</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control @error('cost') is-invalid @enderror" 
+                                               id="cost" name="cost" step="0.01" min="0" max="999999.99"
+                                               value="{{ old('cost') }}" placeholder="0.00">
+                                        @error('cost')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control @error('start_date') is-invalid @enderror" 
+                                           id="start_date" name="start_date" 
+                                           value="{{ old('start_date', now()->format('Y-m-d\TH:i')) }}" required>
+                                    @error('start_date')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="end_date" class="form-label">End Date</label>
+                                    <input type="datetime-local" class="form-control @error('end_date') is-invalid @enderror" 
+                                           id="end_date" name="end_date" value="{{ old('end_date') }}">
+                                    @error('end_date')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
+                            <select class="form-select @error('status') is-invalid @enderror" 
+                                    id="status" name="status" required>
+                                <option value="">Select Status</option>
+                                <option value="Scheduled" {{ old('status') == 'Scheduled' ? 'selected' : '' }}>Scheduled</option>
+                                <option value="In Progress" {{ old('status') == 'In Progress' ? 'selected' : '' }}>In Progress</option>
+                                <option value="Completed" {{ old('status') == 'Completed' ? 'selected' : '' }}>Completed</option>
+                                <option value="On Hold" {{ old('status') == 'On Hold' ? 'selected' : '' }}>On Hold</option>
+                                <option value="Cancelled" {{ old('status') == 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
+                            </select>
+                            @error('status')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="remarks" class="form-label">Remarks</label>
+                            <textarea class="form-control @error('remarks') is-invalid @enderror" 
+                                      id="remarks" name="remarks" rows="3" 
+                                      placeholder="Additional notes or remarks...">{{ old('remarks') }}</textarea>
+                            @error('remarks')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ route('maintenance.index') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Back to List
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Create Maintenance Record
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+    // Auto-set end date when start date changes (for scheduled maintenance)
+    document.getElementById('start_date').addEventListener('change', function() {
+        const startDate = new Date(this.value);
+        const endDateInput = document.getElementById('end_date');
+        
+        if (!endDateInput.value && this.value) {
+            // Set end date to 2 hours after start date by default
+            startDate.setHours(startDate.getHours() + 2);
+            endDateInput.value = startDate.toISOString().slice(0, 16);
+        }
+    });
+    
+    // Validate end date is after start date
+    document.getElementById('end_date').addEventListener('change', function() {
+        const startDate = document.getElementById('start_date').value;
+        const endDate = this.value;
+        
+        if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
+            alert('End date must be after start date.');
+            this.value = '';
+        }
+    });
+</script>
+@endpush

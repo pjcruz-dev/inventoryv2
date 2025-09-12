@@ -384,4 +384,105 @@ class AssetController extends Controller
 
         return view('assets.print-single-employee-assets', compact('user', 'totalAssets', 'assetsByCategory'));
     }
+
+    /**
+     * Generate printable labels for selected assets.
+     */
+    public function bulkPrintLabels(Request $request)
+    {
+        $request->validate([
+            'asset_ids' => 'required|array|min:1',
+            'asset_ids.*' => 'exists:assets,id',
+            'label_width' => 'nullable|integer|min:50|max:800',
+            'label_height' => 'nullable|integer|min:50|max:400'
+        ]);
+
+        $assets = Asset::with(['category', 'vendor', 'assignedUser', 'department'])
+                      ->whereIn('id', $request->asset_ids)
+                      ->get();
+
+        if ($assets->isEmpty()) {
+            return back()->with('error', 'No valid assets selected for printing.');
+        }
+
+        // Get custom dimensions from request or use defaults
+        $labelWidth = $request->input('label_width', 320);
+        $labelHeight = $request->input('label_height', 200);
+        
+        return view('assets.bulk-print-labels', compact('assets', 'labelWidth', 'labelHeight'));
+    }
+
+    /**
+     * Generate printable labels for all assets.
+     */
+    public function printAllAssetLabels(Request $request)
+    {
+        $this->authorize('viewAny', Asset::class);
+        
+        // Validate label dimensions
+        $request->validate([
+            'label_width' => 'nullable|integer|min:50|max:800',
+            'label_height' => 'nullable|integer|min:50|max:400'
+        ]);
+        
+        // Apply the same filters as the index page
+        $query = Asset::with(['category', 'vendor', 'assignedUser', 'department']);
+        
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('asset_tag', 'like', "%{$search}%")
+                  ->orWhere('serial_number', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('category', function($categoryQuery) use ($search) {
+                      $categoryQuery->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('vendor', function($vendorQuery) use ($search) {
+                      $vendorQuery->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('assignedUser', function($userQuery) use ($search) {
+                      $userQuery->where('first_name', 'like', "%{$search}%")
+                               ->orWhere('last_name', 'like', "%{$search}%");
+                  });
+            });
+        }
+        
+        // Category filter
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
+        }
+        
+        // Status filter
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        
+        // Movement filter
+        if ($request->filled('movement')) {
+            $query->where('movement', $request->movement);
+        }
+        
+        // Assignment filter
+        if ($request->filled('assignment')) {
+            if ($request->assignment === 'assigned') {
+                $query->whereNotNull('assigned_to');
+            } elseif ($request->assignment === 'unassigned') {
+                $query->whereNull('assigned_to');
+            }
+        }
+        
+        $assets = $query->get();
+        
+        if ($assets->isEmpty()) {
+            return back()->with('error', 'No assets found to print.');
+        }
+        
+        // Get custom dimensions from request
+        $labelWidth = $request->input('label_width', 320);
+        $labelHeight = $request->input('label_height', 200);
+        
+        return view('assets.bulk-print-labels', compact('assets', 'labelWidth', 'labelHeight'));
+    }
 }

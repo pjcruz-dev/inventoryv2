@@ -16,6 +16,8 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\AssetConfirmationController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\MaintenanceController;
+use App\Http\Controllers\DisposalController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -34,6 +36,8 @@ Route::middleware('auth')->group(function () {
     Route::post('assets/{asset}/reassign', [AssetController::class, 'reassign'])->name('assets.reassign');
     Route::get('assets/reports/employee-assets', [AssetController::class, 'printEmployeeAssets'])->name('assets.print-employee-assets');
     Route::get('assets/reports/employee-assets/{user}', [AssetController::class, 'printSingleEmployeeAssets'])->name('assets.print-single-employee-assets');
+    Route::post('assets/bulk/print-labels', [AssetController::class, 'bulkPrintLabels'])->name('assets.bulk-print-labels');
+    Route::get('assets/print-all-labels', [AssetController::class, 'printAllAssetLabels'])->name('assets.print-all-labels');
     Route::resource('computers', ComputerController::class);
     Route::resource('monitors', MonitorController::class);
     Route::resource('printers', PrinterController::class);
@@ -96,6 +100,32 @@ Route::middleware('auth')->group(function () {
         Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('read');
         Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
         Route::delete('/{id}', [NotificationController::class, 'delete'])->name('delete');
+    });
+    
+    // Maintenance routes
+    Route::prefix('maintenance')->name('maintenance.')->middleware('check.permission:view_maintenance')->group(function () {
+        Route::get('/', [MaintenanceController::class, 'index'])->name('index');
+        Route::get('/create', [MaintenanceController::class, 'create'])->name('create')->middleware('check.permission:create_maintenance');
+        Route::post('/', [MaintenanceController::class, 'store'])->name('store')->middleware('check.permission:create_maintenance');
+        Route::get('/{maintenance}', [MaintenanceController::class, 'show'])->name('show');
+        Route::get('/{maintenance}/edit', [MaintenanceController::class, 'edit'])->name('edit')->middleware('check.permission:edit_maintenance');
+        Route::put('/{maintenance}', [MaintenanceController::class, 'update'])->name('update')->middleware('check.permission:edit_maintenance');
+        Route::delete('/{maintenance}', [MaintenanceController::class, 'destroy'])->name('destroy')->middleware('check.permission:delete_maintenance');
+        Route::get('/export/excel', [MaintenanceController::class, 'exportExcel'])->name('export.excel')->middleware('check.permission:export_maintenance');
+        Route::get('/export/pdf', [MaintenanceController::class, 'exportPdf'])->name('export.pdf')->middleware('check.permission:export_maintenance');
+    });
+    
+    // Disposal routes
+    Route::prefix('disposal')->name('disposal.')->middleware('check.permission:view_disposal')->group(function () {
+        Route::get('/', [DisposalController::class, 'index'])->name('index');
+        Route::get('/create', [DisposalController::class, 'create'])->name('create')->middleware('check.permission:create_disposal');
+        Route::post('/', [DisposalController::class, 'store'])->name('store')->middleware('check.permission:create_disposal');
+        Route::get('/{disposal}', [DisposalController::class, 'show'])->name('show');
+        Route::get('/{disposal}/edit', [DisposalController::class, 'edit'])->name('edit')->middleware('check.permission:edit_disposal');
+        Route::put('/{disposal}', [DisposalController::class, 'update'])->name('update')->middleware('check.permission:edit_disposal');
+        Route::delete('/{disposal}', [DisposalController::class, 'destroy'])->name('destroy')->middleware('check.permission:delete_disposal');
+        Route::get('/export/excel', [DisposalController::class, 'exportExcel'])->name('export.excel')->middleware('check.permission:export_disposal');
+        Route::get('/export/pdf', [DisposalController::class, 'exportPdf'])->name('export.pdf')->middleware('check.permission:export_disposal');
     });
 });
 
