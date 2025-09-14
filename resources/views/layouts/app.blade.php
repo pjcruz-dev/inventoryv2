@@ -605,6 +605,15 @@
                             
                             @can('view_assets')
                             <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('import-export.*') ? 'active' : '' }}" href="{{ route('import-export.interface') }}">
+                                    <i class="fas fa-file-import"></i>
+                                    Import/Export
+                                </a>
+                            </li>
+                            @endcan
+                            
+                            @can('view_assets')
+                            <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('timeline.*') ? 'active' : '' }}" href="{{ route('timeline.index') }}">
                                     <i class="fas fa-history"></i>
                                     Asset Timeline

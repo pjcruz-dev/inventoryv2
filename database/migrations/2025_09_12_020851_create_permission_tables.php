@@ -78,6 +78,7 @@ return new class extends Migration
             }
 
         });
+        }
 
         // Skip model_has_roles table - already exists
         if (!Schema::hasTable($tableNames['model_has_roles'])) {

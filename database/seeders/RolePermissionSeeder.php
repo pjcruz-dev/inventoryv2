@@ -53,6 +53,20 @@ class RolePermissionSeeder extends Seeder
             ['role_id' => 1, 'permission_id' => 36], // field_mapping
             ['role_id' => 1, 'permission_id' => 37], // import_progress
             ['role_id' => 1, 'permission_id' => 38], // admin_access
+            ['role_id' => 1, 'permission_id' => 39], // view_maintenance
+            ['role_id' => 1, 'permission_id' => 40], // create_maintenance
+            ['role_id' => 1, 'permission_id' => 41], // edit_maintenance
+            ['role_id' => 1, 'permission_id' => 42], // delete_maintenance
+            ['role_id' => 1, 'permission_id' => 43], // view_disposal
+            ['role_id' => 1, 'permission_id' => 44], // create_disposal
+            ['role_id' => 1, 'permission_id' => 45], // edit_disposal
+            ['role_id' => 1, 'permission_id' => 46], // delete_disposal
+            ['role_id' => 1, 'permission_id' => 47], // edit_maintenance
+            ['role_id' => 1, 'permission_id' => 48], // delete_maintenance
+            ['role_id' => 1, 'permission_id' => 49], // view_disposal
+            ['role_id' => 1, 'permission_id' => 50], // create_disposal
+            ['role_id' => 1, 'permission_id' => 51], // edit_disposal
+            ['role_id' => 1, 'permission_id' => 52], // delete_disposal
             
             // Admin - Most permissions except system admin
             ['role_id' => 2, 'permission_id' => 1],  // view_assets
