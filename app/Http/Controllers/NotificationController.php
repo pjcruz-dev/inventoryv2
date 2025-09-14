@@ -8,6 +8,13 @@ use Illuminate\Http\JsonResponse;
 
 class NotificationController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('permission:view_notifications')->only(['getUnread', 'getAll']);
+        $this->middleware('permission:manage_notifications')->only(['markAsRead', 'markAllAsRead']);
+    }
+
     /**
      * Get unread notifications for the authenticated user
      */

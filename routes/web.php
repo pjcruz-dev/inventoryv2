@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AssetController;
+use App\Http\Controllers\AssetCategoryController;
+use App\Http\Controllers\AssetAssignmentController;
+use App\Http\Controllers\AssetAssignmentConfirmationController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\VendorController;
@@ -38,6 +41,35 @@ Route::middleware('auth')->group(function () {
     Route::get('assets/reports/employee-assets/{user}', [AssetController::class, 'printSingleEmployeeAssets'])->name('assets.print-single-employee-assets');
     Route::post('assets/bulk/print-labels', [AssetController::class, 'bulkPrintLabels'])->name('assets.bulk-print-labels');
     Route::get('assets/print-all-labels', [AssetController::class, 'printAllAssetLabels'])->name('assets.print-all-labels');
+    
+    // Asset Categories
+    Route::resource('asset-categories', AssetCategoryController::class);
+    Route::get('asset-categories/export', [AssetCategoryController::class, 'export'])->name('asset-categories.export');
+    Route::get('asset-categories/export/excel', [AssetCategoryController::class, 'exportExcel'])->name('asset-categories.export.excel');
+    Route::get('asset-categories/download/template', [AssetCategoryController::class, 'downloadTemplate'])->name('asset-categories.download-template');
+    Route::get('asset-categories/import/form', [AssetCategoryController::class, 'importForm'])->name('asset-categories.import-form');
+    Route::post('asset-categories/import', [AssetCategoryController::class, 'import'])->name('asset-categories.import');
+    
+    // Asset Assignments
+    Route::resource('asset-assignments', AssetAssignmentController::class);
+    Route::get('asset-assignments/export', [AssetAssignmentController::class, 'export'])->name('asset-assignments.export');
+    Route::get('asset-assignments/export/excel', [AssetAssignmentController::class, 'exportExcel'])->name('asset-assignments.export.excel');
+    Route::get('asset-assignments/download/template', [AssetAssignmentController::class, 'downloadTemplate'])->name('asset-assignments.download-template');
+    Route::get('asset-assignments/import/form', [AssetAssignmentController::class, 'importForm'])->name('asset-assignments.import-form');
+    Route::post('asset-assignments/import', [AssetAssignmentController::class, 'import'])->name('asset-assignments.import');
+    Route::post('asset-assignments/{assignment}/return', [AssetAssignmentController::class, 'markAsReturned'])->name('asset-assignments.return');
+    
+    // Asset Assignment Confirmations
+    Route::resource('asset-assignment-confirmations', AssetAssignmentConfirmationController::class);
+    Route::get('asset-assignment-confirmations/export', [AssetAssignmentConfirmationController::class, 'export'])->name('asset-assignment-confirmations.export');
+    Route::get('asset-assignment-confirmations/export/excel', [AssetAssignmentConfirmationController::class, 'exportExcel'])->name('asset-assignment-confirmations.export.excel');
+    Route::get('asset-assignment-confirmations/download/template', [AssetAssignmentConfirmationController::class, 'downloadTemplate'])->name('asset-assignment-confirmations.download-template');
+    Route::get('asset-assignment-confirmations/import/form', [AssetAssignmentConfirmationController::class, 'importForm'])->name('asset-assignment-confirmations.import-form');
+    Route::post('asset-assignment-confirmations/import', [AssetAssignmentConfirmationController::class, 'import'])->name('asset-assignment-confirmations.import');
+    Route::get('asset-assignment-confirmations/{confirmation}/send-reminder', [AssetAssignmentConfirmationController::class, 'sendReminder'])->name('asset-assignment-confirmations.send-reminder');
+    Route::get('asset-assignment-confirmations/confirm/{token}', [AssetAssignmentConfirmationController::class, 'confirmByToken'])->name('asset-assignment-confirmations.confirm');
+    Route::get('asset-assignment-confirmations/decline/{token}', [AssetAssignmentConfirmationController::class, 'declineByToken'])->name('asset-assignment-confirmations.decline');
+    
     Route::resource('computers', ComputerController::class);
     Route::resource('monitors', MonitorController::class);
     Route::resource('printers', PrinterController::class);

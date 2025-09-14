@@ -21,6 +21,27 @@ class PermissionSeeder extends Seeder
             ['name' => 'delete_assets', 'description' => 'Delete assets'],
             ['name' => 'assign_assets', 'description' => 'Assign assets to users'],
             
+            // Asset Assignment Management
+            ['name' => 'view_asset_assignments', 'description' => 'View asset assignments'],
+            ['name' => 'create_asset_assignments', 'description' => 'Create new asset assignments'],
+            ['name' => 'edit_asset_assignments', 'description' => 'Edit existing asset assignments'],
+            ['name' => 'delete_asset_assignments', 'description' => 'Delete asset assignments'],
+            ['name' => 'manage_asset_assignments', 'description' => 'Full management of asset assignments'],
+            
+            // Asset Assignment Confirmation Management
+            ['name' => 'view_assignment_confirmations', 'description' => 'View assignment confirmations'],
+            ['name' => 'create_assignment_confirmations', 'description' => 'Create new assignment confirmations'],
+            ['name' => 'edit_assignment_confirmations', 'description' => 'Edit existing assignment confirmations'],
+            ['name' => 'delete_assignment_confirmations', 'description' => 'Delete assignment confirmations'],
+            ['name' => 'manage_assignment_confirmations', 'description' => 'Full management of assignment confirmations'],
+            
+            // Asset Category Management
+            ['name' => 'view_asset_categories', 'description' => 'View asset categories'],
+            ['name' => 'create_asset_categories', 'description' => 'Create new asset categories'],
+            ['name' => 'edit_asset_categories', 'description' => 'Edit existing asset categories'],
+            ['name' => 'delete_asset_categories', 'description' => 'Delete asset categories'],
+            ['name' => 'manage_asset_categories', 'description' => 'Full management of asset categories'],
+             
             // User Management
             ['name' => 'view_users', 'description' => 'View user information'],
             ['name' => 'create_users', 'description' => 'Create new users'],
@@ -86,7 +107,28 @@ class PermissionSeeder extends Seeder
             ['name' => 'view_disposal', 'description' => 'View disposal records'],
             ['name' => 'create_disposal', 'description' => 'Create new disposal records'],
             ['name' => 'edit_disposal', 'description' => 'Edit existing disposal records'],
-            ['name' => 'delete_disposal', 'description' => 'Delete disposal records']
+            ['name' => 'delete_disposal', 'description' => 'Delete disposal records'],
+            
+            // Timeline Management
+            ['name' => 'view_timeline', 'description' => 'View asset timeline'],
+            ['name' => 'create_timeline', 'description' => 'Create timeline entries'],
+            
+            // Dashboard Access
+            ['name' => 'view_dashboard', 'description' => 'View dashboard and statistics'],
+            
+            // Notification Management
+            ['name' => 'view_notifications', 'description' => 'View notifications'],
+            ['name' => 'manage_notifications', 'description' => 'Manage notifications'],
+            
+            // Peripheral Management
+            ['name' => 'view_peripherals', 'description' => 'View peripheral devices'],
+            ['name' => 'create_peripherals', 'description' => 'Create new peripheral devices'],
+            ['name' => 'edit_peripherals', 'description' => 'Edit existing peripheral devices'],
+            ['name' => 'delete_peripherals', 'description' => 'Delete peripheral devices'],
+            
+            // Asset Confirmation Management
+            ['name' => 'view_asset_confirmations', 'description' => 'View asset confirmations'],
+            ['name' => 'manage_asset_confirmations', 'description' => 'Manage asset confirmations']
         ];
 
         foreach ($permissions as $permission) {

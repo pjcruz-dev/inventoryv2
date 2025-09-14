@@ -26,7 +26,25 @@ class ImportExportController extends Controller
 
     public function __construct(TemplateGenerationService $templateService)
     {
+        $this->middleware('auth');
+        $this->middleware('permission:import_export_access');
         $this->templateService = $templateService;
+    }
+
+    /**
+     * Show the improved import/export interface
+     */
+    public function interface()
+    {
+        return view('import-export.interface');
+    }
+
+    /**
+     * Show the enhanced import/export interface (legacy)
+     */
+    public function enhancedInterface()
+    {
+        return view('import-export.enhanced-interface');
     }
 
     /**
