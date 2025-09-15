@@ -74,7 +74,7 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="department_id" class="form-label">Department</label>
-                                <select class="form-select @error('department_id') is-invalid @enderror" 
+                                <select class="form-select searchable-select @error('department_id') is-invalid @enderror" 
                                         id="department_id" name="department_id">
                                     <option value="">Select Department</option>
                                     @foreach($departments as $department)
@@ -90,6 +90,23 @@
                             </div>
                         </div>
                         
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="company" class="form-label">Company</label>
+                                <select class="form-select searchable-select @error('company') is-invalid @enderror" 
+                                        id="company" name="company">
+                                    <option value="">Select Company</option>
+                                    <option value="Philtower" {{ old('company') == 'Philtower' ? 'selected' : '' }}>Philtower</option>
+                                    <option value="MIDC" {{ old('company') == 'MIDC' ? 'selected' : '' }}>MIDC</option>
+                                </select>
+                                @error('company')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="job_title" class="form-label">Job Title</label>
@@ -119,7 +136,7 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
-                                <select class="form-select @error('status') is-invalid @enderror" 
+                                <select class="form-select searchable-select @error('status') is-invalid @enderror" 
                                         id="status" name="status" required>
                                     <option value="1" {{ old('status', '1') == '1' ? 'selected' : '' }}>Active</option>
                                     <option value="0" {{ old('status') == '0' ? 'selected' : '' }}>Inactive</option>
@@ -136,7 +153,7 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="role_id" class="form-label">Role</label>
-                                <select class="form-select @error('role_id') is-invalid @enderror" 
+                                <select class="form-select searchable-select @error('role_id') is-invalid @enderror" 
                                         id="role_id" name="role_id">
                                     <option value="">Select Role</option>
                                     @foreach($roles as $role)

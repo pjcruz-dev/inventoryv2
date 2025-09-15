@@ -268,8 +268,8 @@
 
                     <!-- Pagination -->
                     @if($confirmations->hasPages())
-                        <div class="d-flex justify-content-center mt-4">
-                            {{ $confirmations->appends(request()->query())->links() }}
+                        <div class="pagination-wrapper mt-3">
+                            {{ $confirmations->appends(request()->query())->links('pagination.custom') }}
                         </div>
                     @endif
                 </div>

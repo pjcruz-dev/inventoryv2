@@ -228,8 +228,8 @@
                     @if($asset->location)
                         <strong>Location:</strong> {{ $asset->location }}<br>
                     @endif
-                    @if($asset->assignedUser)
-                        <strong>Assigned to:</strong> {{ $asset->assignedUser->first_name }} {{ $asset->assignedUser->last_name }}<br>
+                    @if($asset->purchase_date)
+                        <strong>Purchase Date:</strong> {{ $asset->purchase_date->format('M d, Y') }}<br>
                     @endif
                     @if($asset->department)
                         <strong>Department:</strong> {{ $asset->department->name }}<br>

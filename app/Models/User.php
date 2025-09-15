@@ -26,6 +26,7 @@ class User extends Authenticatable
         'first_name',
         'last_name',
         'department_id',
+        'company',
         'position',
         'email',
         'password',
@@ -67,6 +68,7 @@ class User extends Authenticatable
             'password' => 'required|string|min:8|confirmed|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/',
             'phone' => 'nullable|string|max:20|regex:/^[+]?[0-9\s\-\(\)]+$/',
             'department_id' => 'required|exists:departments,id',
+            'company' => 'nullable|in:Philtower,MIDC',
             'role_id' => 'required|exists:roles,id',
             'job_title' => 'nullable|string|max:100',
             'status' => 'required|integer|in:0,1,2'
@@ -86,6 +88,7 @@ class User extends Authenticatable
             'password' => 'nullable|string|min:8|confirmed|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/',
             'phone' => 'nullable|string|max:20|regex:/^[+]?[0-9\s\-\(\)]+$/',
             'department_id' => 'required|exists:departments,id',
+            'company' => 'nullable|in:Philtower,MIDC',
             'role_id' => 'required|exists:roles,id',
             'job_title' => 'nullable|string|max:100',
             'status' => 'required|integer|in:0,1,2'

@@ -7,6 +7,8 @@
     <title>{{ config('app.name', 'Laravel') }} - @yield('title', 'Inventory Management')</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700;800&display=swap');
         
@@ -489,40 +491,50 @@
                                 </h6>
                             </li>
                             
+                            @can('view_assets')
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('assets.*') ? 'active' : '' }}" href="{{ route('assets.index') }}">
                                     <i class="fas fa-boxes"></i>
                                     All Assets
                                 </a>
                             </li>
+                            @endcan
                             
+                            @can('view_computers')
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('computers.*') ? 'active' : '' }}" href="{{ route('computers.index') }}">
                                     <i class="fas fa-desktop"></i>
                                     Computers
                                 </a>
                             </li>
+                            @endcan
                             
+                            @can('view_monitors')
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('monitors.*') ? 'active' : '' }}" href="{{ route('monitors.index') }}">
                                     <i class="fas fa-tv"></i>
                                     Monitors
                                 </a>
                             </li>
+                            @endcan
                             
+                            @can('view_printers')
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('printers.*') ? 'active' : '' }}" href="{{ route('printers.index') }}">
                                     <i class="fas fa-print"></i>
                                     Printers
                                 </a>
                             </li>
+                            @endcan
                             
+                            @can('view_peripherals')
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('peripherals.*') ? 'active' : '' }}" href="{{ route('peripherals.index') }}">
                                     <i class="fas fa-mouse"></i>
                                     Peripherals
                                 </a>
                             </li>
+                            @endcan
                             
                             @can('view_asset_categories')
                             <li class="nav-item">
@@ -595,7 +607,7 @@
                             </li>
                             @endcan
                             
-                            @can('view_users')
+                            @can('view_departments')
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('departments.*') ? 'active' : '' }}" href="{{ route('departments.index') }}">
                                     <i class="fas fa-building"></i>
@@ -604,7 +616,7 @@
                             </li>
                             @endcan
                             
-                            @can('view_assets')
+                            @can('view_vendors')
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('vendors.*') ? 'active' : '' }}" href="{{ route('vendors.index') }}">
                                     <i class="fas fa-truck"></i>
@@ -1069,6 +1081,9 @@
         });
     </script>
     
+    <script src="{{ asset('js/searchable-dropdown.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     @yield('scripts')
+    @stack('scripts')
 </body>
 </html>

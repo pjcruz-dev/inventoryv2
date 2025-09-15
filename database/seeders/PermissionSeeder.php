@@ -42,6 +42,36 @@ class PermissionSeeder extends Seeder
             ['name' => 'delete_asset_categories', 'description' => 'Delete asset categories'],
             ['name' => 'manage_asset_categories', 'description' => 'Full management of asset categories'],
              
+            // Computer Management
+            ['name' => 'view_computers', 'description' => 'View computer information'],
+            ['name' => 'create_computers', 'description' => 'Create new computers'],
+            ['name' => 'edit_computers', 'description' => 'Edit existing computers'],
+            ['name' => 'delete_computers', 'description' => 'Delete computers'],
+            
+            // Monitor Management
+            ['name' => 'view_monitors', 'description' => 'View monitor information'],
+            ['name' => 'create_monitors', 'description' => 'Create new monitors'],
+            ['name' => 'edit_monitors', 'description' => 'Edit existing monitors'],
+            ['name' => 'delete_monitors', 'description' => 'Delete monitors'],
+            
+            // Printer Management
+            ['name' => 'view_printers', 'description' => 'View printer information'],
+            ['name' => 'create_printers', 'description' => 'Create new printers'],
+            ['name' => 'edit_printers', 'description' => 'Edit existing printers'],
+            ['name' => 'delete_printers', 'description' => 'Delete printers'],
+            
+            // Department Management
+            ['name' => 'view_departments', 'description' => 'View department information'],
+            ['name' => 'create_departments', 'description' => 'Create new departments'],
+            ['name' => 'edit_departments', 'description' => 'Edit existing departments'],
+            ['name' => 'delete_departments', 'description' => 'Delete departments'],
+            
+            // Vendor Management
+            ['name' => 'view_vendors', 'description' => 'View vendor information'],
+            ['name' => 'create_vendors', 'description' => 'Create new vendors'],
+            ['name' => 'edit_vendors', 'description' => 'Edit existing vendors'],
+            ['name' => 'delete_vendors', 'description' => 'Delete vendors'],
+            
             // User Management
             ['name' => 'view_users', 'description' => 'View user information'],
             ['name' => 'create_users', 'description' => 'Create new users'],

@@ -12,10 +12,10 @@ class DepartmentController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        $this->middleware('permission:view_users')->only(['index', 'show']);
-        $this->middleware('permission:create_users')->only(['create', 'store']);
-        $this->middleware('permission:edit_users')->only(['edit', 'update']);
-        $this->middleware('permission:delete_users')->only(['destroy']);
+        $this->middleware('permission:view_departments')->only(['index', 'show']);
+        $this->middleware('permission:create_departments')->only(['create', 'store']);
+        $this->middleware('permission:edit_departments')->only(['edit', 'update']);
+        $this->middleware('permission:delete_departments')->only(['destroy']);
     }
 
     /**
@@ -51,7 +51,7 @@ class DepartmentController extends Controller
      */
     public function create()
     {
-        $users = User::where('status', 'active')
+        $users = User::where('status', 1)
                     ->orderBy('first_name')
                     ->get();
                     

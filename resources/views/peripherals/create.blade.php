@@ -15,7 +15,7 @@
                             <label for="asset_id" class="col-md-4 col-form-label text-md-end">{{ __('Asset') }}</label>
 
                             <div class="col-md-6">
-                                <select id="asset_id" class="form-control @error('asset_id') is-invalid @enderror" name="asset_id" required>
+                                <select id="asset_id" class="form-control searchable-select @error('asset_id') is-invalid @enderror" name="asset_id" required>
                                     <option value="">Select an Asset</option>
                                     @if($assets->count() > 0)
                                         @foreach($assets as $asset)

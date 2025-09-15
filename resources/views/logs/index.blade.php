@@ -102,8 +102,67 @@
                            value="{{ request('date_to') }}">
                 </div>
                 
+                <!-- Affected Field Filter -->
+                <div class="col-md-2">
+                    <label for="affected_field" class="form-label">Affected Field</label>
+                    <select name="affected_field" id="affected_field" class="form-select">
+                        <option value="">All Fields</option>
+                        @foreach($affectedFields as $field)
+                            <option value="{{ $field }}" {{ request('affected_field') == $field ? 'selected' : '' }}>
+                                {{ ucfirst(str_replace('_', ' ', $field)) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                
+                <!-- Browser Filter -->
+                <div class="col-md-2">
+                    <label for="browser_name" class="form-label">Browser</label>
+                    <select name="browser_name" id="browser_name" class="form-select">
+                        <option value="">All Browsers</option>
+                        @foreach($browsers as $browser)
+                            <option value="{{ $browser }}" {{ request('browser_name') == $browser ? 'selected' : '' }}>
+                                {{ $browser }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                
+                <!-- Has Changes Filter -->
+                <div class="col-md-2">
+                    <label for="has_changes" class="form-label">Has Changes</label>
+                    <select name="has_changes" id="has_changes" class="form-select">
+                        <option value="">All Logs</option>
+                        <option value="yes" {{ request('has_changes') == 'yes' ? 'selected' : '' }}>With Changes</option>
+                        <option value="no" {{ request('has_changes') == 'no' ? 'selected' : '' }}>Without Changes</option>
+                    </select>
+                </div>
+                
+                <!-- Request Method Filter -->
+                <div class="col-md-2">
+                    <label for="request_method" class="form-label">Method</label>
+                    <select name="request_method" id="request_method" class="form-select">
+                        <option value="">All Methods</option>
+                        <option value="GET" {{ request('request_method') == 'GET' ? 'selected' : '' }}>GET</option>
+                        <option value="POST" {{ request('request_method') == 'POST' ? 'selected' : '' }}>POST</option>
+                        <option value="PUT" {{ request('request_method') == 'PUT' ? 'selected' : '' }}>PUT</option>
+                        <option value="PATCH" {{ request('request_method') == 'PATCH' ? 'selected' : '' }}>PATCH</option>
+                        <option value="DELETE" {{ request('request_method') == 'DELETE' ? 'selected' : '' }}>DELETE</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row g-3 mt-2">
+                <!-- IP Address Filter -->
+                <div class="col-md-3">
+                    <label for="ip_address" class="form-label">IP Address</label>
+                    <input type="text" name="ip_address" id="ip_address" class="form-control" 
+                           placeholder="Search by IP address..." 
+                           value="{{ request('ip_address') }}">
+                </div>
+                
                 <!-- Filter Actions -->
-                <div class="col-md-8 d-flex align-items-end gap-2">
+                <div class="col-md-9 d-flex align-items-end gap-2">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-filter me-1"></i>Apply Filters
                     </button>
@@ -119,7 +178,7 @@
             <div class="alert alert-info">
                 <i class="fas fa-info-circle me-1"></i>
                 Showing {{ $logs->firstItem() }} to {{ $logs->lastItem() }} of {{ $logs->total() }} log entries
-                @if(request()->hasAny(['search', 'category', 'event_type', 'user_id', 'department_id', 'date_from', 'date_to']))
+                @if(request()->hasAny(['search', 'category', 'event_type', 'user_id', 'department_id', 'date_from', 'date_to', 'affected_field', 'browser_name', 'has_changes', 'request_method', 'ip_address']))
                     (filtered)
                 @endif
             </div>
@@ -136,8 +195,8 @@
                             <th class="fw-semibold">Event</th>
                             <th class="fw-semibold">User</th>
                             <th class="fw-semibold">Asset</th>
-                            <th class="fw-semibold">Department</th>
-                            <th class="fw-semibold">IP Address</th>
+                            <th class="fw-semibold">Changes</th>
+                            <th class="fw-semibold">Browser/IP</th>
                             <th class="fw-semibold text-center">Actions</th>
                         </tr>
                     </thead>
@@ -185,14 +244,50 @@
                                     @endif
                                 </td>
                                 <td>
-                                    @if($log->department)
-                                        {{ $log->department->name }}
+                                    @if($log->affected_fields || $log->old_values || $log->new_values)
+                                        <div class="small">
+                                            @if($log->affected_fields)
+                                                @php
+                                                    $fields = is_array($log->affected_fields) ? $log->affected_fields : (is_string($log->affected_fields) ? json_decode($log->affected_fields, true) : []);
+                                                    // Flatten and filter to ensure all values are strings
+                                                    $flatFields = [];
+                                                    if (is_array($fields)) {
+                                                        array_walk_recursive($fields, function($value) use (&$flatFields) {
+                                                            if (is_string($value) && !empty(trim($value))) {
+                                                                $flatFields[] = $value;
+                                                            }
+                                                        });
+                                                        $flatFields = array_unique($flatFields);
+                                                    }
+                                                @endphp
+                                                @if(count($flatFields) > 0)
+                                                    <span class="badge bg-info me-1">{{ count($flatFields) }} field(s)</span><br>
+                                                    <small class="text-muted">{{ implode(', ', array_slice($flatFields, 0, 3)) }}{{ count($flatFields) > 3 ? '...' : '' }}</small>
+                                                @endif
+                                            @endif
+                                            @if($log->old_values || $log->new_values)
+                                                <br><span class="badge bg-warning text-dark">Data Changed</span>
+                                            @endif
+                                        </div>
                                     @else
                                         <span class="text-muted">-</span>
                                     @endif
                                 </td>
                                 <td>
-                                    <small class="text-muted">{{ $log->ip_address ?: '-' }}</small>
+                                    <div class="small">
+                                        @if($log->browser_name)
+                                            <i class="fas fa-globe me-1"></i>{{ $log->browser_name }}<br>
+                                        @endif
+                                        @if($log->operating_system)
+                                            <i class="fas fa-desktop me-1"></i>{{ $log->operating_system }}<br>
+                                        @endif
+                                        @if($log->ip_address)
+                                            <i class="fas fa-network-wired me-1"></i><span class="text-muted">{{ $log->ip_address }}</span>
+                                        @endif
+                                        @if($log->request_method)
+                                            <br><span class="badge bg-secondary">{{ $log->request_method }}</span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td>
                                     <div class="d-flex justify-content-center">

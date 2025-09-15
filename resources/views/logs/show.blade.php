@@ -69,6 +69,34 @@
                                 {{ $log->ip_address ?: 'Not recorded' }}
                             </div>
                         </div>
+                        
+                        @if($log->browser_name || $log->operating_system)
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Browser & OS:</label>
+                                <div class="text-muted">
+                                    @if($log->browser_name)
+                                        <i class="fas fa-globe me-1"></i>{{ $log->browser_name }}<br>
+                                    @endif
+                                    @if($log->operating_system)
+                                        <i class="fas fa-desktop me-1"></i>{{ $log->operating_system }}
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+                        
+                        @if($log->request_method || $log->request_url)
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Request Info:</label>
+                                <div class="text-muted">
+                                    @if($log->request_method)
+                                        <span class="badge bg-secondary me-2">{{ $log->request_method }}</span>
+                                    @endif
+                                    @if($log->request_url)
+                                        <br><small>{{ $log->request_url }}</small>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
                     </div>
                     
                     <!-- Related Information -->
@@ -134,6 +162,118 @@
                     </div>
                 @endif
                 
+                <!-- Change Tracking -->
+                @if($log->affected_fields || $log->old_values || $log->new_values)
+                    <hr>
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-3">Change Details</h6>
+                        
+                        @if($log->affected_fields)
+                            @php
+                                $affectedFields = is_array($log->affected_fields) ? $log->affected_fields : (is_string($log->affected_fields) ? json_decode($log->affected_fields, true) : []);
+                                $oldValues = is_array($log->old_values) ? $log->old_values : (is_string($log->old_values) ? json_decode($log->old_values, true) : []);
+                                $newValues = is_array($log->new_values) ? $log->new_values : (is_string($log->new_values) ? json_decode($log->new_values, true) : []);
+                            @endphp
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Affected Fields:</label>
+                                <div>
+                                    @if(is_array($affectedFields))
+                                        @foreach($affectedFields as $field)
+                                            @if(is_string($field) && !empty(trim($field)))
+                                                <span class="badge bg-info me-1 mb-1">{{ ucfirst(str_replace('_', ' ', $field)) }}</span>
+                                            @elseif(is_array($field))
+                                                @foreach($field as $subField)
+                                                    @if(is_string($subField) && !empty(trim($subField)))
+                                                        <span class="badge bg-info me-1 mb-1">{{ ucfirst(str_replace('_', ' ', $subField)) }}</span>
+                                                    @endif
+                                                @endforeach
+                                            @endif
+                                        @endforeach
+                                    @endif
+                                </div>
+                            </div>
+                            
+                            @if($oldValues || $newValues)
+                                <div class="row">
+                                    @if($oldValues)
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold text-danger">Previous Values:</label>
+                                            <div class="bg-light border-start border-danger border-3 p-3 rounded">
+                                                @if(is_array($oldValues))
+                                                    @foreach($oldValues as $key => $value)
+                                                        <div class="mb-2">
+                                                            <strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong>
+                                                            <span class="text-muted">{{ is_array($value) ? json_encode($value) : (is_string($value) ? $value : json_encode($value)) }}</span>
+                                                        </div>
+                                                    @endforeach
+                                                @else
+                                                    <pre class="mb-0"><code>{{ json_encode($oldValues, JSON_PRETTY_PRINT) }}</code></pre>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endif
+                                    
+                                    @if($newValues)
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold text-success">New Values:</label>
+                                            <div class="bg-light border-start border-success border-3 p-3 rounded">
+                                                @if(is_array($newValues))
+                                                    @foreach($newValues as $key => $value)
+                                                        <div class="mb-2">
+                                                            <strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong>
+                                                            <span class="text-muted">{{ is_array($value) ? json_encode($value) : (is_string($value) ? $value : json_encode($value)) }}</span>
+                                                        </div>
+                                                    @endforeach
+                                                @else
+                                                    <pre class="mb-0"><code>{{ json_encode($newValues, JSON_PRETTY_PRINT) }}</code></pre>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
+                        @endif
+                    </div>
+                @endif
+                
+                <!-- Session & Request Details -->
+                @if($log->session_id || $log->request_parameters)
+                    <hr>
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-3">Session & Request Details</h6>
+                        
+                        @if($log->session_id)
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Session ID:</label>
+                                <div class="text-muted">
+                                    <code>{{ $log->session_id }}</code>
+                                </div>
+                            </div>
+                        @endif
+                        
+                        @if($log->request_parameters)
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Request Parameters:</label>
+                                <div class="bg-light p-3 rounded">
+                                    @php
+                                        $params = is_array($log->request_parameters) ? $log->request_parameters : (is_string($log->request_parameters) ? json_decode($log->request_parameters, true) : []);
+                                    @endphp
+                                    @if(is_array($params))
+                                        @foreach($params as $key => $value)
+                                            <div class="mb-1">
+                                                <strong>{{ $key }}:</strong> {{ is_array($value) ? json_encode($value) : (is_string($value) ? $value : json_encode($value)) }}
+                                            </div>
+                                        @endforeach
+                                    @else
+                                        <pre class="mb-0"><code>{{ json_encode($params, JSON_PRETTY_PRINT) }}</code></pre>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
                 <!-- Additional Data -->
                 @if($log->additional_data)
                     <hr>

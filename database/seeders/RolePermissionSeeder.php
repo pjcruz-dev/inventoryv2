@@ -100,6 +100,28 @@ class RolePermissionSeeder extends Seeder
             ['role_id' => 1, 'permission_id' => 77], // view_asset_confirmations
             ['role_id' => 1, 'permission_id' => 78], // manage_asset_confirmations
             
+            // Super Admin - Computer, Monitor, Printer, Department, Vendor permissions
+            ['role_id' => 1, 'permission_id' => 79], // view_computers
+            ['role_id' => 1, 'permission_id' => 80], // create_computers
+            ['role_id' => 1, 'permission_id' => 81], // edit_computers
+            ['role_id' => 1, 'permission_id' => 82], // delete_computers
+            ['role_id' => 1, 'permission_id' => 83], // view_monitors
+            ['role_id' => 1, 'permission_id' => 84], // create_monitors
+            ['role_id' => 1, 'permission_id' => 85], // edit_monitors
+            ['role_id' => 1, 'permission_id' => 86], // delete_monitors
+            ['role_id' => 1, 'permission_id' => 87], // view_printers
+            ['role_id' => 1, 'permission_id' => 88], // create_printers
+            ['role_id' => 1, 'permission_id' => 89], // edit_printers
+            ['role_id' => 1, 'permission_id' => 90], // delete_printers
+            ['role_id' => 1, 'permission_id' => 91], // view_departments
+            ['role_id' => 1, 'permission_id' => 92], // create_departments
+            ['role_id' => 1, 'permission_id' => 93], // edit_departments
+            ['role_id' => 1, 'permission_id' => 94], // delete_departments
+            ['role_id' => 1, 'permission_id' => 95], // view_vendors
+            ['role_id' => 1, 'permission_id' => 96], // create_vendors
+            ['role_id' => 1, 'permission_id' => 97], // edit_vendors
+            ['role_id' => 1, 'permission_id' => 98], // delete_vendors
+            
             // Admin - Most permissions except system admin
             ['role_id' => 2, 'permission_id' => 1],  // view_assets
             ['role_id' => 2, 'permission_id' => 2],  // create_assets
@@ -166,6 +188,28 @@ class RolePermissionSeeder extends Seeder
             ['role_id' => 2, 'permission_id' => 77], // view_asset_confirmations
             ['role_id' => 2, 'permission_id' => 78], // manage_asset_confirmations
             
+            // Admin - Computer, Monitor, Printer, Department, Vendor permissions
+            ['role_id' => 2, 'permission_id' => 79], // view_computers
+            ['role_id' => 2, 'permission_id' => 80], // create_computers
+            ['role_id' => 2, 'permission_id' => 81], // edit_computers
+            ['role_id' => 2, 'permission_id' => 82], // delete_computers
+            ['role_id' => 2, 'permission_id' => 83], // view_monitors
+            ['role_id' => 2, 'permission_id' => 84], // create_monitors
+            ['role_id' => 2, 'permission_id' => 85], // edit_monitors
+            ['role_id' => 2, 'permission_id' => 86], // delete_monitors
+            ['role_id' => 2, 'permission_id' => 87], // view_printers
+            ['role_id' => 2, 'permission_id' => 88], // create_printers
+            ['role_id' => 2, 'permission_id' => 89], // edit_printers
+            ['role_id' => 2, 'permission_id' => 90], // delete_printers
+            ['role_id' => 2, 'permission_id' => 91], // view_departments
+            ['role_id' => 2, 'permission_id' => 92], // create_departments
+            ['role_id' => 2, 'permission_id' => 93], // edit_departments
+            ['role_id' => 2, 'permission_id' => 94], // delete_departments
+            ['role_id' => 2, 'permission_id' => 95], // view_vendors
+            ['role_id' => 2, 'permission_id' => 96], // create_vendors
+            ['role_id' => 2, 'permission_id' => 97], // edit_vendors
+            ['role_id' => 2, 'permission_id' => 98], // delete_vendors
+            
             // Manager - View and approve permissions
             ['role_id' => 3, 'permission_id' => 1],  // view_assets
             ['role_id' => 3, 'permission_id' => 5],  // assign_assets
@@ -186,6 +230,11 @@ class RolePermissionSeeder extends Seeder
             ['role_id' => 3, 'permission_id' => 71], // view_notifications
             ['role_id' => 3, 'permission_id' => 73], // view_peripherals
             ['role_id' => 3, 'permission_id' => 77], // view_asset_confirmations
+            ['role_id' => 3, 'permission_id' => 79], // view_computers
+            ['role_id' => 3, 'permission_id' => 83], // view_monitors
+            ['role_id' => 3, 'permission_id' => 87], // view_printers
+            ['role_id' => 3, 'permission_id' => 91], // view_departments
+            ['role_id' => 3, 'permission_id' => 95], // view_vendors
             
             // User - Basic view permissions
             ['role_id' => 4, 'permission_id' => 1],  // view_assets
@@ -218,6 +267,17 @@ class RolePermissionSeeder extends Seeder
             ['role_id' => 5, 'permission_id' => 75], // edit_peripherals
             ['role_id' => 5, 'permission_id' => 77], // view_asset_confirmations
             ['role_id' => 5, 'permission_id' => 78], // manage_asset_confirmations
+            ['role_id' => 5, 'permission_id' => 79], // view_computers
+            ['role_id' => 5, 'permission_id' => 80], // create_computers
+            ['role_id' => 5, 'permission_id' => 81], // edit_computers
+            ['role_id' => 5, 'permission_id' => 83], // view_monitors
+            ['role_id' => 5, 'permission_id' => 84], // create_monitors
+            ['role_id' => 5, 'permission_id' => 85], // edit_monitors
+            ['role_id' => 5, 'permission_id' => 87], // view_printers
+            ['role_id' => 5, 'permission_id' => 88], // create_printers
+            ['role_id' => 5, 'permission_id' => 89], // edit_printers
+            ['role_id' => 5, 'permission_id' => 91], // view_departments
+            ['role_id' => 5, 'permission_id' => 95], // view_vendors
         ];
 
         foreach ($rolePermissions as $rolePermission) {

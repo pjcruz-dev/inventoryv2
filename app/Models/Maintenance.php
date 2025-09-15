@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\ActivityLoggable;
 
 class Maintenance extends Model
 {
+    use ActivityLoggable;
     protected $table = 'maintenance';
     
     protected $fillable = [

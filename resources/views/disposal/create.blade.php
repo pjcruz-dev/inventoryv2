@@ -19,7 +19,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="asset_id" class="form-label">Asset <span class="text-danger">*</span></label>
-                                    <select class="form-select @error('asset_id') is-invalid @enderror" 
+                                    <select class="form-select searchable-select @error('asset_id') is-invalid @enderror" 
                                             id="asset_id" name="asset_id" required>
                                         <option value="">Select Asset</option>
                                         @foreach($assets as $asset)
@@ -56,12 +56,21 @@
                                     <select class="form-select @error('disposal_type') is-invalid @enderror" 
                                             id="disposal_type" name="disposal_type" required>
                                         <option value="">Select Disposal Type</option>
-                                        <option value="Sold" {{ old('disposal_type') == 'Sold' ? 'selected' : '' }}>Sold</option>
-                                        <option value="Donated" {{ old('disposal_type') == 'Donated' ? 'selected' : '' }}>Donated</option>
-                                        <option value="Recycled" {{ old('disposal_type') == 'Recycled' ? 'selected' : '' }}>Recycled</option>
-                                        <option value="Destroyed" {{ old('disposal_type') == 'Destroyed' ? 'selected' : '' }}>Destroyed</option>
-                                        <option value="Lost" {{ old('disposal_type') == 'Lost' ? 'selected' : '' }}>Lost</option>
-                                        <option value="Stolen" {{ old('disposal_type') == 'Stolen' ? 'selected' : '' }}>Stolen</option>
+                        <option value="Sold" {{ old('disposal_type') == 'Sold' ? 'selected' : '' }}>Sold</option>
+                        <option value="Donated" {{ old('disposal_type') == 'Donated' ? 'selected' : '' }}>Donated</option>
+                        <option value="Recycled" {{ old('disposal_type') == 'Recycled' ? 'selected' : '' }}>Recycled</option>
+                        <option value="Destroyed" {{ old('disposal_type') == 'Destroyed' ? 'selected' : '' }}>Destroyed</option>
+                        <option value="Lost" {{ old('disposal_type') == 'Lost' ? 'selected' : '' }}>Lost</option>
+                        <option value="Stolen" {{ old('disposal_type') == 'Stolen' ? 'selected' : '' }}>Stolen</option>
+                        <option value="Trade-in" {{ old('disposal_type') == 'Trade-in' ? 'selected' : '' }}>Trade-in</option>
+                        <option value="Return to Vendor" {{ old('disposal_type') == 'Return to Vendor' ? 'selected' : '' }}>Return to Vendor</option>
+                        <option value="Upgrade Replacement" {{ old('disposal_type') == 'Upgrade Replacement' ? 'selected' : '' }}>Upgrade Replacement</option>
+                        <option value="Damaged Beyond Repair" {{ old('disposal_type') == 'Damaged Beyond Repair' ? 'selected' : '' }}>Damaged Beyond Repair</option>
+                        <option value="End of Life" {{ old('disposal_type') == 'End of Life' ? 'selected' : '' }}>End of Life</option>
+                        <option value="Security Risk" {{ old('disposal_type') == 'Security Risk' ? 'selected' : '' }}>Security Risk</option>
+                        <option value="Theft/Loss" {{ old('disposal_type') == 'Theft/Loss' ? 'selected' : '' }}>Theft/Loss</option>
+                        <option value="Obsolete Technology" {{ old('disposal_type') == 'Obsolete Technology' ? 'selected' : '' }}>Obsolete Technology</option>
+                        <option value="Cost of Repair Exceeds Value" {{ old('disposal_type') == 'Cost of Repair Exceeds Value' ? 'selected' : '' }}>Cost of Repair Exceeds Value</option>
                                     </select>
                                     @error('disposal_type')
                                         <div class="invalid-feedback">{{ $message }}</div>

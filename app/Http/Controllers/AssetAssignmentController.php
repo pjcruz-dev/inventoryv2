@@ -21,7 +21,7 @@ class AssetAssignmentController extends Controller
         $this->middleware('permission:create_asset_assignments')->only(['create', 'store']);
         $this->middleware('permission:edit_asset_assignments')->only(['edit', 'update']);
         $this->middleware('permission:delete_asset_assignments')->only(['destroy']);
-        $this->middleware('permission:manage_asset_assignments')->only(['markAsReturned', 'sendReminder', 'export', 'import']);
+        $this->middleware('permission:manage_asset_assignments')->only(['markAsReturned', 'export', 'import', 'downloadTemplate', 'importForm']);
     }
 
     /**
@@ -38,7 +38,8 @@ class AssetAssignmentController extends Controller
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('asset_tag', 'like', "%{$search}%");
             })->orWhereHas('user', function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%");
             });
         }
@@ -330,5 +331,44 @@ class AssetAssignmentController extends Controller
             return redirect()->back()
                            ->with('error', 'Import failed: ' . $e->getMessage());
         }
+    }
+    
+    /**
+     * Mark asset assignment as returned
+     */
+    public function markAsReturned(Request $request, AssetAssignment $assignment)
+    {
+        $request->validate([
+            'return_date' => 'required|date',
+            'notes' => 'nullable|string|max:1000'
+        ]);
+        
+        $oldData = $assignment->toArray();
+        
+        // Update assignment status to returned
+        $assignment->update([
+            'status' => 'returned',
+            'return_date' => $request->return_date,
+            'notes' => $request->notes
+        ]);
+        
+        // Update asset status to Available
+        $assignment->asset->update([
+            'status' => 'Available',
+            'assigned_to' => null,
+            'assigned_date' => null
+        ]);
+        
+        // Log activity
+        Log::info('Asset assignment marked as returned', [
+            'user_id' => Auth::id(),
+            'assignment_id' => $assignment->id,
+            'asset_id' => $assignment->asset_id,
+            'return_date' => $request->return_date,
+            'old_data' => $oldData
+        ]);
+        
+        return redirect()->route('asset-assignments.show', $assignment)
+                        ->with('success', 'Asset assignment marked as returned successfully.');
     }
 }

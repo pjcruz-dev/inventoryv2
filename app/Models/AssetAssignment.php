@@ -9,10 +9,11 @@ use App\Models\AssetAssignmentConfirmation;
 use App\Mail\AssetAssignmentConfirmation as AssetAssignmentConfirmationMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use App\Traits\ActivityLoggable;
 
 class AssetAssignment extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, ActivityLoggable;
 
     protected $fillable = [
         'asset_id',

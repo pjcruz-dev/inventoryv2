@@ -30,6 +30,10 @@ Auth::routes();
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
+// Public token-based confirmation routes (no auth required)
+Route::get('asset-assignment-confirmations/confirm/{token}', [AssetAssignmentConfirmationController::class, 'confirmByToken'])->name('asset-assignment-confirmations.confirm');
+Route::get('asset-assignment-confirmations/decline/{token}', [AssetAssignmentConfirmationController::class, 'declineByToken'])->name('asset-assignment-confirmations.decline');
+
 // Protected routes
 Route::middleware('auth')->group(function () {
     // Asset management
@@ -41,6 +45,7 @@ Route::middleware('auth')->group(function () {
     Route::get('assets/reports/employee-assets/{user}', [AssetController::class, 'printSingleEmployeeAssets'])->name('assets.print-single-employee-assets');
     Route::post('assets/bulk/print-labels', [AssetController::class, 'bulkPrintLabels'])->name('assets.bulk-print-labels');
     Route::get('assets/print-all-labels', [AssetController::class, 'printAllAssetLabels'])->name('assets.print-all-labels');
+    Route::post('assets/generate-tag', [AssetController::class, 'generateUniqueTag'])->name('assets.generate-tag');
     
     // Asset Categories
     Route::resource('asset-categories', AssetCategoryController::class);
@@ -60,25 +65,23 @@ Route::middleware('auth')->group(function () {
     Route::post('asset-assignments/{assignment}/return', [AssetAssignmentController::class, 'markAsReturned'])->name('asset-assignments.return');
     
     // Asset Assignment Confirmations
-    Route::resource('asset-assignment-confirmations', AssetAssignmentConfirmationController::class);
-    Route::get('asset-assignment-confirmations/export', [AssetAssignmentConfirmationController::class, 'export'])->name('asset-assignment-confirmations.export');
-    Route::get('asset-assignment-confirmations/export/excel', [AssetAssignmentConfirmationController::class, 'exportExcel'])->name('asset-assignment-confirmations.export.excel');
-    Route::get('asset-assignment-confirmations/download/template', [AssetAssignmentConfirmationController::class, 'downloadTemplate'])->name('asset-assignment-confirmations.download-template');
-    Route::get('asset-assignment-confirmations/import/form', [AssetAssignmentConfirmationController::class, 'importForm'])->name('asset-assignment-confirmations.import-form');
-    Route::post('asset-assignment-confirmations/import', [AssetAssignmentConfirmationController::class, 'import'])->name('asset-assignment-confirmations.import');
-    Route::get('asset-assignment-confirmations/{confirmation}/send-reminder', [AssetAssignmentConfirmationController::class, 'sendReminder'])->name('asset-assignment-confirmations.send-reminder');
-    Route::get('asset-assignment-confirmations/confirm/{token}', [AssetAssignmentConfirmationController::class, 'confirmByToken'])->name('asset-assignment-confirmations.confirm');
-    Route::get('asset-assignment-confirmations/decline/{token}', [AssetAssignmentConfirmationController::class, 'declineByToken'])->name('asset-assignment-confirmations.decline');
+    Route::resource('asset-assignment-confirmations', AssetAssignmentConfirmationController::class)->middleware('check.permission:view_assignment_confirmations');
+    Route::get('asset-assignment-confirmations/export', [AssetAssignmentConfirmationController::class, 'export'])->name('asset-assignment-confirmations.export')->middleware('check.permission:manage_assignment_confirmations');
+    Route::get('asset-assignment-confirmations/export/excel', [AssetAssignmentConfirmationController::class, 'exportExcel'])->name('asset-assignment-confirmations.export.excel')->middleware('check.permission:manage_assignment_confirmations');
+    Route::get('asset-assignment-confirmations/download/template', [AssetAssignmentConfirmationController::class, 'downloadTemplate'])->name('asset-assignment-confirmations.download-template')->middleware('check.permission:manage_assignment_confirmations');
+    Route::get('asset-assignment-confirmations/import/form', [AssetAssignmentConfirmationController::class, 'importForm'])->name('asset-assignment-confirmations.import-form')->middleware('check.permission:manage_assignment_confirmations');
+    Route::post('asset-assignment-confirmations/import', [AssetAssignmentConfirmationController::class, 'import'])->name('asset-assignment-confirmations.import')->middleware('check.permission:manage_assignment_confirmations');
+    Route::get('asset-assignment-confirmations/{confirmation}/send-reminder', [AssetAssignmentConfirmationController::class, 'sendReminder'])->name('asset-assignment-confirmations.send-reminder')->middleware('check.permission:manage_assignment_confirmations');
     
-    Route::resource('computers', ComputerController::class);
-    Route::resource('monitors', MonitorController::class);
-    Route::resource('printers', PrinterController::class);
-    Route::resource('peripherals', PeripheralController::class);
+    Route::resource('computers', ComputerController::class)->middleware('check.permission:view_computers');
+    Route::resource('monitors', MonitorController::class)->middleware('check.permission:view_monitors');
+    Route::resource('printers', PrinterController::class)->middleware('check.permission:view_printers');
+    Route::resource('peripherals', PeripheralController::class)->middleware('check.permission:view_peripherals');
     
     // User and organization management
-    Route::resource('users', UserController::class);
-    Route::resource('departments', DepartmentController::class);
-    Route::resource('vendors', VendorController::class);
+    Route::resource('users', UserController::class)->middleware('check.permission:view_users');
+    Route::resource('departments', DepartmentController::class)->middleware('check.permission:view_departments');
+    Route::resource('vendors', VendorController::class)->middleware('check.permission:view_vendors');
     
     // User role management routes
     Route::prefix('users')->name('users.')->group(function () {
@@ -100,8 +103,8 @@ Route::middleware('auth')->group(function () {
      });
     
     // Roles and permissions management
-    Route::resource('roles', RoleController::class);
-    Route::resource('permissions', PermissionController::class);
+    Route::resource('roles', RoleController::class)->middleware('check.permission:view_roles');
+    Route::resource('permissions', PermissionController::class)->middleware('check.permission:view_permissions');
     
     // Dashboard route
     Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
@@ -110,7 +113,7 @@ Route::middleware('auth')->group(function () {
     require __DIR__.'/import-export.php';
     
     // Activity Logs routes
-    Route::prefix('logs')->name('logs.')->group(function () {
+    Route::prefix('logs')->name('logs.')->middleware('check.permission:view_logs')->group(function () {
         Route::get('/', [LogController::class, 'index'])->name('index');
         Route::get('/{log}', [LogController::class, 'show'])->name('show');
         Route::get('/export', [LogController::class, 'export'])->name('export');
@@ -118,20 +121,20 @@ Route::middleware('auth')->group(function () {
     });
     
     // Asset Timeline routes
-    Route::prefix('timeline')->name('timeline.')->group(function () {
+    Route::prefix('timeline')->name('timeline.')->middleware('check.permission:view_timeline')->group(function () {
         Route::get('/', [AssetTimelineController::class, 'index'])->name('index');
-        Route::get('/create', [AssetTimelineController::class, 'create'])->name('create');
-        Route::post('/', [AssetTimelineController::class, 'store'])->name('store');
+        Route::get('/create', [AssetTimelineController::class, 'create'])->name('create')->middleware('check.permission:create_timeline');
+        Route::post('/', [AssetTimelineController::class, 'store'])->name('store')->middleware('check.permission:create_timeline');
         Route::get('/asset/{asset}', [AssetTimelineController::class, 'show'])->name('show');
     });
     
     // Notification routes
-    Route::prefix('notifications')->name('notifications.')->group(function () {
+    Route::prefix('notifications')->name('notifications.')->middleware('check.permission:view_notifications')->group(function () {
         Route::get('/unread', [NotificationController::class, 'getUnread'])->name('unread');
         Route::get('/all', [NotificationController::class, 'getAll'])->name('all');
         Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('read');
         Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
-        Route::delete('/{id}', [NotificationController::class, 'delete'])->name('delete');
+        Route::delete('/{id}', [NotificationController::class, 'delete'])->name('delete')->middleware('check.permission:manage_notifications');
     });
     
     // Maintenance routes

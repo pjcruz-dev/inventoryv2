@@ -3,14 +3,17 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\ActivityLoggable;
 
 class Disposal extends Model
 {
+    use ActivityLoggable;
     protected $fillable = [
         'asset_id',
         'disposal_date',
         'disposal_type',
         'disposal_value',
+        'approved_by',
         'remarks',
     ];
 
@@ -23,6 +26,11 @@ class Disposal extends Model
     public function asset()
     {
         return $this->belongsTo(Asset::class);
+    }
+
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 
 

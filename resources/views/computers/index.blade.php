@@ -38,7 +38,7 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <select name="processor" class="form-control">
+                                    <select name="processor" class="form-control searchable-select">
                                         <option value="">All Processors</option>
                                         <option value="Intel" {{ request('processor') == 'Intel' ? 'selected' : '' }}>Intel</option>
                                         <option value="AMD" {{ request('processor') == 'AMD' ? 'selected' : '' }}>AMD</option>

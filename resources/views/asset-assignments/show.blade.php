@@ -329,9 +329,8 @@
                 <h5 class="modal-title">Mark as Returned</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ route('asset-assignments.update', $assetAssignment) }}" method="POST">
+            <form action="{{ route('asset-assignments.return', $assetAssignment) }}" method="POST">
                 @csrf
-                @method('PUT')
                 <div class="modal-body">
                     <p>Mark this asset assignment as returned?</p>
                     <div class="mb-3">

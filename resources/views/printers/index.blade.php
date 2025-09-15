@@ -38,7 +38,7 @@
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="type">Type:</label>
-                                    <select name="type" id="type" class="form-control">
+                                    <select name="type" id="type" class="form-control searchable-select">
                                         <option value="">All Types</option>
                                         <option value="Inkjet" {{ request('type') == 'Inkjet' ? 'selected' : '' }}>Inkjet</option>
                                         <option value="Laser" {{ request('type') == 'Laser' ? 'selected' : '' }}>Laser</option>
@@ -51,7 +51,7 @@
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="color_support">Color Support:</label>
-                                    <select name="color_support" id="color_support" class="form-control">
+                                    <select name="color_support" id="color_support" class="form-control searchable-select">
                                         <option value="">All</option>
                                         <option value="1" {{ request('color_support') == '1' ? 'selected' : '' }}>Color</option>
                                         <option value="0" {{ request('color_support') == '0' ? 'selected' : '' }}>Monochrome</option>

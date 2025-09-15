@@ -12,13 +12,17 @@ use App\Mail\AssetAssignmentConfirmation as AssetAssignmentConfirmationMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use App\Services\ActivityLogService;
 
 class AssetController extends Controller
 {
     use AuthorizesRequests;
     
-    public function __construct()
+    protected $activityLogService;
+    
+    public function __construct(ActivityLogService $activityLogService)
     {
+        $this->activityLogService = $activityLogService;
         $this->middleware('auth');
         $this->middleware('throttle:60,1')->only(['store', 'update', 'destroy']);
         $this->middleware('permission:view_assets')->only(['index', 'show']);
@@ -95,7 +99,7 @@ class AssetController extends Controller
     {
         $categories = AssetCategory::orderBy('name')->get();
         $vendors = Vendor::orderBy('name')->get();
-        $users = User::where('status', 'active')
+        $users = User::where('status', 1)
                     ->orderBy('first_name')
                     ->get();
         return view('assets.create', compact('categories', 'vendors', 'users'));
@@ -135,7 +139,7 @@ class AssetController extends Controller
         $asset->load(['timeline.fromUser', 'timeline.toUser']);
         $categories = AssetCategory::orderBy('name')->get();
         $vendors = Vendor::orderBy('name')->get();
-        $users = User::where('status', 'active')
+        $users = User::where('status', 1)
                     ->orderBy('first_name')
                     ->get();
         return view('assets.edit', compact('asset', 'categories', 'vendors', 'users'));
@@ -203,21 +207,22 @@ class AssetController extends Controller
             'notes' => $validated['notes']
         ]);
 
-        // Create audit log
-        \App\Models\Log::create([
-            'category' => 'Asset',
-            'asset_id' => $asset->id,
-            'user_id' => auth()->id(),
-            'role_id' => auth()->user()->role_id ?? 1,
-            'department_id' => auth()->user()->department_id,
-            'event_type' => 'assigned',
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-            'remarks' => 'Asset assigned to ' . $user->first_name . ' ' . $user->last_name . 
-                        '. Confirmation email sent.' . 
-                        (!empty($validated['notes']) ? ' Notes: ' . $validated['notes'] : ''),
-            'created_at' => now()
-        ]);
+        // Create enhanced audit log
+        $this->activityLogService->logActivity(
+            $asset,
+            'assigned',
+            'Asset assigned to ' . $user->first_name . ' ' . $user->last_name . '. Status changed to Pending Confirmation.',
+            $asset->getOriginal(), // old values
+            $asset->getAttributes(), // new values
+            [
+                'assigned_user_id' => $validated['assigned_to'],
+                'assigned_user_name' => $user->first_name . ' ' . $user->last_name,
+                'assigned_date' => $validated['assigned_date'],
+                'assignment_notes' => $validated['notes'],
+                'previous_status' => $asset->getOriginal('status'),
+                'new_status' => 'Pending Confirmation'
+            ]
+        );
 
         return redirect()->route('assets.show', $asset)
                         ->with('success', 'Asset assigned successfully. Confirmation email sent to user.');
@@ -249,19 +254,23 @@ class AssetController extends Controller
                 'notes' => 'Asset returned - confirmation automatically completed'
             ]);
 
-        // Create audit log
-        \App\Models\Log::create([
-            'category' => 'Asset',
-            'asset_id' => $asset->id,
-            'user_id' => auth()->id(),
-            'role_id' => auth()->user()->role_id ?? 1,
-            'department_id' => auth()->user()->department_id,
-            'event_type' => 'returned',
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-            'remarks' => 'Asset returned from ' . ($previousUser ? $previousUser->first_name . ' ' . $previousUser->last_name : 'unknown user') . '. Status updated to Active, movement to Returned.',
-            'created_at' => now()
-        ]);
+        // Create enhanced audit log
+        $this->activityLogService->logActivity(
+            $asset,
+            'returned',
+            'Asset returned from ' . ($previousUser ? $previousUser->first_name . ' ' . $previousUser->last_name : 'unknown user') . '. Status updated to Active, movement to Returned.',
+            $asset->getOriginal(), // old values
+            $asset->getAttributes(), // new values
+            [
+                'previous_user_id' => $previousUser ? $previousUser->id : null,
+                'previous_user_name' => $previousUser ? $previousUser->first_name . ' ' . $previousUser->last_name : 'unknown user',
+                'previous_status' => $asset->getOriginal('status'),
+                'new_status' => 'Active',
+                'previous_movement' => $asset->getOriginal('movement'),
+                'new_movement' => 'Returned',
+                'return_processed_by' => auth()->user()->first_name . ' ' . auth()->user()->last_name
+            ]
+        );
 
         return response()->json([
             'success' => true,
@@ -484,5 +493,44 @@ class AssetController extends Controller
         $labelHeight = $request->input('label_height', 200);
         
         return view('assets.bulk-print-labels', compact('assets', 'labelWidth', 'labelHeight'));
+    }
+
+    /**
+     * Generate a unique asset tag
+     */
+    public function generateUniqueTag(Request $request)
+    {
+        $request->validate([
+            'category_name' => 'required|string'
+        ]);
+
+        $categoryName = $request->category_name;
+        $categoryPrefix = strtoupper(substr($categoryName, 0, 3));
+        
+        $date = now();
+        $timestamp = $date->format('ymd');
+        
+        // Generate unique tag by checking database
+        $attempts = 0;
+        $maxAttempts = 100;
+        
+        do {
+            $random = str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
+            $assetTag = $categoryPrefix . '-' . $timestamp . '-' . $random;
+            $exists = Asset::where('asset_tag', $assetTag)->exists();
+            $attempts++;
+        } while ($exists && $attempts < $maxAttempts);
+        
+        if ($attempts >= $maxAttempts) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to generate unique asset tag after multiple attempts'
+            ], 500);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'asset_tag' => $assetTag
+        ]);
     }
 }

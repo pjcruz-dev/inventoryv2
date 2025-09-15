@@ -38,7 +38,7 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <select name="panel_type" class="form-control">
+                                    <select name="panel_type" class="form-control searchable-select">
                                         <option value="">All Panel Types</option>
                                         <option value="LCD" {{ request('panel_type') == 'LCD' ? 'selected' : '' }}>LCD</option>
                                         <option value="LED" {{ request('panel_type') == 'LED' ? 'selected' : '' }}>LED</option>

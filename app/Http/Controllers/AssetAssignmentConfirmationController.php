@@ -20,7 +20,8 @@ class AssetAssignmentConfirmationController extends Controller
         $this->middleware('permission:create_assignment_confirmations')->only(['create', 'store']);
         $this->middleware('permission:edit_assignment_confirmations')->only(['edit', 'update']);
         $this->middleware('permission:delete_assignment_confirmations')->only(['destroy']);
-        $this->middleware('permission:manage_assignment_confirmations')->only(['export', 'import']);
+        $this->middleware('permission:manage_assignment_confirmations')->only(['export', 'import', 'sendReminder']);
+        // confirmByToken and declineByToken are public routes without middleware
     }
 
     /**
@@ -37,7 +38,8 @@ class AssetAssignmentConfirmationController extends Controller
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('asset_tag', 'like', "%{$search}%");
             })->orWhereHas('user', function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%");
             });
         }
@@ -122,7 +124,8 @@ class AssetAssignmentConfirmationController extends Controller
             'confirmation_id' => $assetAssignmentConfirmation->id
         ]);
         
-        return view('asset-assignment-confirmations.show', compact('assetAssignmentConfirmation'));
+        return view('asset-assignment-confirmations.show', compact('assetAssignmentConfirmation'))
+            ->with('confirmation', $assetAssignmentConfirmation);
     }
 
     /**
@@ -139,7 +142,8 @@ class AssetAssignmentConfirmationController extends Controller
             'confirmation_id' => $assetAssignmentConfirmation->id
         ]);
         
-        return view('asset-assignment-confirmations.edit', compact('assetAssignmentConfirmation', 'assets', 'users'));
+        return view('asset-assignment-confirmations.edit', compact('assetAssignmentConfirmation', 'assets', 'users'))
+            ->with('confirmation', $assetAssignmentConfirmation);
     }
 
     /**
@@ -372,5 +376,21 @@ class AssetAssignmentConfirmationController extends Controller
             return redirect()->back()
                            ->with('error', 'Import failed: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Confirm asset assignment by token (public access)
+     */
+    public function confirmByToken($token)
+    {
+        return $this->confirm($token);
+    }
+
+    /**
+     * Decline asset assignment by token (public access)
+     */
+    public function declineByToken($token)
+    {
+        return $this->decline($token);
     }
 }

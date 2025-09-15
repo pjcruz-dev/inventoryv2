@@ -13,8 +13,8 @@ class AssetConfirmationController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:view_asset_confirmations')->only(['show']);
-        $this->middleware('permission:manage_asset_confirmations')->only(['confirm']);
+        // Token-based routes should be publicly accessible without authentication
+        // No middleware needed for token-based confirmation routes
     }
 
     /**
@@ -95,19 +95,26 @@ class AssetConfirmationController extends Controller
             'movement' => 'Deployed Tagged'
         ]);
 
-        // Create audit log
-        Log::create([
-            'category' => 'Asset',
-            'asset_id' => $confirmation->asset->id,
-            'user_id' => $confirmation->user->id,
-            'role_id' => $confirmation->user->role_id ?? 1,
-            'department_id' => $confirmation->user->department_id,
-            'event_type' => 'confirmed',
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-            'remarks' => 'Asset assignment confirmed by user: ' . $confirmation->user->first_name . ' ' . $confirmation->user->last_name . '. Status changed from Pending Confirmation to Active.',
-            'created_at' => now()
-        ]);
+        // Create enhanced audit log using ActivityLogService
+        $activityLogService = app(\App\Services\ActivityLogService::class);
+        $activityLogService->logActivity(
+            $confirmation->asset,
+            'confirmed',
+            'Asset assignment confirmed by user: ' . $confirmation->user->first_name . ' ' . $confirmation->user->last_name . '. Status changed from Pending Confirmation to Active.',
+            ['status' => 'Pending Confirmation', 'movement' => $confirmation->asset->getOriginal('movement')], // old values
+            ['status' => 'Active', 'movement' => 'Deployed Tagged'], // new values
+            [
+                'confirming_user_id' => $confirmation->user->id,
+                'confirming_user_name' => $confirmation->user->first_name . ' ' . $confirmation->user->last_name,
+                'confirmation_id' => $confirmation->id,
+                'confirmation_token' => $confirmation->token,
+                'confirmed_at' => now()->toISOString(),
+                'previous_status' => 'Pending Confirmation',
+                'new_status' => 'Active',
+                'previous_movement' => $confirmation->asset->getOriginal('movement'),
+                'new_movement' => 'Deployed Tagged'
+            ]
+        );
 
         // Create notification for the user
         $notificationData = [

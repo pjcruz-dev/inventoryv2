@@ -141,7 +141,7 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="vendor_id" class="form-label">Vendor</label>
-                                <select class="form-select @error('vendor_id') is-invalid @enderror" id="vendor_id" name="vendor_id">
+                                <select class="form-select searchable-select @error('vendor_id') is-invalid @enderror" id="vendor_id" name="vendor_id">
                                     <option value="">Select Vendor</option>
                                     @foreach($vendors as $vendor)
                                         <option value="{{ $vendor->id }}" {{ old('vendor_id') == $vendor->id ? 'selected' : '' }}>
@@ -182,12 +182,53 @@
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
+                                <label for="po_number" class="form-label">PO Number</label>
+                                <input type="text" class="form-control @error('po_number') is-invalid @enderror" 
+                                       id="po_number" name="po_number" value="{{ old('po_number') }}">
+                                @error('po_number')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="entity" class="form-label">Entity</label>
+                                <select class="form-select @error('entity') is-invalid @enderror" id="entity" name="entity">
+                                    <option value="">Select Entity</option>
+                                    <option value="MIDC" {{ old('entity') == 'MIDC' ? 'selected' : '' }}>MIDC</option>
+                                    <option value="PHILTOWER" {{ old('entity') == 'PHILTOWER' ? 'selected' : '' }}>PHILTOWER</option>
+                                    <option value="PRIMUS" {{ old('entity') == 'PRIMUS' ? 'selected' : '' }}>PRIMUS</option>
+                                </select>
+                                @error('entity')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="lifespan" class="form-label">Lifespan (Years)</label>
+                                <input type="number" min="1" max="50" class="form-control @error('lifespan') is-invalid @enderror" 
+                                       id="lifespan" name="lifespan" value="{{ old('lifespan') }}" placeholder="e.g., 5">
+                                <small class="form-text text-muted">Recommended lifespan for laptops and other equipment</small>
+                                @error('lifespan')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
                                 <label for="assigned_to" class="form-label">Assigned To</label>
                                 <select class="form-select @error('assigned_to') is-invalid @enderror" id="assigned_to" name="assigned_to">
                                     <option value="">Select User</option>
                                     @foreach($users as $user)
                                         <option value="{{ $user->id }}" {{ old('assigned_to') == $user->id ? 'selected' : '' }}>
-                                            {{ $user->first_name }} {{ $user->last_name }}
+                                            {{ $user->first_name }} {{ $user->last_name }} - {{ $user->department->name ?? 'No Department' }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -339,30 +380,55 @@ $(document).ready(function() {
         }
     });
     
-    // Auto-generate asset tag based on category and current date
+    // Auto-generate asset tag based on category using backend API
     function generateAssetTag(categoryText, forceGenerate = false) {
         const assetTagField = document.getElementById('asset_tag');
         const generateBtn = document.getElementById('generateTagBtn');
         
         // Only generate if field is empty or force generation is requested
         if (!assetTagField.value || forceGenerate) {
-            const categoryPrefix = categoryText.substring(0, 3).toUpperCase();
-            const date = new Date();
-            const timestamp = date.getFullYear().toString().substr(-2) + 
-                            String(date.getMonth() + 1).padStart(2, '0') + 
-                            String(date.getDate()).padStart(2, '0');
-            const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-            assetTagField.value = categoryPrefix + '-' + timestamp + '-' + random;
+            // Show loading state
+            assetTagField.value = 'Generating...';
+            assetTagField.disabled = true;
             
-            // Add visual feedback
-            assetTagField.classList.add('border-success');
-            setTimeout(() => {
-                assetTagField.classList.remove('border-success');
-            }, 2000);
+            // Call backend API to generate unique tag
+            fetch('{{ route("assets.generate-tag") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    category_name: categoryText
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    assetTagField.value = data.asset_tag;
+                    
+                    // Add visual feedback
+                    assetTagField.classList.add('border-success');
+                    setTimeout(() => {
+                        assetTagField.classList.remove('border-success');
+                    }, 2000);
+                } else {
+                    assetTagField.value = '';
+                    alert('Error generating asset tag: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                assetTagField.value = '';
+                alert('Error generating asset tag. Please try again.');
+            })
+            .finally(() => {
+                assetTagField.disabled = false;
+            });
         }
         
         // Show generate button if category is selected and field has value
-        if (categoryText && assetTagField.value) {
+        if (categoryText && assetTagField.value && assetTagField.value !== 'Generating...') {
             generateBtn.style.display = 'block';
         }
     }
@@ -389,6 +455,14 @@ $(document).ready(function() {
         } else {
             generateBtn.style.display = 'none';
         }
+    });
+    
+    // Initialize Select2 for assigned_to dropdown
+    $('#assigned_to').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Search and select a user...',
+        allowClear: true,
+        width: '100%'
     });
 });
 </script>

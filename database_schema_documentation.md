@@ -211,7 +211,7 @@ This document describes the complete database schema for the Inventory Managemen
 |--------|------|-------------|-------------|
 | id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique maintenance identifier |
 | asset_id | BIGINT | FOREIGN KEY → assets.id | Related asset |
-| vendor_id | BIGINT | FOREIGN KEY → vendors.id | Service vendor |
+| vendor_id | BIGINT | FOREIGN KEY → vendors.id, NULLABLE | Service vendor |
 | issue_reported | TEXT | NULLABLE | Reported issue |
 | repair_action | TEXT | NULLABLE | Repair actions taken |
 | cost | DECIMAL(12,2) | NULLABLE | Maintenance cost |

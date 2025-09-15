@@ -37,7 +37,7 @@
                         </button>
                     </div>
                     
-                    <select name="department" class="form-select form-select-sm" style="width: 150px;">
+                    <select name="department" class="form-select form-select-sm searchable-select" style="width: 150px;">
                         <option value="">All Departments</option>
                         @foreach($departments as $department)
                             <option value="{{ $department->id }}" 
@@ -47,7 +47,7 @@
                         @endforeach
                     </select>
                     
-                    <select name="status" class="form-select form-select-sm" style="width: 120px;">
+                    <select name="status" class="form-select form-select-sm searchable-select" style="width: 120px;">
                         <option value="">All Status</option>
                         <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Active</option>
                         <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Inactive</option>

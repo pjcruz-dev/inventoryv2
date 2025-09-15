@@ -146,7 +146,7 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="vendor_id" class="form-label">Vendor</label>
-                                <select class="form-select @error('vendor_id') is-invalid @enderror" id="vendor_id" name="vendor_id">
+                                <select class="form-select searchable-select @error('vendor_id') is-invalid @enderror" id="vendor_id" name="vendor_id">
                                     <option value="">Select Vendor</option>
                                     @foreach($vendors as $vendor)
                                         <option value="{{ $vendor->id }}" {{ old('vendor_id', $asset->vendor_id) == $vendor->id ? 'selected' : '' }}>
@@ -187,12 +187,53 @@
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
+                                <label for="po_number" class="form-label">PO Number</label>
+                                <input type="text" class="form-control @error('po_number') is-invalid @enderror" 
+                                       id="po_number" name="po_number" value="{{ old('po_number', $asset->po_number) }}">
+                                @error('po_number')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="entity" class="form-label">Entity</label>
+                                <select class="form-select @error('entity') is-invalid @enderror" id="entity" name="entity">
+                                    <option value="">Select Entity</option>
+                                    <option value="MIDC" {{ old('entity', $asset->entity) == 'MIDC' ? 'selected' : '' }}>MIDC</option>
+                                    <option value="PHILTOWER" {{ old('entity', $asset->entity) == 'PHILTOWER' ? 'selected' : '' }}>PHILTOWER</option>
+                                    <option value="PRIMUS" {{ old('entity', $asset->entity) == 'PRIMUS' ? 'selected' : '' }}>PRIMUS</option>
+                                </select>
+                                @error('entity')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="lifespan" class="form-label">Lifespan (Years)</label>
+                                <input type="number" min="1" max="50" class="form-control @error('lifespan') is-invalid @enderror" 
+                                       id="lifespan" name="lifespan" value="{{ old('lifespan', $asset->lifespan) }}" placeholder="e.g., 5">
+                                <small class="form-text text-muted">Recommended lifespan for laptops and other equipment</small>
+                                @error('lifespan')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
                                 <label for="assigned_to" class="form-label">Assigned To</label>
                                 <select class="form-select @error('assigned_to') is-invalid @enderror" id="assigned_to" name="assigned_to">
                                     <option value="">Select User</option>
                                     @foreach($users as $user)
                                         <option value="{{ $user->id }}" {{ old('assigned_to', $asset->assigned_to) == $user->id ? 'selected' : '' }}>
-                                            {{ $user->first_name }} {{ $user->last_name }}
+                                            {{ $user->first_name }} {{ $user->last_name }} - {{ $user->department ? $user->department->name : 'No Department' }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -489,6 +530,14 @@ $(document).ready(function() {
                 return false;
             }
         }
+    });
+    
+    // Initialize Select2 for assigned_to dropdown
+    $('#assigned_to').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Search and select a user...',
+        allowClear: true,
+        width: '100%'
     });
 });
 </script>

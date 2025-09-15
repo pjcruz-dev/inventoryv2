@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('maintenance', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('asset_id');
-            $table->unsignedBigInteger('vendor_id');
+            $table->unsignedBigInteger('vendor_id')->nullable();
             $table->text('issue_reported')->nullable();
             $table->text('repair_action')->nullable();
             $table->decimal('cost', 12, 2)->nullable();

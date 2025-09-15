@@ -54,7 +54,7 @@
                                 </div>
                             </div>
                             <div class="col-md-3">
-                                <select name="status" class="form-select">
+                                <select name="status" class="form-select searchable-select">
                                     <option value="">All Statuses</option>
                                     <option value="assigned" {{ request('status') == 'assigned' ? 'selected' : '' }}>Assigned</option>
                                     <option value="returned" {{ request('status') == 'returned' ? 'selected' : '' }}>Returned</option>
@@ -62,7 +62,7 @@
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <select name="asset_category" class="form-select">
+                                <select name="asset_category" class="form-select searchable-select">
                                     <option value="">All Categories</option>
                                     @foreach($categories as $category)
                                         <option value="{{ $category->id }}" {{ request('asset_category') == $category->id ? 'selected' : '' }}>
@@ -188,8 +188,8 @@
 
                     <!-- Pagination -->
                     @if($assignments->hasPages())
-                        <div class="d-flex justify-content-center mt-4">
-                            {{ $assignments->appends(request()->query())->links() }}
+                        <div class="pagination-wrapper mt-3">
+                            {{ $assignments->appends(request()->query())->links('pagination.custom') }}
                         </div>
                     @endif
                 </div>

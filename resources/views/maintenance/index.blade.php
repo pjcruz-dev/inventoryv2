@@ -161,8 +161,8 @@
 
                     <!-- Pagination -->
                     @if($maintenances->hasPages())
-                        <div class="d-flex justify-content-center mt-4">
-                            {{ $maintenances->links() }}
+                        <div class="pagination-wrapper mt-3">
+                            {{ $maintenances->appends(request()->query())->links('pagination.custom') }}
                         </div>
                     @endif
                 </div>

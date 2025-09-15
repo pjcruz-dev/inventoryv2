@@ -7,14 +7,18 @@ use App\Models\Log;
 use App\Models\User;
 use App\Models\Asset;
 use App\Models\Department;
+use App\Services\ActivityLogService;
 use Illuminate\Support\Facades\Auth;
 
 class LogController extends Controller
 {
-    public function __construct()
+    protected $activityLogService;
+
+    public function __construct(ActivityLogService $activityLogService)
     {
         $this->middleware('auth');
         $this->middleware('permission:view_logs')->only(['index', 'show']);
+        $this->activityLogService = $activityLogService;
     }
 
     /**
@@ -74,6 +78,37 @@ class LogController extends Controller
             $query->whereDate('created_at', '<=', $request->date_to);
         }
 
+        // Enhanced filtering options
+        if ($request->filled('affected_field')) {
+            $query->whereJsonContains('affected_fields', $request->affected_field);
+        }
+
+        if ($request->filled('browser_name')) {
+            $query->where('browser_name', $request->browser_name);
+        }
+
+        if ($request->filled('has_changes')) {
+            if ($request->has_changes === 'yes') {
+                $query->where(function($q) {
+                    $q->whereNotNull('old_values')
+                      ->orWhereNotNull('new_values');
+                });
+            } else {
+                $query->where(function($q) {
+                    $q->whereNull('old_values')
+                      ->whereNull('new_values');
+                });
+            }
+        }
+
+        if ($request->filled('request_method')) {
+            $query->where('request_method', $request->request_method);
+        }
+
+        if ($request->filled('ip_address')) {
+            $query->where('ip_address', 'like', '%' . $request->ip_address . '%');
+        }
+
         $logs = $query->paginate(20)->withQueryString();
 
         // Get filter options
@@ -81,13 +116,41 @@ class LogController extends Controller
         $eventTypes = Log::distinct()->pluck('event_type')->filter()->sort();
         $users = User::where('status', 'Active')->orderBy('first_name')->get();
         $departments = Department::orderBy('name')->get();
+        
+        // Get affected fields for filtering
+        $affectedFields = Log::whereNotNull('affected_fields')
+                            ->distinct()
+                            ->pluck('affected_fields')
+                            ->filter()
+                            ->flatMap(function($fields) {
+                                $decoded = is_string($fields) ? json_decode($fields, true) : $fields;
+                                if (!is_array($decoded)) {
+                                    return [];
+                                }
+                                return $decoded;
+                            })
+                            ->filter(function($field) {
+                                return is_string($field) && !empty($field);
+                            })
+                            ->unique()
+                            ->sort()
+                            ->values();
+        
+        // Get browser names for filtering
+        $browsers = Log::whereNotNull('browser_name')
+                      ->distinct()
+                      ->pluck('browser_name')
+                      ->filter()
+                      ->sort();
 
         return view('logs.index', compact(
             'logs',
             'categories',
             'eventTypes',
             'users',
-            'departments'
+            'departments',
+            'affectedFields',
+            'browsers'
         ));
     }
 
@@ -200,12 +263,32 @@ class LogController extends Controller
                 'Department',
                 'Role',
                 'IP Address',
+                'Browser',
+                'Operating System',
+                'Request Method',
+                'Request URL',
+                'Session ID',
+                'Affected Fields',
+                'Old Values',
+                'New Values',
                 'User Agent',
                 'Remarks'
             ]);
 
             // CSV data
             foreach ($logs as $log) {
+                $affectedFields = is_string($log->affected_fields) ? 
+                    implode(', ', json_decode($log->affected_fields, true) ?: []) : 
+                    (is_array($log->affected_fields) ? implode(', ', $log->affected_fields) : '');
+                
+                $oldValues = is_string($log->old_values) ? 
+                    json_encode(json_decode($log->old_values, true), JSON_UNESCAPED_UNICODE) : 
+                    (is_array($log->old_values) ? json_encode($log->old_values, JSON_UNESCAPED_UNICODE) : '');
+                
+                $newValues = is_string($log->new_values) ? 
+                    json_encode(json_decode($log->new_values, true), JSON_UNESCAPED_UNICODE) : 
+                    (is_array($log->new_values) ? json_encode($log->new_values, JSON_UNESCAPED_UNICODE) : '');
+                
                 fputcsv($file, [
                     $log->id,
                     $log->created_at ? $log->created_at->format('Y-m-d H:i:s') : '',
@@ -216,6 +299,14 @@ class LogController extends Controller
                     $log->department ? $log->department->name : '',
                     $log->role ? $log->role->name : '',
                     $log->ip_address,
+                    $log->browser_name ?: '',
+                    $log->operating_system ?: '',
+                    $log->request_method ?: '',
+                    $log->request_url ?: '',
+                    $log->session_id ?: '',
+                    $affectedFields,
+                    $oldValues,
+                    $newValues,
                     $log->user_agent,
                     $log->remarks
                 ]);

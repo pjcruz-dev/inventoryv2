@@ -94,7 +94,7 @@ class DisposalController extends Controller
         $request->validate([
             'asset_id' => 'required|exists:assets,id',
             'disposal_date' => 'required|date',
-            'disposal_type' => 'required|in:Sale,Donation,Recycling,Destruction,Trade-in,Return to Vendor',
+            'disposal_type' => 'required|in:Sold,Donated,Recycled,Destroyed,Lost,Stolen,Trade-in,Return to Vendor,Upgrade Replacement,Damaged Beyond Repair,End of Life,Security Risk,Theft/Loss,Obsolete Technology,Cost of Repair Exceeds Value,Recycling,Donation',
             'disposal_value' => 'nullable|numeric|min:0|max:999999.99',
             'remarks' => 'nullable|string|max:1000',
         ]);
@@ -151,7 +151,7 @@ class DisposalController extends Controller
         $request->validate([
             'asset_id' => 'required|exists:assets,id',
             'disposal_date' => 'required|date',
-            'disposal_type' => 'required|in:Sale,Donation,Recycling,Destruction,Trade-in,Return to Vendor',
+            'disposal_type' => 'required|in:Sold,Donated,Recycled,Destroyed,Lost,Stolen,Trade-in,Return to Vendor,Upgrade Replacement,Damaged Beyond Repair,End of Life,Security Risk,Theft/Loss,Obsolete Technology,Cost of Repair Exceeds Value,Recycling,Donation',
             'disposal_value' => 'nullable|numeric|min:0|max:999999.99',
             'remarks' => 'nullable|string|max:1000',
         ]);

@@ -19,7 +19,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="asset_id" class="form-label">Asset <span class="text-danger">*</span></label>
-                                    <select class="form-select @error('asset_id') is-invalid @enderror" 
+                                    <select class="form-select searchable-select @error('asset_id') is-invalid @enderror" 
                                             id="asset_id" name="asset_id" required>
                                         <option value="">Select Asset</option>
                                         @foreach($assets as $asset)
@@ -37,7 +37,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="vendor_id" class="form-label">Vendor</label>
-                                    <select class="form-select @error('vendor_id') is-invalid @enderror" 
+                                    <select class="form-select searchable-select @error('vendor_id') is-invalid @enderror" 
                                             id="vendor_id" name="vendor_id">
                                         <option value="">Select Vendor (Optional)</option>
                                         @foreach($vendors as $vendor)

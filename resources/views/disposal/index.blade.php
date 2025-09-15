@@ -199,8 +199,8 @@
                     
                     <!-- Pagination -->
                     @if($disposals->hasPages())
-                        <div class="d-flex justify-content-center">
-                            {{ $disposals->appends(request()->query())->links() }}
+                        <div class="pagination-wrapper mt-3">
+                            {{ $disposals->appends(request()->query())->links('pagination.custom') }}
                         </div>
                     @endif
                 </div>
@@ -213,14 +213,20 @@
 @push('scripts')
 <script>
     // Auto-submit form when disposal type changes
-    document.getElementById('disposal_type').addEventListener('change', function() {
-        this.form.submit();
-    });
+    const disposalTypeElement = document.getElementById('disposal_type');
+    if (disposalTypeElement) {
+        disposalTypeElement.addEventListener('change', function() {
+            this.form.submit();
+        });
+    }
     
-    // Auto-submit form when approved_by changes
-    document.getElementById('approved_by').addEventListener('change', function() {
-        this.form.submit();
-    });
+    // Auto-submit form when approved_by changes (if element exists)
+    const approvedByElement = document.getElementById('approved_by');
+    if (approvedByElement) {
+        approvedByElement.addEventListener('change', function() {
+            this.form.submit();
+        });
+    }
 </script>
 @endpush
 

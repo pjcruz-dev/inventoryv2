@@ -23,7 +23,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="asset_id" class="form-label">Asset <span class="text-danger">*</span></label>
-                                    <select name="asset_id" id="asset_id" class="form-select @error('asset_id') is-invalid @enderror" required>
+                                    <select name="asset_id" id="asset_id" class="form-select searchable-select @error('asset_id') is-invalid @enderror" required>
                                         <option value="">Select an asset...</option>
                                         @foreach($assets as $asset)
                                             <option value="{{ $asset->id }}" 
@@ -42,7 +42,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="user_id" class="form-label">Assign To <span class="text-danger">*</span></label>
-                                    <select name="user_id" id="user_id" class="form-select @error('user_id') is-invalid @enderror" required>
+                                    <select name="user_id" id="user_id" class="form-select searchable-select @error('user_id') is-invalid @enderror" required>
                                         <option value="">Select a user...</option>
                                         @foreach($users as $user)
                                             <option value="{{ $user->id }}" 

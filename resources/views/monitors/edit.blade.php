@@ -25,7 +25,7 @@
                         <!-- Asset Selection -->
                         <div class="form-group">
                             <label for="asset_id" class="form-label">Asset <span class="text-danger">*</span></label>
-                            <select name="asset_id" id="asset_id" class="form-control @error('asset_id') is-invalid @enderror" required>
+                            <select name="asset_id" id="asset_id" class="form-control searchable-select @error('asset_id') is-invalid @enderror" required>
                                 <option value="">Select an Asset</option>
                                 @foreach($assets as $asset)
                                     <option value="{{ $asset->id }}" 
