@@ -523,6 +523,33 @@
                                     Peripherals
                                 </a>
                             </li>
+                            
+                            @can('view_asset_categories')
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('asset-categories.*') ? 'active' : '' }}" href="{{ route('asset-categories.index') }}">
+                                    <i class="fas fa-tags"></i>
+                                    Asset Categories
+                                </a>
+                            </li>
+                            @endcan
+                            
+                            @can('view_asset_assignments')
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('asset-assignments.*') ? 'active' : '' }}" href="{{ route('asset-assignments.index') }}">
+                                    <i class="fas fa-user-check"></i>
+                                    Asset Assignments
+                                </a>
+                            </li>
+                            @endcan
+                            
+                            @can('view_assignment_confirmations')
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('asset-assignment-confirmations.*') ? 'active' : '' }}" href="{{ route('asset-assignment-confirmations.index') }}">
+                                    <i class="fas fa-clipboard-check"></i>
+                                    Assignment Confirmations
+                                </a>
+                            </li>
+                            @endcan
                             @endif
                             
                             @if(auth()->user()->can('view_maintenance') || auth()->user()->can('view_disposal'))
@@ -599,6 +626,15 @@
                                 <a class="nav-link {{ request()->routeIs('logs.*') ? 'active' : '' }}" href="{{ route('logs.index') }}">
                                     <i class="fas fa-clipboard-list"></i>
                                     Activity Logs
+                                </a>
+                            </li>
+                            @endcan
+                            
+                            @can('view_assets')
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('import-export.*') ? 'active' : '' }}" href="{{ route('import-export.interface') }}">
+                                    <i class="fas fa-file-import"></i>
+                                    Import/Export
                                 </a>
                             </li>
                             @endcan

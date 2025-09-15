@@ -11,6 +11,12 @@ use App\Models\User;
 
 class AssetConfirmationController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:view_asset_confirmations')->only(['show']);
+        $this->middleware('permission:manage_asset_confirmations')->only(['confirm']);
+    }
+
     /**
      * Show confirmation page for asset assignment
      */

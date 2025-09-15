@@ -10,6 +10,13 @@ use App\Models\Department;
 
 class AssetTimelineController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('permission:view_timeline')->only(['index', 'show']);
+        $this->middleware('permission:create_timeline')->only(['create', 'store']);
+    }
+
     public function index(Request $request)
     {
         $query = AssetTimeline::with(['asset', 'fromUser', 'toUser', 'fromDepartment', 'toDepartment', 'performedBy']);

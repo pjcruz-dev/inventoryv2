@@ -23,10 +23,12 @@ Route::middleware([
 ])->prefix('import-export')->name('import-export.')->group(function () {
     
     // Enhanced Interface Route
-    Route::get('/interface', function () {
-        return view('import-export.enhanced-interface');
-    })->middleware('check.permission:import_export_access')
-      ->name('interface');
+    Route::get('/interface', [ImportExportController::class, 'interface'])
+        ->middleware('check.permission:import_export_access')
+        ->name('interface');
+    Route::get('/enhanced-interface', [ImportExportController::class, 'enhancedInterface'])
+        ->middleware('check.permission:import_export_access')
+        ->name('enhanced-interface');
     
     // Template Download Routes
     Route::get('/template/{module}', [ImportExportController::class, 'downloadTemplate'])

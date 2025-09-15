@@ -133,7 +133,7 @@ class UserController extends Controller
             'department_id' => 'nullable|exists:departments,id',
             'job_title' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:255',
-            'status' => 'required|in:active,inactive',
+            'status' => 'required|integer|in:0,1,2',
             'password' => 'required|string|min:8|confirmed',
             'role_id' => 'nullable|exists:roles,id',
         ]);
@@ -190,7 +190,7 @@ class UserController extends Controller
             'department_id' => 'nullable|exists:departments,id',
             'job_title' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:255',
-            'status' => 'required|in:active,inactive',
+            'status' => 'required|integer|in:0,1,2',
             'password' => 'nullable|string|min:8|confirmed',
             'role_id' => 'nullable|exists:roles,id',
         ]);

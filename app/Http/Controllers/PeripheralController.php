@@ -8,6 +8,15 @@ use Illuminate\Http\Request;
 
 class PeripheralController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('permission:view_peripherals')->only(['index', 'show']);
+        $this->middleware('permission:create_peripherals')->only(['create', 'store']);
+        $this->middleware('permission:edit_peripherals')->only(['edit', 'update']);
+        $this->middleware('permission:delete_peripherals')->only(['destroy']);
+    }
+
     /**
      * Display a listing of the resource.
      */
