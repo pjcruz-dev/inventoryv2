@@ -120,6 +120,20 @@
                                 @endif
                             </dd>
                             
+                            <dt class="col-sm-4">Parent Department:</dt>
+                            <dd class="col-sm-8">
+                                @if($department->parent)
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-level-up-alt text-muted me-2"></i>
+                                        <a href="{{ route('departments.show', $department->parent) }}" class="text-decoration-none">
+                                            <strong>{{ $department->parent->name }}</strong>
+                                        </a>
+                                    </div>
+                                @else
+                                    <span class="text-muted"><i class="fas fa-building me-1"></i>Main Department</span>
+                                @endif
+                            </dd>
+                            
                             <dt class="col-sm-4">Created:</dt>
                             <dd class="col-sm-8">
                                 <i class="fas fa-calendar me-1"></i>
@@ -202,6 +216,65 @@
                 @endif
             </div>
         </div>
+        
+        <!-- Sub-Departments -->
+        @if($department->children->count() > 0)
+            <div class="card mt-4">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">Sub-Departments</h6>
+                        <span class="badge bg-secondary">{{ $department->children->count() }}</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        @foreach($department->children as $child)
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card border">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="avatar-sm bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-2">
+                                                {{ strtoupper(substr($child->name, 0, 2)) }}
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-0">
+                                                    <a href="{{ route('departments.show', $child) }}" class="text-decoration-none">
+                                                        {{ $child->name }}
+                                                    </a>
+                                                </h6>
+                                                @if($child->code)
+                                                    <small class="text-muted">{{ $child->code }}</small>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        
+                                        @if($child->description)
+                                            <p class="text-muted small mb-2" style="font-size: 0.85rem;">
+                                                {{ Str::limit($child->description, 80) }}
+                                            </p>
+                                        @endif
+                                        
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div class="d-flex gap-3">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-users me-1"></i>{{ $child->users->count() }}
+                                                </small>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-box me-1"></i>{{ $child->assets->count() }}
+                                                </small>
+                                            </div>
+                                            <a href="{{ route('departments.show', $child) }}" class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        @endif
         
         <!-- Department Assets -->
         <div class="card mt-4">

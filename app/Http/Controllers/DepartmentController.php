@@ -23,22 +23,23 @@ class DepartmentController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Department::with(['manager', 'users', 'assets']);
+        $query = Department::with(['manager', 'users', 'assets', 'parent', 'children']);
         
         // Search functionality
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%")
                   ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('location', 'like', "%{$search}%");
+                  ->orWhereHas('manager', function($managerQuery) use ($search) {
+                      $managerQuery->where('first_name', 'like', "%{$search}%")
+                                   ->orWhere('last_name', 'like', "%{$search}%")
+                                   ->orWhere('email', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('parent', function($parentQuery) use ($search) {
+                      $parentQuery->where('name', 'like', "%{$search}%");
+                  });
             });
-        }
-        
-        // Status filter
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
         }
         
         $departments = $query->paginate(10)->withQueryString();
@@ -67,6 +68,7 @@ class DepartmentController extends Controller
             'name' => 'required|string|max:255|unique:departments',
             'code' => 'nullable|string|max:10|unique:departments',
             'description' => 'nullable|string|max:1000',
+            'parent_id' => 'nullable|exists:departments,id',
             'manager_id' => 'nullable|exists:users,id',
             'status' => 'required|in:active,inactive',
             'location' => 'nullable|string|max:255',
@@ -86,7 +88,7 @@ class DepartmentController extends Controller
      */
     public function show(Department $department)
     {
-        $department->load(['manager', 'users.assignedAssets', 'assets.category', 'assets.assignedUser']);
+        $department->load(['manager', 'users.assignedAssets', 'assets.category', 'assets.assignedUser', 'parent', 'children']);
         
         return view('departments.show', compact('department'));
     }
@@ -112,6 +114,7 @@ class DepartmentController extends Controller
             'name' => ['required', 'string', 'max:255', Rule::unique('departments')->ignore($department->id)],
             'code' => ['nullable', 'string', 'max:10', Rule::unique('departments')->ignore($department->id)],
             'description' => 'nullable|string|max:1000',
+            'parent_id' => 'nullable|exists:departments,id',
             'manager_id' => 'nullable|exists:users,id',
             'status' => 'required|in:active,inactive',
             'location' => 'nullable|string|max:255',

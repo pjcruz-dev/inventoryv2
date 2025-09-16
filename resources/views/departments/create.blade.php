@@ -49,6 +49,24 @@
                     </div>
                     
                     <div class="mb-3">
+                        <label for="parent_id" class="form-label">Parent Department</label>
+                        <select class="form-select @error('parent_id') is-invalid @enderror" 
+                                id="parent_id" name="parent_id">
+                            <option value="">Select parent department (optional)</option>
+                            @foreach(App\Models\Department::whereNull('parent_id')->orderBy('name')->get() as $parentDept)
+                                <option value="{{ $parentDept->id }}" 
+                                        {{ old('parent_id') == $parentDept->id ? 'selected' : '' }}>
+                                    {{ $parentDept->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('parent_id')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <div class="form-text">Choose a parent department to create a sub-department</div>
+                    </div>
+                    
+                    <div class="mb-3">
                         <label for="description" class="form-label">Description</label>
                         <textarea class="form-control @error('description') is-invalid @enderror" 
                                   id="description" name="description" rows="3" 

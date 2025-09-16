@@ -22,6 +22,59 @@
     </div>
 @endsection
 
+@push('scripts')
+<script>
+$(document).ready(function() {
+    // Auto-submit search form on Enter key
+    $('#filterForm input[name="search"]').on('keypress', function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            $(this).closest('form').submit();
+        }
+    });
+    
+    // Clear search input when clear button is clicked
+    $('.btn-clear-search').on('click', function(e) {
+        e.preventDefault();
+        $('#filterForm input[name="search"]').val('');
+        $('#filterForm').submit();
+    });
+    
+    // Highlight search terms in results
+    var searchTerm = '{{ request("search") }}';
+    if (searchTerm) {
+        highlightSearchTerms(searchTerm);
+    }
+    
+    function highlightSearchTerms(term) {
+        if (!term) return;
+        
+        var regex = new RegExp('(' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+        
+        $('.table tbody td').each(function() {
+            var $this = $(this);
+            var html = $this.html();
+            
+            // Skip if this cell contains HTML elements we don't want to modify
+            if ($this.find('button, a, form').length > 0) return;
+            
+            var newHtml = html.replace(regex, '<mark class="bg-warning">$1</mark>');
+            if (newHtml !== html) {
+                $this.html(newHtml);
+            }
+        });
+    }
+    
+    // Add loading state to form submission
+    $('#filterForm').on('submit', function() {
+        var $submitBtn = $(this).find('button[type="submit"]');
+        $submitBtn.prop('disabled', true);
+        $submitBtn.html('<i class="fas fa-spinner fa-spin"></i>');
+    });
+});
+</script>
+@endpush
+
 @section('content')
 <div class="card">
     <div class="card-header">
@@ -30,24 +83,42 @@
                 <h6 class="card-title mb-0">All Departments</h6>
             </div>
             <div class="col-auto">
-                <form method="GET" action="{{ route('departments.index') }}" class="d-flex" id="searchForm">
-                    <div class="input-group input-group-sm">
+                <form method="GET" action="{{ route('departments.index') }}" class="d-flex gap-2" id="filterForm">
+                    <!-- Search Input -->
+                    <div class="input-group input-group-sm" style="min-width: 250px;">
                         <input type="text" class="form-control" name="search" 
                                placeholder="Search departments..." 
                                value="{{ request('search') }}">
                         <button class="btn btn-outline-secondary" type="submit">
                             <i class="fas fa-search"></i>
                         </button>
-                        @if(request('search'))
-                            <a href="{{ route('departments.index') }}" class="btn btn-outline-secondary">
-                                <i class="fas fa-times"></i>
-                            </a>
-                        @endif
                     </div>
+                    
+                    <!-- Clear Filters -->
+                    @if(request('search'))
+                        <a href="{{ route('departments.index') }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-times"></i> Clear
+                        </a>
+                    @endif
                 </form>
             </div>
         </div>
     </div>
+    
+    <!-- Filter Results Indicator -->
+    @if(request('search'))
+        <div class="card-body border-bottom bg-light py-2">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <small class="text-muted">Filtered results:</small>
+                    @if(request('search'))
+                        <span class="badge bg-primary">Search: "{{ request('search') }}"</span>
+                    @endif
+                </div>
+                <small class="text-muted">{{ $departments->total() }} {{ Str::plural('department', $departments->total()) }} found</small>
+            </div>
+        </div>
+    @endif
     
     <div class="card-body p-0">
         @if($departments->count() > 0)
@@ -56,11 +127,11 @@
                     <thead class="table-light">
                         <tr>
                             <th>Name</th>
+                            <th>Parent Department</th>
                             <th>Description</th>
                             <th>Manager</th>
                             <th>Members</th>
                             <th>Assets</th>
-                            <th>Status</th>
                             <th>Created</th>
                             <th width="120">Actions</th>
                         </tr>
@@ -78,8 +149,23 @@
                                             @if($department->code)
                                                 <br><small class="text-muted">Code: {{ $department->code }}</small>
                                             @endif
+                                            @if($department->children->count() > 0)
+                                                <br><small class="text-info"><i class="fas fa-sitemap me-1"></i>{{ $department->children->count() }} sub-department{{ $department->children->count() > 1 ? 's' : '' }}</small>
+                                            @endif
                                         </div>
                                     </div>
+                                </td>
+                                <td>
+                                    @if($department->parent)
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-level-up-alt text-muted me-1"></i>
+                                            <a href="{{ route('departments.show', $department->parent) }}" class="text-decoration-none">
+                                                {{ $department->parent->name }}
+                                            </a>
+                                        </div>
+                                    @else
+                                        <span class="text-muted"><i class="fas fa-building me-1"></i>Main Department</span>
+                                    @endif
                                 </td>
                                 <td>
                                     @if($department->description)
@@ -123,11 +209,6 @@
                                             <small class="text-muted ms-1">asset{{ $department->assets->count() > 1 ? 's' : '' }}</small>
                                         @endif
                                     </div>
-                                </td>
-                                <td>
-                                    <span class="badge bg-{{ $department->status === 'active' ? 'success' : 'danger' }}">
-                                        {{ ucfirst($department->status) }}
-                                    </span>
                                 </td>
                                 <td>
                                     <small class="text-muted">
@@ -175,16 +256,26 @@
                 <i class="fas fa-building fa-3x text-muted mb-3"></i>
                 <h5 class="text-muted">No Departments Found</h5>
                 @if(request('search'))
-                    <p class="text-muted mb-3">No departments match your search criteria.</p>
-                    <a href="{{ route('departments.index') }}" class="btn btn-outline-primary me-2">
-                        <i class="fas fa-times me-2"></i>Clear Search
-                    </a>
+                    <p class="text-muted mb-3">
+                        No departments match your search.
+                        @if(request('search'))
+                            <br>Search term: <strong>"{{ request('search') }}"</strong>
+                        @endif
+                    </p>
+                    <div class="d-flex justify-content-center gap-2">
+                        <a href="{{ route('departments.index') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-times me-2"></i>Clear Search
+                        </a>
+                        <a href="{{ route('departments.create') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add New Department
+                        </a>
+                    </div>
                 @else
                     <p class="text-muted mb-3">Get started by creating your first department.</p>
+                    <a href="{{ route('departments.create') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Add New Department
+                    </a>
                 @endif
-                <a href="{{ route('departments.create') }}" class="btn btn-primary">
-                    <i class="fas fa-plus me-2"></i>Add New Department
-                </a>
             </div>
         @endif
     </div>

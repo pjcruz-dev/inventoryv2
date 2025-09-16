@@ -13,6 +13,12 @@ class DepartmentSeeder extends Seeder
      */
     public function run(): void
     {
+        // Check if departments already exist to prevent duplicates
+        if (Department::count() > 0) {
+            $this->command->info('Departments already exist. Skipping seeder to prevent duplicates.');
+            return;
+        }
+
         // Create parent divisions first
         $parentDivisions = [
             ['name' => 'Roll-Out', 'description' => 'Division responsible for project rollout and implementation'],
@@ -30,6 +36,7 @@ class DepartmentSeeder extends Seeder
         foreach ($parentDivisions as $division) {
             $parent = Department::create($division);
             $createdParents[$parent->name] = $parent->id;
+            $this->command->info("Created parent department: {$parent->name}");
         }
 
         // Create sub-departments with dynamic parent IDs
@@ -89,7 +96,13 @@ class DepartmentSeeder extends Seeder
             $parentName = $department['parent_name'];
             unset($department['parent_name']);
             $department['parent_id'] = $createdParents[$parentName];
-            Department::create($department);
+            $subDept = Department::create($department);
+            $this->command->info("Created sub-department: {$subDept->name} under {$parentName}");
         }
+
+        $this->command->info('Department seeding completed successfully!');
+        $this->command->info('Total parent departments: ' . count($createdParents));
+        $this->command->info('Total sub-departments: ' . count($subDepartments));
+        $this->command->info('Total departments created: ' . Department::count());
     }
 }
