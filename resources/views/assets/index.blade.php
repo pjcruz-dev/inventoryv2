@@ -167,6 +167,17 @@ document.addEventListener('DOMContentLoaded', function() {
                             </select>
                         </div>
                         
+                        <!-- Entity Filter -->
+                        <div class="col-md-2">
+                            <label class="form-label fw-semibold">Entity</label>
+                            <select name="entity" class="form-select">
+                                <option value="">All Entities</option>
+                                @foreach($entities as $entity)
+                                    <option value="{{ $entity }}" {{ request('entity') == $entity ? 'selected' : '' }}>{{ $entity }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        
                         <!-- Filter Actions -->
                         <div class="col-md-1">
                             <label class="form-label">&nbsp;</label>

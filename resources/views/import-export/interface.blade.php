@@ -412,11 +412,11 @@
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="module-card card h-100" data-module="asset-assignments">
+                                <div class="module-card card h-100" data-module="asset_categories">
                                     <div class="card-body text-center p-4">
-                                        <i class="fas fa-handshake fa-3x text-info mb-3"></i>
-                                        <h6 class="card-title fw-bold">Asset Assignments</h6>
-                                        <p class="card-text text-muted small mb-3">Manage asset assignments to users</p>
+                                        <i class="fas fa-tags fa-3x text-info mb-3"></i>
+                                        <h6 class="card-title fw-bold">Asset Categories</h6>
+                                        <p class="card-text text-muted small mb-3">Manage asset category classifications</p>
                                         <div class="d-flex justify-content-center gap-2">
                                             <span class="badge bg-success">Import</span>
                                             <span class="badge bg-info">Export</span>
@@ -886,26 +886,83 @@ $(document).ready(function() {
     
     // Download template
     $('#download-template-btn').click(function() {
-        window.location.href = `/import-export/template/${selectedModule}`;
+        window.location.href = '/import-export/template/' + selectedModule;
     });
     
     // Export data
     $('#export-data-btn').click(function() {
-        window.location.href = `/import-export/export/${selectedModule}`;
+        window.location.href = '/import-export/export/' + selectedModule;
     });
     
     // Step 3 to 4
     $('#next-step-3').click(function() {
         if (selectedAction === 'import') {
-            // Start validation process
-            goToStep(4);
-            startValidation();
+            // Start import process
+            performImport();
         } else {
             // For template/export, go directly to completion
             goToStep(5);
             showCompletion();
         }
     });
+    
+    function performImport() {
+        goToStep(4);
+        $('#progress-container').show();
+        
+        const formData = new FormData();
+        const fileInput = document.getElementById('file-input');
+        
+        if (fileInput.files.length === 0) {
+            alert('Please select a file to import.');
+            return;
+        }
+        
+        formData.append('file', fileInput.files[0]);
+        formData.append('module', selectedModule);
+        formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+        
+        $.ajax({
+            url: '/import-export/import/' + selectedModule,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            xhr: function() {
+                const xhr = new window.XMLHttpRequest();
+                xhr.upload.addEventListener('progress', function(evt) {
+                    if (evt.lengthComputable) {
+                        const percentComplete = (evt.loaded / evt.total) * 100;
+                        $('#progress-bar').css('width', percentComplete + '%');
+                        $('#progress-text').text(Math.round(percentComplete) + '%');
+                    }
+                }, false);
+                return xhr;
+            },
+            success: function(response) {
+                $('#progress-container').hide();
+                $('#validation-results').show();
+                
+                if (response.success) {
+                    $('#success-summary').show();
+                    $('#success-count').text(response.imported || 0);
+                    $('#warning-count').text(response.warnings || 0);
+                    $('#error-count').text(response.errors || 0);
+                } else {
+                    $('#error-summary').show();
+                }
+                
+                $('#next-step-4').prop('disabled', false);
+            },
+            error: function(xhr, status, error) {
+                $('#progress-container').hide();
+                $('#validation-results').show();
+                $('#error-summary').show();
+                $('#next-step-4').prop('disabled', false);
+                console.error('Import failed:', error);
+            }
+        });
+    }
     
     function startValidation() {
         $('#progress-container').show();

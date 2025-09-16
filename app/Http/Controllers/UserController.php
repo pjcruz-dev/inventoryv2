@@ -53,10 +53,15 @@ class UserController extends Controller
             $query->where('status', $request->status);
         }
         
+        if ($request->filled('entity')) {
+            $query->where('entity', $request->entity);
+        }
+        
         $users = $query->orderBy('first_name')->paginate(15);
         $departments = Department::orderBy('name')->get();
+        $entities = User::distinct()->pluck('entity')->filter()->sort()->values();
         
-        return view('users.index', compact('users', 'departments'));
+        return view('users.index', compact('users', 'departments', 'entities'));
     }
 
     /**

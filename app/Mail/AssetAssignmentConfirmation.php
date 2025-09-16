@@ -25,7 +25,8 @@ class AssetAssignmentConfirmation extends Mailable
      */
     public function __construct(Asset $asset, User $user, string $confirmationToken, bool $isFollowUp = false)
     {
-        $this->asset = $asset;
+        // Load asset with all device specification relationships
+        $this->asset = $asset->load(['computer', 'monitor', 'printer', 'peripheral', 'category', 'vendor']);
         $this->user = $user;
         $this->confirmationToken = $confirmationToken;
         $this->isFollowUp = $isFollowUp;

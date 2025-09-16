@@ -74,6 +74,8 @@
                                 <li><a class="dropdown-item filter-status" href="#" data-status="Available">Available</a></li>
                                 <li><a class="dropdown-item filter-status" href="#" data-status="Assigned">Assigned</a></li>
                                 <li><a class="dropdown-item filter-status" href="#" data-status="Under Maintenance">Under Maintenance</a></li>
+                                <li><a class="dropdown-item filter-status" href="#" data-status="Retired">Retired</a></li>
+                                <li><a class="dropdown-item filter-status" href="#" data-status="Damaged">Damaged</a></li>
                                 <li><a class="dropdown-item filter-status" href="#" data-status="Disposed">Disposed</a></li>
                             </ul>
                         </div>

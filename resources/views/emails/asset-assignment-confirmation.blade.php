@@ -499,6 +499,110 @@
                 </div>
             </div>
 
+            <!-- Device Specifications -->
+            @if($asset->computer || $asset->monitor || $asset->printer || $asset->peripheral)
+            <div class="asset-details">
+                <h3>Device Specifications</h3>
+                <div class="detail-grid">
+                    @if($asset->computer)
+                        <!-- Computer Specifications -->
+                        @if($asset->computer->processor)
+                        <div class="detail-row">
+                            <span class="detail-label">Processor</span>
+                            <span class="detail-value">{{ $asset->computer->processor }}</span>
+                        </div>
+                        @endif
+                        @if($asset->computer->memory)
+                        <div class="detail-row">
+                            <span class="detail-label">Memory (RAM)</span>
+                            <span class="detail-value">{{ $asset->computer->memory }}</span>
+                        </div>
+                        @endif
+                        @if($asset->computer->storage)
+                        <div class="detail-row">
+                            <span class="detail-label">Storage</span>
+                            <span class="detail-value">{{ $asset->computer->storage }}</span>
+                        </div>
+                        @endif
+                        @if($asset->computer->operating_system)
+                        <div class="detail-row">
+                            <span class="detail-label">Operating System</span>
+                            <span class="detail-value">{{ $asset->computer->operating_system }}</span>
+                        </div>
+                        @endif
+                        @if($asset->computer->graphics_card)
+                        <div class="detail-row">
+                            <span class="detail-label">Graphics Card</span>
+                            <span class="detail-value">{{ $asset->computer->graphics_card }}</span>
+                        </div>
+                        @endif
+                        @if($asset->computer->computer_type)
+                        <div class="detail-row">
+                            <span class="detail-label">Computer Type</span>
+                            <span class="detail-value">{{ ucfirst($asset->computer->computer_type) }}</span>
+                        </div>
+                        @endif
+                    @endif
+
+                    @if($asset->monitor)
+                        <!-- Monitor Specifications -->
+                        @if($asset->monitor->size)
+                        <div class="detail-row">
+                            <span class="detail-label">Screen Size</span>
+                            <span class="detail-value">{{ $asset->monitor->size }}</span>
+                        </div>
+                        @endif
+                        @if($asset->monitor->resolution)
+                        <div class="detail-row">
+                            <span class="detail-label">Resolution</span>
+                            <span class="detail-value">{{ $asset->monitor->resolution }}</span>
+                        </div>
+                        @endif
+                        @if($asset->monitor->panel_type)
+                        <div class="detail-row">
+                            <span class="detail-label">Panel Type</span>
+                            <span class="detail-value">{{ $asset->monitor->panel_type }}</span>
+                        </div>
+                        @endif
+                    @endif
+
+                    @if($asset->printer)
+                        <!-- Printer Specifications -->
+                        @if($asset->printer->type)
+                        <div class="detail-row">
+                            <span class="detail-label">Printer Type</span>
+                            <span class="detail-value">{{ $asset->printer->type }}</span>
+                        </div>
+                        @endif
+                        <div class="detail-row">
+                            <span class="detail-label">Color Support</span>
+                            <span class="detail-value">{{ $asset->printer->color_support ? 'Yes' : 'No' }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Duplex Printing</span>
+                            <span class="detail-value">{{ $asset->printer->duplex ? 'Yes' : 'No' }}</span>
+                        </div>
+                    @endif
+
+                    @if($asset->peripheral)
+                        <!-- Peripheral Specifications -->
+                        @if($asset->peripheral->type)
+                        <div class="detail-row">
+                            <span class="detail-label">Peripheral Type</span>
+                            <span class="detail-value">{{ $asset->peripheral->type }}</span>
+                        </div>
+                        @endif
+                        @if($asset->peripheral->interface)
+                        <div class="detail-row">
+                            <span class="detail-label">Interface</span>
+                            <span class="detail-value">{{ $asset->peripheral->interface }}</span>
+                        </div>
+                        @endif
+                    @endif
+                </div>
+            </div>
+            @endif
+
             <!-- Confirmation Section -->
             <div class="confirmation-section">
                 <h3>Please Confirm Receipt</h3>

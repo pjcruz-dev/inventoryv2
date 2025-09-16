@@ -92,7 +92,7 @@ class AssetConfirmationController extends Controller
         // Update asset status and movement
         $confirmation->asset->update([
             'status' => 'Active',
-            'movement' => 'Deployed Tagged'
+            'movement' => 'Deployed'
         ]);
 
         // Create enhanced audit log using ActivityLogService
@@ -102,7 +102,7 @@ class AssetConfirmationController extends Controller
             'confirmed',
             'Asset assignment confirmed by user: ' . $confirmation->user->first_name . ' ' . $confirmation->user->last_name . '. Status changed from Pending Confirmation to Active.',
             ['status' => 'Pending Confirmation', 'movement' => $confirmation->asset->getOriginal('movement')], // old values
-            ['status' => 'Active', 'movement' => 'Deployed Tagged'], // new values
+            ['status' => 'Active', 'movement' => 'Deployed'], // new values
             [
                 'confirming_user_id' => $confirmation->user->id,
                 'confirming_user_name' => $confirmation->user->first_name . ' ' . $confirmation->user->last_name,
@@ -112,7 +112,7 @@ class AssetConfirmationController extends Controller
                 'previous_status' => 'Pending Confirmation',
                 'new_status' => 'Active',
                 'previous_movement' => $confirmation->asset->getOriginal('movement'),
-                'new_movement' => 'Deployed Tagged'
+                'new_movement' => 'Deployed'
             ]
         );
 
@@ -185,6 +185,15 @@ class AssetConfirmationController extends Controller
 
         // Mark confirmation as declined
         $confirmation->markAsDeclined();
+
+        // Update related AssetAssignment status from 'pending' to 'rejected'
+        \App\Models\AssetAssignment::where('asset_id', $confirmation->asset_id)
+            ->where('user_id', $confirmation->user_id)
+            ->where('status', 'pending')
+            ->update([
+                'status' => 'rejected',
+                'return_date' => now() // Set return date as assignment is rejected
+            ]);
 
         // Update asset status back to Active and unassign
         $confirmation->asset->update([
@@ -361,6 +370,15 @@ class AssetConfirmationController extends Controller
 
         // Mark confirmation as declined with enhanced details
         $confirmation->markAsDeclined($declineData);
+
+        // Update related AssetAssignment status from 'pending' to 'rejected'
+        \App\Models\AssetAssignment::where('asset_id', $confirmation->asset_id)
+            ->where('user_id', $confirmation->user_id)
+            ->where('status', 'pending')
+            ->update([
+                'status' => 'rejected',
+                'return_date' => now() // Set return date as assignment is rejected
+            ]);
 
         // Update asset status back to Active and unassign
         $confirmation->asset->update([

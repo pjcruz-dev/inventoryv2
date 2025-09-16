@@ -14,16 +14,22 @@
                     </option>
                 @endfor
             </select>
-            <select name="year" class="form-select form-select-sm" style="width: 100px; height: 38px;">
+            <select name="year" class="form-select form-select-sm" style="width: 100px;">
                 <option value="">All Years</option>
-                @for($year = date('Y'); $year >= date('Y') - 5; $year--)
+                @for($year = date('Y'); $year >= 2020; $year--)
                     <option value="{{ $year }}" {{ request('year') == $year ? 'selected' : '' }}>{{ $year }}</option>
                 @endfor
+            </select>
+            <select name="entity" class="form-select form-select-sm" style="width: 120px;">
+                <option value="">All Entities</option>
+                @foreach($entities as $entity)
+                    <option value="{{ $entity }}" {{ request('entity') == $entity ? 'selected' : '' }}>{{ $entity }}</option>
+                @endforeach
             </select>
             <button type="submit" class="btn btn-primary btn-sm shadow-sm d-flex align-items-center" style="height: 38px; padding: 0 16px;">
                 <i class="fas fa-filter me-2"></i>Filter
             </button>
-            @if(request()->hasAny(['month', 'year']))
+            @if(request()->hasAny(['month', 'year', 'entity']))
                 <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-sm shadow-sm d-flex align-items-center" style="height: 38px; padding: 0 16px;">
                     <i class="fas fa-times me-2"></i>Clear
                 </a>

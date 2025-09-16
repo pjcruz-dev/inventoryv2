@@ -158,7 +158,11 @@ class PermissionSeeder extends Seeder
             
             // Asset Confirmation Management
             ['name' => 'view_asset_confirmations', 'description' => 'View asset confirmations'],
-            ['name' => 'manage_asset_confirmations', 'description' => 'Manage asset confirmations']
+            ['name' => 'manage_asset_confirmations', 'description' => 'Manage asset confirmations'],
+            
+            // Export Management
+            ['name' => 'export_maintenance', 'description' => 'Export maintenance records'],
+            ['name' => 'export_disposal', 'description' => 'Export disposal records']
         ];
 
         foreach ($permissions as $permission) {

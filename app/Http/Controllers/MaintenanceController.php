@@ -68,7 +68,7 @@ class MaintenanceController extends Controller
     public function create()
     {
 
-        $assets = Asset::whereIn('status', ['Available', 'Assigned', 'Maintenance'])
+        $assets = Asset::whereIn('status', ['Available', 'Assigned', 'Under Maintenance', 'Issue Reported'])
                       ->orderBy('name')
                       ->get();
         $vendors = Vendor::orderBy('name')->get();

@@ -187,5 +187,39 @@
             document.getElementById('end_date').value = '';
         }
     });
+    
+    // Auto-populate vendor field when asset is selected
+    document.getElementById('asset_id').addEventListener('change', function() {
+        const assetId = this.value;
+        const vendorSelect = document.getElementById('vendor_id');
+        
+        if (assetId) {
+            // Fetch asset vendor information
+            fetch(`/assets/${assetId}/vendor`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.vendor) {
+                        // Set the vendor dropdown to the asset's vendor
+                        vendorSelect.value = data.vendor.id;
+                        
+                        // Trigger change event to update any dependent fields
+                        vendorSelect.dispatchEvent(new Event('change'));
+                        
+                        // Optional: Show a brief notification
+                        console.log(`Vendor auto-populated: ${data.vendor.name}`);
+                    } else {
+                        // Reset vendor selection if asset has no vendor
+                        vendorSelect.value = '';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching asset vendor:', error);
+                    // Don't reset vendor selection on error to avoid disrupting user
+                });
+        } else {
+            // Reset vendor selection when no asset is selected
+            vendorSelect.value = '';
+        }
+    });
 </script>
 @endpush

@@ -221,6 +221,22 @@ class AssetAssignmentConfirmationController extends Controller
             'confirmed_at' => now()
         ]);
         
+        // Update related AssetAssignment status from 'pending' to 'assigned'
+        \App\Models\AssetAssignment::where('asset_id', $confirmation->asset_id)
+            ->where('user_id', $confirmation->user_id)
+            ->where('status', 'pending')
+            ->update([
+                'status' => 'assigned',
+                'return_date' => null // Clear return date as asset is now assigned
+            ]);
+        
+        // Update Asset status from 'Pending Confirmation' to 'Assigned'
+        \App\Models\Asset::where('id', $confirmation->asset_id)
+            ->where('status', 'Pending Confirmation')
+            ->update([
+                'status' => 'Assigned'
+            ]);
+        
         // Log activity
         Log::info('Asset assignment confirmed via token', [
             'confirmation_id' => $confirmation->id,
@@ -250,6 +266,23 @@ class AssetAssignmentConfirmationController extends Controller
             'status' => 'declined',
             'confirmed_at' => now()
         ]);
+        
+        // Update related AssetAssignment status from 'pending' to 'rejected'
+        \App\Models\AssetAssignment::where('asset_id', $confirmation->asset_id)
+            ->where('user_id', $confirmation->user_id)
+            ->where('status', 'pending')
+            ->update([
+                'status' => 'rejected',
+                'return_date' => now() // Set return date as assignment is rejected
+            ]);
+        
+        // Update Asset status back to 'Available' and clear assignment
+        \App\Models\Asset::where('id', $confirmation->asset_id)
+            ->update([
+                'status' => 'Available',
+                'assigned_to' => null,
+                'assigned_date' => null
+            ]);
         
         // Log activity
         Log::info('Asset assignment declined via token', [

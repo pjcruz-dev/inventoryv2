@@ -28,30 +28,47 @@ class DashboardController extends Controller
      */
     public function index(Request $request)
     {
-        // Get basic statistics
-        $totalAssets = Asset::count();
-        $totalUsers = User::count();
-        $totalDepartments = Department::count();
-        $totalVendors = Vendor::count();
-        
-        // Get recent assets (last 5)
-        $recentAssets = Asset::with('category')
-            ->latest()
-            ->take(5)
-            ->get();
-        
-        // Calculate deployed assets percentage
-        $deployedAssets = Asset::where('status', 'deployed')->count();
-        $deployedAssetsPercentage = $totalAssets > 0 ? round(($deployedAssets / $totalAssets) * 100, 1) : 0;
-        
         // Get filter parameters
         $filterMonth = $request->get('month');
         $filterYear = $request->get('year');
+        $filterEntity = $request->get('entity');
+        
+        // Get basic statistics with entity filter
+        $assetQuery = Asset::query();
+        $userQuery = User::query();
+        
+        if ($filterEntity) {
+            $assetQuery->where('entity', $filterEntity);
+            $userQuery->where('entity', $filterEntity);
+        }
+        
+        $totalAssets = $assetQuery->count();
+        $totalUsers = $userQuery->count();
+        $totalDepartments = Department::count();
+        $totalVendors = Vendor::count();
+        
+        // Get recent assets (last 5) with entity filter
+        $recentAssetsQuery = Asset::with('category')->latest();
+        if ($filterEntity) {
+            $recentAssetsQuery->where('entity', $filterEntity);
+        }
+        $recentAssets = $recentAssetsQuery->take(5)->get();
+        
+        // Calculate deployed assets percentage with entity filter
+        $deployedAssetsQuery = Asset::where('status', 'deployed');
+        if ($filterEntity) {
+            $deployedAssetsQuery->where('entity', $filterEntity);
+        }
+        $deployedAssets = $deployedAssetsQuery->count();
+        $deployedAssetsPercentage = $totalAssets > 0 ? round(($deployedAssets / $totalAssets) * 100, 1) : 0;
         
         // Get data for the three dashboard sections with filters
         $weeklyBreakdown = $this->getWeeklyBreakdown($filterMonth, $filterYear);
         $monthlyRollup = $this->getMonthlyRollup($filterMonth, $filterYear);
         $chartData = $this->getChartData($filterMonth, $filterYear);
+        
+        // Get entities for filter dropdown
+        $entities = Asset::distinct()->pluck('entity')->filter()->sort()->values();
         
         return view('dashboard', compact(
             'totalAssets',
@@ -62,7 +79,8 @@ class DashboardController extends Controller
             'deployedAssetsPercentage',
             'weeklyBreakdown',
             'monthlyRollup',
-            'chartData'
+            'chartData',
+            'entities'
         ));
     }
     

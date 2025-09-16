@@ -82,14 +82,20 @@ class AssetController extends Controller
             }
         }
         
+        // Entity filter
+        if ($request->filled('entity')) {
+            $query->where('entity', $request->entity);
+        }
+        
         $assets = $query->paginate(15)->withQueryString();
         
         // Get filter options for the view
         $categories = AssetCategory::orderBy('name')->get();
         $statuses = Asset::distinct()->pluck('status')->filter()->sort()->values();
         $movements = Asset::distinct()->pluck('movement')->filter()->sort()->values();
+        $entities = Asset::distinct()->pluck('entity')->filter()->sort()->values();
         
-        return view('assets.index', compact('assets', 'categories', 'statuses', 'movements'));
+        return view('assets.index', compact('assets', 'categories', 'statuses', 'movements', 'entities'));
     }
 
     /**
@@ -114,11 +120,31 @@ class AssetController extends Controller
         
         $validated = $request->validate(Asset::validationRules());
 
-        // Set default status and movement for new assets
-        $validated['status'] = 'Active';
-        $validated['movement'] = 'New Arrival';
+        // Set status and movement based on assignment
+        if (!empty($validated['assigned_to'])) {
+            // If asset is being assigned during creation
+            $validated['status'] = 'Pending Confirmation';
+            $validated['movement'] = 'Deployed';
+            $validated['assigned_date'] = now();
+        } else {
+            // Default for unassigned assets
+            $validated['status'] = 'Available';
+            $validated['movement'] = 'New Arrival';
+        }
 
-        Asset::create($validated);
+        $asset = Asset::create($validated);
+        
+        // Create AssetAssignment record if asset is assigned during creation
+        if (!empty($validated['assigned_to'])) {
+            \App\Models\AssetAssignment::create([
+                'asset_id' => $asset->id,
+                'user_id' => $validated['assigned_to'],
+                'assigned_by' => auth()->id(),
+                'assigned_date' => $validated['assigned_date'],
+                'status' => 'pending',
+                'notes' => 'Asset assigned during creation'
+            ]);
+        }
         return redirect()->route('assets.index')->with('success', 'Asset created successfully.');
     }
 
@@ -241,7 +267,7 @@ class AssetController extends Controller
         $asset->update([
             'assigned_to' => null,
             'assigned_date' => null,
-            'status' => 'Active',
+            'status' => 'Available',
             'movement' => 'Returned'
         ]);
 
@@ -531,6 +557,25 @@ class AssetController extends Controller
         return response()->json([
             'success' => true,
             'asset_tag' => $assetTag
+        ]);
+    }
+
+    /**
+     * Get vendor information for a specific asset
+     */
+    public function getAssetVendor(Asset $asset)
+    {
+        $asset->load('vendor');
+        
+        return response()->json([
+            'success' => true,
+            'vendor' => $asset->vendor ? [
+                'id' => $asset->vendor->id,
+                'name' => $asset->vendor->name,
+                'contact_person' => $asset->vendor->contact_person,
+                'phone' => $asset->vendor->phone,
+                'email' => $asset->vendor->email
+            ] : null
         ]);
     }
 }

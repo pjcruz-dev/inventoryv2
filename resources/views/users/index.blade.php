@@ -54,7 +54,14 @@
                         <option value="2" {{ request('status') == '2' ? 'selected' : '' }}>Suspended</option>
                     </select>
                     
-                    @if(request()->hasAny(['search', 'department', 'status']))
+                    <select name="entity" class="form-select form-select-sm searchable-select" style="width: 120px;">
+                        <option value="">All Entities</option>
+                        @foreach($entities as $entity)
+                            <option value="{{ $entity }}" {{ request('entity') == $entity ? 'selected' : '' }}>{{ $entity }}</option>
+                        @endforeach
+                    </select>
+                    
+                    @if(request()->hasAny(['search', 'department', 'status', 'entity']))
                         <a href="{{ route('users.index') }}" class="btn btn-outline-secondary btn-sm">
                             <i class="fas fa-times"></i>
                         </a>

@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('asset_categories', function (Blueprint $table) {
-            $table->unique('name');
+        Schema::table('users', function (Blueprint $table) {
+            $table->enum('entity', ['MIDC', 'PHILTOWER', 'PRIMUS'])->nullable()->after('company');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('asset_categories', function (Blueprint $table) {
-            $table->dropUnique(['name']);
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn('entity');
         });
     }
 };

@@ -82,11 +82,15 @@
                             <div class="mb-3">
                                 <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
                                 <select class="form-select @error('status') is-invalid @enderror" id="status" name="status" required>
+                                    <option value="Available" {{ old('status') == 'Available' ? 'selected' : '' }}>Available</option>
+                                    <option value="Assigned" {{ old('status') == 'Assigned' ? 'selected' : '' }}>Assigned</option>
                                     <option value="Active" {{ old('status') == 'Active' ? 'selected' : '' }}>Active</option>
                                     <option value="Inactive" {{ old('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
                                     <option value="Under Maintenance" {{ old('status') == 'Under Maintenance' ? 'selected' : '' }}>Under Maintenance</option>
                                     <option value="Issue Reported" {{ old('status') == 'Issue Reported' ? 'selected' : '' }}>Issue Reported</option>
                                     <option value="Pending Confirmation" {{ old('status') == 'Pending Confirmation' ? 'selected' : '' }}>Pending Confirmation</option>
+                                    <option value="Retired" {{ old('status') == 'Retired' ? 'selected' : '' }}>Retired</option>
+                                    <option value="Damaged" {{ old('status') == 'Damaged' ? 'selected' : '' }}>Damaged</option>
                                     <option value="Disposed" {{ old('status') == 'Disposed' ? 'selected' : '' }}>Disposed</option>
                                 </select>
                                 @error('status')
@@ -463,6 +467,35 @@ $(document).ready(function() {
         placeholder: 'Search and select a user...',
         allowClear: true,
         width: '100%'
+    });
+    
+    // Auto-populate movement based on status selection
+    document.getElementById('status').addEventListener('change', function() {
+        const status = this.value;
+        const movementSelect = document.getElementById('movement');
+        
+        // Define status to movement mapping
+         const statusMovementMap = {
+             'Active': 'Deployed',
+             'Inactive': 'Returned',
+             'Under Maintenance': 'Deployed',
+             'Issue Reported': 'Deployed',
+             'Pending Confirmation': 'New Arrival',
+             'Retired': 'Returned',
+             'Damaged': 'Returned',
+             'Disposed': 'Disposed'
+         };
+        
+        // Auto-populate movement if mapping exists
+        if (statusMovementMap[status]) {
+            movementSelect.value = statusMovementMap[status];
+            
+            // Trigger change event for any dependent functionality
+            movementSelect.dispatchEvent(new Event('change'));
+            
+            // Optional: Show brief notification
+            console.log(`Movement auto-populated: ${statusMovementMap[status]} based on status: ${status}`);
+        }
     });
 });
 </script>

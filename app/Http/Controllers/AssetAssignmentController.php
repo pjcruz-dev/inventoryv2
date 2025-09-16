@@ -118,9 +118,10 @@ class AssetAssignmentController extends Controller
             'notes' => $request->notes
         ]);
         
-        // Update asset status
+        // Update asset status to Pending Confirmation and movement to Deployed
         $asset->update([
-            'status' => 'Assigned',
+            'status' => 'Pending',
+            'movement' => 'Deployed',
             'assigned_to' => $request->user_id,
             'assigned_date' => $request->assigned_date
         ]);
@@ -180,7 +181,7 @@ class AssetAssignmentController extends Controller
             'user_id' => 'required|exists:users,id',
             'assigned_date' => 'required|date',
             'return_date' => 'nullable|date|after:assigned_date',
-            'status' => 'required|in:pending,confirmed,declined,returned',
+            'status' => 'required|in:pending,assigned,confirmed,declined,returned',
             'notes' => 'nullable|string|max:1000'
         ]);
         
