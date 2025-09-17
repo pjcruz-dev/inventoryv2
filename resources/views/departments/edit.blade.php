@@ -4,9 +4,11 @@
 @section('page-title', 'Edit Department: ' . $department->name)
 
 @section('page-actions')
+    @can('view_departments')
     <a href="{{ route('departments.show', $department) }}" class="btn btn-info me-2">
         <i class="fas fa-eye me-2"></i>View Department
     </a>
+    @endcan
     <a href="{{ route('departments.index') }}" class="btn btn-secondary">
         <i class="fas fa-arrow-left me-2"></i>Back to Departments
     </a>
@@ -306,10 +308,13 @@
                     
                     <hr>
                     
+                    @can('view_departments')
                     <a href="{{ route('departments.show', $department) }}" class="btn btn-outline-info">
                         <i class="fas fa-eye me-2"></i>View Department
                     </a>
+                    @endcan
                     
+                    @can('delete_departments')
                     <form method="POST" action="{{ route('departments.destroy', $department) }}" 
                           onsubmit="return confirm('Are you sure you want to delete this department? This action cannot be undone.')">
                         @csrf
@@ -325,6 +330,7 @@
                             Cannot delete department with members or assets
                         </small>
                     @endif
+                    @endcan
                 </div>
             </div>
         </div>

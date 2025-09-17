@@ -137,20 +137,27 @@
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm" role="group">
+                                        @can('view_users')
                                         <a href="{{ route('users.show', $user) }}" 
                                            class="btn btn-outline-primary" title="View">
                                             <i class="fas fa-eye"></i>
                                         </a>
+                                        @endcan
                                         @if($user->assignedAssets()->count() > 0)
+                                        @can('view_assets')
                                             <a href="{{ route('assets.print-single-employee-assets', $user) }}" 
                                                class="btn btn-outline-info" title="Print Assets" target="_blank">
                                                 <i class="fas fa-print"></i>
                                             </a>
+                                        @endcan
                                         @endif
+                                        @can('edit_users')
                                         <a href="{{ route('users.edit', $user) }}" 
                                            class="btn btn-outline-secondary" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
+                                        @endcan
+                                        @can('delete_users')
                                         <form method="POST" action="{{ route('users.destroy', $user) }}" 
                                               class="d-inline" 
                                               onsubmit="return confirm('Are you sure you want to delete this user?')">
@@ -160,6 +167,7 @@
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
+                                        @endcan
                                     </div>
                                 </td>
                             </tr>

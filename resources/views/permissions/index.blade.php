@@ -77,12 +77,17 @@
                                         </td>
                                         <td>
                                             <div class="btn-group" role="group">
+                                                @can('view_permissions')
                                                 <a href="{{ route('permissions.show', $permission) }}" class="btn btn-sm btn-outline-info" title="View">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
+                                                @endcan
+                                                @can('edit_permissions')
                                                 <a href="{{ route('permissions.edit', $permission) }}" class="btn btn-sm btn-outline-warning" title="Edit">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
+                                                @endcan
+                                                @can('delete_permissions')
                                                 @php
                                                     $systemPermissions = [
                                                         'view_assets', 'create_assets', 'edit_assets', 'delete_assets',
@@ -100,6 +105,7 @@
                                                         </button>
                                                     </form>
                                                 @endif
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>

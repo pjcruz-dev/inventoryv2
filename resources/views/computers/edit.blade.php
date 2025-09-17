@@ -8,9 +8,11 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">Edit Computer</h4>
                     <div>
+                        @can('view_computers')
                         <a href="{{ route('computers.show', $computer) }}" class="btn btn-info btn-sm">
                             <i class="fas fa-eye"></i> View
                         </a>
+                        @endcan
                         <a href="{{ route('computers.index') }}" class="btn btn-secondary btn-sm">
                             <i class="fas fa-arrow-left"></i> Back to List
                         </a>
@@ -144,6 +146,7 @@
                     <!-- Delete Form -->
                     <hr class="my-4">
                     <div class="text-center">
+                        @can('delete_computers')
                         <form action="{{ route('computers.destroy', $computer) }}" method="POST" class="d-inline"
                               onsubmit="return confirm('Are you sure you want to delete this computer? This action cannot be undone.')">
                             @csrf
@@ -152,6 +155,7 @@
                                 <i class="fas fa-trash"></i> Delete Computer
                             </button>
                         </form>
+                        @endcan
                     </div>
                 </div>
             </div>

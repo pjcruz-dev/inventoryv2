@@ -168,9 +168,11 @@
                                 <i class="fas fa-arrow-left me-1"></i>Back to List
                             </a>
                             <div>
+                                @can('view_asset_assignments')
                                 <a href="{{ route('asset-assignments.show', $assetAssignment) }}" class="btn btn-outline-info me-2">
                                     <i class="fas fa-eye me-1"></i>View
                                 </a>
+                                @endcan
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-save me-1"></i>Update Assignment
                                 </button>

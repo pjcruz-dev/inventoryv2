@@ -6,13 +6,17 @@
 @section('page-actions')
     <div class="d-flex gap-2">
         @if($user->assignedAssets->count() > 0)
+        @can('view_assets')
             <a href="{{ route('assets.print-single-employee-assets', $user) }}" class="btn btn-outline-info btn-sm" target="_blank">
                 <i class="fas fa-print me-1"></i>Print Assets
             </a>
+        @endcan
         @endif
+        @can('edit_users')
         <a href="{{ route('users.edit', $user) }}" class="btn btn-primary">
             <i class="fas fa-edit me-2"></i>Edit User
         </a>
+        @endcan
         <a href="{{ route('users.index') }}" class="btn btn-secondary">
             <i class="fas fa-arrow-left me-2"></i>Back to Users
         </a>
@@ -266,10 +270,13 @@
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
+                    @can('edit_users')
                     <a href="{{ route('users.edit', $user) }}" class="btn btn-primary">
                         <i class="fas fa-edit me-2"></i>Edit User
                     </a>
+                    @endcan
                     
+                    @can('edit_users')
                     @if($user->status === 1)
                         <button class="btn btn-outline-warning" onclick="changeUserStatus('0')">
                             <i class="fas fa-user-slash me-2"></i>Deactivate User
@@ -279,15 +286,21 @@
                             <i class="fas fa-user-check me-2"></i>Activate User
                         </button>
                     @endif
+                    @endcan
                     
+                    @can('edit_users')
                     <button class="btn btn-outline-info" onclick="sendPasswordReset()">
                         <i class="fas fa-key me-2"></i>Send Password Reset
                     </button>
+                    @endcan
                     
+                    @can('view_assets')
                     <a href="{{ route('assets.index', ['assigned_to' => $user->id]) }}" class="btn btn-outline-secondary">
                         <i class="fas fa-list me-2"></i>View User's Assets
                     </a>
+                    @endcan
                     
+                    @can('delete_users')
                     <hr>
                     
                     <form method="POST" action="{{ route('users.destroy', $user) }}" 
@@ -299,6 +312,7 @@
                             <i class="fas fa-trash me-2"></i>Delete User
                         </button>
                     </form>
+                    @endcan
                     
                     @if($user->assignedAssets->count() > 0)
                         <small class="text-muted text-center d-block mt-1">

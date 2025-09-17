@@ -162,9 +162,11 @@
                                 <a href="{{ route('disposal.index') }}" class="btn btn-secondary me-2">
                                     <i class="fas fa-arrow-left me-1"></i>Back to List
                                 </a>
+                                @can('view_disposal')
                                 <a href="{{ route('disposal.show', $disposal) }}" class="btn btn-info">
                                     <i class="fas fa-eye me-1"></i>View Details
                                 </a>
+                                @endcan
                             </div>
                             <button type="submit" class="btn btn-warning">
                                 <i class="fas fa-save me-1"></i>Update Disposal Record

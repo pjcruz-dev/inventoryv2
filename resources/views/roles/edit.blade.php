@@ -10,9 +10,11 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="card-title mb-0">Edit Role: {{ $role->name }}</h3>
                     <div class="btn-group">
+                        @can('view_roles')
                         <a href="{{ route('roles.show', $role) }}" class="btn btn-info btn-sm">
                             <i class="fas fa-eye"></i> View
                         </a>
+                        @endcan
                         <a href="{{ route('roles.index') }}" class="btn btn-secondary btn-sm">
                             <i class="fas fa-arrow-left"></i> Back to Roles
                         </a>

@@ -12,9 +12,12 @@
                         <i class="fas fa-user-tag me-2"></i>Asset Assignments
                     </h3>
                     <div class="btn-group">
+                        @can('create_asset_assignments')
                         <a href="{{ route('asset-assignments.create') }}" class="btn btn-primary">
                             <i class="fas fa-plus me-1"></i>New Assignment
                         </a>
+                        @endcan
+                        @can('manage_asset_assignments')
                         <div class="btn-group" role="group">
                             <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
                                 <i class="fas fa-download me-1"></i>Import/Export
@@ -32,6 +35,7 @@
                                 </a></li>
                             </ul>
                         </div>
+                        @endcan
                     </div>
                 </div>
                 
@@ -152,18 +156,24 @@
                                         </td>
                                         <td>
                                             <div class="btn-group btn-group-sm">
+                                                @can('view_asset_assignments')
                                                 <a href="{{ route('asset-assignments.show', $assignment) }}" 
                                                    class="btn btn-outline-info" title="View">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
+                                                @endcan
+                                                @can('edit_asset_assignments')
                                                 <a href="{{ route('asset-assignments.edit', $assignment) }}" 
                                                    class="btn btn-outline-warning" title="Edit">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
+                                                @endcan
+                                                @can('delete_asset_assignments')
                                                 <button type="button" class="btn btn-outline-danger" 
                                                         onclick="confirmDelete({{ $assignment->id }})" title="Delete">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>

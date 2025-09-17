@@ -4,9 +4,11 @@
 @section('page-title', 'Edit User: ' . $user->first_name . ' ' . $user->last_name)
 
 @section('page-actions')
+    @can('view_users')
     <a href="{{ route('users.show', $user) }}" class="btn btn-outline-primary me-2">
         <i class="fas fa-eye me-2"></i>View User
     </a>
+    @endcan
     <a href="{{ route('users.index') }}" class="btn btn-secondary">
         <i class="fas fa-arrow-left me-2"></i>Back to Users
     </a>
@@ -319,10 +321,13 @@
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
+                    @can('edit_users')
                     <button type="button" class="btn btn-outline-secondary" onclick="generatePassword()">
                         <i class="fas fa-key me-2"></i>Generate New Password
                     </button>
+                    @endcan
                     
+                    @can('edit_users')
                     @if($user->status === 'active')
                         <button type="button" class="btn btn-outline-warning" onclick="toggleUserStatus('inactive')">
                             <i class="fas fa-user-slash me-2"></i>Deactivate User
@@ -332,7 +337,9 @@
                             <i class="fas fa-user-check me-2"></i>Activate User
                         </button>
                     @endif
+                    @endcan
                     
+                    @can('delete_users')
                     <hr>
                     
                     <form method="POST" action="{{ route('users.destroy', $user) }}" 
@@ -344,6 +351,7 @@
                             <i class="fas fa-trash me-2"></i>Delete User
                         </button>
                     </form>
+                    @endcan
                     
                     @if($user->assignedAssets()->count() > 0)
                         <small class="text-muted">Cannot delete user with assigned assets</small>

@@ -307,12 +307,17 @@ document.addEventListener('DOMContentLoaded', function() {
                             </td>
                             <td>
                                 <div class="d-flex justify-content-center gap-1">
+                                    @can('view_assets')
                                     <a href="{{ route('assets.show', $asset->id) }}" class="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center" title="View Asset" style="width: 32px; height: 32px;">
                                         <i class="fas fa-eye"></i>
                                     </a>
+                                    @endcan
+                                    @can('edit_assets')
                                     <a href="{{ route('assets.edit', $asset->id) }}" class="btn btn-sm btn-outline-warning d-flex align-items-center justify-content-center" title="Edit Asset" style="width: 32px; height: 32px;">
                                         <i class="fas fa-edit"></i>
                                     </a>
+                                    @endcan
+                                    @can('delete_assets')
                                     <form action="{{ route('assets.destroy', $asset->id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this asset? This action cannot be undone.')">
                                         @csrf
                                         @method('DELETE')
@@ -320,6 +325,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </form>
+                                    @endcan
                                 </div>
                             </td>
                         </tr>

@@ -95,6 +95,7 @@
                     </form>
 
                     <!-- Delete Form -->
+                    @can('delete_peripherals')
                     <form method="POST" action="{{ route('peripherals.destroy', $peripheral->id) }}" class="mt-3" onsubmit="return confirm('Are you sure you want to delete this peripheral?')">
                         @csrf
                         @method('DELETE')
@@ -106,6 +107,7 @@
                             </div>
                         </div>
                     </form>
+                    @endcan
                 </div>
             </div>
         </div>

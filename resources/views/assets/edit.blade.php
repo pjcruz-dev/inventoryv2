@@ -4,9 +4,11 @@
 @section('page-title', 'Edit Asset: ' . $asset->name)
 
 @section('page-actions')
+    @can('view_assets')
     <a href="{{ route('assets.show', $asset) }}" class="btn btn-info me-2">
         <i class="fas fa-eye me-2"></i>View Asset
     </a>
+    @endcan
     <a href="{{ route('assets.index') }}" class="btn btn-secondary">
         <i class="fas fa-arrow-left me-2"></i>Back to Assets
     </a>
@@ -308,12 +310,15 @@
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
+                    @can('view_assets')
                     <a href="{{ route('assets.show', $asset) }}" class="btn btn-outline-info btn-sm">
                         <i class="fas fa-eye me-2"></i>View Details
                     </a>
                     <a href="{{ route('timeline.show', $asset) }}" class="btn btn-outline-primary btn-sm">
                         <i class="fas fa-history me-2"></i>View Full Timeline
                     </a>
+                    @endcan
+                    @can('delete_assets')
                     <form method="POST" action="{{ route('assets.destroy', $asset) }}" 
                           onsubmit="return confirm('Are you sure you want to delete this asset? This action cannot be undone.')">
                         @csrf
@@ -322,6 +327,7 @@
                             <i class="fas fa-trash me-2"></i>Delete Asset
                         </button>
                     </form>
+                    @endcan
                 </div>
             </div>
         </div>
@@ -330,9 +336,11 @@
         <div class="card mt-3">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h6 class="mb-0">Recent Timeline</h6>
+                @can('view_assets')
                 <a href="{{ route('timeline.show', $asset) }}" class="btn btn-sm btn-outline-primary">
                     <i class="fas fa-external-link-alt me-1"></i>View All
                 </a>
+                @endcan
             </div>
             <div class="card-body">
                 @if($asset->timeline && $asset->timeline->count() > 0)

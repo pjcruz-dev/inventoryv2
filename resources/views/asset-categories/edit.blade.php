@@ -12,9 +12,11 @@
                         <i class="fas fa-edit me-2"></i>Edit Asset Category
                     </h3>
                     <div class="btn-group">
+                        @can('view_asset_categories')
                         <a href="{{ route('asset-categories.show', $assetCategory) }}" class="btn btn-outline-info">
                             <i class="fas fa-eye me-1"></i>View
                         </a>
+                        @endcan
                         <a href="{{ route('asset-categories.index') }}" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left me-1"></i>Back to Categories
                         </a>
@@ -151,9 +153,11 @@
                         <p class="text-muted">
                             Once you delete this category, there is no going back. Please be certain.
                         </p>
+                        @can('delete_asset_categories')
                         <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
                             <i class="fas fa-trash me-1"></i>Delete Category
                         </button>
+                        @endcan
                     </div>
                 </div>
                 
@@ -173,6 +177,7 @@
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                @can('delete_asset_categories')
                                 <form action="{{ route('asset-categories.destroy', $assetCategory) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
@@ -180,6 +185,7 @@
                                         Delete Category
                                     </button>
                                 </form>
+                                @endcan
                             </div>
                         </div>
                     </div>

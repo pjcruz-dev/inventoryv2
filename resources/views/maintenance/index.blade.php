@@ -118,10 +118,12 @@
                         </td>
                                         <td>
                                             <div class="btn-group" role="group">
+                                                @can('view_maintenance')
                                                 <a href="{{ route('maintenance.show', $maintenance) }}" 
                                                    class="btn btn-sm btn-outline-info" title="View">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
+                                                @endcan
                                                 @can('manage_maintenance')
                                                     <a href="{{ route('maintenance.edit', $maintenance) }}" 
                                                        class="btn btn-sm btn-outline-warning" title="Edit">

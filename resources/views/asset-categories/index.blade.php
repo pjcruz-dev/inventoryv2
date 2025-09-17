@@ -89,14 +89,19 @@
                                         </td>
                                         <td>
                                             <div class="btn-group btn-group-sm">
+                                                @can('view_asset_categories')
                                                 <a href="{{ route('asset-categories.show', $category) }}" 
                                                    class="btn btn-outline-info" title="View">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
+                                                @endcan
+                                                @can('edit_asset_categories')
                                                 <a href="{{ route('asset-categories.edit', $category) }}" 
                                                    class="btn btn-outline-warning" title="Edit">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
+                                                @endcan
+                                                @can('delete_asset_categories')
                                                 @if($category->assets_count == 0)
                                                     <button type="button" class="btn btn-outline-danger" 
                                                             title="Delete" data-bs-toggle="modal" 
@@ -109,6 +114,7 @@
                                                         <i class="fas fa-trash"></i>
                                                     </button>
                                                 @endif
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>

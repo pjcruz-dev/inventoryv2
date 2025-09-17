@@ -77,12 +77,17 @@
                                         </td>
                                         <td>
                                             <div class="btn-group" role="group">
+                                                @can('view_roles')
                                                 <a href="{{ route('roles.show', $role) }}" class="btn btn-sm btn-outline-info" title="View">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
+                                                @endcan
+                                                @can('edit_roles')
                                                 <a href="{{ route('roles.edit', $role) }}" class="btn btn-sm btn-outline-warning" title="Edit">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
+                                                @endcan
+                                                @can('delete_roles')
                                                 @if(!in_array($role->name, ['Super Admin', 'Admin', 'Manager', 'User', 'IT Support']))
                                                     <form action="{{ route('roles.destroy', $role) }}" method="POST" class="d-inline" 
                                                           onsubmit="return confirm('Are you sure you want to delete this role?')">
@@ -93,6 +98,7 @@
                                                         </button>
                                                     </form>
                                                 @endif
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>

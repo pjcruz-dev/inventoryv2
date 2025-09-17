@@ -218,14 +218,19 @@ $(document).ready(function() {
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm" role="group">
+                                        @can('view_departments')
                                         <a href="{{ route('departments.show', $department) }}" 
                                            class="btn btn-outline-primary" title="View">
                                             <i class="fas fa-eye"></i>
                                         </a>
+                                        @endcan
+                                        @can('edit_departments')
                                         <a href="{{ route('departments.edit', $department) }}" 
                                            class="btn btn-outline-secondary" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
+                                        @endcan
+                                        @can('delete_departments')
                                         <form method="POST" action="{{ route('departments.destroy', $department) }}" 
                                               class="d-inline" 
                                               onsubmit="return confirm('Are you sure you want to delete this department?')">
@@ -236,6 +241,7 @@ $(document).ready(function() {
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
+                                        @endcan
                                     </div>
                                 </td>
                             </tr>

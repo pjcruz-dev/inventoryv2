@@ -279,16 +279,22 @@
                         </a>
                         <div>
                             @if($assetAssignment->status !== 'returned')
+                                @can('edit_asset_assignments')
                                 <button type="button" class="btn btn-success me-2" onclick="markAsReturned()">
                                     <i class="fas fa-undo me-1"></i>Mark as Returned
                                 </button>
+                                @endcan
                             @endif
+                            @can('edit_asset_assignments')
                             <a href="{{ route('asset-assignments.edit', $assetAssignment) }}" class="btn btn-warning me-2">
                                 <i class="fas fa-edit me-1"></i>Edit
                             </a>
+                            @endcan
+                            @can('view_asset_assignments')
                             <button type="button" class="btn btn-outline-primary" onclick="printAssignment()">
                                 <i class="fas fa-print me-1"></i>Print
                             </button>
+                            @endcan
                         </div>
                     </div>
                 </div>

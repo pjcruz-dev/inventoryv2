@@ -10,9 +10,11 @@
                         <i class="fas fa-desktop"></i> Computer Details
                     </h4>
                     <div>
+                        @can('edit_computers')
                         <a href="{{ route('computers.edit', $computer) }}" class="btn btn-warning btn-sm">
                             <i class="fas fa-edit"></i> Edit
                         </a>
+                        @endcan
                         <a href="{{ route('computers.index') }}" class="btn btn-secondary btn-sm">
                             <i class="fas fa-arrow-left"></i> Back to List
                         </a>

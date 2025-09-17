@@ -8,9 +8,11 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">Edit Monitor</h4>
                     <div>
+                        @can('view_monitors')
                         <a href="{{ route('monitors.show', $monitor) }}" class="btn btn-info btn-sm">
                             <i class="fas fa-eye"></i> View
                         </a>
+                        @endcan
                         <a href="{{ route('monitors.index') }}" class="btn btn-secondary btn-sm">
                             <i class="fas fa-arrow-left"></i> Back to List
                         </a>
@@ -105,9 +107,11 @@
                         <div class="form-group mt-4">
                             <div class="d-flex justify-content-between">
                                 <div>
+                                    @can('view_monitors')
                                     <a href="{{ route('monitors.show', $monitor) }}" class="btn btn-info">
                                         <i class="fas fa-eye"></i> View
                                     </a>
+                                    @endcan
                                     <a href="{{ route('monitors.index') }}" class="btn btn-secondary">
                                         <i class="fas fa-times"></i> Cancel
                                     </a>
@@ -121,6 +125,7 @@
 
                     <!-- Delete Form -->
                     <hr class="my-4">
+                    @can('delete_monitors')
                     <div class="text-center">
                         <form action="{{ route('monitors.destroy', $monitor) }}" method="POST" class="d-inline"
                               onsubmit="return confirm('Are you sure you want to delete this monitor? This action cannot be undone.')">
@@ -131,6 +136,7 @@
                             </button>
                         </form>
                     </div>
+                    @endcan
                 </div>
             </div>
         </div>

@@ -12,9 +12,12 @@
                         <i class="fas fa-check-circle me-2"></i>Asset Assignment Confirmations
                     </h3>
                     <div class="btn-group">
+                        @can('create_asset_assignment_confirmations')
                         <a href="{{ route('asset-assignment-confirmations.create') }}" class="btn btn-primary">
                             <i class="fas fa-plus me-1"></i>New Confirmation
                         </a>
+                        @endcan
+                        @can('manage_asset_assignment_confirmations')
                         <div class="btn-group" role="group">
                             <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
                                 <i class="fas fa-download me-1"></i>Import/Export
@@ -32,6 +35,7 @@
                                 </a></li>
                             </ul>
                         </div>
+                        @endcan
                     </div>
                 </div>
                 
@@ -205,23 +209,29 @@
                                             <div class="d-flex align-items-center">
                                                 <span class="badge bg-info me-2">{{ $confirmation->reminder_count ?? 0 }}</span>
                                                 @if($confirmation->status == 'pending')
+                                                    @can('manage_asset_assignment_confirmations')
                                                     <a href="{{ route('asset-assignment-confirmations.send-reminder', $confirmation) }}" 
                                                        class="btn btn-sm btn-outline-warning" title="Send Reminder">
                                                         <i class="fas fa-bell"></i>
                                                     </a>
+                                                    @endcan
                                                 @endif
                                             </div>
                                         </td>
                                         <td>
                                             <div class="btn-group btn-group-sm">
+                                                @can('view_asset_assignment_confirmations')
                                                 <a href="{{ route('asset-assignment-confirmations.show', $confirmation) }}" 
                                                    class="btn btn-outline-info" title="View">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
+                                                @endcan
+                                                @can('edit_asset_assignment_confirmations')
                                                 <a href="{{ route('asset-assignment-confirmations.edit', $confirmation) }}" 
                                                    class="btn btn-outline-warning" title="Edit">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
+                                                @endcan
                                                 @if($confirmation->status == 'pending')
                                                     <div class="btn-group" role="group">
                                                         <button type="button" class="btn btn-outline-secondary dropdown-toggle" 

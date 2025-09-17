@@ -43,12 +43,17 @@
                                         <td>{{ $peripheral->asset->department->name ?? 'N/A' }}</td>
                                         <td>
                                             <div class="d-flex justify-content-center gap-1">
+                                                @can('view_peripherals')
                                                 <a href="{{ route('peripherals.show', $peripheral) }}" class="btn btn-outline-info btn-sm" style="width: 32px; height: 32px;" title="View Details">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
+                                                @endcan
+                                                @can('edit_peripherals')
                                                 <a href="{{ route('peripherals.edit', $peripheral) }}" class="btn btn-outline-warning btn-sm" style="width: 32px; height: 32px;" title="Edit Peripheral">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
+                                                @endcan
+                                                @can('delete_peripherals')
                                                 <form action="{{ route('peripherals.destroy', $peripheral) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to permanently delete this peripheral? This action cannot be undone.')">
                                                     @csrf
                                                     @method('DELETE')
@@ -56,6 +61,7 @@
                                                         <i class="fas fa-trash"></i>
                                                     </button>
                                                 </form>
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>

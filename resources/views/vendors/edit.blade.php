@@ -223,9 +223,11 @@
                     
                     <hr>
                     
+                    @can('delete_vendors')
                     <button type="button" class="btn btn-outline-danger" onclick="deleteVendor()">
                         <i class="fas fa-trash me-2"></i>Delete Vendor
                     </button>
+                    @endcan
                 </div>
             </div>
         </div>
@@ -265,11 +267,13 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 @if($vendor->assets->count() == 0)
+                @can('delete_vendors')
                 <form method="POST" action="{{ route('vendors.destroy', $vendor) }}" class="d-inline">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="btn btn-danger">Delete Vendor</button>
                 </form>
+                @endcan
                 @endif
             </div>
         </div>

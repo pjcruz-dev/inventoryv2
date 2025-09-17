@@ -19,9 +19,11 @@
                                 <i class="fas fa-file-import me-1"></i>Import
                             </button>
                         </div>
+                        @can('create_computers')
                         <a href="{{ route('computers.create') }}" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Add Computer
                         </a>
+                        @endcan
                     </div>
                 </div>
 
@@ -107,18 +109,23 @@
                                         </td>
                                         <td>
                                             <div class="d-flex justify-content-center gap-1">
+                                                @can('view_computers')
                                                 <a href="{{ route('computers.show', $computer) }}" 
                                                    class="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center" 
                                                    style="width: 32px; height: 32px;" 
                                                    title="View Computer Details">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
+                                                @endcan
+                                                @can('edit_computers')
                                                 <a href="{{ route('computers.edit', $computer) }}" 
                                                    class="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center" 
                                                    style="width: 32px; height: 32px;" 
                                                    title="Edit Computer">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
+                                                @endcan
+                                                @can('delete_computers')
                                                 <form action="{{ route('computers.destroy', $computer) }}" method="POST" class="d-inline" 
                                                       onsubmit="return confirm('Are you sure you want to permanently delete this computer? This action cannot be undone.')">
                                                     @csrf
@@ -130,6 +137,7 @@
                                                         <i class="fas fa-trash"></i>
                                                     </button>
                                                 </form>
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>

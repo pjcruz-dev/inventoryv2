@@ -4,9 +4,11 @@
 @section('page-title', 'Asset: ' . $asset->name)
 
 @section('page-actions')
+    @can('edit_assets')
     <a href="{{ route('assets.edit', $asset) }}" class="btn btn-primary me-2">
         <i class="fas fa-edit me-2"></i>Edit Asset
     </a>
+    @endcan
     <a href="{{ route('assets.index') }}" class="btn btn-secondary">
         <i class="fas fa-arrow-left me-2"></i>Back to Assets
     </a>
@@ -184,6 +186,7 @@
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
+                    @can('edit_assets')
                     <a href="{{ route('assets.edit', $asset) }}" class="btn btn-primary">
                         <i class="fas fa-edit me-2"></i>Edit Asset
                     </a>
@@ -200,13 +203,17 @@
                             <i class="fas fa-user-plus me-2"></i>Assign User
                         </button>
                     @endif
+                    @endcan
                     
+                    @can('view_assets')
                     <button class="btn btn-outline-info" onclick="printAssetLabel()">
                         <i class="fas fa-print me-2"></i>Print Label
                     </button>
+                    @endcan
                     
                     <hr>
                     
+                    @can('delete_assets')
                     <form method="POST" action="{{ route('assets.destroy', $asset) }}" 
                           onsubmit="return confirm('Are you sure you want to delete this asset? This action cannot be undone.')">
                         @csrf
@@ -215,6 +222,7 @@
                             <i class="fas fa-trash me-2"></i>Delete Asset
                         </button>
                     </form>
+                    @endcan
                 </div>
             </div>
         </div>
