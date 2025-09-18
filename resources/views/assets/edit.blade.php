@@ -35,7 +35,7 @@
                                         <i class="fas fa-lock" title="Asset tag should remain unchanged"></i>
                                     </span>
                                     <input type="text" class="form-control @error('asset_tag') is-invalid @enderror" 
-                                           id="asset_tag" name="asset_tag" value="{{ old('asset_tag', $asset->asset_tag) }}" required>
+                                           id="asset_tag" name="asset_tag" value="{{ old('asset_tag', $asset->asset_tag) }}" required readonly>
                                 </div>
                                 <small class="text-warning">
                                     <i class="fas fa-exclamation-triangle me-1"></i>

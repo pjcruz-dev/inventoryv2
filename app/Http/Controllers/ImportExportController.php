@@ -917,17 +917,9 @@ class ImportExportController extends Controller
      */
     private function importAsset($data, $rowNumber)
     {
-        // Check if asset with this tag already exists
-        $existingAsset = Asset::where('asset_tag', $data['asset_tag'])->first();
-        
-        if ($existingAsset) {
-            // Skip duplicate asset tags with a warning
-            throw new \Exception("Asset with tag '{$data['asset_tag']}' already exists. Skipping duplicate entry.");
-        }
-
-        // Validate required fields
+        // Validate required fields (asset_tag is now optional for auto-generation)
         $validator = Validator::make($data, [
-            'asset_tag' => 'required|string|max:255',
+            'asset_tag' => 'nullable|string|max:255',
             'asset_name' => 'required|string|max:255',
             'category' => 'required|string',
             'vendor' => 'required|string',
@@ -951,8 +943,14 @@ class ImportExportController extends Controller
             throw new \Exception("Vendor '{$data['vendor']}' not found.");
         }
 
+        // Auto-generate unique asset tag if not provided or if it already exists
+        $assetTag = $data['asset_tag'] ?? '';
+        if (empty($assetTag) || Asset::where('asset_tag', $assetTag)->exists()) {
+            $assetTag = $this->generateUniqueAssetTag($category);
+        }
+
         Asset::create([
-            'asset_tag' => $data['asset_tag'],
+            'asset_tag' => $assetTag,
             'name' => $data['asset_name'],
             'category_id' => $category->id,
             'vendor_id' => $vendor->id,
@@ -968,6 +966,22 @@ class ImportExportController extends Controller
             'location' => $data['location'] ?? null,
             'description' => $data['notes'] ?? null
         ]);
+    }
+
+    /**
+     * Generate unique asset tag for import
+     */
+    private function generateUniqueAssetTag($category)
+    {
+        $prefix = strtoupper(substr($category->name, 0, 3));
+        $counter = 1;
+        
+        do {
+            $assetTag = $prefix . '-' . str_pad($counter, 6, '0', STR_PAD_LEFT);
+            $counter++;
+        } while (Asset::where('asset_tag', $assetTag)->exists());
+        
+        return $assetTag;
     }
 
     /**
