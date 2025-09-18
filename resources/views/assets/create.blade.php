@@ -53,22 +53,68 @@
                     </div>
                     
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <div class="mb-3">
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" id="bulk_creation" name="bulk_creation" value="1" {{ old('bulk_creation') ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="bulk_creation">
-                                        Bulk Creation (for items without serial numbers)
+                                <label class="form-label">Creation Mode</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" id="single_creation" name="creation_mode" value="single" {{ old('creation_mode', 'single') == 'single' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="single_creation">
+                                        Single Asset Creation
                                     </label>
                                 </div>
-                                <div id="quantity_field" style="display: {{ old('bulk_creation') ? 'block' : 'none' }};">
-                                    <label for="quantity" class="form-label">Quantity</label>
-                                    <input type="number" class="form-control @error('quantity') is-invalid @enderror" 
-                                           id="quantity" name="quantity" value="{{ old('quantity', 1) }}" min="1" max="100">
-                                    <small class="form-text text-muted">Number of identical assets to create (max 100)</small>
-                                    @error('quantity')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" id="bulk_creation" name="creation_mode" value="bulk" {{ old('creation_mode') == 'bulk' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="bulk_creation">
+                                        Bulk Creation (without serial numbers)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" id="bulk_serial_creation" name="creation_mode" value="bulk_serial" {{ old('creation_mode') == 'bulk_serial' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="bulk_serial_creation">
+                                        Bulk Creation (with manual serial numbers)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row" id="bulk_options" style="display: {{ in_array(old('creation_mode'), ['bulk', 'bulk_serial']) ? 'block' : 'none' }};">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="quantity" class="form-label">Quantity <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control @error('quantity') is-invalid @enderror" 
+                                       id="quantity" name="quantity" value="{{ old('quantity', 1) }}" min="1" max="20">
+                                <small class="form-text text-muted">Number of identical assets to create (max 20)</small>
+                                @error('quantity')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Serial Numbers Input Section for Bulk Creation with Serial Numbers -->
+                    <div class="row" id="serial_numbers_section" style="display: {{ old('creation_mode') == 'bulk_serial' ? 'block' : 'none' }};">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label class="form-label">Serial Numbers <span class="text-danger">*</span></label>
+                                <small class="form-text text-muted mb-2">Enter a unique serial number for each asset</small>
+                                <div id="serial_numbers_container">
+                                    @php
+                                        $quantity = old('quantity', 1);
+                                        $serialNumbers = old('serial_numbers', []);
+                                    @endphp
+                                    @for($i = 1; $i <= $quantity; $i++)
+                                        <div class="input-group mb-2 serial-input-group">
+                                            <span class="input-group-text">Asset {{ $i }}</span>
+                                            <input type="text" class="form-control @error('serial_numbers.' . ($i-1)) is-invalid @enderror" 
+                                                   name="serial_numbers[]" 
+                                                   placeholder="Enter serial number for asset {{ $i }}" 
+                                                   value="{{ $serialNumbers[$i-1] ?? '' }}">
+                                            @error('serial_numbers.' . ($i-1))
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    @endfor
                                 </div>
                             </div>
                         </div>
@@ -152,7 +198,7 @@
                                 @enderror
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-6" id="single_serial_field" style="display: {{ old('creation_mode', 'single') == 'single' ? 'block' : 'none' }};">
                             <div class="mb-3">
                                 <label for="serial_number" class="form-label">Serial Number</label>
                                 <input type="text" class="form-control @error('serial_number') is-invalid @enderror" 
@@ -521,39 +567,73 @@ $(document).ready(function() {
         }
     });
     
-    // Bulk creation functionality
-    $('#bulk_creation').on('change', function() {
-        const quantityField = $('#quantity_field');
-        const serialNumberField = $('#serial_number').closest('.mb-3');
-        const serialNumberInput = $('#serial_number');
+    // Handle creation mode changes
+    $('input[name="creation_mode"]').change(function() {
+        var selectedMode = $(this).val();
+        var bulkOptions = $('#bulk_options');
+        var serialNumbersSection = $('#serial_numbers_section');
+        var singleSerialField = $('#single_serial_field');
         
-        if ($(this).is(':checked')) {
-            // Show quantity field
-            quantityField.show();
-            // Hide serial number field for bulk creation
-            serialNumberField.hide();
-            // Clear and disable serial number input
-            serialNumberInput.val('').prop('disabled', true);
-            // Add note about serial numbers
-            if (!$('#bulk_note').length) {
-                quantityField.after('<div id="bulk_note" class="alert alert-info mt-2"><small><i class="fas fa-info-circle me-1"></i>Serial numbers will be left empty for bulk created assets. You can add them individually later if needed.</small></div>');
-            }
-        } else {
-            // Hide quantity field
-            quantityField.hide();
-            // Show serial number field
-            serialNumberField.show();
-            // Re-enable serial number input
-            serialNumberInput.prop('disabled', false);
-            // Remove bulk note
-            $('#bulk_note').remove();
+        // Hide all sections first
+        bulkOptions.hide();
+        serialNumbersSection.hide();
+        singleSerialField.hide();
+        
+        // Show appropriate sections based on selected mode
+        if (selectedMode === 'single') {
+            singleSerialField.show();
+            $('#serial_number').prop('disabled', false);
+        } else if (selectedMode === 'bulk') {
+            bulkOptions.show();
+            $('#serial_number').prop('disabled', true).val('');
+        } else if (selectedMode === 'bulk_serial') {
+            bulkOptions.show();
+            serialNumbersSection.show();
+            $('#serial_number').prop('disabled', true).val('');
+            generateSerialInputs();
         }
     });
     
-    // Initialize bulk creation state on page load
-    if ($('#bulk_creation').is(':checked')) {
-        $('#bulk_creation').trigger('change');
+    // Handle quantity changes for bulk creation with serial numbers
+    $('#quantity').on('input', function() {
+        if ($('#bulk_serial_creation').is(':checked')) {
+            generateSerialInputs();
+        }
+    });
+    
+    // Function to generate serial number input fields
+    function generateSerialInputs() {
+        var quantity = parseInt($('#quantity').val()) || 1;
+        var container = $('#serial_numbers_container');
+        
+        // Get existing values before clearing
+        var existingValues = [];
+        container.find('input[name="serial_numbers[]"]').each(function() {
+            existingValues.push($(this).val());
+        });
+        
+        // Clear existing inputs
+        container.empty();
+        
+        // Generate new inputs based on quantity
+        for (var i = 1; i <= quantity; i++) {
+            var inputGroup = $('<div class="input-group mb-2 serial-input-group">');
+            var label = $('<span class="input-group-text">Asset ' + i + '</span>');
+            var input = $('<input type="text" class="form-control" name="serial_numbers[]" placeholder="Enter serial number for asset ' + i + '" required>');
+            
+            // Preserve existing value if available
+            if (existingValues[i-1]) {
+                input.val(existingValues[i-1]);
+            }
+            
+            inputGroup.append(label).append(input);
+            container.append(inputGroup);
+        }
     }
+    
+    // Initialize creation mode state on page load
+    var initialMode = $('input[name="creation_mode"]:checked').val() || 'single';
+    $('input[name="creation_mode"][value="' + initialMode + '"]').trigger('change');
     
     // Real-time asset tag validation
     let assetTagTimeout;

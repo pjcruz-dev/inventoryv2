@@ -118,13 +118,16 @@ class AssetController extends Controller
     {
         $this->authorize('create', Asset::class);
         
-        // Check if bulk creation is enabled
-        $isBulkCreation = $request->has('bulk_creation') && $request->bulk_creation;
+        // Check creation mode
+        $creationMode = $request->input('creation_mode', 'single');
         
-        if ($isBulkCreation) {
+        if ($creationMode === 'bulk') {
             return $this->storeBulkAssets($request);
+        } elseif ($creationMode === 'bulk_serial') {
+            return $this->storeBulkAssetsWithSerials($request);
         }
         
+        // Single asset creation
         $validated = $request->validate(Asset::validationRules());
 
         // Set status and movement based on assignment
@@ -163,14 +166,14 @@ class AssetController extends Controller
         // Custom validation rules for bulk creation (serial number not required)
         $rules = Asset::validationRules();
         $rules['serial_number'] = 'nullable|string|max:100'; // Remove unique constraint for bulk
-        $rules['quantity'] = 'required|integer|min:1|max:100';
-        $rules['bulk_creation'] = 'required|boolean';
+        $rules['quantity'] = 'required|integer|min:1|max:20';
+        $rules['creation_mode'] = 'required|string|in:bulk';
         
         $validated = $request->validate($rules);
         $quantity = $validated['quantity'];
         
         // Remove bulk-specific fields from asset data
-        unset($validated['quantity'], $validated['bulk_creation']);
+        unset($validated['quantity'], $validated['creation_mode']);
         
         // Set status and movement based on assignment
         if (!empty($validated['assigned_to'])) {
@@ -243,7 +246,123 @@ class AssetController extends Controller
         
         return $assetTag;
     }
-    
+
+    /**
+     * Store multiple assets for bulk creation with manual serial numbers
+     */
+    private function storeBulkAssetsWithSerials(Request $request)
+    {
+        // Custom validation rules for bulk creation with serial numbers
+        $rules = Asset::validationRules();
+        // Override required fields to be optional for bulk creation
+        $rules['serial_number'] = 'nullable|string|max:100'; // Will be set individually
+        $rules['purchase_date'] = 'nullable|date|before_or_equal:today';
+        $rules['cost'] = 'nullable|numeric|min:0|max:999999.99';
+        $rules['po_number'] = 'nullable|string|max:100';
+        $rules['quantity'] = 'required|integer|min:1|max:20';
+        $rules['creation_mode'] = 'required|string|in:bulk_serial';
+        $rules['serial_numbers'] = 'required|array';
+        $rules['serial_numbers.*'] = 'nullable|string|max:100|distinct';
+        
+        $validated = $request->validate($rules);
+        $quantity = $validated['quantity'];
+        $serialNumbers = $validated['serial_numbers'] ?? [];
+        
+        // Ensure we have an array and filter out empty values
+        if (!is_array($serialNumbers)) {
+            return back()->withErrors([
+                'serial_numbers' => 'Serial numbers must be provided as an array.'
+            ])->withInput();
+        }
+        
+        // Filter and clean serial numbers
+        $filteredSerials = [];
+        foreach ($serialNumbers as $serial) {
+            $trimmedSerial = trim($serial ?? '');
+            if ($trimmedSerial !== '') {
+                $filteredSerials[] = $trimmedSerial;
+            }
+        }
+        
+        // Convert to integers for proper comparison
+        $actualCount = count($filteredSerials);
+        $requiredQuantity = (int) $quantity;
+        
+        // Validate serial number count
+        if ($actualCount !== $requiredQuantity) {
+            $message = "You must provide exactly {$requiredQuantity} serial number" . ($requiredQuantity > 1 ? 's' : '') . ". ";
+            if ($actualCount === 0) {
+                $message .= "No serial numbers were provided.";
+            } elseif ($actualCount < $requiredQuantity) {
+                $message .= "Only {$actualCount} serial number" . ($actualCount > 1 ? 's were' : ' was') . " provided.";
+            } else {
+                $message .= "Too many serial numbers provided ({$actualCount}). Please provide exactly {$requiredQuantity}.";
+            }
+            
+            return back()->withErrors([
+                'serial_numbers' => $message
+            ])->withInput();
+        }
+        
+        // Use the filtered serial numbers
+        $serialNumbers = $filteredSerials;
+        
+
+        
+        // Check for duplicate serial numbers in database
+        $existingSerials = Asset::whereIn('serial_number', $serialNumbers)->pluck('serial_number')->toArray();
+        if (!empty($existingSerials)) {
+            return back()->withErrors(['serial_numbers' => 'Serial numbers already exist: ' . implode(', ', $existingSerials)])->withInput();
+        }
+        
+        // Remove bulk-specific fields from asset data
+        unset($validated['quantity'], $validated['creation_mode'], $validated['serial_numbers']);
+        
+        // Set status and movement based on assignment
+        if (!empty($validated['assigned_to'])) {
+            $validated['status'] = 'Pending Confirmation';
+            $validated['movement'] = 'Deployed';
+            $validated['assigned_date'] = now();
+        } else {
+            $validated['status'] = 'Available';
+            $validated['movement'] = 'New Arrival';
+        }
+        
+        $createdAssets = [];
+        $categoryName = \App\Models\AssetCategory::find($validated['category_id'])->name;
+        
+        // Create multiple assets with unique asset tags and serial numbers
+        for ($i = 0; $i < $quantity; $i++) {
+            // Generate unique asset tag for each asset
+            $assetTag = $this->generateUniqueAssetTag($categoryName);
+            $validated['asset_tag'] = $assetTag;
+            
+            // Keep the original name without numbering
+            $validated['name'] = $validated['name'];
+            
+            // Set the serial number for this asset
+            $validated['serial_number'] = $serialNumbers[$i];
+            
+            $asset = Asset::create($validated);
+            $createdAssets[] = $asset;
+            
+            // Create AssetAssignment record if asset is assigned during creation
+            if (!empty($validated['assigned_to'])) {
+                \App\Models\AssetAssignment::create([
+                    'asset_id' => $asset->id,
+                    'user_id' => $validated['assigned_to'],
+                    'assigned_by' => auth()->id(),
+                    'assigned_date' => $validated['assigned_date'],
+                    'status' => 'pending',
+                    'notes' => 'Asset assigned during bulk creation with serial'
+                ]);
+            }
+        }
+        
+        $message = count($createdAssets) . ' assets created successfully with serial numbers.';
+        return redirect()->route('assets.index')->with('success', $message);
+    }
+
     /**
      * Check if asset tag is unique (for real-time validation)
      */

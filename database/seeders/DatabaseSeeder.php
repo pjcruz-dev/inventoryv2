@@ -21,6 +21,9 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             DepartmentSeeder::class,
             
+            // Asset categories
+            AssetCategorySeeder::class,
+            
             // Admin user data
             UserSeeder::class,
         ]);
