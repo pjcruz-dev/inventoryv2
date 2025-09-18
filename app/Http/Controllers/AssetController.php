@@ -262,7 +262,7 @@ class AssetController extends Controller
         $rules['quantity'] = 'required|integer|min:1|max:20';
         $rules['creation_mode'] = 'required|string|in:bulk_serial';
         $rules['serial_numbers'] = 'required|array';
-        $rules['serial_numbers.*'] = 'nullable|string|max:100|distinct';
+        $rules['serial_numbers.*'] = 'nullable|string|max:100'; // Removed distinct rule
         
         $validated = $request->validate($rules);
         $quantity = $validated['quantity'];
@@ -284,8 +284,27 @@ class AssetController extends Controller
             }
         }
         
+        // Check for duplicate serial numbers within the submitted array
+        $duplicateSerials = [];
+        $uniqueSerials = [];
+        foreach ($filteredSerials as $serial) {
+            if (in_array($serial, $uniqueSerials)) {
+                if (!in_array($serial, $duplicateSerials)) {
+                    $duplicateSerials[] = $serial;
+                }
+            } else {
+                $uniqueSerials[] = $serial;
+            }
+        }
+        
+        if (!empty($duplicateSerials)) {
+            return back()->withErrors([
+                'serial_numbers' => 'Duplicate serial numbers found: ' . implode(', ', $duplicateSerials) . '. Each serial number must be unique.'
+            ])->withInput();
+        }
+        
         // Convert to integers for proper comparison
-        $actualCount = count($filteredSerials);
+        $actualCount = count($uniqueSerials);
         $requiredQuantity = (int) $quantity;
         
         // Validate serial number count
@@ -304,8 +323,8 @@ class AssetController extends Controller
             ])->withInput();
         }
         
-        // Use the filtered serial numbers
-        $serialNumbers = $filteredSerials;
+        // Use the unique serial numbers (after duplicate checking)
+        $serialNumbers = $uniqueSerials;
         
 
         
