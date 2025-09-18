@@ -118,6 +118,13 @@ class AssetController extends Controller
     {
         $this->authorize('create', Asset::class);
         
+        // Check if bulk creation is enabled
+        $isBulkCreation = $request->has('bulk_creation') && $request->bulk_creation;
+        
+        if ($isBulkCreation) {
+            return $this->storeBulkAssets($request);
+        }
+        
         $validated = $request->validate(Asset::validationRules());
 
         // Set status and movement based on assignment
@@ -146,6 +153,123 @@ class AssetController extends Controller
             ]);
         }
         return redirect()->route('assets.index')->with('success', 'Asset created successfully.');
+    }
+    
+    /**
+     * Store multiple assets for bulk creation
+     */
+    private function storeBulkAssets(Request $request)
+    {
+        // Custom validation rules for bulk creation (serial number not required)
+        $rules = Asset::validationRules();
+        $rules['serial_number'] = 'nullable|string|max:100'; // Remove unique constraint for bulk
+        $rules['quantity'] = 'required|integer|min:1|max:100';
+        $rules['bulk_creation'] = 'required|boolean';
+        
+        $validated = $request->validate($rules);
+        $quantity = $validated['quantity'];
+        
+        // Remove bulk-specific fields from asset data
+        unset($validated['quantity'], $validated['bulk_creation']);
+        
+        // Set status and movement based on assignment
+        if (!empty($validated['assigned_to'])) {
+            $validated['status'] = 'Pending Confirmation';
+            $validated['movement'] = 'Deployed';
+            $validated['assigned_date'] = now();
+        } else {
+            $validated['status'] = 'Available';
+            $validated['movement'] = 'New Arrival';
+        }
+        
+        // Remove serial number for bulk creation
+        $validated['serial_number'] = null;
+        
+        $createdAssets = [];
+        $categoryName = \App\Models\AssetCategory::find($validated['category_id'])->name;
+        
+        // Create multiple assets with unique asset tags
+        for ($i = 1; $i <= $quantity; $i++) {
+            // Generate unique asset tag for each asset
+            $assetTag = $this->generateUniqueAssetTag($categoryName);
+            $validated['asset_tag'] = $assetTag;
+            
+            // Add sequence number to name for identification
+            $baseName = $validated['name'];
+            $validated['name'] = $baseName . ' #' . $i;
+            
+            $asset = Asset::create($validated);
+            $createdAssets[] = $asset;
+            
+            // Create AssetAssignment record if asset is assigned during creation
+            if (!empty($validated['assigned_to'])) {
+                \App\Models\AssetAssignment::create([
+                    'asset_id' => $asset->id,
+                    'user_id' => $validated['assigned_to'],
+                    'assigned_by' => auth()->id(),
+                    'assigned_date' => $validated['assigned_date'],
+                    'status' => 'pending',
+                    'notes' => 'Asset assigned during bulk creation'
+                ]);
+            }
+        }
+        
+        $message = count($createdAssets) . ' assets created successfully.';
+        return redirect()->route('assets.index')->with('success', $message);
+    }
+    
+    /**
+     * Generate unique asset tag for bulk creation
+     */
+    private function generateUniqueAssetTag($categoryName)
+    {
+        $categoryPrefix = strtoupper(substr($categoryName, 0, 3));
+        $date = now();
+        $timestamp = $date->format('ymd');
+        
+        $attempts = 0;
+        $maxAttempts = 1000;
+        
+        do {
+            $random = str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
+            $assetTag = $categoryPrefix . '-' . $timestamp . '-' . $random;
+            $exists = Asset::where('asset_tag', $assetTag)->exists();
+            $attempts++;
+        } while ($exists && $attempts < $maxAttempts);
+        
+        if ($attempts >= $maxAttempts) {
+            throw new \Exception('Unable to generate unique asset tag after multiple attempts');
+        }
+        
+        return $assetTag;
+    }
+    
+    /**
+     * Check if asset tag is unique (for real-time validation)
+     */
+    public function checkAssetTagUniqueness(Request $request)
+    {
+        $request->validate([
+            'asset_tag' => 'required|string|max:50',
+            'asset_id' => 'nullable|integer' // For edit mode
+        ]);
+        
+        $assetTag = $request->asset_tag;
+        $assetId = $request->asset_id;
+        
+        $query = Asset::where('asset_tag', $assetTag);
+        
+        // Exclude current asset if editing
+        if ($assetId) {
+            $query->where('id', '!=', $assetId);
+        }
+        
+        $exists = $query->exists();
+        
+        return response()->json([
+            'unique' => !$exists,
+            'message' => $exists ? 'Asset tag already exists' : 'Asset tag is available'
+        ]);
     }
 
     /**
@@ -291,7 +415,7 @@ class AssetController extends Controller
                 'previous_user_id' => $previousUser ? $previousUser->id : null,
                 'previous_user_name' => $previousUser ? $previousUser->first_name . ' ' . $previousUser->last_name : 'unknown user',
                 'previous_status' => $asset->getOriginal('status'),
-                'new_status' => 'Active',
+                'new_status' => 'Available',
                 'previous_movement' => $asset->getOriginal('movement'),
                 'new_movement' => 'Returned',
                 'return_processed_by' => auth()->user()->first_name . ' ' . auth()->user()->last_name

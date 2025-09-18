@@ -34,6 +34,7 @@
                                     </button>
                                 </div>
                                 <small class="text-muted">Asset tag will be automatically generated when you select a category</small>
+                                <div id="asset-tag-feedback" class="mt-1"></div>
                                 @error('asset_tag')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -47,6 +48,28 @@
                                 @error('name')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="bulk_creation" name="bulk_creation" value="1" {{ old('bulk_creation') ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="bulk_creation">
+                                        Bulk Creation (for items without serial numbers)
+                                    </label>
+                                </div>
+                                <div id="quantity_field" style="display: {{ old('bulk_creation') ? 'block' : 'none' }};">
+                                    <label for="quantity" class="form-label">Quantity</label>
+                                    <input type="number" class="form-control @error('quantity') is-invalid @enderror" 
+                                           id="quantity" name="quantity" value="{{ old('quantity', 1) }}" min="1" max="100">
+                                    <small class="form-text text-muted">Number of identical assets to create (max 100)</small>
+                                    @error('quantity')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -496,6 +519,83 @@ $(document).ready(function() {
             // Optional: Show brief notification
             console.log(`Movement auto-populated: ${statusMovementMap[status]} based on status: ${status}`);
         }
+    });
+    
+    // Bulk creation functionality
+    $('#bulk_creation').on('change', function() {
+        const quantityField = $('#quantity_field');
+        const serialNumberField = $('#serial_number').closest('.mb-3');
+        const serialNumberInput = $('#serial_number');
+        
+        if ($(this).is(':checked')) {
+            // Show quantity field
+            quantityField.show();
+            // Hide serial number field for bulk creation
+            serialNumberField.hide();
+            // Clear and disable serial number input
+            serialNumberInput.val('').prop('disabled', true);
+            // Add note about serial numbers
+            if (!$('#bulk_note').length) {
+                quantityField.after('<div id="bulk_note" class="alert alert-info mt-2"><small><i class="fas fa-info-circle me-1"></i>Serial numbers will be left empty for bulk created assets. You can add them individually later if needed.</small></div>');
+            }
+        } else {
+            // Hide quantity field
+            quantityField.hide();
+            // Show serial number field
+            serialNumberField.show();
+            // Re-enable serial number input
+            serialNumberInput.prop('disabled', false);
+            // Remove bulk note
+            $('#bulk_note').remove();
+        }
+    });
+    
+    // Initialize bulk creation state on page load
+    if ($('#bulk_creation').is(':checked')) {
+        $('#bulk_creation').trigger('change');
+    }
+    
+    // Real-time asset tag validation
+    let assetTagTimeout;
+    $('#asset_tag').on('input', function() {
+        const assetTag = $(this).val().trim();
+        const feedback = $('#asset-tag-feedback');
+        
+        // Clear previous timeout
+        clearTimeout(assetTagTimeout);
+        
+        if (assetTag.length === 0) {
+            feedback.removeClass('text-success text-danger').text('');
+            return;
+        }
+        
+        // Show checking status
+        feedback.removeClass('text-success text-danger').addClass('text-info').text('Checking availability...');
+        
+        // Debounce the API call
+        assetTagTimeout = setTimeout(function() {
+            $.ajax({
+                url: '{{ route("assets.check-tag-uniqueness") }}',
+                method: 'POST',
+                data: {
+                    asset_tag: assetTag,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    if (response.available) {
+                        feedback.removeClass('text-info text-danger').addClass('text-success')
+                               .html('<i class="fas fa-check-circle"></i> Asset tag is available');
+                    } else {
+                        feedback.removeClass('text-info text-success').addClass('text-danger')
+                               .html('<i class="fas fa-times-circle"></i> Asset tag already exists');
+                    }
+                },
+                error: function() {
+                    feedback.removeClass('text-info text-success').addClass('text-danger')
+                           .html('<i class="fas fa-exclamation-triangle"></i> Error checking availability');
+                }
+            });
+        }, 500); // 500ms delay
     });
 });
 </script>

@@ -46,6 +46,7 @@ Route::middleware('auth')->group(function () {
     Route::post('assets/bulk/print-labels', [AssetController::class, 'bulkPrintLabels'])->name('assets.bulk-print-labels');
     Route::get('assets/print-all-labels', [AssetController::class, 'printAllAssetLabels'])->name('assets.print-all-labels');
     Route::post('assets/generate-tag', [AssetController::class, 'generateUniqueTag'])->name('assets.generate-tag');
+    Route::post('assets/check-tag-uniqueness', [AssetController::class, 'checkAssetTagUniqueness'])->name('assets.check-tag-uniqueness');
     Route::get('assets/{asset}/vendor', [AssetController::class, 'getAssetVendor'])->name('assets.get-vendor');
     
     // Asset Categories
