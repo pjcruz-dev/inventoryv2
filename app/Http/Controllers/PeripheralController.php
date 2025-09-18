@@ -53,7 +53,7 @@ class PeripheralController extends Controller
         $request->validate([
             'asset_id' => 'required|exists:assets,id|unique:peripherals,asset_id',
             'type' => 'required|in:Mouse,Keyboard,Webcam,Headset,Speaker,Microphone,USB Hub,External Drive,Other',
-            'interface' => 'required|in:USB,Bluetooth,Wireless,Wired',
+            'interface' => 'required|in:USB,Bluetooth,Wireless,Wired,USB-C,Lightning',
         ]);
         
         Peripheral::create($request->all());
@@ -100,7 +100,7 @@ class PeripheralController extends Controller
         $request->validate([
             'asset_id' => 'required|exists:assets,id|unique:peripherals,asset_id,' . $peripheral->id,
             'type' => 'required|in:Mouse,Keyboard,Webcam,Headset,Speaker,Microphone,USB Hub,External Drive,Other',
-            'interface' => 'required|in:USB,Bluetooth,Wireless,Wired',
+            'interface' => 'required|in:USB,Bluetooth,Wireless,Wired,USB-C,Lightning',
         ]);
         
         $peripheral->update($request->all());
@@ -118,5 +118,44 @@ class PeripheralController extends Controller
         
         return redirect()->route('peripherals.index')
                         ->with('success', 'Peripheral deleted successfully.');
+    }
+
+    /**
+     * Show the form for bulk creating peripherals.
+     */
+    public function bulkCreate()
+    {
+        $assets = Asset::whereDoesntHave('peripheral')
+                      ->where('category_id', function($query) {
+                          $query->select('id')
+                                ->from('asset_categories')
+                                ->where('name', 'Peripherals')
+                                ->limit(1);
+                      })
+                      ->get();
+        
+        return view('peripherals.bulk-create', compact('assets'));
+    }
+
+    /**
+     * Store bulk created peripherals.
+     */
+    public function bulkStore(Request $request)
+    {
+        $request->validate([
+            'peripherals' => 'required|array|min:1',
+            'peripherals.*.asset_id' => 'required|exists:assets,id|unique:peripherals,asset_id',
+            'peripherals.*.type' => 'required|in:Mouse,Keyboard,Webcam,Headset,Speaker,Microphone,USB Hub,External Drive,Other',
+            'peripherals.*.interface' => 'required|in:USB,Bluetooth,Wireless,Wired,USB-C,Lightning',
+        ]);
+
+        $created = 0;
+        foreach ($request->peripherals as $peripheralData) {
+            Peripheral::create($peripheralData);
+            $created++;
+        }
+
+        return redirect()->route('peripherals.index')
+                        ->with('success', "Successfully created {$created} peripherals.");
     }
 }

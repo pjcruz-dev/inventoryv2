@@ -76,9 +76,19 @@ Route::middleware('auth')->group(function () {
     Route::get('asset-assignment-confirmations/{confirmation}/send-reminder', [AssetAssignmentConfirmationController::class, 'sendReminder'])->name('asset-assignment-confirmations.send-reminder')->middleware('check.permission:manage_assignment_confirmations');
     
     Route::resource('computers', ComputerController::class)->middleware('check.permission:view_computers');
+    Route::get('computers/bulk/create', [ComputerController::class, 'bulkCreate'])->name('computers.bulk-create')->middleware('check.permission:view_computers');
+    Route::post('computers/bulk/store', [ComputerController::class, 'bulkStore'])->name('computers.bulk-store')->middleware('check.permission:view_computers');
     Route::resource('monitors', MonitorController::class)->middleware('check.permission:view_monitors');
+    Route::get('monitors/bulk/create', [MonitorController::class, 'bulkCreate'])->name('monitors.bulk-create')->middleware('check.permission:view_monitors');
+    Route::post('monitors/bulk/store', [MonitorController::class, 'bulkStore'])->name('monitors.bulk-store')->middleware('check.permission:view_monitors');
+    
     Route::resource('printers', PrinterController::class)->middleware('check.permission:view_printers');
+    Route::get('printers/bulk/create', [PrinterController::class, 'bulkCreate'])->name('printers.bulk-create')->middleware('check.permission:view_printers');
+    Route::post('printers/bulk/store', [PrinterController::class, 'bulkStore'])->name('printers.bulk-store')->middleware('check.permission:view_printers');
+    
     Route::resource('peripherals', PeripheralController::class)->middleware('check.permission:view_peripherals');
+    Route::get('peripherals/bulk/create', [PeripheralController::class, 'bulkCreate'])->name('peripherals.bulk-create')->middleware('check.permission:view_peripherals');
+    Route::post('peripherals/bulk/store', [PeripheralController::class, 'bulkStore'])->name('peripherals.bulk-store')->middleware('check.permission:view_peripherals');
     
     // User and organization management
     Route::resource('users', UserController::class)->middleware('check.permission:view_users');

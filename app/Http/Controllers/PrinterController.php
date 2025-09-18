@@ -12,10 +12,10 @@ class PrinterController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        $this->middleware('permission:view_assets')->only(['index', 'show']);
-        $this->middleware('permission:create_assets')->only(['create', 'store']);
-        $this->middleware('permission:edit_assets')->only(['edit', 'update']);
-        $this->middleware('permission:delete_assets')->only(['destroy']);
+        $this->middleware('permission:view_printers')->only(['index', 'show']);
+        $this->middleware('permission:create_printers')->only(['create', 'store']);
+        $this->middleware('permission:edit_printers')->only(['edit', 'update']);
+        $this->middleware('permission:delete_printers')->only(['destroy']);
     }
 
     /**
@@ -55,7 +55,7 @@ class PrinterController extends Controller
                       ->where('category_id', function($query) {
                           $query->select('id')
                                 ->from('asset_categories')
-                                ->where('name', 'Printers & Scanners')
+                                ->where('name', 'Printers')
                                 ->limit(1);
                       })
                       ->get();
@@ -102,7 +102,7 @@ class PrinterController extends Controller
                                 ->where('category_id', function($subQuery) {
                                     $subQuery->select('id')
                                             ->from('asset_categories')
-                                            ->where('name', 'Printers & Scanners')
+                                            ->where('name', 'Printers')
                                             ->limit(1);
                                 });
                       })
@@ -138,5 +138,45 @@ class PrinterController extends Controller
         
         return redirect()->route('printers.index')
                         ->with('success', 'Printer deleted successfully.');
+    }
+
+    /**
+     * Show the form for bulk creating printers.
+     */
+    public function bulkCreate()
+    {
+        $assets = Asset::whereDoesntHave('printer')
+                      ->where('category_id', function($query) {
+                          $query->select('id')
+                                ->from('asset_categories')
+                                ->where('name', 'Printers')
+                                ->limit(1);
+                      })
+                      ->get();
+        
+        return view('printers.bulk-create', compact('assets'));
+    }
+
+    /**
+     * Store bulk created printers.
+     */
+    public function bulkStore(Request $request)
+    {
+        $request->validate([
+            'printers' => 'required|array|min:1',
+            'printers.*.asset_id' => 'required|exists:assets,id|unique:printers,asset_id',
+            'printers.*.type' => 'required|in:Inkjet,Laser,Dot Matrix,Thermal,3D',
+            'printers.*.color_support' => 'required|boolean',
+            'printers.*.duplex' => 'required|boolean',
+        ]);
+
+        $created = 0;
+        foreach ($request->printers as $printerData) {
+            Printer::create($printerData);
+            $created++;
+        }
+
+        return redirect()->route('printers.index')
+                        ->with('success', "Successfully created {$created} printers.");
     }
 }

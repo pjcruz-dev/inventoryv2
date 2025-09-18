@@ -53,7 +53,7 @@ class MonitorController extends Controller
                       ->where('category_id', function($query) {
                           $query->select('id')
                                 ->from('asset_categories')
-                                ->where('name', 'Monitors & Displays')
+                                ->where('name', 'Monitors')
                                 ->limit(1);
                       })
                       ->get();
@@ -100,7 +100,7 @@ class MonitorController extends Controller
                                 ->where('category_id', function($subQuery) {
                                     $subQuery->select('id')
                                             ->from('asset_categories')
-                                            ->where('name', 'Monitors & Displays')
+                                            ->where('name', 'Monitors')
                                             ->limit(1);
                                 });
                       })
@@ -136,5 +136,45 @@ class MonitorController extends Controller
         
         return redirect()->route('monitors.index')
                         ->with('success', 'Monitor deleted successfully.');
+    }
+
+    /**
+     * Show the form for bulk creating monitors.
+     */
+    public function bulkCreate()
+    {
+        $assets = Asset::whereDoesntHave('monitor')
+                      ->where('category_id', function($query) {
+                          $query->select('id')
+                                ->from('asset_categories')
+                                ->where('name', 'Monitors')
+                                ->limit(1);
+                      })
+                      ->get();
+        
+        return view('monitors.bulk-create', compact('assets'));
+    }
+
+    /**
+     * Store bulk created monitors.
+     */
+    public function bulkStore(Request $request)
+    {
+        $request->validate([
+            'monitors' => 'required|array|min:1',
+            'monitors.*.asset_id' => 'required|exists:assets,id|unique:monitors,asset_id',
+            'monitors.*.size' => 'required|string|max:50',
+            'monitors.*.resolution' => 'required|string|max:50',
+            'monitors.*.panel_type' => 'required|in:LCD,LED,OLED,CRT,Plasma',
+        ]);
+
+        $created = 0;
+        foreach ($request->monitors as $monitorData) {
+            Monitor::create($monitorData);
+            $created++;
+        }
+
+        return redirect()->route('monitors.index')
+                        ->with('success', "Successfully created {$created} monitors.");
     }
 }

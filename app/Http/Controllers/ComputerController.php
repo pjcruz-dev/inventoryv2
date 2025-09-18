@@ -141,4 +141,46 @@ class ComputerController extends Controller
         return redirect()->route('computers.index')
                         ->with('success', 'Computer deleted successfully.');
     }
+
+    /**
+     * Show the form for bulk creating computers.
+     */
+    public function bulkCreate()
+    {
+        $assets = Asset::whereDoesntHave('computer')
+                      ->where('category_id', function($query) {
+                          $query->select('id')
+                                ->from('asset_categories')
+                                ->where('name', 'Computer Hardware')
+                                ->limit(1);
+                      })
+                      ->get();
+        
+        return view('computers.bulk-create', compact('assets'));
+    }
+
+    /**
+     * Store bulk created computers.
+     */
+    public function bulkStore(Request $request)
+    {
+        $request->validate([
+            'computers' => 'required|array|min:1',
+            'computers.*.asset_id' => 'required|exists:assets,id|unique:computers,asset_id',
+            'computers.*.processor' => 'required|string|max:255',
+            'computers.*.memory' => 'required|string|max:100',
+            'computers.*.storage' => 'required|string|max:100',
+            'computers.*.operating_system' => 'required|string|max:255',
+            'computers.*.computer_type' => 'required|in:Desktop,Laptop,Server,Workstation',
+        ]);
+
+        $created = 0;
+        foreach ($request->computers as $computerData) {
+            Computer::create($computerData);
+            $created++;
+        }
+
+        return redirect()->route('computers.index')
+                        ->with('success', "Successfully created {$created} computers.");
+    }
 }

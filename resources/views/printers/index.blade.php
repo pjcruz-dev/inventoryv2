@@ -9,9 +9,14 @@
                     <h4 class="mb-0">
                         <i class="fas fa-print"></i> Printers Management
                     </h4>
-                    <a href="{{ route('printers.create') }}" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Add New Printer
-                    </a>
+                    <div class="btn-group" role="group">
+                        <a href="{{ route('printers.create') }}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add New Printer
+                        </a>
+                        <a href="{{ route('printers.bulk-create') }}" class="btn btn-success">
+                            <i class="fas fa-layer-group"></i> Bulk Create
+                        </a>
+                    </div>
                 </div>
 
                 <div class="card-body">

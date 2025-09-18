@@ -23,6 +23,9 @@
                         <a href="{{ route('computers.create') }}" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Add Computer
                         </a>
+                        <a href="{{ route('computers.bulk-create') }}" class="btn btn-success">
+                            <i class="fas fa-layer-group"></i> Bulk Create
+                        </a>
                         @endcan
                     </div>
                 </div>

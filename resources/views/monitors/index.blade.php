@@ -19,9 +19,14 @@
                                 <i class="fas fa-file-import me-1"></i>Import
                             </button>
                         </div>
-                        <a href="{{ route('monitors.create') }}" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Add Monitor
-                        </a>
+                        <div class="btn-group" role="group">
+                            <a href="{{ route('monitors.create') }}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Add Monitor
+                            </a>
+                            <a href="{{ route('monitors.bulk-create') }}" class="btn btn-success">
+                                <i class="fas fa-layer-group"></i> Bulk Create
+                            </a>
+                        </div>
                     </div>
                 </div>
 
