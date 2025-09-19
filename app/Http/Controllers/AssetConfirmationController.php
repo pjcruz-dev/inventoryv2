@@ -89,6 +89,56 @@ class AssetConfirmationController extends Controller
         // Mark confirmation as confirmed
         $confirmation->markAsConfirmed();
 
+        // Create timeline entry for confirmation
+        \App\Models\AssetTimeline::create([
+            'asset_id' => $confirmation->asset_id,
+            'action' => 'confirmed',
+            'from_user_id' => null,
+            'to_user_id' => $confirmation->user_id,
+            'from_department_id' => null,
+            'to_department_id' => $confirmation->asset->department_id,
+            'notes' => 'Asset assignment confirmed by user via email confirmation',
+            'old_values' => null,
+            'new_values' => [
+                'confirmation_id' => $confirmation->id,
+                'confirmation_token' => $confirmation->confirmation_token,
+                'confirmed_at' => now()->toISOString(),
+                'user_email' => $confirmation->user->email,
+                'user_name' => $confirmation->user->first_name . ' ' . $confirmation->user->last_name
+            ],
+            'performed_by' => $confirmation->user_id, // Use the actual user who confirmed/declined
+            'performed_at' => now()
+        ]);
+
+        // Create activity log entry for confirmation
+        \App\Models\Log::create([
+            'loggable_type' => 'App\Models\AssetAssignmentConfirmation',
+            'loggable_id' => $confirmation->id,
+            'category' => 'asset_assignment_confirmation',
+            'event_type' => 'confirmed',
+            'description' => 'Asset assignment confirmed by user via email confirmation',
+            'user_id' => $confirmation->user_id,
+            'role_id' => $confirmation->user->role_id ?? null,
+            'asset_id' => $confirmation->asset_id,
+            'department_id' => $confirmation->asset->department_id,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'remarks' => 'Asset assignment confirmed by user via email confirmation',
+            'action_details' => [
+                'confirmation_id' => $confirmation->id,
+                'confirmation_token' => $confirmation->confirmation_token,
+                'confirmed_at' => now()->toISOString(),
+                'user_email' => $confirmation->user->email,
+                'user_name' => $confirmation->user->first_name . ' ' . $confirmation->user->last_name,
+                'asset_name' => $confirmation->asset->name,
+                'asset_tag' => $confirmation->asset->asset_tag
+            ],
+            'session_id' => request()->session()->getId(),
+            'request_method' => request()->method(),
+            'request_url' => request()->fullUrl(),
+            'action_timestamp' => now()
+        ]);
+
         // Update asset status and movement
         $confirmation->asset->update([
             'status' => 'Active',
@@ -185,6 +235,56 @@ class AssetConfirmationController extends Controller
 
         // Mark confirmation as declined
         $confirmation->markAsDeclined();
+
+        // Create timeline entry for decline
+        \App\Models\AssetTimeline::create([
+            'asset_id' => $confirmation->asset_id,
+            'action' => 'declined',
+            'from_user_id' => $confirmation->user_id,
+            'to_user_id' => null,
+            'from_department_id' => $confirmation->asset->department_id,
+            'to_department_id' => null,
+            'notes' => 'Asset assignment declined by user via email confirmation',
+            'old_values' => null,
+            'new_values' => [
+                'confirmation_id' => $confirmation->id,
+                'confirmation_token' => $confirmation->confirmation_token,
+                'declined_at' => now()->toISOString(),
+                'user_email' => $confirmation->user->email,
+                'user_name' => $confirmation->user->first_name . ' ' . $confirmation->user->last_name
+            ],
+            'performed_by' => $confirmation->user_id, // Use the actual user who confirmed/declined
+            'performed_at' => now()
+        ]);
+
+        // Create activity log entry for decline
+        \App\Models\Log::create([
+            'loggable_type' => 'App\Models\AssetAssignmentConfirmation',
+            'loggable_id' => $confirmation->id,
+            'category' => 'asset_assignment_confirmation',
+            'event_type' => 'declined',
+            'description' => 'Asset assignment declined by user via email confirmation',
+            'user_id' => $confirmation->user_id,
+            'role_id' => $confirmation->user->role_id ?? null,
+            'asset_id' => $confirmation->asset_id,
+            'department_id' => $confirmation->asset->department_id,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'remarks' => 'Asset assignment declined by user via email confirmation',
+            'action_details' => [
+                'confirmation_id' => $confirmation->id,
+                'confirmation_token' => $confirmation->confirmation_token,
+                'declined_at' => now()->toISOString(),
+                'user_email' => $confirmation->user->email,
+                'user_name' => $confirmation->user->first_name . ' ' . $confirmation->user->last_name,
+                'asset_name' => $confirmation->asset->name,
+                'asset_tag' => $confirmation->asset->asset_tag
+            ],
+            'session_id' => request()->session()->getId(),
+            'request_method' => request()->method(),
+            'request_url' => request()->fullUrl(),
+            'action_timestamp' => now()
+        ]);
 
         // Update related AssetAssignment status from 'pending' to 'declined'
         \App\Models\AssetAssignment::where('asset_id', $confirmation->asset_id)
@@ -370,6 +470,64 @@ class AssetConfirmationController extends Controller
 
         // Mark confirmation as declined with enhanced details
         $confirmation->markAsDeclined($declineData);
+
+        // Create timeline entry for decline with reason
+        \App\Models\AssetTimeline::create([
+            'asset_id' => $confirmation->asset_id,
+            'action' => 'declined',
+            'from_user_id' => $confirmation->user_id,
+            'to_user_id' => null,
+            'from_department_id' => $confirmation->asset->department_id,
+            'to_department_id' => null,
+            'notes' => 'Asset assignment declined by user via email confirmation. Reason: ' . $confirmation->getFormattedDeclineReason(),
+            'old_values' => null,
+            'new_values' => [
+                'confirmation_id' => $confirmation->id,
+                'confirmation_token' => $confirmation->confirmation_token,
+                'declined_at' => now()->toISOString(),
+                'user_email' => $confirmation->user->email,
+                'user_name' => $confirmation->user->first_name . ' ' . $confirmation->user->last_name,
+                'decline_reason' => $confirmation->getFormattedDeclineReason(),
+                'decline_category' => $declineData['decline_category'] ?? null,
+                'decline_severity' => $declineData['decline_severity'] ?? null,
+                'follow_up_required' => $followUpRequired
+            ],
+            'performed_by' => $confirmation->user_id, // Use the actual user who confirmed/declined
+            'performed_at' => now()
+        ]);
+
+        // Create activity log entry for decline with reason
+        \App\Models\Log::create([
+            'loggable_type' => 'App\Models\AssetAssignmentConfirmation',
+            'loggable_id' => $confirmation->id,
+            'category' => 'asset_assignment_confirmation',
+            'event_type' => 'declined',
+            'description' => 'Asset assignment declined by user via email confirmation. Reason: ' . $confirmation->getFormattedDeclineReason(),
+            'user_id' => $confirmation->user_id,
+            'role_id' => $confirmation->user->role_id ?? null,
+            'asset_id' => $confirmation->asset_id,
+            'department_id' => $confirmation->asset->department_id,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'remarks' => 'Asset assignment declined by user via email confirmation. Reason: ' . $confirmation->getFormattedDeclineReason(),
+            'action_details' => [
+                'confirmation_id' => $confirmation->id,
+                'confirmation_token' => $confirmation->confirmation_token,
+                'declined_at' => now()->toISOString(),
+                'user_email' => $confirmation->user->email,
+                'user_name' => $confirmation->user->first_name . ' ' . $confirmation->user->last_name,
+                'asset_name' => $confirmation->asset->name,
+                'asset_tag' => $confirmation->asset->asset_tag,
+                'decline_reason' => $confirmation->getFormattedDeclineReason(),
+                'decline_category' => $declineData['decline_category'] ?? null,
+                'decline_severity' => $declineData['decline_severity'] ?? null,
+                'follow_up_required' => $followUpRequired
+            ],
+            'session_id' => request()->session()->getId(),
+            'request_method' => request()->method(),
+            'request_url' => request()->fullUrl(),
+            'action_timestamp' => now()
+        ]);
 
         // Update related AssetAssignment status from 'pending' to 'declined'
         \App\Models\AssetAssignment::where('asset_id', $confirmation->asset_id)

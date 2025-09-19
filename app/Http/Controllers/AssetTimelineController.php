@@ -42,7 +42,7 @@ class AssetTimelineController extends Controller
         
         $timeline = $query->orderBy('performed_at', 'desc')->paginate(20);
         $assets = Asset::orderBy('name')->get();
-        $actions = ['created', 'assigned', 'unassigned', 'transferred', 'updated'];
+        $actions = ['created', 'assigned', 'unassigned', 'transferred', 'updated', 'confirmed', 'declined'];
         
         return view('timeline.index', compact('timeline', 'assets', 'actions'));
     }
