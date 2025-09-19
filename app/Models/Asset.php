@@ -59,8 +59,8 @@ class Asset extends Model
             'lifespan' => 'nullable|integer|min:1|max:50',
             'location' => 'nullable|string|max:255',
             'notes' => 'nullable|string|max:1000',
-            'status' => 'required|in:Available,Assigned,Active,Inactive,Under Maintenance,Issue Reported,Pending Confirmation,Retired,Damaged,Disposed',
-            'movement' => 'required|in:New Arrival,Deployed,Returned,Transferred,Disposed',
+            'status' => 'required|in:Active,Inactive,Under Maintenance,Issue Reported,Pending Confirmation,Disposed',
+            'movement' => 'required|in:New Arrival,Deployed,Deployed Tagged,Returned,Disposed',
             'assigned_to' => 'nullable|exists:users,id',
             'assigned_date' => 'nullable|date|required_with:assigned_to',
             'department_id' => 'nullable|exists:departments,id'
@@ -87,8 +87,8 @@ class Asset extends Model
             'entity' => 'nullable|in:MIDC,PHILTOWER,PRIMUS',
             'lifespan' => 'nullable|integer|min:1|max:50',
             'location' => 'nullable|string|max:255',
-            'status' => 'required|in:Available,Assigned,Active,Inactive,Under Maintenance,Issue Reported,Pending Confirmation,Retired,Damaged,Disposed',
-            'movement' => 'required|in:New Arrival,Deployed,Returned,Transferred,Disposed',
+            'status' => 'required|in:Active,Inactive,Under Maintenance,Issue Reported,Pending Confirmation,Disposed',
+            'movement' => 'required|in:New Arrival,Deployed,Deployed Tagged,Returned,Disposed',
             'assigned_to' => 'nullable|exists:users,id',
             'assigned_date' => 'nullable|date|required_with:assigned_to',
             'department_id' => 'nullable|exists:departments,id'

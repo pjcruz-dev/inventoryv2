@@ -15,14 +15,24 @@ use App\Http\Controllers\Api\AssetApiController;
 |
 */
 
-// Public API routes
-Route::get('/user', function (Request $request) {
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
-})->middleware('auth:sanctum');
+});
 
-// Protected API routes with Sanctum authentication
-Route::middleware('auth:sanctum')->group(function () {
-    // Asset verification and retrieval for specific user
-    Route::get('/users/{user}/assets/verify', [AssetApiController::class, 'verifyUserAssets'])
-        ->name('api.users.assets.verify');
+// API Routes with authentication
+Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
+    
+    // Asset Management API
+    Route::apiResource('assets', AssetApiController::class);
+    Route::get('assets/statistics/overview', [AssetApiController::class, 'statistics'])->name('assets.statistics');
+    
+    // Additional API endpoints can be added here
+    Route::get('dashboard/stats', function (Request $request) {
+        return response()->json([
+            'total_assets' => \App\Models\Asset::count(),
+            'total_users' => \App\Models\User::count(),
+            'assigned_assets' => \App\Models\Asset::whereNotNull('assigned_to')->count(),
+            'available_assets' => \App\Models\Asset::whereNull('assigned_to')->count(),
+        ]);
+    })->name('api.dashboard.stats');
 });

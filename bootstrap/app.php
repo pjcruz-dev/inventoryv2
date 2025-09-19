@@ -34,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Apply global middleware for authenticated routes
         $middleware->web(append: [
             \App\Http\Middleware\SessionSecurity::class,
+            \App\Http\Middleware\SecurityHeaders::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

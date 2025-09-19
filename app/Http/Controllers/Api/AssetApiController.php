@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Asset;
+use App\Models\AssetCategory;
+use App\Models\Vendor;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -13,6 +15,171 @@ use Illuminate\Support\Facades\Auth;
 
 class AssetApiController extends Controller
 {
+    /**
+     * Display a listing of assets
+     * 
+     * @queryParam search string Search term for assets. Example: "laptop"
+     * @queryParam category_id integer Filter by category ID. Example: 1
+     * @queryParam status string Filter by status. Example: "Available"
+     * @queryParam movement string Filter by movement. Example: "New Arrival"
+     * @queryParam assigned boolean Filter by assignment status. Example: true
+     * @queryParam entity string Filter by entity. Example: "MIDC"
+     * @queryParam page integer Page number for pagination. Example: 1
+     * @queryParam per_page integer Items per page (max 100). Example: 15
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $this->authorize('viewAny', Asset::class);
+        
+        $query = Asset::with(['category', 'vendor', 'assignedUser']);
+        
+        // Apply filters
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('asset_tag', 'like', "%{$search}%")
+                  ->orWhere('serial_number', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+        
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+        
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        
+        if ($request->filled('movement')) {
+            $query->where('movement', $request->movement);
+        }
+        
+        if ($request->filled('assigned')) {
+            if ($request->assigned) {
+                $query->whereNotNull('assigned_to');
+            } else {
+                $query->whereNull('assigned_to');
+            }
+        }
+        
+        if ($request->filled('entity')) {
+            $query->where('entity', $request->entity);
+        }
+        
+        $perPage = min($request->get('per_page', 15), 100);
+        $assets = $query->paginate($perPage);
+        
+        return response()->json($assets);
+    }
+
+    /**
+     * Store a newly created asset
+     */
+    public function store(Request $request): JsonResponse
+    {
+        $this->authorize('create', Asset::class);
+        
+        $validated = $request->validate(Asset::validationRules());
+        
+        $asset = Asset::create($validated);
+        
+        return response()->json([
+            'message' => 'Asset created successfully',
+            'data' => $asset->load(['category', 'vendor'])
+        ], 201);
+    }
+
+    /**
+     * Display the specified asset
+     */
+    public function show(Asset $asset): JsonResponse
+    {
+        $this->authorize('view', $asset);
+        
+        $asset->load(['category', 'vendor', 'assignedUser', 'timeline']);
+        
+        return response()->json(['data' => $asset]);
+    }
+
+    /**
+     * Update the specified asset
+     */
+    public function update(Request $request, Asset $asset): JsonResponse
+    {
+        $this->authorize('update', $asset);
+        
+        $validated = $request->validate(Asset::updateValidationRules($asset->id));
+        
+        $asset->update($validated);
+        
+        return response()->json([
+            'message' => 'Asset updated successfully',
+            'data' => $asset->load(['category', 'vendor'])
+        ]);
+    }
+
+    /**
+     * Remove the specified asset
+     */
+    public function destroy(Asset $asset): JsonResponse
+    {
+        $this->authorize('delete', $asset);
+        
+        if ($asset->assigned_to) {
+            return response()->json([
+                'message' => 'Cannot delete asset that is currently assigned to a user'
+            ], 422);
+        }
+        
+        $asset->delete();
+        
+        return response()->json([
+            'message' => 'Asset deleted successfully'
+        ]);
+    }
+
+    /**
+     * Get asset statistics
+     */
+    public function statistics(Request $request): JsonResponse
+    {
+        $this->authorize('viewAny', Asset::class);
+        
+        $query = Asset::query();
+        
+        if ($request->filled('entity')) {
+            $query->where('entity', $request->entity);
+        }
+        
+        $totalAssets = $query->count();
+        $assignedAssets = $query->clone()->whereNotNull('assigned_to')->count();
+        $availableAssets = $query->clone()->whereNull('assigned_to')->count();
+        
+        $assetsByStatus = $query->clone()
+            ->selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status');
+            
+        $assetsByCategory = $query->clone()
+            ->join('asset_categories', 'assets.category_id', '=', 'asset_categories.id')
+            ->selectRaw('asset_categories.name, COUNT(*) as count')
+            ->groupBy('asset_categories.name')
+            ->pluck('count', 'asset_categories.name');
+            
+        $totalValue = $query->clone()->sum('cost');
+        
+        return response()->json([
+            'total_assets' => $totalAssets,
+            'assigned_assets' => $assignedAssets,
+            'available_assets' => $availableAssets,
+            'assets_by_status' => $assetsByStatus,
+            'assets_by_category' => $assetsByCategory,
+            'total_value' => number_format($totalValue, 2)
+        ]);
+    }
+
     /**
      * Verify and retrieve detailed asset information assigned to a specific user.
      * Also returns notification data containing names of all users assigned to assets.
