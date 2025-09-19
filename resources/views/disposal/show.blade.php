@@ -60,7 +60,7 @@
                                             <td class="fw-bold">Purchase Cost:</td>
                                             <td>
                                                 @if($disposal->asset->purchase_cost)
-                                                    ${{ number_format($disposal->asset->purchase_cost, 2) }}
+                                                    ₱{{ number_format($disposal->asset->purchase_cost, 2) }}
                                                 @else
                                                     N/A
                                                 @endif

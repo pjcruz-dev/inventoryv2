@@ -25,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role.hierarchy' => \App\Http\Middleware\RoleHierarchy::class,
             'route.access.control' => \App\Http\Middleware\RouteAccessControl::class,
             'session.security' => \App\Http\Middleware\SessionSecurity::class,
+            'prevent.maintenance.edit' => \App\Http\Middleware\PreventMaintenanceAssetEdit::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,

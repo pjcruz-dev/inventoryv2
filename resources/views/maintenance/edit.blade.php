@@ -81,7 +81,7 @@
                                 <div class="mb-3">
                                     <label for="cost" class="form-label">Cost</label>
                                     <div class="input-group">
-                                        <span class="input-group-text">$</span>
+                                        <span class="input-group-text">₱</span>
                                         <input type="number" class="form-control @error('cost') is-invalid @enderror" 
                                                id="cost" name="cost" step="0.01" min="0" max="999999.99"
                                                value="{{ old('cost', $maintenance->cost) }}" placeholder="0.00">

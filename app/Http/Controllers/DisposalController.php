@@ -78,6 +78,7 @@ class DisposalController extends Controller
         // Permission is checked by middleware
 
         $assets = Asset::whereIn('status', ['Available', 'Retired', 'Damaged'])
+                      ->where('status', '!=', 'Disposed') // Exclude already disposed assets
                       ->orderBy('name')
                       ->get();
         
@@ -103,10 +104,24 @@ class DisposalController extends Controller
 
         // Update asset status to disposed
         $asset = Asset::find($request->asset_id);
+        $oldAssetStatus = $asset->status;
+        $oldAssetMovement = $asset->movement;
+        
         $asset->update([
             'status' => 'Disposed',
+            'movement' => 'Disposed',
             'assigned_to' => null // Remove any assignment
         ]);
+        
+        // Create timeline entry
+        $asset->createTimelineEntry(
+            'asset_disposed',
+            null,
+            null,
+            "Asset disposed: {$request->disposal_type} - {$request->remarks}",
+            ['status' => $oldAssetStatus, 'movement' => $oldAssetMovement],
+            ['status' => 'Disposed', 'movement' => 'Disposed']
+        );
 
         return redirect()->route('disposal.index')
                         ->with('success', 'Disposal record created successfully.');
@@ -161,10 +176,24 @@ class DisposalController extends Controller
         // Ensure asset status is disposed
         $asset = Asset::find($request->asset_id);
         if ($asset->status !== 'Disposed') {
+            $oldAssetStatus = $asset->status;
+            $oldAssetMovement = $asset->movement;
+            
             $asset->update([
                 'status' => 'Disposed',
+                'movement' => 'Disposed',
                 'assigned_to' => null
             ]);
+            
+            // Create timeline entry
+            $asset->createTimelineEntry(
+                'asset_disposed',
+                null,
+                null,
+                "Asset disposal updated: {$request->disposal_type} - {$request->remarks}",
+                ['status' => $oldAssetStatus, 'movement' => $oldAssetMovement],
+                ['status' => 'Disposed', 'movement' => 'Disposed']
+            );
         }
 
         return redirect()->route('disposal.index')
@@ -181,7 +210,27 @@ class DisposalController extends Controller
         // Revert asset status from disposed
         $asset = Asset::find($disposal->asset_id);
         if ($asset->status === 'Disposed') {
-            $asset->update(['status' => 'Available']);
+            $oldAssetStatus = $asset->status;
+            $oldAssetMovement = $asset->movement;
+            
+            // Determine appropriate status based on assignment
+            $newStatus = $asset->assigned_to ? 'Assigned' : 'Available';
+            $newMovement = $asset->assigned_to ? 'Deployed Tagged' : 'Returned';
+            
+            $asset->update([
+                'status' => $newStatus,
+                'movement' => $newMovement
+            ]);
+            
+            // Create timeline entry
+            $asset->createTimelineEntry(
+                'asset_disposal_reverted',
+                null,
+                null,
+                "Asset disposal record deleted - status reverted",
+                ['status' => $oldAssetStatus, 'movement' => $oldAssetMovement],
+                ['status' => $newStatus, 'movement' => $newMovement]
+            );
         }
 
         $disposal->delete();

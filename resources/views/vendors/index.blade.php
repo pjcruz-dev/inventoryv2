@@ -204,7 +204,7 @@
                                             ₱{{ number_format($vendor->assets->sum('cost'), 2) }}
                                         </strong>
                                     @else
-                                        <span class="text-muted">$0.00</span>
+                                        <span class="text-muted">₱0.00</span>
                                     @endif
                                 </td>
                                 <td>
