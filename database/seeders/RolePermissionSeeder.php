@@ -43,6 +43,7 @@ class RolePermissionSeeder extends Seeder
                 'view_timeline', 'create_timeline',
                 'view_dashboard', 'view_notifications',
                 'import_export_access', 'template_download', 'data_export', 'data_import',
+                'view_accountability_forms', 'generate_accountability_forms', 'print_accountability_forms', 'bulk_accountability_forms',
                 'admin_access'
             ];
             $adminRole->syncPermissions($adminPermissions);

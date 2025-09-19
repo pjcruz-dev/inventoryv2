@@ -115,4 +115,16 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Notification Recipients
+    |--------------------------------------------------------------------------
+    |
+    | Email addresses that should receive system notifications for asset
+    | confirmations, rejections, and other important events.
+    |
+    */
+
+    'notification_recipient' => env('MAIL_NOTIFICATION_RECIPIENT', 'ict.department@midc.ph'),
+
 ];

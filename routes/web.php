@@ -181,6 +181,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/password/change', [ChangePasswordController::class, 'update'])->name('password.update');
 });
 
+// Accountability Form routes
+Route::prefix('accountability')->name('accountability.')->middleware(['auth'])->group(function () {
+    Route::get('/', [App\Http\Controllers\AccountabilityFormController::class, 'index'])->name('index')->middleware('check.permission:view_accountability_forms');
+    Route::get('/generate/{asset}', [App\Http\Controllers\AccountabilityFormController::class, 'generate'])->name('generate')->middleware('check.permission:generate_accountability_forms');
+    Route::get('/print/{asset}', [App\Http\Controllers\AccountabilityFormController::class, 'print'])->name('print')->middleware('check.permission:print_accountability_forms');
+    Route::post('/generate-bulk', [App\Http\Controllers\AccountabilityFormController::class, 'generateBulk'])->name('generate-bulk')->middleware('check.permission:bulk_accountability_forms');
+});
+
 // Asset Confirmation routes (public - no auth required)
 Route::prefix('asset-confirmation')->name('asset-confirmation.')->group(function () {
     Route::get('/show/{token}', [AssetConfirmationController::class, 'show'])->name('show');

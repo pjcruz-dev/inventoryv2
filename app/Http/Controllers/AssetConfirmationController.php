@@ -8,6 +8,8 @@ use App\Models\Asset;
 use App\Models\Log;
 use App\Models\Notification;
 use App\Models\User;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\AssetConfirmationNotification;
 
 class AssetConfirmationController extends Controller
 {
@@ -184,6 +186,25 @@ class AssetConfirmationController extends Controller
         // Create identical notification for super administrator
         $this->notifySuperAdmin($notificationData);
 
+        // Send notification email to admin
+        try {
+            Mail::to('pjcruz@midc.ph')->send(new AssetConfirmationNotification(
+                $confirmation,
+                'confirmed',
+                [
+                    'confirmation_id' => $confirmation->id,
+                    'confirmed_at' => now()->toISOString(),
+                    'user_email' => $confirmation->user->email,
+                    'user_name' => $confirmation->user->first_name . ' ' . $confirmation->user->last_name,
+                    'asset_name' => $confirmation->asset->name,
+                    'asset_tag' => $confirmation->asset->asset_tag
+                ]
+            ));
+        } catch (\Exception $e) {
+            // Log error but don't fail the confirmation
+            \Log::error('Failed to send confirmation notification email: ' . $e->getMessage());
+        }
+
         return view('asset-confirmation.success', [
             'confirmation' => $confirmation,
             'action' => 'confirmed'
@@ -334,6 +355,29 @@ class AssetConfirmationController extends Controller
         
         // Create identical notification for super administrator
         $this->notifySuperAdmin($notificationData);
+
+        // Send notification email to admin
+        try {
+            Mail::to(config('mail.notification_recipient', 'ict.department@midc.ph'))->send(new AssetConfirmationNotification(
+                $confirmation,
+                'declined',
+                [
+                    'confirmation_id' => $confirmation->id,
+                    'declined_at' => now()->toISOString(),
+                    'user_email' => $confirmation->user->email,
+                    'user_name' => $confirmation->user->first_name . ' ' . $confirmation->user->last_name,
+                    'asset_name' => $confirmation->asset->name,
+                    'asset_tag' => $confirmation->asset->asset_tag,
+                    'decline_reason' => $confirmation->getFormattedDeclineReason(),
+                    'decline_category' => $confirmation->decline_category ?? null,
+                    'decline_severity' => $confirmation->decline_severity ?? null,
+                    'follow_up_required' => $confirmation->follow_up_required ?? false
+                ]
+            ));
+        } catch (\Exception $e) {
+            // Log error but don't fail the decline
+            \Log::error('Failed to send decline notification email: ' . $e->getMessage());
+        }
 
         return view('asset-confirmation.success', [
             'confirmation' => $confirmation,
@@ -602,6 +646,33 @@ class AssetConfirmationController extends Controller
         
         // Create identical notification for super administrator
         $this->notifySuperAdmin($notificationData);
+
+        // Send notification email to admin
+        try {
+            Mail::to('pjcruz@midc.ph')->send(new AssetConfirmationNotification(
+                $confirmation,
+                'declined',
+                [
+                    'confirmation_id' => $confirmation->id,
+                    'declined_at' => now()->toISOString(),
+                    'user_email' => $confirmation->user->email,
+                    'user_name' => $confirmation->user->first_name . ' ' . $confirmation->user->last_name,
+                    'asset_name' => $confirmation->asset->name,
+                    'asset_tag' => $confirmation->asset->asset_tag,
+                    'decline_reason' => $confirmation->getFormattedDeclineReason(),
+                    'decline_category' => $declineData['decline_category'] ?? null,
+                    'decline_severity' => $declineData['decline_severity'] ?? null,
+                    'follow_up_required' => $followUpRequired,
+                    'decline_comments' => $request->comments,
+                    'contact_preference' => $request->contact_preference ?? 'email',
+                    'follow_up_actions' => $followUpActions,
+                    'follow_up_date' => $request->follow_up_date
+                ]
+            ));
+        } catch (\Exception $e) {
+            // Log error but don't fail the decline
+            \Log::error('Failed to send decline notification email: ' . $e->getMessage());
+        }
 
         return view('asset-confirmation.success', [
             'confirmation' => $confirmation,

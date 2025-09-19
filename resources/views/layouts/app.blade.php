@@ -562,6 +562,15 @@
                                 </a>
                             </li>
                             @endcan
+                            
+                            @can('view_accountability_forms')
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('accountability.*') ? 'active' : '' }}" href="{{ route('accountability.index') }}">
+                                    <i class="fas fa-file-contract"></i>
+                                    Accountability Forms
+                                </a>
+                            </li>
+                            @endcan
                             @endif
                             
                             @if(auth()->user()->can('view_maintenance') || auth()->user()->can('view_disposal'))

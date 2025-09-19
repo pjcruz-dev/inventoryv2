@@ -162,7 +162,13 @@ class PermissionSeeder extends Seeder
             
             // Export Management
             ['name' => 'export_maintenance', 'description' => 'Export maintenance records'],
-            ['name' => 'export_disposal', 'description' => 'Export disposal records']
+            ['name' => 'export_disposal', 'description' => 'Export disposal records'],
+            
+            // Accountability Form Management
+            ['name' => 'view_accountability_forms', 'description' => 'View accountability forms'],
+            ['name' => 'generate_accountability_forms', 'description' => 'Generate accountability forms'],
+            ['name' => 'print_accountability_forms', 'description' => 'Print accountability forms'],
+            ['name' => 'bulk_accountability_forms', 'description' => 'Generate bulk accountability forms']
         ];
 
         foreach ($permissions as $permission) {

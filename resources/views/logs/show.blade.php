@@ -195,16 +195,45 @@
                             </div>
                             
                             @if($oldValues || $newValues)
+                                @php
+                                    // Get all unique keys from both old and new values
+                                    $allKeys = array_unique(array_merge(
+                                        is_array($oldValues) ? array_keys($oldValues) : [],
+                                        is_array($newValues) ? array_keys($newValues) : []
+                                    ));
+                                    
+                                    // Function to check if values are different
+                                    function valuesAreDifferent($oldVal, $newVal) {
+                                        if ($oldVal === $newVal) return false;
+                                        if (is_null($oldVal) && is_null($newVal)) return false;
+                                        if (is_null($oldVal) || is_null($newVal)) return true;
+                                        return $oldVal != $newVal;
+                                    }
+                                @endphp
+                                
                                 <div class="row">
                                     @if($oldValues)
                                         <div class="col-md-6">
                                             <label class="form-label fw-bold text-danger">Previous Values:</label>
                                             <div class="bg-light border-start border-danger border-3 p-3 rounded">
                                                 @if(is_array($oldValues))
-                                                    @foreach($oldValues as $key => $value)
-                                                        <div class="mb-2">
+                                                    @foreach($allKeys as $key)
+                                                        @php
+                                                            $oldValue = $oldValues[$key] ?? null;
+                                                            $newValue = $newValues[$key] ?? null;
+                                                            $isChanged = valuesAreDifferent($oldValue, $newValue);
+                                                        @endphp
+                                                        <div class="mb-2 {{ $isChanged ? 'bg-warning bg-opacity-25 p-2 rounded border border-warning' : '' }}">
                                                             <strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong>
-                                                            <span class="text-muted">{{ is_array($value) ? json_encode($value) : (is_string($value) ? $value : json_encode($value)) }}</span>
+                                                            <span class="text-muted {{ $isChanged ? 'text-danger fw-bold' : '' }}">
+                                                                {{ is_array($oldValue) ? json_encode($oldValue) : (is_string($oldValue) ? $oldValue : json_encode($oldValue)) }}
+                                                                @if(is_null($oldValue))
+                                                                    <em class="text-muted">(null)</em>
+                                                                @endif
+                                                            </span>
+                                                            @if($isChanged)
+                                                                <i class="fas fa-arrow-right text-warning ms-2"></i>
+                                                            @endif
                                                         </div>
                                                     @endforeach
                                                 @else
@@ -219,10 +248,23 @@
                                             <label class="form-label fw-bold text-success">New Values:</label>
                                             <div class="bg-light border-start border-success border-3 p-3 rounded">
                                                 @if(is_array($newValues))
-                                                    @foreach($newValues as $key => $value)
-                                                        <div class="mb-2">
+                                                    @foreach($allKeys as $key)
+                                                        @php
+                                                            $oldValue = $oldValues[$key] ?? null;
+                                                            $newValue = $newValues[$key] ?? null;
+                                                            $isChanged = valuesAreDifferent($oldValue, $newValue);
+                                                        @endphp
+                                                        <div class="mb-2 {{ $isChanged ? 'bg-success bg-opacity-25 p-2 rounded border border-success' : '' }}">
                                                             <strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong>
-                                                            <span class="text-muted">{{ is_array($value) ? json_encode($value) : (is_string($value) ? $value : json_encode($value)) }}</span>
+                                                            <span class="text-muted {{ $isChanged ? 'text-success fw-bold' : '' }}">
+                                                                {{ is_array($newValue) ? json_encode($newValue) : (is_string($newValue) ? $newValue : json_encode($newValue)) }}
+                                                                @if(is_null($newValue))
+                                                                    <em class="text-muted">(null)</em>
+                                                                @endif
+                                                            </span>
+                                                            @if($isChanged)
+                                                                <i class="fas fa-check-circle text-success ms-2"></i>
+                                                            @endif
                                                         </div>
                                                     @endforeach
                                                 @else
@@ -232,6 +274,37 @@
                                         </div>
                                     @endif
                                 </div>
+                                
+                                <!-- Summary of Changes -->
+                                @php
+                                    $changedFields = [];
+                                    foreach($allKeys as $key) {
+                                        $oldValue = $oldValues[$key] ?? null;
+                                        $newValue = $newValues[$key] ?? null;
+                                        if (valuesAreDifferent($oldValue, $newValue)) {
+                                            $changedFields[] = $key;
+                                        }
+                                    }
+                                @endphp
+                                
+                                @if(count($changedFields) > 0)
+                                    <div class="mt-3">
+                                        <div class="alert alert-info">
+                                            <h6 class="mb-2">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                Summary of Changes ({{ count($changedFields) }} field{{ count($changedFields) > 1 ? 's' : '' }} modified):
+                                            </h6>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                @foreach($changedFields as $field)
+                                                    <span class="badge bg-warning text-dark">
+                                                        <i class="fas fa-edit me-1"></i>
+                                                        {{ ucfirst(str_replace('_', ' ', $field)) }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
                             @endif
                         @endif
                     </div>
