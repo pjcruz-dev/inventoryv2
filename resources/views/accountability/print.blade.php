@@ -482,7 +482,7 @@
                 <div class="info-label">ICT Director</div>
                 <div class="signature-line"></div>
                 <div style="text-align: center; font-size: 10px; margin-top: 3px;">
-                    Rex David De Chavez
+                    Rex David De Chavez                         <!-- Change to the actual ICT Director -->  
                 </div>
                 <div style="text-align: center; font-size: 8px; color: #666;">
                     Signature & Date

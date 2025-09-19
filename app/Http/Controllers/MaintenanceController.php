@@ -68,7 +68,8 @@ class MaintenanceController extends Controller
     public function create()
     {
 
-        $assets = Asset::whereIn('status', ['Available', 'Assigned', 'Under Maintenance', 'Issue Reported'])
+        $assets = Asset::whereIn('status', ['Available', 'Assigned', 'Issue Reported'])
+                      ->where('status', '!=', 'Under Maintenance')
                       ->orderBy('name')
                       ->get();
         $vendors = Vendor::orderBy('name')->get();
@@ -96,14 +97,29 @@ class MaintenanceController extends Controller
 
         $maintenance = Maintenance::create($request->all());
 
-        // Update asset status if maintenance is started
-        if ($request->status === 'In Progress') {
-            $asset = Asset::find($request->asset_id);
-            $asset->update(['status' => 'Maintenance']);
-        }
+        // Update asset status and movement when maintenance is created
+        $asset = Asset::find($request->asset_id);
+        $oldStatus = $asset->status;
+        $oldMovement = $asset->movement;
+        
+        // Set asset to Under Maintenance and movement to Transferred
+        $asset->update([
+            'status' => 'Under Maintenance',
+            'movement' => 'Transferred'
+        ]);
+
+        // Create timeline entry for maintenance start
+        $asset->createTimelineEntry(
+            'maintenance_started',
+            null,
+            null,
+            "Asset sent for maintenance: {$request->issue_reported}",
+            ['status' => $oldStatus, 'movement' => $oldMovement],
+            ['status' => 'Under Maintenance', 'movement' => 'Transferred']
+        );
 
         return redirect()->route('maintenance.index')
-                        ->with('success', 'Maintenance record created successfully.');
+                        ->with('success', 'Maintenance record created successfully. Asset status updated to Under Maintenance.');
     }
 
     /**
@@ -123,7 +139,8 @@ class MaintenanceController extends Controller
     public function edit(Maintenance $maintenance)
     {
 
-        $assets = Asset::whereIn('status', ['Available', 'Assigned', 'Maintenance'])
+        $assets = Asset::whereIn('status', ['Available', 'Assigned', 'Issue Reported'])
+                      ->where('status', '!=', 'Under Maintenance')
                       ->orderBy('name')
                       ->get();
         $vendors = Vendor::orderBy('name')->get();
@@ -154,11 +171,50 @@ class MaintenanceController extends Controller
 
         // Update asset status based on maintenance status
         $asset = Asset::find($request->asset_id);
+        
         if ($request->status === 'In Progress' && $oldStatus !== 'In Progress') {
-            $asset->update(['status' => 'Maintenance']);
+            // Start maintenance - set to Under Maintenance
+            $oldAssetStatus = $asset->status;
+            $oldAssetMovement = $asset->movement;
+            
+            $asset->update([
+                'status' => 'Under Maintenance',
+                'movement' => 'Transferred'
+            ]);
+            
+            // Create timeline entry
+            $asset->createTimelineEntry(
+                'maintenance_started',
+                null,
+                null,
+                "Maintenance started: {$request->issue_reported}",
+                ['status' => $oldAssetStatus, 'movement' => $oldAssetMovement],
+                ['status' => 'Under Maintenance', 'movement' => 'Transferred']
+            );
+            
         } elseif ($request->status === 'Completed' && $oldStatus !== 'Completed') {
-            // Return asset to previous status or Available
-            $asset->update(['status' => $asset->assigned_to ? 'Assigned' : 'Available']);
+            // Complete maintenance - restore asset to appropriate status
+            $oldAssetStatus = $asset->status;
+            $oldAssetMovement = $asset->movement;
+            
+            // Determine appropriate status based on assignment
+            $newStatus = $asset->assigned_to ? 'Assigned' : 'Available';
+            $newMovement = $asset->assigned_to ? 'Deployed Tagged' : 'Returned';
+            
+            $asset->update([
+                'status' => $newStatus,
+                'movement' => $newMovement
+            ]);
+            
+            // Create timeline entry
+            $asset->createTimelineEntry(
+                'maintenance_completed',
+                null,
+                null,
+                "Maintenance completed: {$request->repair_action}",
+                ['status' => $oldAssetStatus, 'movement' => $oldAssetMovement],
+                ['status' => $newStatus, 'movement' => $newMovement]
+            );
         }
 
         return redirect()->route('maintenance.index')
@@ -171,10 +227,30 @@ class MaintenanceController extends Controller
     public function destroy(Maintenance $maintenance)
     {
 
-        // If maintenance was in progress, update asset status
+        // If maintenance was in progress, restore asset status
         if ($maintenance->status === 'In Progress') {
             $asset = Asset::find($maintenance->asset_id);
-            $asset->update(['status' => $asset->assigned_to ? 'Assigned' : 'Available']);
+            $oldAssetStatus = $asset->status;
+            $oldAssetMovement = $asset->movement;
+            
+            // Restore to appropriate status
+            $newStatus = $asset->assigned_to ? 'Assigned' : 'Available';
+            $newMovement = $asset->assigned_to ? 'Deployed Tagged' : 'Returned';
+            
+            $asset->update([
+                'status' => $newStatus,
+                'movement' => $newMovement
+            ]);
+            
+            // Create timeline entry
+            $asset->createTimelineEntry(
+                'maintenance_cancelled',
+                null,
+                null,
+                "Maintenance record deleted - asset restored",
+                ['status' => $oldAssetStatus, 'movement' => $oldAssetMovement],
+                ['status' => $newStatus, 'movement' => $newMovement]
+            );
         }
 
         $maintenance->delete();
