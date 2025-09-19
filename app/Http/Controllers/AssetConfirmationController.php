@@ -186,20 +186,20 @@ class AssetConfirmationController extends Controller
         // Mark confirmation as declined
         $confirmation->markAsDeclined();
 
-        // Update related AssetAssignment status from 'pending' to 'rejected'
+        // Update related AssetAssignment status from 'pending' to 'declined'
         \App\Models\AssetAssignment::where('asset_id', $confirmation->asset_id)
             ->where('user_id', $confirmation->user_id)
             ->where('status', 'pending')
             ->update([
-                'status' => 'rejected',
+                'status' => 'declined',
                 'return_date' => now() // Set return date as assignment is rejected
             ]);
 
-        // Update asset status back to Active and unassign
+        // Update asset status back to Available and unassign
         $confirmation->asset->update([
             'assigned_to' => null,
             'assigned_date' => null,
-            'status' => 'Active',
+            'status' => 'Available',
             'movement' => 'Returned'
         ]);
 
@@ -371,20 +371,20 @@ class AssetConfirmationController extends Controller
         // Mark confirmation as declined with enhanced details
         $confirmation->markAsDeclined($declineData);
 
-        // Update related AssetAssignment status from 'pending' to 'rejected'
+        // Update related AssetAssignment status from 'pending' to 'declined'
         \App\Models\AssetAssignment::where('asset_id', $confirmation->asset_id)
             ->where('user_id', $confirmation->user_id)
             ->where('status', 'pending')
             ->update([
-                'status' => 'rejected',
+                'status' => 'declined',
                 'return_date' => now() // Set return date as assignment is rejected
             ]);
 
-        // Update asset status back to Active and unassign
+        // Update asset status back to Available and unassign
         $confirmation->asset->update([
             'assigned_to' => null,
             'assigned_date' => null,
-            'status' => 'Active',
+            'status' => 'Available',
             'movement' => 'Returned'
         ]);
 

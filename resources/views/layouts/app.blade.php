@@ -729,12 +729,11 @@
                                 
                                 <!-- User Dropdown -->
                                 <div class="dropdown">
-                                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
                                         <i class="fas fa-user"></i> {{ Auth::user()->first_name ?? Auth::user()->name ?? 'User' }}
                                     </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="#">Profile</a></li>
-                                        <li><a class="dropdown-item" href="#">Settings</a></li>
+                                    <ul class="dropdown-menu dropdown-menu-end" style="z-index:1060;">
+                                        <li><a class="dropdown-item" href="{{ route('password.edit') }}">Change Password</a></li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
                                             <a class="dropdown-item" href="{{ route('logout') }}"
@@ -799,7 +798,23 @@
     </button>
     
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+    <script>
+        // Ensure all Bootstrap dropdowns are initialized
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.bootstrap) {
+                document.querySelectorAll('.dropdown-toggle').forEach(function (el) {
+                    try { new bootstrap.Dropdown(el, { popperConfig: { strategy: 'fixed' } }); } catch (e) { /* noop */ }
+                });
+                // Prevent clicks from being swallowed by other handlers
+                document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach(function (btn) {
+                    btn.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                    });
+                });
+            }
+        });
+    </script>
     
     <!-- Dark Mode Toggle Script -->
     <script>
