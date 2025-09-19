@@ -21,6 +21,7 @@ use App\Http\Controllers\AssetConfirmationController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\DisposalController;
+use App\Http\Controllers\ChangePasswordController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -174,6 +175,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/export/excel', [DisposalController::class, 'exportExcel'])->name('export.excel')->middleware('check.permission:export_disposal');
         Route::get('/export/pdf', [DisposalController::class, 'exportPdf'])->name('export.pdf')->middleware('check.permission:export_disposal');
     });
+
+    // Change Password
+    Route::get('/password/change', [ChangePasswordController::class, 'edit'])->name('password.edit');
+    Route::post('/password/change', [ChangePasswordController::class, 'update'])->name('password.update');
 });
 
 // Asset Confirmation routes (public - no auth required)
