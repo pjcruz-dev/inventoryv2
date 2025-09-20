@@ -21,7 +21,9 @@ class AssetAssignmentConfirmation extends Model
         'confirmed_at',
         'notes',
         'last_reminder_sent_at',
-        'reminder_count'
+        'reminder_count',
+        'auto_confirmed',
+        'auto_confirmation_reason'
     ];
 
     protected $casts = [
@@ -30,7 +32,8 @@ class AssetAssignmentConfirmation extends Model
         'last_reminder_sent_at' => 'datetime',
         'reminder_count' => 'integer',
         'follow_up_required' => 'boolean',
-        'follow_up_date' => 'datetime'
+        'follow_up_date' => 'datetime',
+        'auto_confirmed' => 'boolean'
     ];
 
     /**

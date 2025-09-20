@@ -322,3 +322,583 @@ body {
         padding: 0 !important;
     }
 }
+
+/* Mobile-First Responsive Design for Inventory Management System */
+
+/* Base Mobile Styles */
+@media (max-width: 767.98px) {
+    /* Typography adjustments for mobile */
+    :root {
+        --spacing-xs: 0.125rem;
+        --spacing-sm: 0.25rem;
+        --spacing-md: 0.5rem;
+        --spacing-lg: 0.75rem;
+        --spacing-xl: 1rem;
+        --spacing-2xl: 1.5rem;
+        --spacing-3xl: 2rem;
+        
+        --text-xs: 0.625rem;
+        --text-sm: 0.75rem;
+        --text-base: 0.875rem;
+        --text-lg: 1rem;
+        --text-xl: 1.125rem;
+        --text-2xl: 1.25rem;
+        --text-3xl: 1.5rem;
+        --text-4xl: 1.75rem;
+    }
+
+    /* Mobile body adjustments */
+    body {
+        font-size: var(--text-base);
+        padding: 0;
+        margin: 0;
+    }
+
+    /* Mobile container adjustments */
+    .container-fluid {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+
+    /* Mobile sidebar - Hidden by default, toggle with hamburger */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 280px;
+        height: 100vh;
+        z-index: 1050;
+        transition: left 0.3s ease-in-out;
+        overflow-y: auto;
+    }
+
+    .sidebar.show {
+        left: 0;
+    }
+
+    /* Mobile sidebar overlay */
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1040;
+        display: none;
+    }
+
+    .sidebar-overlay.show {
+        display: block;
+    }
+
+    /* Mobile header adjustments */
+    .navbar {
+        padding: 0.5rem 1rem;
+        min-height: 60px;
+    }
+
+    .navbar-brand {
+        font-size: var(--text-lg);
+        margin: 0;
+    }
+
+    /* Mobile hamburger button */
+    .mobile-menu-btn {
+        display: block !important;
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 1.5rem;
+        padding: 0.5rem;
+        margin-right: 1rem;
+    }
+
+    /* Hide desktop menu items on mobile */
+    .navbar-nav .nav-item {
+        display: none;
+    }
+
+    /* Mobile user dropdown */
+    .navbar-nav .nav-item.dropdown {
+        display: block;
+    }
+
+    /* Mobile main content */
+    .main-content {
+        margin-left: 0;
+        padding: 1rem 0.5rem;
+        min-height: calc(100vh - 60px);
+    }
+
+    /* Mobile cards */
+    .card {
+        margin-bottom: 1rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .card-header {
+        padding: 0.75rem 1rem;
+        font-size: var(--text-base);
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    /* Mobile buttons */
+    .btn {
+        padding: 0.5rem 1rem;
+        font-size: var(--text-sm);
+        border-radius: 0.375rem;
+        margin-bottom: 0.5rem;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: var(--text-xs);
+    }
+
+    .btn-lg {
+        padding: 0.75rem 1.5rem;
+        font-size: var(--text-base);
+    }
+
+    /* Mobile form controls */
+    .form-control {
+        padding: 0.75rem;
+        font-size: var(--text-base);
+        border-radius: 0.375rem;
+        margin-bottom: 1rem;
+        min-height: 44px;
+    }
+
+    .form-label {
+        font-size: var(--text-sm);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-select {
+        padding: 0.75rem;
+        font-size: var(--text-base);
+        min-height: 44px;
+    }
+
+    /* Mobile tables - Make horizontal scrollable */
+    .table-responsive {
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .table {
+        font-size: var(--text-sm);
+        margin-bottom: 0;
+    }
+
+    .table th,
+    .table td {
+        padding: 0.75rem 0.5rem;
+        white-space: nowrap;
+        border-top: 1px solid #dee2e6;
+    }
+
+    .table th {
+        font-weight: 600;
+        background-color: #f8f9fa;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    /* Mobile pagination */
+    .pagination {
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 1rem 0;
+    }
+
+    .pagination .page-link {
+        padding: 0.5rem 0.75rem;
+        font-size: var(--text-sm);
+        margin: 0.125rem;
+    }
+
+    /* Mobile modals */
+    .modal-dialog {
+        margin: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+
+    .modal-content {
+        border-radius: 0.5rem;
+    }
+
+    .modal-header {
+        padding: 1rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .modal-body {
+        padding: 1rem;
+    }
+
+    .modal-footer {
+        padding: 1rem;
+        border-top: 1px solid #dee2e6;
+        flex-wrap: wrap;
+    }
+
+    /* Mobile alerts */
+    .alert {
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        border-radius: 0.5rem;
+        font-size: var(--text-sm);
+    }
+
+    /* Mobile badges */
+    .badge {
+        font-size: var(--text-xs);
+        padding: 0.25rem 0.5rem;
+    }
+
+    /* Mobile dropdowns */
+    .dropdown-menu {
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border: none;
+        padding: 0.5rem 0;
+    }
+
+    .dropdown-item {
+        padding: 0.75rem 1rem;
+        font-size: var(--text-sm);
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+    }
+
+    /* Mobile search and filters */
+    .search-filters {
+        background: #fff;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .search-filters .row {
+        margin: 0;
+    }
+
+    .search-filters .col-md-3,
+    .search-filters .col-md-4 {
+        margin-bottom: 1rem;
+    }
+
+    /* Mobile action buttons */
+    .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .action-buttons .btn {
+        flex: 1;
+        min-width: calc(50% - 0.25rem);
+    }
+
+    /* Mobile stats cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .stat-card {
+        background: #fff;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+
+    .stat-card .stat-number {
+        font-size: var(--text-2xl);
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-card .stat-label {
+        font-size: var(--text-sm);
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    /* Mobile dark mode toggle */
+    .theme-toggle {
+        position: fixed;
+        bottom: 2rem;
+        right: 1rem;
+        width: 3.5rem;
+        height: 3.5rem;
+        border-radius: 50%;
+        background: #667eea;
+        color: #fff;
+        border: none;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        z-index: 1000;
+    }
+
+    /* Mobile floating action button */
+    .fab {
+        position: fixed;
+        bottom: 1rem;
+        right: 1rem;
+        width: 3.5rem;
+        height: 3.5rem;
+        border-radius: 50%;
+        background: #28a745;
+        color: #fff;
+        border: none;
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    /* Mobile form layouts */
+    .form-row {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    /* Mobile navigation improvements */
+    .nav-link {
+        padding: 0.75rem 1rem;
+        font-size: var(--text-sm);
+        border-radius: 0.375rem;
+        margin-bottom: 0.25rem;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+    }
+
+    .nav-link:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Mobile breadcrumbs */
+    .breadcrumb {
+        padding: 0.5rem 0;
+        margin-bottom: 1rem;
+        background: none;
+        font-size: var(--text-sm);
+    }
+
+    .breadcrumb-item {
+        display: inline-flex;
+        align-items: center;
+    }
+
+    /* Mobile progress bars */
+    .progress {
+        height: 0.5rem;
+        border-radius: 0.25rem;
+        margin-bottom: 1rem;
+    }
+
+    /* Mobile list groups */
+    .list-group-item {
+        padding: 0.75rem 1rem;
+        border-radius: 0.375rem;
+        margin-bottom: 0.25rem;
+        font-size: var(--text-sm);
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+    }
+
+    /* Mobile tooltips and popovers */
+    .tooltip {
+        font-size: var(--text-xs);
+    }
+
+    /* Mobile select2 adjustments */
+    .select2-container {
+        width: 100% !important;
+    }
+
+    .select2-container--default .select2-selection--single {
+        height: 2.75rem;
+        border-radius: 0.375rem;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 2.75rem;
+        padding-left: 0.75rem;
+    }
+
+    /* Mobile date picker adjustments */
+    .datepicker {
+        font-size: var(--text-sm);
+    }
+
+    /* Mobile file upload */
+    .form-control[type="file"] {
+        padding: 0.5rem;
+    }
+
+    /* Mobile print styles */
+    @media print {
+        .sidebar,
+        .navbar,
+        .theme-toggle,
+        .fab {
+            display: none !important;
+        }
+        
+        .main-content {
+            margin-left: 0 !important;
+            padding: 0 !important;
+        }
+        
+        .card {
+            box-shadow: none !important;
+            border: 1px solid #dee2e6 !important;
+        }
+    }
+}
+
+/* Tablet Styles */
+@media (min-width: 768px) and (max-width: 1023.98px) {
+    .sidebar {
+        width: 250px;
+    }
+
+    .main-content {
+        margin-left: 250px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+
+    .action-buttons .btn {
+        flex: none;
+        margin-right: 0.5rem;
+    }
+}
+
+/* Desktop Styles */
+@media (min-width: 1024px) {
+    .sidebar {
+        width: 280px;
+    }
+
+    .main-content {
+        margin-left: 280px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 2rem;
+    }
+
+    .mobile-menu-btn {
+        display: none !important;
+    }
+}
+
+/* Accessibility Improvements */
+@media (prefers-reduced-motion: reduce) {
+    .sidebar,
+    .modal,
+    .fade {
+        transition: none !important;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    .card {
+        border: 2px solid #000;
+    }
+    
+    .btn {
+        border: 2px solid currentColor;
+    }
+}
+
+/* Dark mode mobile adjustments */
+[data-theme="dark"] .sidebar {
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+}
+
+[data-theme="dark"] .card {
+    background: #2d3748;
+    border-color: #4a5568;
+}
+
+[data-theme="dark"] .table {
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] .table th {
+    background-color: #4a5568;
+}
+
+/* Mobile-specific utility classes */
+.mobile-only {
+    display: block;
+}
+
+.desktop-only {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .mobile-only {
+        display: none;
+    }
+    
+    .desktop-only {
+        display: block;
+    }
+}
+
+/* Mobile touch improvements */
+@media (hover: none) and (pointer: coarse) {
+    .btn,
+    .nav-link,
+    .dropdown-item {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .form-control,
+    .form-select {
+        min-height: 44px;
+    }
+}

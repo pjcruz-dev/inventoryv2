@@ -168,7 +168,45 @@ class PermissionSeeder extends Seeder
             ['name' => 'view_accountability_forms', 'description' => 'View accountability forms'],
             ['name' => 'generate_accountability_forms', 'description' => 'Generate accountability forms'],
             ['name' => 'print_accountability_forms', 'description' => 'Print accountability forms'],
-            ['name' => 'bulk_accountability_forms', 'description' => 'Generate bulk accountability forms']
+            ['name' => 'bulk_accountability_forms', 'description' => 'Generate bulk accountability forms'],
+            
+            // Additional missing permissions
+            ['name' => 'view_transfers', 'description' => 'View asset transfers'],
+            ['name' => 'create_transfers', 'description' => 'Create asset transfers'],
+            ['name' => 'edit_transfers', 'description' => 'Edit asset transfers'],
+            ['name' => 'delete_transfers', 'description' => 'Delete asset transfers'],
+            
+            // System Administration
+            ['name' => 'system_settings', 'description' => 'Manage system settings'],
+            ['name' => 'backup_restore', 'description' => 'Backup and restore system data'],
+            ['name' => 'audit_logs', 'description' => 'View audit logs'],
+            ['name' => 'system_monitoring', 'description' => 'Monitor system performance'],
+            
+            // Additional missing permissions found in routes
+            ['name' => 'bulk_create_assets', 'description' => 'Create assets in bulk'],
+            ['name' => 'bulk_store_assets', 'description' => 'Store bulk asset data'],
+            ['name' => 'print_asset_labels', 'description' => 'Print asset labels'],
+            ['name' => 'generate_asset_tags', 'description' => 'Generate unique asset tags'],
+            ['name' => 'check_asset_uniqueness', 'description' => 'Check asset tag uniqueness'],
+            ['name' => 'get_asset_vendor', 'description' => 'Get asset vendor information'],
+            ['name' => 'print_employee_assets', 'description' => 'Print employee asset reports'],
+            ['name' => 'export_asset_categories', 'description' => 'Export asset categories'],
+            ['name' => 'import_asset_categories', 'description' => 'Import asset categories'],
+            ['name' => 'export_asset_assignments', 'description' => 'Export asset assignments'],
+            ['name' => 'import_asset_assignments', 'description' => 'Import asset assignments'],
+            ['name' => 'return_asset_assignments', 'description' => 'Return asset assignments'],
+            ['name' => 'send_assignment_reminders', 'description' => 'Send assignment reminders'],
+            ['name' => 'clear_old_logs', 'description' => 'Clear old system logs'],
+            ['name' => 'export_logs', 'description' => 'Export system logs'],
+            ['name' => 'show_timeline', 'description' => 'Show asset timeline details'],
+            ['name' => 'mark_notification_read', 'description' => 'Mark notifications as read'],
+            ['name' => 'mark_all_notifications_read', 'description' => 'Mark all notifications as read'],
+            ['name' => 'get_unread_notifications', 'description' => 'Get unread notifications'],
+            ['name' => 'get_all_notifications', 'description' => 'Get all notifications'],
+            ['name' => 'show_maintenance_details', 'description' => 'Show maintenance record details'],
+            ['name' => 'export_maintenance_pdf', 'description' => 'Export maintenance records as PDF'],
+            ['name' => 'show_disposal_details', 'description' => 'Show disposal record details'],
+            ['name' => 'export_disposal_pdf', 'description' => 'Export disposal records as PDF']
         ];
 
         foreach ($permissions as $permission) {

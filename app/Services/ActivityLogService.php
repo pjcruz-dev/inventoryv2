@@ -5,18 +5,18 @@ namespace App\Services;
 use App\Models\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
-use Jenssegers\Agent\Agent;
+use App\Services\DeviceDetector;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class ActivityLogService
 {
-    protected $agent;
+    protected $deviceDetector;
     protected $request;
 
     public function __construct()
     {
-        $this->agent = new Agent();
+        $this->deviceDetector = new DeviceDetector();
         $this->request = request();
     }
 
@@ -91,8 +91,8 @@ class ActivityLogService
             'request_method' => $this->request->method(),
             'request_url' => $this->request->fullUrl(),
             'request_parameters' => $requestParameters,
-            'browser_name' => $this->agent->browser(),
-            'operating_system' => $this->agent->platform(),
+            'browser_name' => $this->deviceDetector->browser(),
+            'operating_system' => $this->deviceDetector->platform(),
             'action_timestamp' => Carbon::now(),
         ]);
     }
@@ -131,8 +131,8 @@ class ActivityLogService
             'request_method' => $this->request->method(),
             'request_url' => $this->request->fullUrl(),
             'request_parameters' => $this->filterSensitiveData($this->request->all()),
-            'browser_name' => $this->agent->browser(),
-            'operating_system' => $this->agent->platform(),
+            'browser_name' => $this->deviceDetector->browser(),
+            'operating_system' => $this->deviceDetector->platform(),
             'action_timestamp' => Carbon::now(),
         ]);
     }
@@ -171,8 +171,8 @@ class ActivityLogService
             'request_method' => $this->request->method(),
             'request_url' => $this->request->fullUrl(),
             'request_parameters' => $this->filterSensitiveData($this->request->all()),
-            'browser_name' => $this->agent->browser(),
-            'operating_system' => $this->agent->platform(),
+            'browser_name' => $this->deviceDetector->browser(),
+            'operating_system' => $this->deviceDetector->platform(),
             'action_timestamp' => Carbon::now(),
         ]);
     }
@@ -226,14 +226,14 @@ class ActivityLogService
             'request_id' => $this->request->header('X-Request-ID', uniqid()),
             'referrer' => $this->request->header('referer'),
             'user_agent_full' => $this->request->userAgent(),
-            'device_type' => $this->agent->device(),
-            'platform' => $this->agent->platform(),
-            'platform_version' => $this->agent->version($this->agent->platform()),
-            'browser_version' => $this->agent->version($this->agent->browser()),
-            'is_mobile' => $this->agent->isMobile(),
-            'is_tablet' => $this->agent->isTablet(),
-            'is_desktop' => $this->agent->isDesktop(),
-            'is_robot' => $this->agent->isRobot(),
+            'device_type' => $this->deviceDetector->deviceType(),
+            'platform' => $this->deviceDetector->platform(),
+            'platform_version' => 'Unknown',
+            'browser_version' => 'Unknown',
+            'is_mobile' => $this->deviceDetector->isMobile(),
+            'is_tablet' => $this->deviceDetector->isTablet(),
+            'is_desktop' => $this->deviceDetector->isDesktop(),
+            'is_robot' => false,
             'languages' => $this->request->getLanguages(),
             'accept_encoding' => $this->request->header('accept-encoding'),
             'content_type' => $this->request->header('content-type'),

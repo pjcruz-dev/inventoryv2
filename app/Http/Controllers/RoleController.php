@@ -100,9 +100,63 @@ class RoleController extends Controller
      */
     public function edit(Role $role)
     {
-        $permissions = Permission::all();
+        $allPermissions = Permission::all();
         $role->load('permissions');
-        return view('roles.edit', compact('role', 'permissions'));
+        
+        // Group permissions by module
+        $permissionsByModule = $allPermissions->groupBy(function ($permission) {
+            // Extract module name from permission name
+            $parts = explode('_', $permission->name);
+            if (count($parts) >= 2) {
+                $module = $parts[1]; // Second part is usually the module
+                
+                // Map specific modules to user-friendly names
+                $moduleMap = [
+                    'assets' => 'Asset Management',
+                    'asset' => 'Asset Management',
+                    'assignment' => 'Asset Assignments',
+                    'confirmations' => 'Asset Confirmations',
+                    'categories' => 'Asset Categories',
+                    'computers' => 'Computer Management',
+                    'monitors' => 'Monitor Management',
+                    'printers' => 'Printer Management',
+                    'peripherals' => 'Peripheral Management',
+                    'users' => 'User Management',
+                    'departments' => 'Department Management',
+                    'vendors' => 'Vendor Management',
+                    'roles' => 'Role Management',
+                    'permissions' => 'Permission Management',
+                    'logs' => 'System Logs',
+                    'timeline' => 'Asset Timeline',
+                    'notifications' => 'Notifications',
+                    'maintenance' => 'Maintenance',
+                    'disposal' => 'Disposal',
+                    'dashboard' => 'Dashboard',
+                    'accountability' => 'Accountability Forms',
+                    'import' => 'Import/Export',
+                    'export' => 'Import/Export',
+                    'template' => 'Import/Export',
+                    'data' => 'Import/Export',
+                    'serial' => 'Serial Management',
+                    'field' => 'Field Management',
+                    'error' => 'Error Management',
+                    'admin' => 'System Administration',
+                    'system' => 'System Administration',
+                    'backup' => 'System Administration',
+                    'audit' => 'System Administration',
+                    'monitoring' => 'System Administration',
+                    'settings' => 'System Administration',
+                    'transfers' => 'Asset Transfers',
+                    'reports' => 'Reports',
+                    'manage' => 'General Management'
+                ];
+                
+                return $moduleMap[$module] ?? ucfirst($module);
+            }
+            return 'General';
+        })->sortKeys();
+        
+        return view('roles.edit', compact('role', 'allPermissions', 'permissionsByModule'));
     }
 
     /**

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Vendors')
-@section('page-title', 'Vendors')
+{{-- Page title removed - using breadcrumbs instead --}}
 
 @section('page-actions')
     <div class="d-flex gap-2">

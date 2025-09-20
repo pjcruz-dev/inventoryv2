@@ -1,17 +1,21 @@
 @extends('layouts.app')
 
 @section('title', 'Create Asset')
-@section('page-title', 'Create New Asset')
+{{-- Page title removed - using breadcrumbs instead --}}
 
 @section('page-actions')
-    <a href="{{ route('assets.index') }}" class="btn btn-secondary">
-        <i class="fas fa-arrow-left me-2"></i>Back to Assets
-    </a>
+    <div class="d-flex flex-column flex-md-row gap-2">
+        <a href="{{ route('assets.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>
+            <span class="d-none d-sm-inline">Back to Assets</span>
+            <span class="d-sm-none">Back</span>
+        </a>
+    </div>
 @endsection
 
 @section('content')
 <div class="row">
-    <div class="col-lg-8">
+    <div class="col-12 col-lg-8">
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">Asset Information</h5>
@@ -20,7 +24,7 @@
                 <form method="POST" action="{{ route('assets.store') }}">
                     @csrf
                     
-                    <div class="row">
+                    <div class="form-row">
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="asset_tag" class="form-label">Asset Tag <span class="text-danger">*</span></label>

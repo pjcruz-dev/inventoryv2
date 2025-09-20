@@ -17,6 +17,13 @@ class Kernel extends ConsoleKernel
                  ->dailyAt('09:00')
                  ->withoutOverlapping()
                  ->runInBackground();
+        
+        // Auto-confirm asset assignments after 3 reminders and 1 day grace period
+        // Run daily at 10:00 AM (after reminders are sent)
+        $schedule->command('asset:auto-confirm-assignments')
+                 ->dailyAt('10:00')
+                 ->withoutOverlapping()
+                 ->runInBackground();
     }
 
     /**

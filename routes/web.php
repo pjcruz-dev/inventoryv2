@@ -37,17 +37,22 @@ Route::get('asset-assignment-confirmations/decline/{token}', [AssetAssignmentCon
 
 // Protected routes
 Route::middleware('auth')->group(function () {
-    // Asset management
+    // Asset management - Specific routes first (before resource route)
+    Route::get('assets/print-all-labels', [AssetController::class, 'printAllAssetLabels'])->name('assets.print-all-labels')->middleware('permission:view_assets');
+    Route::get('assets/reports/employee-assets', [AssetController::class, 'printEmployeeAssets'])->name('assets.print-employee-assets');
+    Route::get('assets/reports/employee-assets/{user}', [AssetController::class, 'printSingleEmployeeAssets'])->name('assets.print-single-employee-assets');
+    Route::post('assets/bulk/print-labels', [AssetController::class, 'bulkPrintLabels'])->name('assets.bulk-print-labels');
+    Route::post('assets/generate-tag', [AssetController::class, 'generateUniqueTag'])->name('assets.generate-tag');
+    Route::post('assets/check-tag-uniqueness', [AssetController::class, 'checkAssetTagUniqueness'])->name('assets.check-tag-uniqueness');
+    Route::get('assets/export', [AssetController::class, 'export'])->name('assets.export');
+    Route::get('assets/export/excel', [AssetController::class, 'exportExcel'])->name('assets.export.excel');
+    Route::get('assets/download/template', [AssetController::class, 'downloadTemplate'])->name('assets.template');
+    
+    // Resource route (must come after specific routes)
     Route::resource('assets', AssetController::class)->middleware('prevent.maintenance.edit');
     Route::post('assets/{asset}/assign', [AssetController::class, 'assign'])->name('assets.assign')->middleware('prevent.maintenance.edit');
     Route::post('assets/{asset}/unassign', [AssetController::class, 'unassign'])->name('assets.unassign')->middleware('prevent.maintenance.edit');
     Route::post('assets/{asset}/reassign', [AssetController::class, 'reassign'])->name('assets.reassign')->middleware('prevent.maintenance.edit');
-    Route::get('assets/reports/employee-assets', [AssetController::class, 'printEmployeeAssets'])->name('assets.print-employee-assets');
-    Route::get('assets/reports/employee-assets/{user}', [AssetController::class, 'printSingleEmployeeAssets'])->name('assets.print-single-employee-assets');
-    Route::post('assets/bulk/print-labels', [AssetController::class, 'bulkPrintLabels'])->name('assets.bulk-print-labels');
-    Route::get('assets/print-all-labels', [AssetController::class, 'printAllAssetLabels'])->name('assets.print-all-labels');
-    Route::post('assets/generate-tag', [AssetController::class, 'generateUniqueTag'])->name('assets.generate-tag');
-    Route::post('assets/check-tag-uniqueness', [AssetController::class, 'checkAssetTagUniqueness'])->name('assets.check-tag-uniqueness');
     Route::get('assets/{asset}/vendor', [AssetController::class, 'getAssetVendor'])->name('assets.get-vendor');
     
     // Asset Categories
