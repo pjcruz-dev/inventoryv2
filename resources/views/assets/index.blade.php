@@ -1,39 +1,9 @@
 @extends('layouts.app')
 
 @section('title', 'Assets')
-@section('page-title', 'Assets Management')
 
 @section('page-actions')
-    <div class="action-buttons">
-        <div class="d-flex flex-column flex-md-row gap-2 w-100">
-            <div class="btn-group w-100 w-md-auto" role="group">
-                <a href="{{ route('import-export.template', 'assets') }}" class="btn btn-outline-success btn-sm">
-                    <i class="fas fa-download me-1"></i>
-                    <span class="d-none d-sm-inline">Template</span>
-                </a>
-                <a href="{{ route('import-export.export', 'assets') }}" class="btn btn-outline-info btn-sm">
-                    <i class="fas fa-file-export me-1"></i>
-                    <span class="d-none d-sm-inline">Export</span>
-                </a>
-                <button type="button" class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">
-                    <i class="fas fa-file-import me-1"></i>
-                    <span class="d-none d-sm-inline">Import</span>
-                </button>
-            </div>
-            <div class="d-flex flex-column flex-md-row gap-2 w-100 w-md-auto">
-                <a href="{{ route('assets.print-employee-assets') }}" class="btn btn-outline-secondary btn-sm" target="_blank">
-                    <i class="fas fa-print me-1"></i>
-                    <span class="d-none d-lg-inline">Employee Assets Report</span>
-                    <span class="d-lg-none">Report</span>
-                </a>
-                <a href="{{ route('assets.create') }}" class="btn btn-primary">
-                    <i class="fas fa-plus me-2"></i>
-                    <span class="d-none d-sm-inline">Add New Asset</span>
-                    <span class="d-sm-none">Add Asset</span>
-                </a>
-            </div>
-        </div>
-    </div>
+
 <script>
 // Function to set label dimensions for bulk print modal
 function setBulkLabelDimensions() {
@@ -99,12 +69,59 @@ document.addEventListener('DOMContentLoaded', function() {
                 <small class="text-muted">{{ $assets->total() }} total assets</small>
             </div>
             <div class="col-auto">
-                <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false">
-                    <i class="fas fa-filter me-1"></i>Filters
-                    @if(request()->hasAny(['search', 'category', 'status', 'movement', 'assignment']))
-                        <span class="badge bg-primary ms-1">{{ collect(request()->only(['search', 'category', 'status', 'movement', 'assignment']))->filter()->count() }}</span>
-                    @endif
-                </button>
+                <div class="d-flex align-items-center gap-2">
+                    <!-- Action Buttons -->
+                    @can('create_assets')
+                    <a href="{{ route('assets.create') }}" class="btn btn-primary btn-sm" title="Add New Asset">
+                        <i class="fas fa-plus me-1"></i>
+                        <span class="d-none d-md-inline">Add Asset</span>
+                    </a>
+                    @endcan
+                    
+                    @can('view_reports')
+                    <a href="{{ route('assets.print-employee-assets') }}" class="btn btn-info btn-sm" title="Employee Asset Reports" target="_blank">
+                        <i class="fas fa-file-alt me-1"></i>
+                        <span class="d-none d-md-inline">Reports</span>
+                    </a>
+                    @endcan
+                    
+                    @can('import_export_access')
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-success btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" title="Import/Export">
+                            <i class="fas fa-file-import me-1"></i>
+                            <span class="d-none d-md-inline">Import/Export</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{{ route('import-export.interface') }}">
+                                <i class="fas fa-file-import me-2"></i>Import Assets
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ route('assets.export') }}">
+                                <i class="fas fa-file-export me-2"></i>Export Assets
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ route('assets.template') }}">
+                                <i class="fas fa-download me-2"></i>Download Template
+                            </a></li>
+                        </ul>
+                    </div>
+                    @endcan
+                    
+                    @can('view_accountability_forms')
+                    <a href="{{ route('accountability.index') }}" class="btn btn-warning btn-sm" title="Accountability Forms">
+                        <i class="fas fa-file-contract me-1"></i>
+                        <span class="d-none d-md-inline">Forms</span>
+                    </a>
+                    @endcan
+                    
+                    <!-- Filter Button with Custom Styling -->
+                    <button class="btn btn-filter-custom" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false">
+                        <i class="fas fa-filter me-1"></i>
+                        <span class="d-none d-md-inline">Filters</span>
+                        @if(request()->hasAny(['search', 'category', 'status', 'movement', 'assignment']))
+                            <span class="filter-badge">{{ collect(request()->only(['search', 'category', 'status', 'movement', 'assignment']))->filter()->count() }}</span>
+                        @endif
+                    </button>
+                </div>
             </div>
         </div>
         
@@ -704,3 +721,154 @@ function openBulkPrintModal() {
 </div>
 
 @endsection
+
+@push('styles')
+<style>
+/* Custom Filter Button Styling - Matches your Soft UI design */
+.btn-filter-custom {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 0.75rem;
+    color: white;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    box-shadow: 
+        0 4px 7px -1px rgba(102, 126, 234, 0.11),
+        0 2px 4px -1px rgba(102, 126, 234, 0.07);
+    transition: all 0.15s ease-in;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-filter-custom::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn-filter-custom:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 
+        0 8px 15px -3px rgba(102, 126, 234, 0.3),
+        0 4px 6px -2px rgba(102, 126, 234, 0.2);
+}
+
+.btn-filter-custom:hover::before {
+    left: 100%;
+}
+
+.btn-filter-custom:focus {
+    box-shadow: 
+        0 0 0 0.2rem rgba(102, 126, 234, 0.25),
+        0 4px 7px -1px rgba(102, 126, 234, 0.11);
+    border: none;
+}
+
+.btn-filter-custom:active {
+    transform: translateY(0);
+    box-shadow: 
+        0 2px 4px -1px rgba(102, 126, 234, 0.3),
+        inset 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Filter Badge Styling */
+.filter-badge {
+    background: linear-gradient(135deg, #cb0c9f 0%, #ad1457 100%);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 50%;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0.5rem;
+    box-shadow: 0 2px 4px rgba(203, 12, 159, 0.3);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { 
+        transform: scale(1);
+        box-shadow: 0 2px 4px rgba(203, 12, 159, 0.3);
+    }
+    50% { 
+        transform: scale(1.1);
+        box-shadow: 0 4px 8px rgba(203, 12, 159, 0.4);
+    }
+}
+
+/* Enhanced Action Buttons */
+.btn-group .btn {
+    border-radius: 0.75rem;
+    font-weight: 500;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-group .btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .btn-filter-custom {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.875rem;
+    }
+    
+    .filter-badge {
+        font-size: 0.7rem;
+        min-width: 1.25rem;
+        height: 1.25rem;
+        margin-left: 0.25rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .btn-filter-custom span {
+        display: none !important;
+    }
+    
+    .filter-badge {
+        font-size: 0.65rem;
+        min-width: 1rem;
+        height: 1rem;
+    }
+}
+
+/* Gap utility for better spacing */
+.gap-2 {
+    gap: 0.5rem !important;
+}
+
+/* Enhanced dropdown menu */
+.dropdown-menu {
+    border-radius: 0.75rem;
+    border: none;
+    box-shadow: 
+        0 10px 25px rgba(0, 0, 0, 0.1),
+        0 4px 6px rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(10px);
+}
+
+.dropdown-item {
+    border-radius: 0.5rem;
+    margin: 0.125rem 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    transform: translateX(2px);
+}
+</style>
+@endpush

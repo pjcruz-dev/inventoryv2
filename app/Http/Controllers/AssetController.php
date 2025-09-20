@@ -13,16 +13,20 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use App\Services\ActivityLogService;
+use App\Services\BreadcrumbService;
+use Illuminate\Support\Facades\View;
 
 class AssetController extends Controller
 {
     use AuthorizesRequests;
     
     protected $activityLogService;
+    protected $breadcrumbService;
     
-    public function __construct(ActivityLogService $activityLogService)
+    public function __construct(ActivityLogService $activityLogService, BreadcrumbService $breadcrumbService)
     {
         $this->activityLogService = $activityLogService;
+        $this->breadcrumbService = $breadcrumbService;
         $this->middleware('auth');
         $this->middleware('throttle:60,1')->only(['store', 'update', 'destroy']);
         $this->middleware('permission:view_assets')->only(['index', 'show']);
@@ -416,6 +420,16 @@ class AssetController extends Controller
     public function show(Asset $asset)
     {
         $asset->load(['category', 'vendor']);
+        
+        // Custom breadcrumb for asset details
+        $this->breadcrumbService
+            ->clear()
+            ->addDashboard()
+            ->addAssets()
+            ->add('Asset Details: ' . $asset->name, null, true);
+        
+        View::share('breadcrumbs', $this->breadcrumbService->getBreadcrumbs());
+        
         return view('assets.show', compact('asset'));
     }
 
@@ -430,6 +444,16 @@ class AssetController extends Controller
         $users = User::where('status', 1)
                     ->orderBy('first_name')
                     ->get();
+        
+        // Custom breadcrumb for asset editing
+        $this->breadcrumbService
+            ->clear()
+            ->addDashboard()
+            ->addAssets()
+            ->add('Edit Asset: ' . $asset->name, null, true);
+        
+        View::share('breadcrumbs', $this->breadcrumbService->getBreadcrumbs());
+        
         return view('assets.edit', compact('asset', 'categories', 'vendors', 'users'));
     }
 

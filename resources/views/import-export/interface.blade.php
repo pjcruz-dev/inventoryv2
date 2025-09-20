@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Import/Export Manager')
-@section('page-title', 'Import/Export Manager')
+{{-- Page title removed - using breadcrumbs instead --}}
 
 @section('styles')
 <style>

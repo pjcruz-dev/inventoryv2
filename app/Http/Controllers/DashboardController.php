@@ -7,16 +7,21 @@ use App\Models\Asset;
 use App\Models\User;
 use App\Models\Department;
 use App\Models\Vendor;
+use App\Services\BreadcrumbService;
+use Illuminate\Support\Facades\View;
 
 class DashboardController extends Controller
 {
+    protected $breadcrumbService;
+    
     /**
      * Create a new controller instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct(BreadcrumbService $breadcrumbService)
     {
+        $this->breadcrumbService = $breadcrumbService;
         $this->middleware('auth');
         $this->middleware('permission:view_dashboard');
     }
@@ -137,7 +142,14 @@ class DashboardController extends Controller
                     
                     $weekData[$status] = $count + $createdCount;
                 }
-                $monthData["Week $week"] = $weekData;
+                
+                // Create week label with date range
+                $weekLabel = "Week $week";
+                $dateRange = $weekStart->format('M j') . ' - ' . $weekEnd->format('M j');
+                $weekData['_label'] = $weekLabel;
+                $weekData['_date_range'] = $dateRange;
+                
+                $monthData["$weekLabel ($dateRange)"] = $weekData;
             }
             
             $months[$monthName] = $monthData;
@@ -176,7 +188,14 @@ class DashboardController extends Controller
                         
                         $weekData[$status] = $count + $createdCount;
                     }
-                    $monthData["Week $week"] = $weekData;
+                    
+                    // Create week label with date range
+                    $weekLabel = "Week $week";
+                    $dateRange = $weekStart->format('M j') . ' - ' . $weekEnd->format('M j');
+                    $weekData['_label'] = $weekLabel;
+                    $weekData['_date_range'] = $dateRange;
+                    
+                    $monthData["$weekLabel ($dateRange)"] = $weekData;
                 }
                 
                 $months[$monthName] = $monthData;

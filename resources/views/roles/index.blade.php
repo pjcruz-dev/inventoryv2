@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Roles')
-@section('page-title', 'Roles Management')
+{{-- Page title removed - using breadcrumbs instead --}}
 
 @section('page-actions')
     <a href="{{ route('roles.create') }}" class="btn btn-primary">

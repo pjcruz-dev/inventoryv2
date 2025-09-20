@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Users')
-@section('page-title', 'Users')
+{{-- Page title removed - using breadcrumbs instead --}}
 
 @section('page-actions')
     <div class="btn-group me-2" role="group">

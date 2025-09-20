@@ -26,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'route.access.control' => \App\Http\Middleware\RouteAccessControl::class,
             'session.security' => \App\Http\Middleware\SessionSecurity::class,
             'prevent.maintenance.edit' => \App\Http\Middleware\PreventMaintenanceAssetEdit::class,
+            'set.breadcrumbs' => \App\Http\Middleware\SetBreadcrumbs::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
@@ -35,6 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\SessionSecurity::class,
             \App\Http\Middleware\SecurityHeaders::class,
+            \App\Http\Middleware\SetBreadcrumbs::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

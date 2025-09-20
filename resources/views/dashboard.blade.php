@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
 @section('title', 'Dashboard')
-@section('page-title', 'Dashboard')
+{{-- Page title removed - using breadcrumbs instead --}}
 
 @section('page-actions')
     <div class="d-flex flex-column flex-md-row gap-2 align-items-start align-items-md-center">
         <form method="GET" action="{{ route('dashboard') }}" class="d-flex flex-column flex-md-row gap-2 align-items-stretch align-items-md-center w-100">
             <div class="row g-2 w-100">
                 <div class="col-6 col-md-3">
-                    <select name="month" class="form-select form-select-sm">
+                    <select name="month" class="form-select form-select-sm dashboard-filter-select">
                 <option value="">All Months</option>
                 @for($i = 1; $i <= 12; $i++)
                     <option value="{{ $i }}" {{ request('month') == $i ? 'selected' : '' }}>
@@ -18,7 +18,7 @@
             </select>
                 </div>
                 <div class="col-6 col-md-3">
-                    <select name="year" class="form-select form-select-sm">
+                    <select name="year" class="form-select form-select-sm dashboard-filter-select">
                 <option value="">All Years</option>
                 @for($year = date('Y'); $year >= 2020; $year--)
                     <option value="{{ $year }}" {{ request('year') == $year ? 'selected' : '' }}>{{ $year }}</option>
@@ -26,7 +26,7 @@
             </select>
                 </div>
                 <div class="col-6 col-md-3">
-                    <select name="entity" class="form-select form-select-sm">
+                    <select name="entity" class="form-select form-select-sm dashboard-filter-select">
                 <option value="">All Entities</option>
                 @foreach($entities as $entity)
                     <option value="{{ $entity }}" {{ request('entity') == $entity ? 'selected' : '' }}>{{ $entity }}</option>
@@ -35,12 +35,12 @@
                 </div>
                 <div class="col-6 col-md-3">
                     <div class="d-flex gap-1">
-                        <button type="submit" class="btn btn-primary btn-sm shadow-sm flex-fill d-flex align-items-center justify-content-center">
+                        <button type="submit" class="btn btn-dashboard-filter btn-sm flex-fill d-flex align-items-center justify-content-center">
                             <i class="fas fa-filter me-1"></i>
                             <span class="d-none d-sm-inline">Filter</span>
             </button>
             @if(request()->hasAny(['month', 'year', 'entity']))
-                            <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-sm shadow-sm d-flex align-items-center justify-content-center">
+                            <a href="{{ route('dashboard') }}" class="btn btn-dashboard-clear btn-sm d-flex align-items-center justify-content-center">
                                 <i class="fas fa-times"></i>
                                 <span class="d-none d-sm-inline ms-1">Clear</span>
                 </a>
@@ -326,14 +326,21 @@
                                     </thead>
                                     <tbody>
                                         @foreach($monthData as $week => $weekData)
-                                        <tr>
-                                            <td class="week-cell"><strong>{{ $week }}</strong></td>
-                                            <td class="deployed-cell">{{ $weekData['Deployed'] ?? 0 }}</td>
-                                            <td class="disposed-cell">{{ $weekData['Disposed'] ?? 0 }}</td>
-                                            <td class="new-arrival-cell">{{ $weekData['New Arrival'] ?? 0 }}</td>
-                                            <td class="returned-cell">{{ $weekData['Returned'] ?? 0 }}</td>
-                                            <td class="maintenance-cell">{{ $weekData['Maintenance'] ?? 0 }}</td>
-                                        </tr>
+                                            @if(!str_contains($week, 'Week 0'))
+                                            <tr>
+                                                <td class="week-cell">
+                                                    <strong>{{ $week }}</strong>
+                                                    @if(isset($weekData['_date_range']))
+                                                        <br><small class="text-muted">{{ $weekData['_date_range'] }}</small>
+                                                    @endif
+                                                </td>
+                                                <td class="deployed-cell">{{ $weekData['Deployed'] ?? 0 }}</td>
+                                                <td class="disposed-cell">{{ $weekData['Disposed'] ?? 0 }}</td>
+                                                <td class="new-arrival-cell">{{ $weekData['New Arrival'] ?? 0 }}</td>
+                                                <td class="returned-cell">{{ $weekData['Returned'] ?? 0 }}</td>
+                                                <td class="maintenance-cell">{{ $weekData['Maintenance'] ?? 0 }}</td>
+                                            </tr>
+                                            @endif
                                         @endforeach
                                     </tbody>
                                 </table>
@@ -1383,6 +1390,242 @@
 .metric-card:nth-child(2) { animation-delay: 0.1s; }
 .metric-card:nth-child(3) { animation-delay: 0.2s; }
 .metric-card:nth-child(4) { animation-delay: 0.3s; }
+
+/* Dashboard Filter Buttons - Soft UI Design */
+.btn-dashboard-filter {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 0.75rem;
+    color: white;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    box-shadow: 
+        0 4px 7px -1px rgba(102, 126, 234, 0.11),
+        0 2px 4px -1px rgba(102, 126, 234, 0.07);
+    transition: all 0.15s ease-in;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-dashboard-filter::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn-dashboard-filter:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 
+        0 8px 15px -3px rgba(102, 126, 234, 0.3),
+        0 4px 6px -2px rgba(102, 126, 234, 0.2);
+}
+
+.btn-dashboard-filter:hover::before {
+    left: 100%;
+}
+
+.btn-dashboard-filter:focus {
+    box-shadow: 
+        0 0 0 0.2rem rgba(102, 126, 234, 0.25),
+        0 4px 7px -1px rgba(102, 126, 234, 0.11);
+    border: none;
+}
+
+.btn-dashboard-filter:active {
+    transform: translateY(0);
+    box-shadow: 
+        0 2px 4px -1px rgba(102, 126, 234, 0.3),
+        inset 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.btn-dashboard-clear {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 1px solid #e9ecef;
+    border-radius: 0.75rem;
+    color: #6c757d;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    box-shadow: 
+        0 4px 7px -1px rgba(0, 0, 0, 0.08),
+        0 2px 4px -1px rgba(0, 0, 0, 0.05);
+    transition: all 0.15s ease-in;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-dashboard-clear::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(108, 117, 125, 0.1), transparent);
+    transition: left 0.5s;
+}
+
+.btn-dashboard-clear:hover {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    color: #495057;
+    transform: translateY(-1px);
+    box-shadow: 
+        0 8px 15px -3px rgba(0, 0, 0, 0.15),
+        0 4px 6px -2px rgba(0, 0, 0, 0.1);
+    border-color: #dee2e6;
+}
+
+.btn-dashboard-clear:hover::before {
+    left: 100%;
+}
+
+.btn-dashboard-clear:focus {
+    box-shadow: 
+        0 0 0 0.2rem rgba(108, 117, 125, 0.25),
+        0 4px 7px -1px rgba(0, 0, 0, 0.08);
+    border-color: #adb5bd;
+}
+
+.btn-dashboard-clear:active {
+    transform: translateY(0);
+    box-shadow: 
+        0 2px 4px -1px rgba(0, 0, 0, 0.2),
+        inset 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Dashboard Filter Selects - Soft UI Design */
+.dashboard-filter-select {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 1px solid #e9ecef;
+    border-radius: 0.75rem;
+    color: #495057;
+    font-weight: 500;
+    box-shadow: 
+        0 4px 7px -1px rgba(0, 0, 0, 0.08),
+        0 2px 4px -1px rgba(0, 0, 0, 0.05);
+    transition: all 0.15s ease-in;
+}
+
+.dashboard-filter-select:focus {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border-color: #667eea;
+    box-shadow: 
+        0 0 0 0.2rem rgba(102, 126, 234, 0.15),
+        0 4px 7px -1px rgba(0, 0, 0, 0.08);
+    color: #495057;
+}
+
+.dashboard-filter-select:hover {
+    border-color: #adb5bd;
+    box-shadow: 
+        0 6px 12px -2px rgba(0, 0, 0, 0.12),
+        0 3px 6px -2px rgba(0, 0, 0, 0.08);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .btn-dashboard-filter,
+    .btn-dashboard-clear {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.875rem;
+    }
+    
+    .dashboard-filter-select {
+        font-size: 0.875rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .btn-dashboard-filter span,
+    .btn-dashboard-clear span {
+        display: none !important;
+    }
+}
+
+/* Weekly Breakdown Table Improvements */
+.week-cell {
+    min-width: 120px;
+    padding: 0.75rem 1rem !important;
+    vertical-align: middle;
+}
+
+.week-cell strong {
+    display: block;
+    font-size: 0.875rem;
+    color: #495057;
+    margin-bottom: 0.25rem;
+}
+
+.week-cell small {
+    display: block;
+    font-size: 0.75rem;
+    color: #6c757d;
+    font-weight: 400;
+    line-height: 1.2;
+}
+
+/* Table cell improvements */
+.deployed-cell,
+.disposed-cell,
+.new-arrival-cell,
+.returned-cell,
+.maintenance-cell {
+    text-align: center;
+    font-weight: 600;
+    padding: 0.75rem 0.5rem !important;
+    vertical-align: middle;
+}
+
+.deployed-cell {
+    color: #28a745;
+}
+
+.disposed-cell {
+    color: #dc3545;
+}
+
+.new-arrival-cell {
+    color: #17a2b8;
+}
+
+.returned-cell {
+    color: #6f42c1;
+}
+
+.maintenance-cell {
+    color: #fd7e14;
+}
+
+/* Responsive table improvements */
+@media (max-width: 768px) {
+    .week-cell {
+        min-width: 100px;
+        padding: 0.5rem 0.75rem !important;
+    }
+    
+    .week-cell strong {
+        font-size: 0.8rem;
+    }
+    
+    .week-cell small {
+        font-size: 0.7rem;
+    }
+    
+    .deployed-cell,
+    .disposed-cell,
+    .new-arrival-cell,
+    .returned-cell,
+    .maintenance-cell {
+        padding: 0.5rem 0.25rem !important;
+        font-size: 0.875rem;
+    }
+}
 </style>
 @endpush
 

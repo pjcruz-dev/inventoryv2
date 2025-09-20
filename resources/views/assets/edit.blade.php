@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Edit Asset')
-@section('page-title', 'Edit Asset: ' . $asset->name)
+{{-- Page title removed - using breadcrumbs instead --}}
 
 @section('page-actions')
     @can('view_assets')

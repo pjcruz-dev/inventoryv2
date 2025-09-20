@@ -2,7 +2,7 @@
 
 @section('title', 'Activity Logs')
 
-@section('page-title', 'Activity Logs')
+{{-- Page title removed - using breadcrumbs instead --}}
 
 @section('page-actions')
     <div class="d-flex gap-2">

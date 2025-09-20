@@ -49,6 +49,9 @@ Route::middleware('auth')->group(function () {
     Route::post('assets/generate-tag', [AssetController::class, 'generateUniqueTag'])->name('assets.generate-tag');
     Route::post('assets/check-tag-uniqueness', [AssetController::class, 'checkAssetTagUniqueness'])->name('assets.check-tag-uniqueness');
     Route::get('assets/{asset}/vendor', [AssetController::class, 'getAssetVendor'])->name('assets.get-vendor');
+    Route::get('assets/export', [AssetController::class, 'export'])->name('assets.export');
+    Route::get('assets/export/excel', [AssetController::class, 'exportExcel'])->name('assets.export.excel');
+    Route::get('assets/download/template', [AssetController::class, 'downloadTemplate'])->name('assets.template');
     
     // Asset Categories
     Route::resource('asset-categories', AssetCategoryController::class);
