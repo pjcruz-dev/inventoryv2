@@ -181,9 +181,9 @@ document.addEventListener('DOMContentLoaded', function() {
         checkedBoxes.forEach(checkbox => {
             const row = checkbox.closest('.peripheral-row');
             const type = row.querySelector('select[name*="[type]"]').value;
-            const connectivity = row.querySelector('select[name*="[connectivity]"]').value;
+            const interface = row.querySelector('select[name*="[interface]"]').value;
 
-            if (!type || !connectivity) {
+            if (!type || !interface) {
                 hasErrors = true;
             }
         });

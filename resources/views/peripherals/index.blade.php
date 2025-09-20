@@ -7,9 +7,14 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span>{{ __('Peripherals') }}</span>
-                    <a href="{{ route('peripherals.create') }}" class="btn btn-primary btn-sm">
-                        {{ __('Add New Peripheral') }}
-                    </a>
+                    <div class="btn-group" role="group">
+                        <a href="{{ route('peripherals.create') }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-1"></i>{{ __('Add New') }}
+                        </a>
+                        <a href="{{ route('peripherals.bulk-create') }}" class="btn btn-success btn-sm">
+                            <i class="fas fa-layer-group me-1"></i>{{ __('Bulk Create') }}
+                        </a>
+                    </div>
                 </div>
 
                 <div class="card-body">
@@ -38,8 +43,8 @@
                                         <td><span class="badge bg-secondary">{{ $peripheral->asset->asset_tag }}</span></td>
                                         <td class="fw-medium">{{ $peripheral->asset->name }}</td>
                                         <td><span class="badge bg-info text-dark">{{ $peripheral->type }}</span></td>
-                                        <td><span class="badge bg-primary">{{ $peripheral->connectivity }}</span></td>
-                                        <td>{{ $peripheral->asset->assignedUser->name ?? 'Unassigned' }}</td>
+                                        <td><span class="badge bg-primary">{{ $peripheral->interface }}</span></td>
+                                        <td>{{ $peripheral->asset->assignedUser ? $peripheral->asset->assignedUser->first_name . ' ' . $peripheral->asset->assignedUser->last_name : 'Unassigned' }}</td>
                                         <td>{{ $peripheral->asset->department->name ?? 'N/A' }}</td>
                                         <td>
                                             <div class="d-flex justify-content-center gap-1">
@@ -92,3 +97,86 @@
     </div>
 </div>
 @endsection
+
+@push('styles')
+<style>
+/* Peripherals Index Styling */
+.btn-group .btn {
+    margin-right: 0.25rem;
+}
+
+.btn-group .btn:last-child {
+    margin-right: 0;
+}
+
+/* Table improvements */
+.table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* Badge styling */
+.badge {
+    font-size: 0.75em;
+    padding: 0.35em 0.65em;
+}
+
+/* Action buttons */
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .btn-group .btn {
+        margin-right: 0;
+        margin-bottom: 0.25rem;
+    }
+    
+    .btn-group .btn:last-child {
+        margin-bottom: 0;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .d-flex.justify-content-between {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .card-header {
+        padding: 1rem 0.75rem;
+    }
+}
+
+/* Print styles */
+@media print {
+    .btn, .btn-group {
+        display: none !important;
+    }
+    
+    .table {
+        font-size: 0.75rem;
+    }
+    
+    .card {
+        border: none;
+        box-shadow: none;
+    }
+}
+</style>
+@endpush

@@ -743,8 +743,6 @@ class AssetController extends Controller
      */
     public function printAllAssetLabels(Request $request)
     {
-        $this->authorize('viewAny', Asset::class);
-        
         // Validate label dimensions
         $request->validate([
             'label_width' => 'nullable|integer|min:50|max:800',

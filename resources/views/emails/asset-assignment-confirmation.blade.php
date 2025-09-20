@@ -454,6 +454,16 @@
                 <div class="follow-up-notice">
                     <div class="content-text">
                         <strong>Follow-up Notice:</strong> We have not yet received your confirmation for the asset assignment below. Please confirm your receipt of this asset to complete the assignment process.
+                        
+                        @php
+                            $reminderCount = $asset->assignmentConfirmations()->where('user_id', $user->id)->first()->reminder_count ?? 0;
+                        @endphp
+                        
+                        @if($reminderCount >= 2)
+                            <br><br>
+                            <strong style="color: #dc2626;">⚠️ Important:</strong> This is your {{ $reminderCount + 1 }}th{{ $reminderCount == 2 ? 'd' : '' }} follow-up reminder. 
+                            If you do not respond to this confirmation request, the system will automatically confirm this asset assignment after 3 follow-up reminders and 1 additional day.
+                        @endif
                     </div>
                 </div>
             @endif
