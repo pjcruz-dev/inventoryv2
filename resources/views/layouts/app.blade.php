@@ -9,6 +9,279 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    @vite(['resources/sass/app.scss'])
+    <style>
+        /* Mobile-First Responsive Design for Inventory Management System */
+        
+        /* Base Mobile Styles */
+        @media (max-width: 767.98px) {
+            /* Typography adjustments for mobile */
+            :root {
+                --spacing-xs: 0.125rem;
+                --spacing-sm: 0.25rem;
+                --spacing-md: 0.5rem;
+                --spacing-lg: 0.75rem;
+                --spacing-xl: 1rem;
+                --spacing-2xl: 1.5rem;
+                --spacing-3xl: 2rem;
+                
+                --text-xs: 0.625rem;
+                --text-sm: 0.75rem;
+                --text-base: 0.875rem;
+                --text-lg: 1rem;
+                --text-xl: 1.125rem;
+                --text-2xl: 1.25rem;
+                --text-3xl: 1.5rem;
+                --text-4xl: 1.75rem;
+            }
+
+            /* Mobile body adjustments */
+            body {
+                font-size: var(--text-base);
+                padding: 0;
+                margin: 0;
+            }
+
+            /* Mobile container adjustments */
+            .container-fluid {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+
+            /* Mobile sidebar - Hidden by default, toggle with hamburger */
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: -100%;
+                width: 280px;
+                height: 100vh;
+                z-index: 1050;
+                transition: left 0.3s ease-in-out;
+                overflow-y: auto;
+            }
+
+            .sidebar.show {
+                left: 0;
+            }
+
+            /* Mobile sidebar overlay */
+            .sidebar-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 1040;
+                display: none;
+            }
+
+            .sidebar-overlay.show {
+                display: block;
+            }
+
+            /* Mobile hamburger button */
+            .mobile-menu-btn {
+                display: block !important;
+                background: none;
+                border: none;
+                color: #fff;
+                font-size: 1.5rem;
+                padding: 0.5rem;
+                margin-right: 1rem;
+                position: fixed;
+                top: 10px;
+                left: 10px;
+                z-index: 1050;
+                background: rgba(102, 126, 234, 0.9);
+                border-radius: 8px;
+            }
+
+            /* Hide desktop menu items on mobile */
+            .navbar-nav .nav-item {
+                display: none;
+            }
+
+            /* Mobile user dropdown */
+            .navbar-nav .nav-item.dropdown {
+                display: block;
+            }
+
+            /* Mobile main content */
+            .main-content {
+                margin-left: 0;
+                padding: 1rem 0.5rem;
+                min-height: calc(100vh - 60px);
+            }
+
+            /* Mobile buttons */
+            .btn {
+                padding: 0.5rem 1rem;
+                font-size: var(--text-sm);
+                border-radius: 0.375rem;
+                margin-bottom: 0.5rem;
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            /* Mobile form controls */
+            .form-control, .form-select {
+                padding: 0.75rem;
+                font-size: var(--text-base);
+                border-radius: 0.375rem;
+                margin-bottom: 1rem;
+                min-height: 44px;
+            }
+
+            /* Mobile tables - Make horizontal scrollable */
+            .table-responsive {
+                border-radius: 0.5rem;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            }
+
+            .table {
+                font-size: var(--text-sm);
+                margin-bottom: 0;
+            }
+
+            .table th,
+            .table td {
+                padding: 0.75rem 0.5rem;
+                white-space: nowrap;
+                border-top: 1px solid #dee2e6;
+            }
+
+            .table th {
+                font-weight: 600;
+                background-color: #f8f9fa;
+                position: sticky;
+                top: 0;
+                z-index: 10;
+            }
+
+            /* Mobile stats cards */
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            .stat-card {
+                background: #fff;
+                padding: 1rem;
+                border-radius: 0.5rem;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                text-align: center;
+            }
+
+            .stat-card .stat-number {
+                font-size: var(--text-2xl);
+                font-weight: 700;
+                color: #667eea;
+                margin-bottom: 0.25rem;
+            }
+
+            .stat-card .stat-label {
+                font-size: var(--text-sm);
+                color: #6c757d;
+                font-weight: 500;
+            }
+
+            /* Mobile action buttons */
+            .action-buttons {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                margin-bottom: 1rem;
+            }
+
+            .action-buttons .btn {
+                flex: 1;
+                min-width: calc(50% - 0.25rem);
+            }
+
+            /* Mobile form layouts */
+            .form-row {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            /* Mobile navigation improvements */
+            .nav-link {
+                padding: 0.75rem 1rem;
+                font-size: var(--text-sm);
+                border-radius: 0.375rem;
+                margin-bottom: 0.25rem;
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+            }
+        }
+
+        /* Tablet Styles */
+        @media (min-width: 768px) and (max-width: 1023.98px) {
+            .sidebar {
+                width: 250px;
+            }
+
+            .main-content {
+                margin-left: 250px;
+            }
+
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.5rem;
+            }
+
+            .action-buttons .btn {
+                flex: none;
+                margin-right: 0.5rem;
+            }
+        }
+
+        /* Desktop Styles */
+        @media (min-width: 1024px) {
+            .sidebar {
+                width: 280px;
+            }
+
+            .main-content {
+                margin-left: 280px;
+            }
+
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 2rem;
+            }
+
+            .mobile-menu-btn {
+                display: none !important;
+            }
+        }
+
+        /* Mobile touch improvements */
+        @media (hover: none) and (pointer: coarse) {
+            .btn,
+            .nav-link,
+            .dropdown-item {
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .form-control,
+            .form-select {
+                min-height: 44px;
+            }
+        }
+    </style>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700;800&display=swap');
         
@@ -433,8 +706,206 @@
             background-color: #fff;
             border-color: #dee2e6;
         }
+        
+        /* Basic Dashboard Styles */
+        .dashboard-container {
+            padding: 0 1rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .welcome-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 2rem;
+            color: white;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            margin-bottom: 2rem;
+        }
+        
+        .metric-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .metric-card.primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+        
+        .metric-card.success::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #10b981, #34d399);
+        }
+        
+        .metric-card.info::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+        }
+        
+        .metric-card.warning::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        }
+        
+        .metric-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            color: white;
+            font-size: 1.5rem;
+        }
+        
+        .metric-card.primary .metric-icon {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        
+        .metric-card.success .metric-icon {
+            background: linear-gradient(135deg, #10b981, #34d399);
+        }
+        
+        .metric-card.info .metric-icon {
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
+        }
+        
+        .metric-card.warning .metric-icon {
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        }
+        
+        .metric-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #1f2937;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-label {
+            font-size: 1rem;
+            color: #6b7280;
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+        }
+        
+        .metric-change {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .metric-change.positive {
+            color: #10b981;
+        }
+        
+        .metric-change.neutral {
+            color: #6b7280;
+        }
+        
+        .dashboard-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .dashboard-card:hover {
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+        }
+        
+        .card-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            background: #fafafa;
+        }
+        
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-title i {
+            color: #667eea;
+        }
+        
+        .card-body {
+            padding: 2rem;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+        
+        .empty-icon {
+            font-size: 4rem;
+            color: #d1d5db;
+            margin-bottom: 1rem;
+        }
+        
+        .empty-text {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+        
+        .empty-subtext {
+            color: #9ca3af;
+        }
     </style>
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
+    @stack('styles')
+    
+    <!-- Chart.js CDN for dashboard charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     @guest
@@ -461,15 +932,18 @@
         </div>
     @else
         <!-- Authenticated layout with sidebar -->
+        <!-- Mobile Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        
         <div class="container-fluid">
             <div class="row">
-                <!-- Mobile Navigation Toggle -->
-                <button class="navbar-toggler d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation" style="position: fixed; top: 10px; left: 10px; z-index: 1050; background: rgba(102, 126, 234, 0.9); border: none; border-radius: 8px; padding: 8px 12px;">
-                    <span class="navbar-toggler-icon" style="background-image: url('data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 30 30%27%3e%3cpath stroke=%27rgba%28255, 255, 255, 1%29%27 stroke-linecap=%27round%27 stroke-miterlimit=%2710%27 stroke-width=%272%27 d=%27M4 7h22M4 15h22M4 23h22%27/%3e%3c/svg%3e'); width: 20px; height: 20px;"></span>
+                <!-- Mobile Menu Button -->
+                <button class="mobile-menu-btn d-md-none" type="button" id="mobileMenuBtn" aria-label="Toggle navigation">
+                    <i class="fas fa-bars"></i>
                 </button>
 
                 <!-- Sidebar -->
-                <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse" id="sidebarMenu">
+                <nav class="col-md-3 col-lg-2 d-md-block sidebar" id="sidebarMenu">
                     <div class="position-sticky pt-3">
                         <div class="text-center mb-4">
                             <h4 class="navbar-brand">{{ config('app.name', 'Inventory') }}</h4>
@@ -808,9 +1282,39 @@
     
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+    @vite(['resources/js/app.js'])
     <script>
-        // Ensure all Bootstrap dropdowns are initialized
+        // Mobile navigation functionality
         document.addEventListener('DOMContentLoaded', function () {
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const sidebar = document.getElementById('sidebarMenu');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            // Mobile menu toggle
+            if (mobileMenuBtn && sidebar) {
+                mobileMenuBtn.addEventListener('click', function() {
+                    sidebar.classList.toggle('show');
+                    overlay.classList.toggle('show');
+                });
+                
+                // Close sidebar when clicking overlay
+                overlay.addEventListener('click', function() {
+                    sidebar.classList.remove('show');
+                    overlay.classList.remove('show');
+                });
+                
+                // Close sidebar when clicking nav links on mobile
+                sidebar.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('nav-link')) {
+                        if (window.innerWidth < 768) {
+                            sidebar.classList.remove('show');
+                            overlay.classList.remove('show');
+                        }
+                    }
+                });
+            }
+            
+            // Ensure all Bootstrap dropdowns are initialized
             if (window.bootstrap) {
                 document.querySelectorAll('.dropdown-toggle').forEach(function (el) {
                     try { new bootstrap.Dropdown(el, { popperConfig: { strategy: 'fixed' } }); } catch (e) { /* noop */ }
@@ -820,6 +1324,26 @@
                     btn.addEventListener('click', function (e) {
                         e.stopPropagation();
                     });
+                });
+            }
+            
+            // Auto-close sidebar on window resize to desktop
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 768) {
+                    sidebar.classList.remove('show');
+                    overlay.classList.remove('show');
+                }
+            });
+            
+            // Touch improvements for mobile
+            if ('ontouchstart' in window) {
+                document.body.classList.add('touch-device');
+                
+                // Improve button touch targets
+                document.querySelectorAll('.btn, .nav-link, .dropdown-item').forEach(function(el) {
+                    el.style.minHeight = '44px';
+                    el.style.display = 'flex';
+                    el.style.alignItems = 'center';
                 });
             }
         });

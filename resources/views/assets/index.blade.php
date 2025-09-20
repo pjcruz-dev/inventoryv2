@@ -4,24 +4,35 @@
 @section('page-title', 'Assets Management')
 
 @section('page-actions')
-    <div class="d-flex gap-2">
-        <div class="btn-group" role="group">
-            <a href="{{ route('import-export.template', 'assets') }}" class="btn btn-outline-success btn-sm">
-                <i class="fas fa-download me-1"></i>Template
-            </a>
-            <a href="{{ route('import-export.export', 'assets') }}" class="btn btn-outline-info btn-sm">
-                <i class="fas fa-file-export me-1"></i>Export
-            </a>
-            <button type="button" class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">
-                <i class="fas fa-file-import me-1"></i>Import
-            </button>
+    <div class="action-buttons">
+        <div class="d-flex flex-column flex-md-row gap-2 w-100">
+            <div class="btn-group w-100 w-md-auto" role="group">
+                <a href="{{ route('import-export.template', 'assets') }}" class="btn btn-outline-success btn-sm">
+                    <i class="fas fa-download me-1"></i>
+                    <span class="d-none d-sm-inline">Template</span>
+                </a>
+                <a href="{{ route('import-export.export', 'assets') }}" class="btn btn-outline-info btn-sm">
+                    <i class="fas fa-file-export me-1"></i>
+                    <span class="d-none d-sm-inline">Export</span>
+                </a>
+                <button type="button" class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">
+                    <i class="fas fa-file-import me-1"></i>
+                    <span class="d-none d-sm-inline">Import</span>
+                </button>
+            </div>
+            <div class="d-flex flex-column flex-md-row gap-2 w-100 w-md-auto">
+                <a href="{{ route('assets.print-employee-assets') }}" class="btn btn-outline-secondary btn-sm" target="_blank">
+                    <i class="fas fa-print me-1"></i>
+                    <span class="d-none d-lg-inline">Employee Assets Report</span>
+                    <span class="d-lg-none">Report</span>
+                </a>
+                <a href="{{ route('assets.create') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>
+                    <span class="d-none d-sm-inline">Add New Asset</span>
+                    <span class="d-sm-none">Add Asset</span>
+                </a>
+            </div>
         </div>
-        <a href="{{ route('assets.print-employee-assets') }}" class="btn btn-outline-secondary btn-sm" target="_blank">
-            <i class="fas fa-print me-1"></i>Employee Assets Report
-        </a>
-        <a href="{{ route('assets.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus me-2"></i>Add New Asset
-        </a>
     </div>
 <script>
 // Function to set label dimensions for bulk print modal

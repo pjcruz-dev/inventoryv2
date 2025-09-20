@@ -4,9 +4,11 @@
 @section('page-title', 'Dashboard')
 
 @section('page-actions')
-    <div class="d-flex gap-2 align-items-center">
-        <form method="GET" action="{{ route('dashboard') }}" class="d-flex gap-2 align-items-center">
-            <select name="month" class="form-select form-select-sm" style="width: 140px; height: 38px;">
+    <div class="d-flex flex-column flex-md-row gap-2 align-items-start align-items-md-center">
+        <form method="GET" action="{{ route('dashboard') }}" class="d-flex flex-column flex-md-row gap-2 align-items-stretch align-items-md-center w-100">
+            <div class="row g-2 w-100">
+                <div class="col-6 col-md-3">
+                    <select name="month" class="form-select form-select-sm">
                 <option value="">All Months</option>
                 @for($i = 1; $i <= 12; $i++)
                     <option value="{{ $i }}" {{ request('month') == $i ? 'selected' : '' }}>
@@ -14,309 +16,329 @@
                     </option>
                 @endfor
             </select>
-            <select name="year" class="form-select form-select-sm" style="width: 100px;">
+                </div>
+                <div class="col-6 col-md-3">
+                    <select name="year" class="form-select form-select-sm">
                 <option value="">All Years</option>
                 @for($year = date('Y'); $year >= 2020; $year--)
                     <option value="{{ $year }}" {{ request('year') == $year ? 'selected' : '' }}>{{ $year }}</option>
                 @endfor
             </select>
-            <select name="entity" class="form-select form-select-sm" style="width: 120px;">
+                </div>
+                <div class="col-6 col-md-3">
+                    <select name="entity" class="form-select form-select-sm">
                 <option value="">All Entities</option>
                 @foreach($entities as $entity)
                     <option value="{{ $entity }}" {{ request('entity') == $entity ? 'selected' : '' }}>{{ $entity }}</option>
                 @endforeach
             </select>
-            <button type="submit" class="btn btn-primary btn-sm shadow-sm d-flex align-items-center" style="height: 38px; padding: 0 16px;">
-                <i class="fas fa-filter me-2"></i>Filter
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="d-flex gap-1">
+                        <button type="submit" class="btn btn-primary btn-sm shadow-sm flex-fill d-flex align-items-center justify-content-center">
+                            <i class="fas fa-filter me-1"></i>
+                            <span class="d-none d-sm-inline">Filter</span>
             </button>
             @if(request()->hasAny(['month', 'year', 'entity']))
-                <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-sm shadow-sm d-flex align-items-center" style="height: 38px; padding: 0 16px;">
-                    <i class="fas fa-times me-2"></i>Clear
+                            <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-sm shadow-sm d-flex align-items-center justify-content-center">
+                                <i class="fas fa-times"></i>
+                                <span class="d-none d-sm-inline ms-1">Clear</span>
                 </a>
             @endif
+                    </div>
+                </div>
+            </div>
         </form>
     </div>
 @endsection
 
 @section('content')
-<div class="container-fluid">
-    <!-- Key Metrics Row -->
+<div class="container-fluid dashboard-container">
+    <!-- Welcome Section -->
     <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-primary bg-gradient metric-icon-container">
-                                <i class="fas fa-boxes text-white fa-2x"></i>
+        <div class="col-12">
+            <div class="welcome-card">
+                <div class="welcome-content">
+                    <div class="welcome-text">
+                        <h2 class="welcome-title">Welcome back, {{ auth()->user()->first_name }}! 👋</h2>
+                        <p class="welcome-subtitle">Here's what's happening with your inventory today.</p>
                             </div>
-                        </div>
-                        <div class="flex-grow-1 ms-3">
-                            <div class="text-muted small text-uppercase fw-bold">Total Assets</div>
-                            <div class="fs-2 fw-bold text-dark">{{ number_format($totalAssets) }}</div>
+                    <div class="welcome-time">
+                        <div class="time-display">{{ now()->format('l, F j, Y') }}</div>
+                        <div class="time-ago">Last updated {{ now()->diffForHumans() }}</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div class="col-xl-3 col-md-6 mb-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-success bg-gradient metric-icon-container">
-                                <i class="fas fa-users text-white fa-2x"></i>
+    <!-- Key Metrics Row -->
+    <div class="row g-4 mb-5">
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="metric-card primary">
+                <div class="metric-icon">
+                    <i class="fas fa-boxes"></i>
                             </div>
+                <div class="metric-content">
+                    <div class="metric-number">{{ number_format($totalAssets) }}</div>
+                    <div class="metric-label">Total Assets</div>
+                    @if($totalAssets > 0)
+                        <div class="metric-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>Active in system</span>
                         </div>
-                        <div class="flex-grow-1 ms-3">
-                            <div class="text-muted small text-uppercase fw-bold">Total Users</div>
-                            <div class="fs-2 fw-bold text-dark">{{ number_format($totalUsers) }}</div>
+                    @else
+                        <div class="metric-change neutral">
+                            <i class="fas fa-info-circle"></i>
+                            <span>No assets yet</span>
                         </div>
-                    </div>
+                    @endif
                 </div>
             </div>
         </div>
         
-        <div class="col-xl-3 col-md-6 mb-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-info bg-gradient metric-icon-container">
-                                <i class="fas fa-building text-white fa-2x"></i>
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="metric-card success">
+                <div class="metric-icon">
+                    <i class="fas fa-users"></i>
                             </div>
+                <div class="metric-content">
+                    <div class="metric-number">{{ number_format($totalUsers) }}</div>
+                    <div class="metric-label">Active Users</div>
+                    @if($totalUsers > 0)
+                        <div class="metric-change positive">
+                            <i class="fas fa-users"></i>
+                            <span>Registered users</span>
                         </div>
-                        <div class="flex-grow-1 ms-3">
-                            <div class="text-muted small text-uppercase fw-bold">Departments</div>
-                            <div class="fs-2 fw-bold text-dark">{{ number_format($totalDepartments) }}</div>
+                    @else
+                        <div class="metric-change neutral">
+                            <i class="fas fa-user-plus"></i>
+                            <span>Add users</span>
                         </div>
-                    </div>
+                    @endif
                 </div>
             </div>
         </div>
         
-        <div class="col-xl-3 col-md-6 mb-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-warning bg-gradient metric-icon-container">
-                                <i class="fas fa-truck text-white fa-2x"></i>
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="metric-card info">
+                <div class="metric-icon">
+                    <i class="fas fa-building"></i>
                             </div>
+                <div class="metric-content">
+                    <div class="metric-number">{{ number_format($totalDepartments) }}</div>
+                    <div class="metric-label">Departments</div>
+                    @if($totalDepartments > 0)
+                        <div class="metric-change positive">
+                            <i class="fas fa-building"></i>
+                            <span>Organized structure</span>
                         </div>
-                        <div class="flex-grow-1 ms-3">
-                            <div class="text-muted small text-uppercase fw-bold">Vendors</div>
-                            <div class="fs-2 fw-bold text-dark">{{ number_format($totalVendors) }}</div>
+                    @else
+                        <div class="metric-change neutral">
+                            <i class="fas fa-building"></i>
+                            <span>Setup departments</span>
                         </div>
+                    @endif
                     </div>
+                </div>
+            </div>
+        
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="metric-card warning">
+                <div class="metric-icon">
+                    <i class="fas fa-truck"></i>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-number">{{ number_format($totalVendors) }}</div>
+                    <div class="metric-label">Vendors</div>
+                    @if($totalVendors > 0)
+                        <div class="metric-change positive">
+                            <i class="fas fa-truck"></i>
+                            <span>Active suppliers</span>
+                        </div>
+                    @else
+                        <div class="metric-change neutral">
+                            <i class="fas fa-truck"></i>
+                            <span>Add vendors</span>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Deployment Status & Recent Assets Row -->
-    <div class="row mb-4">
-        <!-- Deployment Status -->
-        <div class="col-xl-4 col-lg-6 mb-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-transparent border-0 pb-0">
-                    <h6 class="card-title mb-0">
-                        <i class="fas fa-chart-pie me-2 text-primary"></i>Asset Deployment Status
-                    </h6>
+    <!-- Main Content Row -->
+    <div class="row g-4 mb-5">
+        <!-- Asset Status Overview -->
+        <div class="col-xl-4 col-lg-6">
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        Asset Status Overview
+                    </h5>
+                    <div class="card-actions">
+                        <button class="btn btn-sm btn-outline-primary" onclick="refreshAssetStatus()">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body">
-                    <div class="text-center mb-3">
-                        <div class="display-4 fw-bold text-success">{{ $deployedAssetsPercentage }}%</div>
-                        <div class="text-muted">Assets Deployed</div>
+                    <div class="status-overview">
+                        <div class="status-main">
+                            <div class="status-percentage">{{ $deployedAssetsPercentage }}%</div>
+                            <div class="status-label">Assets Deployed</div>
                     </div>
-                    <div class="progress" style="height: 10px;">
-                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ $deployedAssetsPercentage }}%"></div>
+                        <div class="status-progress">
+                            <div class="progress-ring">
+                                <svg class="progress-ring-svg" width="120" height="120">
+                                    <circle class="progress-ring-circle-bg" cx="60" cy="60" r="50"/>
+                                    <circle class="progress-ring-circle" cx="60" cy="60" r="50" 
+                                            style="stroke-dasharray: {{ 2 * pi() * 50 }}; stroke-dashoffset: {{ 2 * pi() * 50 * (1 - $deployedAssetsPercentage / 100) }};"/>
+                                </svg>
+                                <div class="progress-text">{{ $deployedAssetsPercentage }}%</div>
                     </div>
-                    <div class="d-flex justify-content-between mt-2 small text-muted">
-                        <span>{{ $totalAssets - \App\Models\Asset::where('status', 'deployed')->count() }} Pending</span>
-                        <span>{{ \App\Models\Asset::where('status', 'deployed')->count() }} Deployed</span>
+                    </div>
+                </div>
+                    <div class="status-breakdown">
+                        <div class="status-item">
+                            <div class="status-dot deployed"></div>
+                            <span class="status-name">Deployed</span>
+                            <span class="status-count">{{ \App\Models\Asset::where('status', 'deployed')->count() }}</span>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-dot pending"></div>
+                            <span class="status-name">Pending</span>
+                            <span class="status-count">{{ $totalAssets - \App\Models\Asset::where('status', 'deployed')->count() }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- Recent Assets -->
-        <div class="col-xl-8 col-lg-6 mb-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-transparent border-0 pb-0">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="card-title mb-0">
-                            <i class="fas fa-clock me-2 text-primary"></i>Recent Assets
-                        </h6>
-                        <a href="{{ route('assets.index') }}" class="btn btn-primary btn-sm shadow-sm d-flex align-items-center" style="height: 32px; padding: 0 12px;">
-                            <i class="fas fa-eye me-2"></i>View All
+        <!-- Recent Activity -->
+        <div class="col-xl-8 col-lg-6">
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-clock me-2"></i>
+                        Recent Activity
+                    </h5>
+                    <div class="card-actions">
+                        <a href="{{ route('assets.index') }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-eye me-1"></i>View All
                         </a>
                     </div>
                 </div>
                 <div class="card-body">
                     @if($recentAssets->count() > 0)
-                        <div class="list-group list-group-flush">
+                        <div class="activity-list">
                             @foreach($recentAssets as $asset)
-                                <div class="list-group-item border-0 px-0 py-2">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div class="d-flex align-items-center">
-                                            <div class="me-3">
-                                                <div class="recent-asset-icon">
-                                                    <i class="fas fa-box text-muted"></i>
+                                <div class="activity-item">
+                                    <div class="activity-icon">
+                                        <i class="fas fa-box"></i>
                                                 </div>
-                                            </div>
-                                            <div>
-                                                <div class="fw-semibold">{{ $asset->name }}</div>
-                                                <div class="small text-muted">
+                                    <div class="activity-content">
+                                        <div class="activity-title">{{ $asset->name }}</div>
+                                        <div class="activity-meta">
                                                     {{ $asset->category->name ?? 'No Category' }} • 
-                                                    <span class="badge badge-sm bg-{{ $asset->status === 'deployed' ? 'success' : ($asset->status === 'problematic' ? 'danger' : 'warning') }}">
+                                            <span class="status-badge status-{{ $asset->status }}">
                                                         {{ ucfirst(str_replace('_', ' ', $asset->status)) }}
                                                     </span>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div class="text-end">
-                                            <div class="small text-muted">{{ $asset->created_at->diffForHumans() }}</div>
-                                            <a href="{{ route('assets.show', $asset) }}" class="btn btn-primary btn-sm shadow-sm d-flex align-items-center justify-content-center" title="View Asset Details" style="width: 32px; height: 32px; padding: 0;">
+                                    <div class="activity-time">
+                                        <div class="time-text">{{ $asset->created_at->diffForHumans() }}</div>
+                                        <a href="{{ route('assets.show', $asset) }}" class="btn btn-sm btn-outline-primary">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                        </div>
                                     </div>
                                 </div>
                             @endforeach
                         </div>
                     @else
-                        <div class="text-center py-4">
-                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">No recent assets found</p>
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Charts and Analytics Row -->
-    <div class="row mb-4">
-        <!-- Current Asset Distribution -->
-        <div class="col-xl-6 col-lg-12 mb-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-transparent border-0 pb-0">
-                    <h6 class="card-title mb-0">
-                        <i class="fas fa-chart-pie me-2 text-primary"></i>Current Asset Distribution
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <canvas id="distributionChart" width="400" height="200"></canvas>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Problematic Assets Trend -->
-        <div class="col-xl-6 col-lg-12 mb-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-transparent border-0 pb-0">
-                    <h6 class="card-title mb-0">
-                        <i class="fas fa-chart-line me-2 text-primary"></i>Problematic Assets Trend
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <canvas id="trendChart" width="400" height="200"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Monthly Analysis Row -->
-    <div class="row mb-4">
-        <!-- Monthly Status Rollup -->
-        <div class="col-xl-6 col-lg-12 mb-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-transparent border-0 pb-0">
-                    <h6 class="card-title mb-0">
-                        <i class="fas fa-chart-bar me-2 text-primary"></i>Monthly Status Analysis
-                    </h6>
-                </div>
-                <div class="card-body">
-                    @if(!empty($monthlyRollup['months']))
-                        @foreach($monthlyRollup['months'] as $month => $data)
-                            <div class="mb-4">
-                                <h6 class="fw-semibold mb-3">{{ $month }}</h6>
-                                @foreach($monthlyRollup['statuses'] as $status)
-                                    @php
-                                        $statusData = $data[$status] ?? ['count' => 0, 'percentage' => 0];
-                                        $statusColor = match($status) {
-                                            'deployed' => 'success',
-                                            'problematic' => 'danger',
-                                            'pending_confirm' => 'warning',
-                                            'returned' => 'info',
-                                            'disposed' => 'secondary',
-                                            'new_arrived' => 'primary',
-                                            default => 'light'
-                                        };
-                                    @endphp
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <span class="small">{{ ucfirst(str_replace('_', ' ', $status)) }}</span>
-                                        <span class="small fw-semibold">{{ $statusData['count'] }} ({{ $statusData['percentage'] }}%)</span>
-                                    </div>
-                                    <div class="progress mb-2" style="height: 6px;">
-                                        <div class="progress-bar bg-{{ $statusColor }}" style="width: {{ $statusData['percentage'] }}%"></div>
-                                    </div>
-                                @endforeach
+                        <div class="empty-state">
+                            <div class="empty-icon">
+                                <i class="fas fa-clock"></i>
                             </div>
-                        @endforeach
+                            <div class="empty-text">No Recent Activity</div>
+                            <div class="empty-subtext">Your recent asset activities will appear here</div>
+                            <a href="{{ route('assets.create') }}" class="btn btn-primary btn-sm mt-3">
+                                <i class="fas fa-plus me-2"></i>Add Your First Asset
+                            </a>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Row -->
+    <div class="row g-4 mb-5">
+        <!-- Asset Distribution Chart -->
+        <div class="col-xl-6 col-lg-12">
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        Asset Distribution
+                    </h5>
+                    <div class="card-actions">
+                        <div class="chart-controls">
+                            <button class="btn btn-sm btn-outline-primary active" data-chart="doughnut">Doughnut</button>
+                            <button class="btn btn-sm btn-outline-primary" data-chart="bar">Bar</button>
+                </div>
+                </div>
+                </div>
+                <div class="card-body">
+                    @if($totalAssets > 0)
+                        <div class="chart-container">
+                            <canvas id="distributionChart" width="400" height="200"></canvas>
+                </div>
                     @else
-                        <div class="text-center py-4">
-                            <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">No monthly data available</p>
+                        <div class="empty-chart-state">
+                            <div class="empty-chart-icon">
+                                <i class="fas fa-chart-pie"></i>
+                            </div>
+                            <div class="empty-chart-text">No Assets Available</div>
+                            <div class="empty-chart-subtext">Create your first asset to see distribution</div>
+                            <a href="{{ route('assets.create') }}" class="btn btn-primary btn-sm mt-3">
+                                <i class="fas fa-plus me-2"></i>Add First Asset
+                            </a>
                         </div>
                     @endif
                 </div>
             </div>
         </div>
         
-        <!-- Weekly Breakdown -->
-        <div class="col-xl-6 col-lg-12 mb-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-transparent border-0 pb-0">
-                    <h6 class="card-title mb-0">
-                        <i class="fas fa-calendar-week me-2 text-primary"></i>Weekly Movement Breakdown
-                    </h6>
+        <!-- Asset Trends -->
+        <div class="col-xl-6 col-lg-12">
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Asset Trends
+                    </h5>
+                    <div class="card-actions">
+                        <select class="form-select form-select-sm" id="trendFilter">
+                            <option value="problematic">Problematic Assets</option>
+                            <option value="deployed">Deployed Assets</option>
+                            <option value="maintenance">Maintenance</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="card-body">
-                    @if(!empty($weeklyBreakdown['months']))
-                        @foreach($weeklyBreakdown['months'] as $month => $weeks)
-                            <div class="mb-4">
-                                <h6 class="fw-semibold mb-3">{{ $month }}</h6>
-                                <div class="table-responsive">
-                                    <table class="table table-sm">
-                                        <thead>
-                                            <tr>
-                                                <th class="border-0 small text-muted">Week</th>
-                                                @foreach($weeklyBreakdown['statuses'] as $status)
-                                                    <th class="border-0 small text-muted text-center">{{ $status }}</th>
-                                                @endforeach
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach($weeks as $week => $data)
-                                                <tr>
-                                                    <td class="small fw-semibold">{{ $week }}</td>
-                                                    @foreach($weeklyBreakdown['statuses'] as $status)
-                                                        <td class="text-center small">{{ $data[$status] ?? 0 }}</td>
-                                                    @endforeach
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
+                    @if($totalAssets > 0)
+                        <div class="chart-container">
+                            <canvas id="trendChart" width="400" height="200"></canvas>
                                 </div>
-                            </div>
-                        @endforeach
                     @else
-                        <div class="text-center py-4">
-                            <i class="fas fa-calendar-week fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">No weekly data available</p>
+                        <div class="empty-chart-state">
+                            <div class="empty-chart-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="empty-chart-text">No Trend Data</div>
+                            <div class="empty-chart-subtext">Assets will appear here as they're created</div>
                         </div>
                     @endif
                 </div>
@@ -324,79 +346,98 @@
         </div>
     </div>
 
-    <!-- Quick Actions Row -->
+    <!-- Quick Actions -->
     <div class="row">
         <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-transparent border-0 pb-0">
-                    <h6 class="card-title mb-0">
-                        <i class="fas fa-bolt me-2 text-primary"></i>Quick Actions
-                    </h6>
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-bolt me-2"></i>
+                        Quick Actions
+                    </h5>
                 </div>
                 <div class="card-body">
-                    <div class="row g-4">
+                    <div class="quick-actions-grid">
                         @can('create_assets')
-                            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
-                                <a href="{{ route('assets.create') }}" class="btn btn-primary w-100 d-flex flex-column align-items-center justify-content-center shadow-sm border-0 text-decoration-none quick-action-btn" style="height: 120px; transition: all 0.3s ease; border-radius: 12px;">
-                                    <div class="d-flex align-items-center justify-content-center mb-3" style="width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 50%;">
-                                        <i class="fas fa-plus fa-lg text-white"></i>
+                            <div class="quick-action-item">
+                                <a href="{{ route('assets.create') }}" class="quick-action-btn primary">
+                                    <div class="quick-action-icon">
+                                        <i class="fas fa-plus"></i>
                                     </div>
-                                    <span class="fw-semibold text-white small">Add Asset</span>
+                                    <div class="quick-action-content">
+                                        <div class="quick-action-title">Add Asset</div>
+                                        <div class="quick-action-subtitle">Create new asset</div>
+                                    </div>
                                 </a>
                             </div>
                         @endcan
                         
                         @can('view_assets')
-                            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
-                                <a href="{{ route('assets.index') }}" class="btn btn-success w-100 d-flex flex-column align-items-center justify-content-center shadow-sm border-0 text-decoration-none quick-action-btn" style="height: 120px; transition: all 0.3s ease; border-radius: 12px;">
-                                    <div class="d-flex align-items-center justify-content-center mb-3" style="width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 50%;">
-                                        <i class="fas fa-list fa-lg text-white"></i>
+                            <div class="quick-action-item">
+                                <a href="{{ route('assets.index') }}" class="quick-action-btn success">
+                                    <div class="quick-action-icon">
+                                        <i class="fas fa-list"></i>
                                     </div>
-                                    <span class="fw-semibold text-white small">View Assets</span>
+                                    <div class="quick-action-content">
+                                        <div class="quick-action-title">View Assets</div>
+                                        <div class="quick-action-subtitle">Browse all assets</div>
+                                    </div>
                                 </a>
                             </div>
                         @endcan
                         
                         @can('create_users')
-                            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
-                                <a href="{{ route('users.create') }}" class="btn btn-info w-100 d-flex flex-column align-items-center justify-content-center shadow-sm border-0 text-decoration-none quick-action-btn" style="height: 120px; transition: all 0.3s ease; border-radius: 12px;">
-                                    <div class="d-flex align-items-center justify-content-center mb-3" style="width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 50%;">
-                                        <i class="fas fa-user-plus fa-lg text-white"></i>
+                            <div class="quick-action-item">
+                                <a href="{{ route('users.create') }}" class="quick-action-btn info">
+                                    <div class="quick-action-icon">
+                                        <i class="fas fa-user-plus"></i>
                                     </div>
-                                    <span class="fw-semibold text-white small">Add User</span>
+                                    <div class="quick-action-content">
+                                        <div class="quick-action-title">Add User</div>
+                                        <div class="quick-action-subtitle">Create new user</div>
+                                    </div>
                                 </a>
                             </div>
                         @endcan
                         
                         @can('view_reports')
-                            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
-                                <a href="{{ route('assets.print-employee-assets') }}" class="btn btn-warning w-100 d-flex flex-column align-items-center justify-content-center shadow-sm border-0 text-decoration-none quick-action-btn" style="height: 120px; transition: all 0.3s ease; border-radius: 12px;" target="_blank">
-                                    <div class="d-flex align-items-center justify-content-center mb-3" style="width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 50%;">
-                                        <i class="fas fa-print fa-lg text-white"></i>
+                            <div class="quick-action-item">
+                                <a href="{{ route('assets.print-employee-assets') }}" class="quick-action-btn warning" target="_blank">
+                                    <div class="quick-action-icon">
+                                        <i class="fas fa-print"></i>
                                     </div>
-                                    <span class="fw-semibold text-white small">Reports</span>
+                                    <div class="quick-action-content">
+                                        <div class="quick-action-title">Reports</div>
+                                        <div class="quick-action-subtitle">Generate reports</div>
+                                    </div>
                                 </a>
                             </div>
                         @endcan
                         
                         @can('view_maintenance')
-                            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
-                                <a href="{{ route('maintenance.index') }}" class="btn btn-secondary w-100 d-flex flex-column align-items-center justify-content-center shadow-sm border-0 text-decoration-none quick-action-btn" style="height: 120px; transition: all 0.3s ease; border-radius: 12px;">
-                                    <div class="d-flex align-items-center justify-content-center mb-3" style="width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 50%;">
-                                        <i class="fas fa-tools fa-lg text-white"></i>
+                            <div class="quick-action-item">
+                                <a href="{{ route('maintenance.index') }}" class="quick-action-btn secondary">
+                                    <div class="quick-action-icon">
+                                        <i class="fas fa-tools"></i>
                                     </div>
-                                    <span class="fw-semibold text-white small">Maintenance</span>
+                                    <div class="quick-action-content">
+                                        <div class="quick-action-title">Maintenance</div>
+                                        <div class="quick-action-subtitle">Manage maintenance</div>
+                                    </div>
                                 </a>
                             </div>
                         @endcan
                         
                         @can('view_timeline')
-                            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
-                                <a href="{{ route('timeline.index') }}" class="btn btn-dark w-100 d-flex flex-column align-items-center justify-content-center shadow-sm border-0 text-decoration-none quick-action-btn" style="height: 120px; transition: all 0.3s ease; border-radius: 12px;">
-                                    <div class="d-flex align-items-center justify-content-center mb-3" style="width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 50%;">
-                                        <i class="fas fa-history fa-lg text-white"></i>
+                            <div class="quick-action-item">
+                                <a href="{{ route('timeline.index') }}" class="quick-action-btn dark">
+                                    <div class="quick-action-icon">
+                                        <i class="fas fa-history"></i>
                                     </div>
-                                    <span class="fw-semibold text-white small">Timeline</span>
+                                    <div class="quick-action-content">
+                                        <div class="quick-action-title">Timeline</div>
+                                        <div class="quick-action-subtitle">View activity history</div>
+                                    </div>
                                 </a>
                             </div>
                         @endcan
@@ -408,50 +449,622 @@
 </div>
 @endsection
 
-@push('scripts')
+@push('styles')
 <style>
-.quick-action-btn:hover {
-    transform: translateY(-3px) !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+/* Dashboard Styles - Moved to ensure proper loading */
+/* Dashboard Container */
+.dashboard-container {
+    padding: 0 1rem;
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
-.quick-action-btn:active {
-    transform: translateY(-1px) !important;
+/* Welcome Card */
+.welcome-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 2rem;
+    color: white;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    margin-bottom: 2rem;
 }
 
-/* Ensure consistent icon container sizing in metric cards */
-.metric-icon-container {
-    width: 64px;
-    height: 64px;
+.welcome-content {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.welcome-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    background: linear-gradient(45deg, #fff, #f0f8ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.welcome-subtitle {
+    font-size: 1.1rem;
+    margin: 0.5rem 0 0 0;
+    opacity: 0.9;
+}
+
+.welcome-time {
+    text-align: right;
+}
+
+.time-display {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.time-ago {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+/* Metric Cards */
+.metric-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--metric-color), var(--metric-color-light));
+}
+
+.metric-card.primary {
+    --metric-color: #667eea;
+    --metric-color-light: #764ba2;
+}
+
+.metric-card.success {
+    --metric-color: #10b981;
+    --metric-color-light: #34d399;
+}
+
+.metric-card.info {
+    --metric-color: #3b82f6;
+    --metric-color-light: #60a5fa;
+}
+
+.metric-card.warning {
+    --metric-color: #f59e0b;
+    --metric-color-light: #fbbf24;
+}
+
+.metric-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+.metric-icon {
+    width: 60px;
+    height: 60px;
     border-radius: 16px;
-}
-
-/* Improve button alignment in filter section */
-.filter-controls .btn {
+    background: linear-gradient(135deg, var(--metric-color), var(--metric-color-light));
     display: flex;
     align-items: center;
     justify-content: center;
-    white-space: nowrap;
+    margin-bottom: 1.5rem;
+    color: white;
+    font-size: 1.5rem;
 }
 
-/* Recent assets list improvements */
-.recent-asset-icon {
+.metric-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #1f2937;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.metric-label {
+    font-size: 1rem;
+    color: #6b7280;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+}
+
+.metric-change {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.metric-change.positive {
+    color: #10b981;
+}
+
+.metric-change.neutral {
+    color: #6b7280;
+}
+
+.metric-change.negative {
+    color: #ef4444;
+}
+
+/* Dashboard Cards */
+.dashboard-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.dashboard-card:hover {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+.card-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fafafa;
+}
+
+.card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.card-title i {
+    color: #667eea;
+}
+
+.card-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.card-body {
+    padding: 2rem;
+}
+
+/* Status Overview */
+.status-overview {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.status-main {
+    text-align: center;
+}
+
+.status-percentage {
+    font-size: 3rem;
+    font-weight: 800;
+    color: #10b981;
+    line-height: 1;
+}
+
+.status-label {
+    font-size: 1rem;
+    color: #6b7280;
+    margin-top: 0.5rem;
+}
+
+.progress-ring {
+    position: relative;
+    display: inline-block;
+}
+
+.progress-ring-svg {
+    transform: rotate(-90deg);
+}
+
+.progress-ring-circle-bg {
+    fill: none;
+    stroke: #e5e7eb;
+    stroke-width: 8;
+}
+
+.progress-ring-circle {
+    fill: none;
+    stroke: #10b981;
+    stroke-width: 8;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.5s ease-in-out;
+}
+
+.progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.status-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.status-dot.deployed {
+    background: #10b981;
+}
+
+.status-dot.pending {
+    background: #f59e0b;
+}
+
+.status-name {
+    flex: 1;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.status-count {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+/* Activity List */
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 12px;
+    background: #f9fafb;
+    transition: all 0.3s ease;
+}
+
+.activity-item:hover {
+    background: #f3f4f6;
+    transform: translateX(5px);
+}
+
+.activity-icon {
     width: 40px;
     height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
-    background: #f8f9fa;
+    color: white;
 }
+
+.activity-content {
+    flex: 1;
+}
+
+.activity-title {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.25rem;
+}
+
+.activity-meta {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.status-deployed {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-problematic {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.activity-time {
+    text-align: right;
+}
+
+.time-text {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin-bottom: 0.5rem;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: #d1d5db;
+    margin-bottom: 1rem;
+}
+
+.empty-text {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #6b7280;
+    margin-bottom: 0.5rem;
+}
+
+.empty-subtext {
+    color: #9ca3af;
+}
+
+/* Chart Container */
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+
+/* Empty Chart State */
+.empty-chart-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    text-align: center;
+    padding: 2rem;
+}
+
+.empty-chart-icon {
+    font-size: 4rem;
+    color: #d1d5db;
+    margin-bottom: 1rem;
+    opacity: 0.6;
+}
+
+.empty-chart-text {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #6b7280;
+    margin-bottom: 0.5rem;
+}
+
+.empty-chart-subtext {
+    color: #9ca3af;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+.chart-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.chart-controls .btn {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+}
+
+.chart-controls .btn.active {
+    background: #667eea;
+    border-color: #667eea;
+    color: white;
+}
+
+/* Quick Actions */
+.quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.quick-action-item {
+    transition: all 0.3s ease;
+}
+
+.quick-action-item:hover {
+    transform: translateY(-5px);
+}
+
+.quick-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-radius: 16px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    background: white;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+.quick-action-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    text-decoration: none;
+}
+
+.quick-action-btn.primary {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.quick-action-btn.success {
+    border-color: #10b981;
+    background: linear-gradient(135deg, #10b981, #34d399);
+    color: white;
+}
+
+.quick-action-btn.info {
+    border-color: #3b82f6;
+    background: linear-gradient(135deg, #3b82f6, #60a5fa);
+    color: white;
+}
+
+.quick-action-btn.warning {
+    border-color: #f59e0b;
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    color: white;
+}
+
+.quick-action-btn.secondary {
+    border-color: #6b7280;
+    background: linear-gradient(135deg, #6b7280, #9ca3af);
+    color: white;
+}
+
+.quick-action-btn.dark {
+    border-color: #1f2937;
+    background: linear-gradient(135deg, #1f2937, #374151);
+    color: white;
+}
+
+.quick-action-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.quick-action-content {
+    flex: 1;
+}
+
+.quick-action-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.quick-action-subtitle {
+    font-size: 0.875rem;
+    opacity: 0.8;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .welcome-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .welcome-time {
+        text-align: center;
+    }
+    
+    .metric-card {
+        padding: 1.5rem;
+    }
+    
+    .metric-number {
+        font-size: 2rem;
+    }
+    
+    .status-overview {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .card-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .quick-actions-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .quick-action-btn {
+        padding: 1rem;
+    }
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.metric-card,
+.dashboard-card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.metric-card:nth-child(2) { animation-delay: 0.1s; }
+.metric-card:nth-child(3) { animation-delay: 0.2s; }
+.metric-card:nth-child(4) { animation-delay: 0.3s; }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+@endpush
+
+@push('scripts')
 <script>
-// Asset Distribution Pie Chart
-const distributionCtx = document.getElementById('distributionChart').getContext('2d');
+// Asset Distribution Chart
+const distributionCanvas = document.getElementById('distributionChart');
+if (distributionCanvas) {
+    const distributionCtx = distributionCanvas.getContext('2d');
 const distributionData = @json($chartData['currentDistribution']);
 
 const distributionLabels = [];
@@ -464,26 +1077,28 @@ for (const [status, data] of Object.entries(distributionData)) {
         distributionValues.push(data.count);
         
         switch(status) {
-            case 'deployed': distributionColors.push('#198754'); break;
-            case 'problematic': distributionColors.push('#dc3545'); break;
-            case 'pending_confirm': distributionColors.push('#ffc107'); break;
-            case 'returned': distributionColors.push('#0dcaf0'); break;
-            case 'disposed': distributionColors.push('#6c757d'); break;
-            case 'new_arrived': distributionColors.push('#0d6efd'); break;
-            default: distributionColors.push('#adb5bd'); break;
+                case 'deployed': distributionColors.push('#10b981'); break;
+                case 'problematic': distributionColors.push('#ef4444'); break;
+                case 'pending_confirm': distributionColors.push('#f59e0b'); break;
+                case 'returned': distributionColors.push('#3b82f6'); break;
+                case 'disposed': distributionColors.push('#6b7280'); break;
+                case 'new_arrived': distributionColors.push('#667eea'); break;
+                default: distributionColors.push('#d1d5db'); break;
+            }
         }
     }
-}
 
-new Chart(distributionCtx, {
+    // Only create chart if we have data
+    if (distributionValues.length > 0) {
+        const distributionChart = new Chart(distributionCtx, {
     type: 'doughnut',
     data: {
         labels: distributionLabels,
         datasets: [{
             data: distributionValues,
             backgroundColor: distributionColors,
-            borderWidth: 2,
-            borderColor: '#fff'
+                    borderWidth: 0,
+                    hoverOffset: 10
         }]
     },
     options: {
@@ -494,36 +1109,67 @@ new Chart(distributionCtx, {
                 position: 'bottom',
                 labels: {
                     padding: 20,
-                    usePointStyle: true
-                }
+                            usePointStyle: true,
+                            font: {
+                                size: 12,
+                                weight: '500'
+                            }
+                        }
+                    }
+                },
+                cutout: '70%'
             }
-        }
-    }
-});
+        });
 
-// Problematic Assets Trend Line Chart
-const trendCtx = document.getElementById('trendChart').getContext('2d');
+        // Chart Controls
+        document.querySelectorAll('[data-chart="doughnut"]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                distributionChart.config.type = 'doughnut';
+                distributionChart.update();
+                document.querySelectorAll('.chart-controls .btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        document.querySelectorAll('[data-chart="bar"]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                distributionChart.config.type = 'bar';
+                distributionChart.update();
+                document.querySelectorAll('.chart-controls .btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    }
+}
+
+// Asset Trends Chart
+const trendCanvas = document.getElementById('trendChart');
+if (trendCanvas) {
+    const trendCtx = trendCanvas.getContext('2d');
 const trendData = @json($chartData['problematicTrend']);
 
 const trendLabels = trendData.map(item => item.month);
 const trendValues = trendData.map(item => item.count);
 
-new Chart(trendCtx, {
+    // Only create chart if we have data
+    if (trendValues.length > 0) {
+        const trendChart = new Chart(trendCtx, {
     type: 'line',
     data: {
         labels: trendLabels,
         datasets: [{
             label: 'Problematic Assets',
             data: trendValues,
-            borderColor: '#dc3545',
-            backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
             borderWidth: 3,
             fill: true,
             tension: 0.4,
-            pointBackgroundColor: '#dc3545',
+                    pointBackgroundColor: '#ef4444',
             pointBorderColor: '#fff',
             pointBorderWidth: 2,
-            pointRadius: 6
+                    pointRadius: 6,
+                    pointHoverRadius: 8
         }]
     },
     options: {
@@ -538,16 +1184,69 @@ new Chart(trendCtx, {
             y: {
                 beginAtZero: true,
                 grid: {
-                    color: 'rgba(0,0,0,0.1)'
+                            color: 'rgba(0,0,0,0.05)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#6b7280',
+                            font: {
+                                size: 11
+                            }
                 }
             },
             x: {
                 grid: {
                     display: false
+                        },
+                        ticks: {
+                            color: '#6b7280',
+                            font: {
+                                size: 11
+                            }
+                        }
+                    }
                 }
             }
-        }
+        });
     }
+}
+
+// Chart Controls (moved inside chart creation)
+
+// Refresh Asset Status
+function refreshAssetStatus() {
+    // Add loading state
+    const btn = event.target.closest('button');
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    btn.disabled = true;
+    
+    // Simulate refresh (replace with actual AJAX call)
+    setTimeout(() => {
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+        // Reload page or update data
+        window.location.reload();
+    }, 1000);
+}
+
+// Auto-refresh every 5 minutes
+setInterval(() => {
+    // You can implement auto-refresh here
+}, 300000);
+
+// Add smooth scrolling for better UX
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
 });
 </script>
 @endpush

@@ -6,6 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use App\Models\User;
 
 class RolePermissionSeeder extends Seeder
 {
@@ -22,6 +23,13 @@ class RolePermissionSeeder extends Seeder
         if ($superAdminRole) {
             $superAdminRole->syncPermissions($allPermissions);
             $this->command->info('✓ All permissions assigned to Super Admin role');
+            
+            // Also ensure any existing Super Admin users get the role
+            $superAdminUsers = User::role('Super Admin')->get();
+            foreach ($superAdminUsers as $user) {
+                $user->syncRoles(['Super Admin']);
+                $this->command->info("✓ Super Admin role confirmed for user: {$user->email}");
+            }
         }
         
         // Assign specific permissions to Admin role

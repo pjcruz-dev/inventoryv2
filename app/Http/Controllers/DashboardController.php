@@ -39,7 +39,12 @@ class DashboardController extends Controller
         
         if ($filterEntity) {
             $assetQuery->where('entity', $filterEntity);
-            $userQuery->where('entity', $filterEntity);
+            // Only apply entity filter to users if the column exists
+            try {
+                $userQuery->where('entity', $filterEntity);
+            } catch (\Exception $e) {
+                // Entity column doesn't exist in users table, skip filter
+            }
         }
         
         $totalAssets = $assetQuery->count();
@@ -70,6 +75,13 @@ class DashboardController extends Controller
         // Get entities for filter dropdown
         $entities = Asset::distinct()->pluck('entity')->filter()->sort()->values();
         
+        // Check if users table has entity column, if not, use empty collection
+        try {
+            $userEntities = User::distinct()->pluck('entity')->filter()->sort()->values();
+        } catch (\Exception $e) {
+            $userEntities = collect();
+        }
+        
         return view('dashboard', compact(
             'totalAssets',
             'totalUsers', 
@@ -89,7 +101,7 @@ class DashboardController extends Controller
      */
     private function getWeeklyBreakdown($filterMonth = null, $filterYear = null)
     {
-        $statuses = ['Deployed', 'Disposed', 'New Arrival', 'Returned', 'Transferred'];
+        $statuses = ['Deployed', 'Disposed', 'New Arrival', 'Returned', 'Maintenance'];
         $months = [];
         
         if ($filterMonth && $filterYear) {

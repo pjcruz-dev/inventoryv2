@@ -5,7 +5,7 @@ namespace App\Traits;
 use App\Models\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Request;
-use Jenssegers\Agent\Agent;
+use App\Services\DeviceDetector;
 use Carbon\Carbon;
 
 trait ActivityLoggable
@@ -78,17 +78,17 @@ trait ActivityLoggable
 
         // Get request information
         $request = request();
-        $agent = new Agent();
+        $agent = new DeviceDetector();
         
         // Prepare metadata
         $metadata = [
             'request_id' => $request->header('X-Request-ID', uniqid()),
             'referrer' => $request->header('referer'),
             'user_agent_full' => $request->userAgent(),
-            'device_type' => $agent->device(),
+            'device_type' => $agent->deviceType(),
             'platform' => $agent->platform(),
-            'platform_version' => $agent->version($agent->platform()),
-            'browser_version' => $agent->version($agent->browser()),
+            'platform_version' => 'Unknown',
+            'browser_version' => 'Unknown',
             'is_mobile' => $agent->isMobile(),
             'is_tablet' => $agent->isTablet(),
             'is_desktop' => $agent->isDesktop(),
@@ -323,7 +323,7 @@ trait ActivityLoggable
         }
 
         $request = request();
-        $agent = new Agent();
+        $agent = new DeviceDetector();
         $user = Auth::user();
 
         return Log::create([

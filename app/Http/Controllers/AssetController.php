@@ -655,13 +655,18 @@ class AssetController extends Controller
             return $user->assignedAssets->count();
         });
         
+        // Calculate total value of all assigned assets
+        $totalValue = $users->flatMap(function($user) {
+            return $user->assignedAssets;
+        })->sum('cost');
+        
         $assetsByCategory = $users->flatMap(function($user) {
             return $user->assignedAssets;
         })->groupBy('category.name')->map(function($assets) {
             return $assets->count();
         });
 
-        return view('assets.print-employee-assets', compact('users', 'totalUsers', 'totalAssets', 'assetsByCategory'));
+        return view('assets.print-employee-assets', compact('users', 'totalUsers', 'totalAssets', 'totalValue', 'assetsByCategory'));
     }
 
     public function printSingleEmployeeAssets(User $user)
