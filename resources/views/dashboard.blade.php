@@ -212,57 +212,141 @@
                             <span class="status-count">{{ $totalAssets - \App\Models\Asset::where('status', 'deployed')->count() }}</span>
                         </div>
                     </div>
+                    
+                    <!-- Enhanced Quick Actions Panel -->
+                    <div class="quick-actions-panel">
+                        <div class="quick-actions-header">
+                            <h6 class="quick-actions-title">
+                                <i class="fas fa-rocket me-2"></i>Quick Actions
+                            </h6>
+                            <div class="quick-actions-subtitle">Most used features</div>
+                        </div>
+                        
+                        <div class="quick-actions-grid-enhanced">
+                            @can('create_assets')
+                            <a href="{{ route('assets.create') }}" class="quick-action-card primary-card" data-tooltip="Create a new asset">
+                                <div class="action-icon-wrapper">
+                                    <i class="fas fa-plus"></i>
+                                </div>
+                                <div class="action-content">
+                                    <div class="action-title">Add Asset</div>
+                                    <div class="action-subtitle">Create new asset</div>
+                                    <div class="action-arrow">
+                                        <i class="fas fa-arrow-right"></i>
+                                    </div>
+                                </div>
+                            </a>
+                            @endcan
+                            
+                            @can('view_assets')
+                            <a href="{{ route('assets.index') }}" class="quick-action-card success-card" data-tooltip="Browse all assets">
+                                <div class="action-icon-wrapper">
+                                    <i class="fas fa-list"></i>
+                                </div>
+                                <div class="action-content">
+                                    <div class="action-title">View All</div>
+                                    <div class="action-subtitle">Browse assets</div>
+                                    <div class="action-arrow">
+                                        <i class="fas fa-arrow-right"></i>
+                                    </div>
+                                </div>
+                            </a>
+                            @endcan
+                            
+                            @can('import_export_access')
+                            <a href="{{ route('import-export.interface') }}" class="quick-action-card info-card" data-tooltip="Bulk import assets">
+                                <div class="action-icon-wrapper">
+                                    <i class="fas fa-file-import"></i>
+                                </div>
+                                <div class="action-content">
+                                    <div class="action-title">Import</div>
+                                    <div class="action-subtitle">Bulk import</div>
+                                    <div class="action-arrow">
+                                        <i class="fas fa-arrow-right"></i>
+                                    </div>
+                                </div>
+                            </a>
+                            @endcan
+                            
+                            @can('view_accountability_forms')
+                            <a href="{{ route('accountability.index') }}" class="quick-action-card warning-card" data-tooltip="Generate accountability forms">
+                                <div class="action-icon-wrapper">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <div class="action-content">
+                                    <div class="action-title">Reports</div>
+                                    <div class="action-subtitle">Generate forms</div>
+                                    <div class="action-arrow">
+                                        <i class="fas fa-arrow-right"></i>
+                                    </div>
+                                </div>
+                            </a>
+                            @endcan
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
         
-        <!-- Recent Activity -->
+        <!-- Weekly Breakdown -->
         <div class="col-xl-8 col-lg-6">
             <div class="dashboard-card">
                 <div class="card-header">
                     <h5 class="card-title">
-                        <i class="fas fa-clock me-2"></i>
-                        Recent Activity
+                        <i class="fas fa-calendar-week me-2"></i>
+                        Weekly Breakdown
                     </h5>
                     <div class="card-actions">
-                        <a href="{{ route('assets.index') }}" class="btn btn-sm btn-primary">
-                            <i class="fas fa-eye me-1"></i>View All
-                        </a>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-outline-primary" onclick="filterWeeklyBreakdown('current')">
+                                <i class="fas fa-calendar-day me-1"></i>Current Month
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" onclick="filterWeeklyBreakdown('previous')">
+                                <i class="fas fa-chevron-left me-1"></i>Previous
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="card-body">
-                    @if($recentAssets->count() > 0)
-                        <div class="activity-list">
-                            @foreach($recentAssets as $asset)
-                                <div class="activity-item">
-                                    <div class="activity-icon">
-                                        <i class="fas fa-box"></i>
-                                                </div>
-                                    <div class="activity-content">
-                                        <div class="activity-title">{{ $asset->name }}</div>
-                                        <div class="activity-meta">
-                                                    {{ $asset->category->name ?? 'No Category' }} • 
-                                            <span class="status-badge status-{{ $asset->status }}">
-                                                        {{ ucfirst(str_replace('_', ' ', $asset->status)) }}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                    <div class="activity-time">
-                                        <div class="time-text">{{ $asset->created_at->diffForHumans() }}</div>
-                                        <a href="{{ route('assets.show', $asset) }}" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                    </div>
-                                </div>
-                            @endforeach
+                    @if(!empty($weeklyBreakdown))
+                        @foreach($weeklyBreakdown as $month => $monthData)
+                        <div class="weekly-breakdown-container">
+                            <h6 class="breakdown-month-title">{{ $month }}</h6>
+                            <div class="table-responsive">
+                                <table class="table table-hover weekly-breakdown-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="week-column">WEEK</th>
+                                            <th class="deployed-column">DEPLOYED</th>
+                                            <th class="disposed-column">DISPOSED</th>
+                                            <th class="new-arrival-column">NEW ARRIVAL</th>
+                                            <th class="returned-column">RETURNED</th>
+                                            <th class="maintenance-column">MAINTENANCE</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($monthData as $week => $weekData)
+                                        <tr>
+                                            <td class="week-cell"><strong>{{ $week }}</strong></td>
+                                            <td class="deployed-cell">{{ $weekData['Deployed'] ?? 0 }}</td>
+                                            <td class="disposed-cell">{{ $weekData['Disposed'] ?? 0 }}</td>
+                                            <td class="new-arrival-cell">{{ $weekData['New Arrival'] ?? 0 }}</td>
+                                            <td class="returned-cell">{{ $weekData['Returned'] ?? 0 }}</td>
+                                            <td class="maintenance-cell">{{ $weekData['Maintenance'] ?? 0 }}</td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
+                        @endforeach
                     @else
                         <div class="empty-state">
                             <div class="empty-icon">
-                                <i class="fas fa-clock"></i>
+                                <i class="fas fa-calendar-week"></i>
                             </div>
-                            <div class="empty-text">No Recent Activity</div>
-                            <div class="empty-subtext">Your recent asset activities will appear here</div>
+                            <div class="empty-text">No Weekly Data Available</div>
+                            <div class="empty-subtext">Weekly breakdown data will appear here once assets are created</div>
                             <a href="{{ route('assets.create') }}" class="btn btn-primary btn-sm mt-3">
                                 <i class="fas fa-plus me-2"></i>Add Your First Asset
                             </a>
@@ -346,106 +430,6 @@
         </div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="row">
-        <div class="col-12">
-            <div class="dashboard-card">
-                <div class="card-header">
-                    <h5 class="card-title">
-                        <i class="fas fa-bolt me-2"></i>
-                        Quick Actions
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="quick-actions-grid">
-                        @can('create_assets')
-                            <div class="quick-action-item">
-                                <a href="{{ route('assets.create') }}" class="quick-action-btn primary">
-                                    <div class="quick-action-icon">
-                                        <i class="fas fa-plus"></i>
-                                    </div>
-                                    <div class="quick-action-content">
-                                        <div class="quick-action-title">Add Asset</div>
-                                        <div class="quick-action-subtitle">Create new asset</div>
-                                    </div>
-                                </a>
-                            </div>
-                        @endcan
-                        
-                        @can('view_assets')
-                            <div class="quick-action-item">
-                                <a href="{{ route('assets.index') }}" class="quick-action-btn success">
-                                    <div class="quick-action-icon">
-                                        <i class="fas fa-list"></i>
-                                    </div>
-                                    <div class="quick-action-content">
-                                        <div class="quick-action-title">View Assets</div>
-                                        <div class="quick-action-subtitle">Browse all assets</div>
-                                    </div>
-                                </a>
-                            </div>
-                        @endcan
-                        
-                        @can('create_users')
-                            <div class="quick-action-item">
-                                <a href="{{ route('users.create') }}" class="quick-action-btn info">
-                                    <div class="quick-action-icon">
-                                        <i class="fas fa-user-plus"></i>
-                                    </div>
-                                    <div class="quick-action-content">
-                                        <div class="quick-action-title">Add User</div>
-                                        <div class="quick-action-subtitle">Create new user</div>
-                                    </div>
-                                </a>
-                            </div>
-                        @endcan
-                        
-                        @can('view_reports')
-                            <div class="quick-action-item">
-                                <a href="{{ route('assets.print-employee-assets') }}" class="quick-action-btn warning" target="_blank">
-                                    <div class="quick-action-icon">
-                                        <i class="fas fa-print"></i>
-                                    </div>
-                                    <div class="quick-action-content">
-                                        <div class="quick-action-title">Reports</div>
-                                        <div class="quick-action-subtitle">Generate reports</div>
-                                    </div>
-                                </a>
-                            </div>
-                        @endcan
-                        
-                        @can('view_maintenance')
-                            <div class="quick-action-item">
-                                <a href="{{ route('maintenance.index') }}" class="quick-action-btn secondary">
-                                    <div class="quick-action-icon">
-                                        <i class="fas fa-tools"></i>
-                                    </div>
-                                    <div class="quick-action-content">
-                                        <div class="quick-action-title">Maintenance</div>
-                                        <div class="quick-action-subtitle">Manage maintenance</div>
-                                    </div>
-                                </a>
-                            </div>
-                        @endcan
-                        
-                        @can('view_timeline')
-                            <div class="quick-action-item">
-                                <a href="{{ route('timeline.index') }}" class="quick-action-btn dark">
-                                    <div class="quick-action-icon">
-                                        <i class="fas fa-history"></i>
-                                    </div>
-                                    <div class="quick-action-content">
-                                        <div class="quick-action-title">Timeline</div>
-                                        <div class="quick-action-subtitle">View activity history</div>
-                                    </div>
-                                </a>
-                            </div>
-                        @endcan
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 @endsection
 
@@ -847,6 +831,349 @@
     color: #9ca3af;
 }
 
+/* Weekly Breakdown Styling */
+.weekly-breakdown-container {
+    margin-bottom: 2rem;
+}
+
+.breakdown-month-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.weekly-breakdown-table {
+    margin-bottom: 0;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.weekly-breakdown-table thead th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #495057;
+    padding: 1rem 0.75rem;
+    text-align: center;
+}
+
+.weekly-breakdown-table tbody td {
+    padding: 1rem 0.75rem;
+    text-align: center;
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.weekly-breakdown-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.week-column {
+    width: 20%;
+    text-align: left !important;
+}
+
+.week-cell {
+    text-align: left !important;
+    color: #495057;
+    font-weight: 500;
+}
+
+.deployed-column,
+.disposed-column,
+.new-arrival-column,
+.returned-column,
+.maintenance-column {
+    width: 16%;
+}
+
+.deployed-cell {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.disposed-cell {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.new-arrival-cell {
+    color: #007bff;
+    font-weight: 600;
+}
+
+.returned-cell {
+    color: #ffc107;
+    font-weight: 600;
+}
+
+.maintenance-cell {
+    color: #6f42c1;
+    font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .weekly-breakdown-table {
+        font-size: 0.875rem;
+    }
+    
+    .weekly-breakdown-table thead th,
+    .weekly-breakdown-table tbody td {
+        padding: 0.75rem 0.5rem;
+    }
+    
+    .breakdown-month-title {
+        font-size: 1rem;
+    }
+}
+
+/* Enhanced Quick Actions Panel Styling */
+.quick-actions-panel {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.quick-actions-header {
+    margin-bottom: 1.25rem;
+}
+
+.quick-actions-title {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #495057;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+}
+
+.quick-actions-subtitle {
+    font-size: 0.75rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.quick-actions-grid-enhanced {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.875rem;
+}
+
+.quick-action-card {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 1px solid #e9ecef;
+    border-radius: 0.75rem;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.quick-action-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--card-color), var(--card-color-light));
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.quick-action-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    text-decoration: none;
+    color: inherit;
+}
+
+.quick-action-card:hover::before {
+    transform: scaleX(1);
+}
+
+.action-icon-wrapper {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.action-icon-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, var(--card-color), var(--card-color-light));
+    opacity: 0.1;
+}
+
+.action-icon-wrapper i {
+    font-size: 1.25rem;
+    color: var(--card-color);
+    position: relative;
+    z-index: 1;
+}
+
+.action-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.action-title {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 0.25rem;
+    line-height: 1.2;
+}
+
+.action-subtitle {
+    display: block;
+    font-size: 0.75rem;
+    color: #6c757d;
+    line-height: 1.3;
+    margin-bottom: 0.5rem;
+}
+
+.action-arrow {
+    opacity: 0;
+    transform: translateX(-5px);
+    transition: all 0.3s ease;
+}
+
+.quick-action-card:hover .action-arrow {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.action-arrow i {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+/* Card Color Variants */
+.primary-card {
+    --card-color: #007bff;
+    --card-color-light: #66b3ff;
+}
+
+.success-card {
+    --card-color: #28a745;
+    --card-color-light: #5cb85c;
+}
+
+.info-card {
+    --card-color: #17a2b8;
+    --card-color-light: #5bc0de;
+}
+
+.warning-card {
+    --card-color: #ffc107;
+    --card-color-light: #f0ad4e;
+}
+
+/* Tooltip Styling */
+.quick-action-card[data-tooltip] {
+    position: relative;
+}
+
+.quick-action-card[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #2c3e50;
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    z-index: 1000;
+    margin-bottom: 0.5rem;
+}
+
+.quick-action-card[data-tooltip]:hover::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #2c3e50;
+    z-index: 1000;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .quick-actions-grid-enhanced {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .quick-action-card {
+        padding: 0.875rem;
+    }
+    
+    .action-icon-wrapper {
+        width: 2.5rem;
+        height: 2.5rem;
+        margin-right: 0.875rem;
+    }
+    
+    .action-icon-wrapper i {
+        font-size: 1.125rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .quick-action-card {
+        padding: 0.75rem;
+    }
+    
+    .action-icon-wrapper {
+        width: 2.25rem;
+        height: 2.25rem;
+        margin-right: 0.75rem;
+    }
+    
+    .action-icon-wrapper i {
+        font-size: 1rem;
+    }
+    
+    .action-title {
+        font-size: 0.8125rem;
+    }
+    
+    .action-subtitle {
+        font-size: 0.6875rem;
+    }
+}
+
 /* Chart Container */
 .chart-container {
     position: relative;
@@ -1246,7 +1573,29 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 block: 'start'
             });
         }
+        });
     });
-});
+    
+    // Weekly Breakdown Filter Functions
+    function filterWeeklyBreakdown(period) {
+        // Get current URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        if (period === 'current') {
+            // Show current month
+            const now = new Date();
+            urlParams.set('month', now.getMonth() + 1);
+            urlParams.set('year', now.getFullYear());
+        } else if (period === 'previous') {
+            // Show previous month
+            const now = new Date();
+            const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1);
+            urlParams.set('month', prevMonth.getMonth() + 1);
+            urlParams.set('year', prevMonth.getFullYear());
+        }
+        
+        // Reload page with new parameters
+        window.location.href = window.location.pathname + '?' + urlParams.toString();
+    }
 </script>
 @endpush
