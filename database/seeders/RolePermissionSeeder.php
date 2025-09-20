@@ -25,7 +25,9 @@ class RolePermissionSeeder extends Seeder
             $this->command->info('✓ All permissions assigned to Super Admin role');
             
             // Also ensure any existing Super Admin users get the role
-            $superAdminUsers = User::role('Super Admin')->get();
+            $superAdminUsers = User::whereHas('roles', function ($query) {
+                $query->where('name', 'Super Admin');
+            })->get();
             foreach ($superAdminUsers as $user) {
                 $user->syncRoles(['Super Admin']);
                 $this->command->info("✓ Super Admin role confirmed for user: {$user->email}");
