@@ -104,6 +104,7 @@
                                     <option value="">Select Company</option>
                                     <option value="Philtower" {{ old('company', $user->company) == 'Philtower' ? 'selected' : '' }}>Philtower</option>
                                     <option value="MIDC" {{ old('company', $user->company) == 'MIDC' ? 'selected' : '' }}>MIDC</option>
+                                    <option value="PRIMUS" {{ old('company', $user->company) == 'PRIMUS' ? 'selected' : '' }}>PRIMUS</option>
                                 </select>
                                 @error('company')
                                     <div class="invalid-feedback">{{ $message }}</div>
