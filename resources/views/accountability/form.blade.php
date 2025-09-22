@@ -59,6 +59,14 @@
                         <div class="info-value">{{ $formData['asset']->serial_number }}</div>
                     </div>
                 </div>
+                @if($formData['asset']->category && strtolower($formData['asset']->category->name) == 'mobile devices' && $formData['asset']->mobile_number)
+                <div class="col-md-4">
+                    <div class="info-item">
+                        <div class="info-label">Mobile Number</div>
+                        <div class="info-value">{{ $formData['asset']->mobile_number }}</div>
+                    </div>
+                </div>
+                @endif
                 <div class="col-md-4">
                     <div class="info-item">
                         <div class="info-label">Category</div>

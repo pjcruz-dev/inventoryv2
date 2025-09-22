@@ -244,6 +244,12 @@
                 <div class="info-label">Serial Number</div>
                 <div class="info-value">{{ $formData['asset']->serial_number }}</div>
             </div>
+            @if($formData['asset']->category && strtolower($formData['asset']->category->name) == 'mobile devices' && $formData['asset']->mobile_number)
+            <div class="info-item">
+                <div class="info-label">Mobile Number</div>
+                <div class="info-value">{{ $formData['asset']->mobile_number }}</div>
+            </div>
+            @endif
             <div class="info-item">
                 <div class="info-label">Model</div>
                 <div class="info-value">{{ $formData['asset']->model ?? 'N/A' }}</div>

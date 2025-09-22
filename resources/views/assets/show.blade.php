@@ -68,6 +68,13 @@
                                     <span class="text-muted">Not specified</span>
                                 @endif
                             </dd>
+                            
+                            @if($asset->category && strtolower($asset->category->name) == 'mobile devices' && $asset->mobile_number)
+                            <dt class="col-sm-4">Mobile Number:</dt>
+                            <dd class="col-sm-8">
+                                <code class="fs-6">{{ $asset->mobile_number }}</code>
+                            </dd>
+                            @endif
                         </dl>
                     </div>
                     
