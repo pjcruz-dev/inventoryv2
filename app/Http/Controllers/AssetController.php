@@ -144,11 +144,15 @@ class AssetController extends Controller
             // If asset is being assigned during creation
             $validated['status'] = 'Pending Confirmation';
             $validated['movement'] = 'Deployed';
-            $validated['assigned_date'] = now();
+            // Set assigned_date if not provided
+            if (empty($validated['assigned_date'])) {
+                $validated['assigned_date'] = now();
+            }
         } else {
             // Default for unassigned assets
             $validated['status'] = 'Available';
             $validated['movement'] = 'New Arrival';
+            $validated['assigned_date'] = null;
         }
 
         $asset = Asset::create($validated);
@@ -195,10 +199,14 @@ class AssetController extends Controller
         if (!empty($validated['assigned_to'])) {
             $validated['status'] = 'Pending Confirmation';
             $validated['movement'] = 'Deployed';
-            $validated['assigned_date'] = now();
+            // Set assigned_date if not provided
+            if (empty($validated['assigned_date'])) {
+                $validated['assigned_date'] = now();
+            }
         } else {
             $validated['status'] = 'Available';
             $validated['movement'] = 'New Arrival';
+            $validated['assigned_date'] = null;
         }
         
         // Remove serial number for bulk creation
@@ -364,10 +372,14 @@ class AssetController extends Controller
         if (!empty($validated['assigned_to'])) {
             $validated['status'] = 'Pending Confirmation';
             $validated['movement'] = 'Deployed';
-            $validated['assigned_date'] = now();
+            // Set assigned_date if not provided
+            if (empty($validated['assigned_date'])) {
+                $validated['assigned_date'] = now();
+            }
         } else {
             $validated['status'] = 'Available';
             $validated['movement'] = 'New Arrival';
+            $validated['assigned_date'] = null;
         }
         
         $createdAssets = [];
@@ -474,6 +486,15 @@ class AssetController extends Controller
         }
         
         $validated = $request->validate($rules);
+
+        // Handle assigned_date logic
+        if (!empty($validated['assigned_to']) && empty($validated['assigned_date'])) {
+            // If asset is being assigned but no date provided, set to current date
+            $validated['assigned_date'] = now();
+        } elseif (empty($validated['assigned_to'])) {
+            // If asset is being unassigned, clear the assigned_date
+            $validated['assigned_date'] = null;
+        }
 
         $asset->update($validated);
         return redirect()->route('assets.index')->with('success', 'Asset updated successfully.');

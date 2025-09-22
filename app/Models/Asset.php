@@ -64,7 +64,7 @@ class Asset extends Model
             'status' => 'required|in:Available,Assigned,Active,Inactive,Under Maintenance,Issue Reported,Pending Confirmation,Retired,Damaged,Disposed',
             'movement' => 'required|in:New Arrival,Deployed,Returned,Transferred,Disposed',
             'assigned_to' => 'nullable|exists:users,id',
-            'assigned_date' => 'nullable|date|required_with:assigned_to',
+            'assigned_date' => 'nullable|date',
             'department_id' => 'nullable|exists:departments,id'
         ];
     }
@@ -93,7 +93,7 @@ class Asset extends Model
             'status' => 'required|in:Available,Assigned,Active,Inactive,Under Maintenance,Issue Reported,Pending Confirmation,Retired,Damaged,Disposed',
             'movement' => 'required|in:New Arrival,Deployed,Returned,Transferred,Disposed',
             'assigned_to' => 'nullable|exists:users,id',
-            'assigned_date' => 'nullable|date|required_with:assigned_to',
+            'assigned_date' => 'nullable|date',
             'department_id' => 'nullable|exists:departments,id'
         ];
     }
