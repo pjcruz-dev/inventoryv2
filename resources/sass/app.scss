@@ -1,4 +1,5 @@
-// Fonts - Using system fonts for better performance and familiarity
+// Fonts - Professional typography system
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap');
 
 // Variables
 @import 'variables';
@@ -8,23 +9,125 @@
 
 // Custom Inventory Management Styles
 :root {
+    // Typography
+    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-heading: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    
+    // Font weights
+    --font-weight-light: 300;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --font-weight-extrabold: 800;
+    
+    // Font sizes
+    --text-xs: 0.75rem;      // 12px
+    --text-sm: 0.875rem;     // 14px
+    --text-base: 1rem;       // 16px
+    --text-lg: 1.125rem;     // 18px
+    --text-xl: 1.25rem;      // 20px
+    --text-2xl: 1.5rem;      // 24px
+    --text-3xl: 1.875rem;    // 30px
+    --text-4xl: 2.25rem;     // 36px
+    --text-5xl: 3rem;        // 48px
+    
+    // Line heights
+    --leading-tight: 1.25;
+    --leading-snug: 1.375;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.625;
+    --leading-loose: 2;
+    
+    // Colors
+    --color-primary: #344767;
+    --color-secondary: #67748e;
+    --color-muted: #8392ab;
+    --color-light: #f8f9fa;
+    
+    // Gradients
     --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
     --warning-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
     --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    
+    // Shadows
     --shadow-light: 0 2px 10px rgba(0,0,0,0.1);
     --shadow-medium: 0 4px 20px rgba(0,0,0,0.15);
     --shadow-heavy: 0 8px 30px rgba(0,0,0,0.2);
+    
+    // Other
     --border-radius: 12px;
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 // Global Styles
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-family: var(--font-primary);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--leading-normal);
+    background: linear-gradient(310deg, #f8f9fa 0%, #dee2e6 100%);
+    color: var(--color-primary);
+    font-size: var(--text-base);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+// Typography System
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-primary);
+    line-height: var(--leading-tight);
+    margin-bottom: var(--spacing-md);
+    
+    &.display-1 { font-size: var(--text-5xl); font-weight: var(--font-weight-bold); }
+    &.display-2 { font-size: var(--text-4xl); font-weight: var(--font-weight-bold); }
+    &.display-3 { font-size: var(--text-3xl); font-weight: var(--font-weight-semibold); }
+    &.display-4 { font-size: var(--text-2xl); font-weight: var(--font-weight-semibold); }
+}
+
+h1 { font-size: var(--text-3xl); font-weight: var(--font-weight-bold); }
+h2 { font-size: var(--text-2xl); font-weight: var(--font-weight-semibold); }
+h3 { font-size: var(--text-xl); font-weight: var(--font-weight-semibold); }
+h4 { font-size: var(--text-lg); font-weight: var(--font-weight-medium); }
+h5 { font-size: var(--text-base); font-weight: var(--font-weight-medium); }
+h6 { font-size: var(--text-sm); font-weight: var(--font-weight-medium); }
+
+// Text utilities
+.text-xs { font-size: var(--text-xs); }
+.text-sm { font-size: var(--text-sm); }
+.text-base { font-size: var(--text-base); }
+.text-lg { font-size: var(--text-lg); }
+.text-xl { font-size: var(--text-xl); }
+.text-2xl { font-size: var(--text-2xl); }
+.text-3xl { font-size: var(--text-3xl); }
+
+.font-light { font-weight: var(--font-weight-light); }
+.font-normal { font-weight: var(--font-weight-normal); }
+.font-medium { font-weight: var(--font-weight-medium); }
+.font-semibold { font-weight: var(--font-weight-semibold); }
+.font-bold { font-weight: var(--font-weight-bold); }
+
+// Code and monospace
+code, pre, .code {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
     background-color: #f8f9fa;
-    color: #2d3748;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    color: #e83e8c;
+}
+
+pre {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    overflow-x: auto;
+    font-size: var(--text-sm);
+    line-height: var(--leading-relaxed);
 }
 
 // Enhanced Card Styles
@@ -44,11 +147,13 @@ body {
         background: var(--primary-gradient);
         color: white;
         border: none;
-        padding: 1rem 1.5rem;
+        padding: 1.5rem;
         
         h1, h2, h3, h4, h5, h6 {
             margin: 0;
             color: white;
+            font-family: var(--font-heading);
+            font-weight: var(--font-weight-semibold);
         }
     }
     
@@ -133,11 +238,16 @@ body {
 
 // Enhanced Button Styles
 .btn {
+    font-family: var(--font-primary);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--text-sm);
     border-radius: 8px;
-    font-weight: 600;
-    padding: 0.5rem 1.5rem;
+    padding: 0.75rem 1.5rem;
     transition: var(--transition);
     border: none;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    line-height: var(--leading-tight);
     
     &.btn-primary {
         background: var(--primary-gradient);
@@ -190,6 +300,7 @@ body {
 
 // Enhanced Table Styles
 .table {
+    font-family: var(--font-primary);
     background: white;
     border-radius: var(--border-radius);
     overflow: hidden;
@@ -198,16 +309,18 @@ body {
     thead th {
         background: #f8f9fa;
         border: none;
-        color: #4a5568;
-        font-weight: 600;
+        color: var(--color-primary);
+        font-family: var(--font-heading);
+        font-weight: var(--font-weight-semibold);
         text-transform: uppercase;
-        font-size: 0.75rem;
-        letter-spacing: 0.5px;
+        font-size: var(--text-xs);
+        letter-spacing: 0.05em;
         padding: 1rem;
     }
     
     tbody tr {
         transition: var(--transition);
+        font-size: var(--text-sm);
         
         &:hover {
             background-color: #f7fafc;
@@ -219,26 +332,60 @@ body {
         border: none;
         padding: 1rem;
         vertical-align: middle;
+        line-height: var(--leading-normal);
+    }
+    
+    // Code elements in tables
+    code {
+        font-family: var(--font-mono);
+        font-size: 0.8em;
+        background-color: #f1f3f4;
+        color: #d63384;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
     }
 }
 
 // Form Enhancements
 .form-control, .form-select {
+    font-family: var(--font-primary);
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-normal);
     border: 2px solid #e2e8f0;
     border-radius: 8px;
     padding: 0.75rem 1rem;
     transition: var(--transition);
+    line-height: var(--leading-normal);
     
     &:focus {
         border-color: #667eea;
         box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        font-weight: var(--font-weight-medium);
+    }
+    
+    &::placeholder {
+        color: var(--color-muted);
+        font-weight: var(--font-weight-normal);
     }
 }
 
 .form-label {
-    font-weight: 600;
-    color: #4a5568;
+    font-family: var(--font-primary);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-primary);
     margin-bottom: 0.5rem;
+    font-size: var(--text-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+// Input groups
+.input-group-text {
+    font-family: var(--font-primary);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-secondary);
+    background-color: #f8f9fa;
+    border-color: #e2e8f0;
 }
 
 // Alert Enhancements
