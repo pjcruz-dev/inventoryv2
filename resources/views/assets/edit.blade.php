@@ -148,6 +148,22 @@
                         </div>
                     </div>
                     
+                    <!-- Mobile Number Field - Only for Mobile Devices category -->
+                    <div class="row" id="mobile_number_section" style="display: {{ $asset->category && strtolower($asset->category->name) == 'mobile devices' ? 'block' : 'none' }};">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="mobile_number" class="form-label">Mobile Number</label>
+                                <input type="text" class="form-control @error('mobile_number') is-invalid @enderror" 
+                                       id="mobile_number" name="mobile_number" value="{{ old('mobile_number', $asset->mobile_number) }}"
+                                       placeholder="e.g., +63 912 345 6789">
+                                <small class="form-text text-muted">Phone number associated with this mobile device</small>
+                                @error('mobile_number')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
@@ -472,6 +488,9 @@ $(document).ready(function() {
         
         // Hide dropdown
         categoryDropdown.removeClass('show');
+        
+        // Show/hide mobile number field based on category
+        toggleMobileNumberField(text);
     });
     
     // Show all items when dropdown is opened
@@ -496,6 +515,20 @@ $(document).ready(function() {
             categoryDropdown.removeClass('show');
         }
     });
+    
+    // Toggle mobile number field based on category selection
+    function toggleMobileNumberField(categoryText) {
+        const mobileNumberSection = $('#mobile_number_section');
+        const mobileNumberField = $('#mobile_number');
+        
+        if (categoryText && categoryText.toLowerCase().includes('mobile')) {
+            mobileNumberSection.show();
+            mobileNumberField.prop('disabled', false);
+        } else {
+            mobileNumberSection.hide();
+            mobileNumberField.prop('disabled', true).val('');
+        }
+    }
     
     // Asset tag protection - warn user if they try to modify it
     const originalAssetTag = $('#asset_tag').val();
@@ -580,6 +613,12 @@ $(document).ready(function() {
             console.log(`Movement auto-populated: ${statusMovementMap[status]} based on status: ${status}`);
         }
     });
+    
+    // Initialize mobile number field visibility on page load
+    var initialCategory = $('#categorySearchEdit').val();
+    if (initialCategory) {
+        toggleMobileNumberField(initialCategory);
+    }
 });
 </script>
 @endsection

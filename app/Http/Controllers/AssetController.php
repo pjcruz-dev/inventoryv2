@@ -128,7 +128,16 @@ class AssetController extends Controller
         }
         
         // Single asset creation
-        $validated = $request->validate(Asset::validationRules());
+        $rules = Asset::validationRules();
+        
+        // Only validate mobile_number if category is Mobile Devices
+        $category = \App\Models\AssetCategory::find($request->category_id);
+        if (!$category || strtolower($category->name) !== 'mobile devices') {
+            // Remove mobile_number validation if not a mobile device
+            unset($rules['mobile_number']);
+        }
+        
+        $validated = $request->validate($rules);
 
         // Set status and movement based on assignment
         if (!empty($validated['assigned_to'])) {
@@ -168,6 +177,13 @@ class AssetController extends Controller
         $rules['serial_number'] = 'nullable|string|max:100'; // Remove unique constraint for bulk
         $rules['quantity'] = 'required|integer|min:1|max:20';
         $rules['creation_mode'] = 'required|string|in:bulk';
+        
+        // Only validate mobile_number if category is Mobile Devices
+        $category = \App\Models\AssetCategory::find($request->category_id);
+        if (!$category || strtolower($category->name) !== 'mobile devices') {
+            // Remove mobile_number validation if not a mobile device
+            unset($rules['mobile_number']);
+        }
         
         $validated = $request->validate($rules);
         $quantity = $validated['quantity'];
@@ -263,6 +279,13 @@ class AssetController extends Controller
         $rules['creation_mode'] = 'required|string|in:bulk_serial';
         $rules['serial_numbers'] = 'required|array';
         $rules['serial_numbers.*'] = 'nullable|string|max:100'; // Removed distinct rule
+        
+        // Only validate mobile_number if category is Mobile Devices
+        $category = \App\Models\AssetCategory::find($request->category_id);
+        if (!$category || strtolower($category->name) !== 'mobile devices') {
+            // Remove mobile_number validation if not a mobile device
+            unset($rules['mobile_number']);
+        }
         
         $validated = $request->validate($rules);
         $quantity = $validated['quantity'];
@@ -440,7 +463,17 @@ class AssetController extends Controller
     {
         $this->authorize('update', $asset);
         
-        $validated = $request->validate(Asset::updateValidationRules($asset->id));
+        // Get validation rules
+        $rules = Asset::updateValidationRules($asset->id);
+        
+        // Only validate mobile_number if category is Mobile Devices
+        $category = \App\Models\AssetCategory::find($request->category_id);
+        if (!$category || strtolower($category->name) !== 'mobile devices') {
+            // Remove mobile_number validation if not a mobile device
+            unset($rules['mobile_number']);
+        }
+        
+        $validated = $request->validate($rules);
 
         $asset->update($validated);
         return redirect()->route('assets.index')->with('success', 'Asset updated successfully.');
