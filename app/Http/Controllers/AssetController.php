@@ -144,9 +144,11 @@ class AssetController extends Controller
             // If asset is being assigned during creation
             $validated['status'] = 'Pending Confirmation';
             $validated['movement'] = 'Deployed';
-            // Set assigned_date if not provided
+            // Set assigned_date if not provided (except for Mobile Devices)
             if (empty($validated['assigned_date'])) {
-                $validated['assigned_date'] = now();
+                if (!$category || strtolower($category->name) !== 'mobile devices') {
+                    $validated['assigned_date'] = now();
+                }
             }
         } else {
             // Default for unassigned assets
@@ -199,9 +201,11 @@ class AssetController extends Controller
         if (!empty($validated['assigned_to'])) {
             $validated['status'] = 'Pending Confirmation';
             $validated['movement'] = 'Deployed';
-            // Set assigned_date if not provided
+            // Set assigned_date if not provided (except for Mobile Devices)
             if (empty($validated['assigned_date'])) {
-                $validated['assigned_date'] = now();
+                if (!$category || strtolower($category->name) !== 'mobile devices') {
+                    $validated['assigned_date'] = now();
+                }
             }
         } else {
             $validated['status'] = 'Available';
@@ -372,9 +376,11 @@ class AssetController extends Controller
         if (!empty($validated['assigned_to'])) {
             $validated['status'] = 'Pending Confirmation';
             $validated['movement'] = 'Deployed';
-            // Set assigned_date if not provided
+            // Set assigned_date if not provided (except for Mobile Devices)
             if (empty($validated['assigned_date'])) {
-                $validated['assigned_date'] = now();
+                if (!$category || strtolower($category->name) !== 'mobile devices') {
+                    $validated['assigned_date'] = now();
+                }
             }
         } else {
             $validated['status'] = 'Available';
@@ -490,7 +496,10 @@ class AssetController extends Controller
         // Handle assigned_date logic
         if (!empty($validated['assigned_to']) && empty($validated['assigned_date'])) {
             // If asset is being assigned but no date provided, set to current date
-            $validated['assigned_date'] = now();
+            // Exception: For Mobile Devices, assigned_date is optional
+            if (!$category || strtolower($category->name) !== 'mobile devices') {
+                $validated['assigned_date'] = now();
+            }
         } elseif (empty($validated['assigned_to'])) {
             // If asset is being unassigned, clear the assigned_date
             $validated['assigned_date'] = null;
