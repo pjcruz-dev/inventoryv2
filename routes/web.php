@@ -121,6 +121,7 @@ Route::middleware('auth')->group(function () {
     
     // Dashboard route
     Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+Route::get('/dashboard/asset-movements', [App\Http\Controllers\DashboardController::class, 'assetMovements'])->name('dashboard.asset-movements');
     
     // Import/Export routes - Enhanced with comprehensive security
     require __DIR__.'/import-export.php';

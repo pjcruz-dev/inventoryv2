@@ -1,6 +1,28 @@
 @extends('layouts.app')
 
 @section('title', 'Dashboard')
+
+@section('styles')
+<style>
+.clickable-number {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.clickable-number:hover {
+    background-color: #e3f2fd;
+    transform: scale(1.1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.clickable-number:active {
+    transform: scale(0.95);
+}
+</style>
+@endsection
 @section('page-title', 'Dashboard')
 
 @section('page-actions')
@@ -304,7 +326,27 @@
                                                 <tr>
                                                     <td class="small fw-semibold">{{ $week }}</td>
                                                     @foreach($weeklyBreakdown['statuses'] as $status)
-                                                        <td class="text-center small">{{ $data[$status] ?? 0 }}</td>
+                                                        <td class="text-center small">
+                                                            @php
+                                                                $count = $data[$status] ?? 0;
+                                                                $monthNumber = date('n', strtotime($month));
+                                                                $year = date('Y', strtotime($month));
+                                                            @endphp
+                                                            @if($count > 0)
+                                                                <a href="{{ route('dashboard.asset-movements', [
+                                                                    'week' => $week,
+                                                                    'status' => $status,
+                                                                    'month' => $monthNumber,
+                                                                    'year' => $year
+                                                                ]) }}" 
+                                                                   class="text-decoration-none fw-bold text-primary clickable-number" 
+                                                                   title="Click to view {{ $count }} {{ strtolower($status) }} assets">
+                                                                    {{ $count }}
+                                                                </a>
+                                                            @else
+                                                                <span class="text-muted">{{ $count }}</span>
+                                                            @endif
+                                                        </td>
                                                     @endforeach
                                                 </tr>
                                             @endforeach
@@ -452,40 +494,51 @@
 <script>
 // Asset Distribution Pie Chart
 const distributionCtx = document.getElementById('distributionChart').getContext('2d');
-const distributionData = @json($chartData['currentDistribution']);
+const distributionData = @json($chartData['currentDistribution'] ?? []);
 
 const distributionLabels = [];
 const distributionValues = [];
 const distributionColors = [];
 
-for (const [status, data] of Object.entries(distributionData)) {
-    if (data.count > 0) {
-        distributionLabels.push(status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()));
-        distributionValues.push(data.count);
-        
-        switch(status) {
-            case 'deployed': distributionColors.push('#198754'); break;
-            case 'problematic': distributionColors.push('#dc3545'); break;
-            case 'pending_confirm': distributionColors.push('#ffc107'); break;
-            case 'returned': distributionColors.push('#0dcaf0'); break;
-            case 'disposed': distributionColors.push('#6c757d'); break;
-            case 'new_arrived': distributionColors.push('#0d6efd'); break;
-            default: distributionColors.push('#adb5bd'); break;
+// Process distribution data
+if (distributionData && typeof distributionData === 'object') {
+    for (const [status, data] of Object.entries(distributionData)) {
+        if (data && data.count > 0) {
+            distributionLabels.push(status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()));
+            distributionValues.push(data.count);
+            
+            switch(status) {
+                case 'deployed': distributionColors.push('#198754'); break;
+                case 'problematic': distributionColors.push('#dc3545'); break;
+                case 'pending_confirm': distributionColors.push('#ffc107'); break;
+                case 'returned': distributionColors.push('#0dcaf0'); break;
+                case 'disposed': distributionColors.push('#6c757d'); break;
+                case 'new_arrived': distributionColors.push('#0d6efd'); break;
+                default: distributionColors.push('#adb5bd'); break;
+            }
         }
     }
 }
 
-new Chart(distributionCtx, {
-    type: 'doughnut',
-    data: {
-        labels: distributionLabels,
-        datasets: [{
-            data: distributionValues,
-            backgroundColor: distributionColors,
-            borderWidth: 2,
-            borderColor: '#fff'
-        }]
-    },
+// If no data, show a message
+if (distributionLabels.length === 0) {
+    distributionLabels.push('No Data');
+    distributionValues.push(1);
+    distributionColors.push('#e9ecef');
+}
+
+try {
+    new Chart(distributionCtx, {
+        type: 'doughnut',
+        data: {
+            labels: distributionLabels,
+            datasets: [{
+                data: distributionValues,
+                backgroundColor: distributionColors,
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
     options: {
         responsive: true,
         maintainAspectRatio: false,
@@ -500,24 +553,41 @@ new Chart(distributionCtx, {
         }
     }
 });
+} catch (error) {
+    console.error('Error creating distribution chart:', error);
+    document.getElementById('distributionChart').innerHTML = '<div class="text-center text-muted">Chart failed to load</div>';
+}
 
 // Problematic Assets Trend Line Chart
 const trendCtx = document.getElementById('trendChart').getContext('2d');
-const trendData = @json($chartData['problematicTrend']);
+const trendData = @json($chartData['problematicTrend'] ?? []);
 
-const trendLabels = trendData.map(item => item.month);
-const trendValues = trendData.map(item => item.count);
+const trendLabels = [];
+const trendValues = [];
 
-new Chart(trendCtx, {
-    type: 'line',
-    data: {
-        labels: trendLabels,
-        datasets: [{
-            label: 'Problematic Assets',
-            data: trendValues,
-            borderColor: '#dc3545',
-            backgroundColor: 'rgba(220, 53, 69, 0.1)',
-            borderWidth: 3,
+// Process trend data safely
+if (trendData && Array.isArray(trendData)) {
+    trendLabels.push(...trendData.map(item => item.month));
+    trendValues.push(...trendData.map(item => item.count));
+}
+
+// If no data, show a message
+if (trendLabels.length === 0) {
+    trendLabels.push('No Data');
+    trendValues.push(0);
+}
+
+try {
+    new Chart(trendCtx, {
+        type: 'line',
+        data: {
+            labels: trendLabels,
+            datasets: [{
+                label: 'Problematic Assets',
+                data: trendValues,
+                borderColor: '#dc3545',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                borderWidth: 3,
             fill: true,
             tension: 0.4,
             pointBackgroundColor: '#dc3545',
@@ -548,6 +618,30 @@ new Chart(trendCtx, {
             }
         }
     }
+});
+} catch (error) {
+    console.error('Error creating trend chart:', error);
+    document.getElementById('trendChart').innerHTML = '<div class="text-center text-muted">Chart failed to load</div>';
+}
+
+// Add loading state to clickable numbers
+const clickableNumbers = document.querySelectorAll('.clickable-number');
+
+clickableNumbers.forEach(function(link) {
+    link.addEventListener('click', function(e) {
+        // Add loading state
+        const originalText = this.textContent;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Loading...';
+        this.style.pointerEvents = 'none';
+        
+        // If the page doesn't load within 3 seconds, restore the original text
+        setTimeout(() => {
+            if (this.innerHTML.includes('fa-spinner')) {
+                this.innerHTML = originalText;
+                this.style.pointerEvents = 'auto';
+            }
+        }, 3000);
+    });
 });
 </script>
 @endpush
