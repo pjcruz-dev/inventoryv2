@@ -126,6 +126,20 @@ Route::middleware('auth')->group(function () {
     
     // Dashboard route
     Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+Route::get('/dashboard/asset-movements', [App\Http\Controllers\DashboardController::class, 'assetMovements'])->name('dashboard.asset-movements');
+
+// Debug route to check asset data
+Route::get('/debug-assets', function() {
+    $totalAssets = \App\Models\Asset::count();
+    $movements = \App\Models\Asset::selectRaw('movement, count(*) as count')->groupBy('movement')->get();
+    $recentAssets = \App\Models\Asset::orderBy('created_at', 'desc')->take(5)->get(['id', 'name', 'movement', 'created_at']);
+    
+    return response()->json([
+        'total_assets' => $totalAssets,
+        'movements' => $movements,
+        'recent_assets' => $recentAssets
+    ]);
+});
     
     // Import/Export routes - Enhanced with comprehensive security
     require __DIR__.'/import-export.php';

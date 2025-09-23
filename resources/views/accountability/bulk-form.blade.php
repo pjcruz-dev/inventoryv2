@@ -230,6 +230,12 @@
                     <div class="info-label">Serial Number</div>
                     <div class="info-value">{{ $asset->serial_number }}</div>
                 </div>
+                @if($asset->category && strtolower($asset->category->name) == 'mobile devices' && $asset->mobile_number)
+                <div class="info-item">
+                    <div class="info-label">Mobile Number</div>
+                    <div class="info-value">{{ $asset->mobile_number }}</div>
+                </div>
+                @endif
                 <div class="info-item">
                     <div class="info-label">Model</div>
                     <div class="info-value">{{ $asset->model ?? 'N/A' }}</div>

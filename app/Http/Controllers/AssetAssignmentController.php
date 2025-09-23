@@ -120,7 +120,7 @@ class AssetAssignmentController extends Controller
         
         // Update asset status to Pending Confirmation and movement to Deployed
         $asset->update([
-            'status' => 'Pending',
+            'status' => 'Pending Confirmation',
             'movement' => 'Deployed',
             'assigned_to' => $request->user_id,
             'assigned_date' => $request->assigned_date

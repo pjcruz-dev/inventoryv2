@@ -98,7 +98,7 @@ class DepartmentController extends Controller
      */
     public function edit(Department $department)
     {
-        $users = User::where('status', 'active')
+        $users = User::where('status', 1)
                     ->orderBy('first_name')
                     ->get();
                     

@@ -64,13 +64,25 @@ class DashboardController extends Controller
         }
         $recentAssets = $recentAssetsQuery->take(5)->get();
         
-        // Calculate deployed assets percentage with entity filter
-        $deployedAssetsQuery = Asset::where('status', 'deployed');
+        // Calculate active assets percentage with entity filter (using 'Active' status)
+        $activeAssetsQuery = Asset::where('status', 'Active');
         if ($filterEntity) {
-            $deployedAssetsQuery->where('entity', $filterEntity);
+            $activeAssetsQuery->where('entity', $filterEntity);
         }
-        $deployedAssets = $deployedAssetsQuery->count();
-        $deployedAssetsPercentage = $totalAssets > 0 ? round(($deployedAssets / $totalAssets) * 100, 1) : 0;
+        $activeAssets = $activeAssetsQuery->count();
+        $activeAssetsPercentage = $totalAssets > 0 ? round(($activeAssets / $totalAssets) * 100, 1) : 0;
+        
+        // Get status breakdown for all asset statuses
+        $statusBreakdown = [];
+        $statuses = ['Available', 'Active', 'Inactive', 'Under Maintenance', 'Issue Reported', 'Pending Confirmation', 'Disposed'];
+        
+        foreach ($statuses as $status) {
+            $query = Asset::where('status', $status);
+            if ($filterEntity) {
+                $query->where('entity', $filterEntity);
+            }
+            $statusBreakdown[$status] = $query->count();
+        }
         
         // Get data for the three dashboard sections with filters
         $weeklyBreakdown = $this->getWeeklyBreakdown($filterMonth, $filterYear);
@@ -93,7 +105,8 @@ class DashboardController extends Controller
             'totalDepartments',
             'totalVendors',
             'recentAssets',
-            'deployedAssetsPercentage',
+            'activeAssetsPercentage',
+            'statusBreakdown',
             'weeklyBreakdown',
             'monthlyRollup',
             'chartData',
@@ -106,7 +119,7 @@ class DashboardController extends Controller
      */
     private function getWeeklyBreakdown($filterMonth = null, $filterYear = null)
     {
-        $statuses = ['Deployed', 'Disposed', 'New Arrival', 'Returned', 'Maintenance'];
+        $statuses = ['Deployed', 'Disposed', 'New Arrival', 'Returned'];
         $months = [];
         
         if ($filterMonth && $filterYear) {
@@ -118,8 +131,12 @@ class DashboardController extends Controller
             $startOfMonth = $date->startOfMonth()->copy();
             $endOfMonth = $date->endOfMonth()->copy();
             
-            for ($week = 1; $week <= 4; $week++) {
-                $weekStart = $startOfMonth->copy()->addWeeks($week - 1);
+            // Calculate the correct number of weeks needed for this month
+            $totalDays = $endOfMonth->day;
+            $weeksNeeded = ceil($totalDays / 7);
+            
+            for ($week = 1; $week <= $weeksNeeded; $week++) {
+                $weekStart = $startOfMonth->copy()->addDays(($week - 1) * 7);
                 $weekEnd = $weekStart->copy()->addDays(6);
                 
                 if ($weekEnd->gt($endOfMonth)) {
@@ -128,19 +145,39 @@ class DashboardController extends Controller
                 
                 $weekData = [];
                 foreach ($statuses as $status) {
-                    // Count assets that changed to this movement during this week
-                    $count = \App\Models\AssetTimeline::where('action', 'updated')
+                    $assetIds = collect();
+                    
+                    // Get assets that were created with this movement during this week
+                    $createdAssetIds = \App\Models\Asset::where('movement', $status)
+                        ->whereBetween('created_at', [$weekStart, $weekEnd])
+                        ->pluck('id');
+                    $assetIds = $assetIds->merge($createdAssetIds);
+                    
+                    // Get assets that had their movement changed to this status during this week
+                    $timelineAssetIds = \App\Models\AssetTimeline::where('action', 'updated')
                         ->whereJsonContains('new_values->movement', $status)
                         ->whereBetween('performed_at', [$weekStart, $weekEnd])
-                        ->distinct('asset_id')
-                        ->count('asset_id');
+                        ->whereNotIn('asset_id', $createdAssetIds)
+                        ->pluck('asset_id');
+                    $assetIds = $assetIds->merge($timelineAssetIds);
                     
-                    // Also count assets created with this movement during this week
-                    $createdCount = \App\Models\Asset::where('movement', $status)
-                        ->whereBetween('created_at', [$weekStart, $weekEnd])
-                        ->count();
+                    // For Deployed status, also include Deployed Tagged
+                    if ($status === 'Deployed') {
+                        $deployedTaggedCreatedIds = \App\Models\Asset::where('movement', 'Deployed Tagged')
+                            ->whereBetween('created_at', [$weekStart, $weekEnd])
+                            ->pluck('id');
+                        $assetIds = $assetIds->merge($deployedTaggedCreatedIds);
+                        
+                        $deployedTaggedTimelineIds = \App\Models\AssetTimeline::where('action', 'updated')
+                            ->whereJsonContains('new_values->movement', 'Deployed Tagged')
+                            ->whereBetween('performed_at', [$weekStart, $weekEnd])
+                            ->whereNotIn('asset_id', $deployedTaggedCreatedIds)
+                            ->pluck('asset_id');
+                        $assetIds = $assetIds->merge($deployedTaggedTimelineIds);
+                    }
                     
-                    $weekData[$status] = $count + $createdCount;
+                    $count = $assetIds->unique()->count();
+                    $weekData[$status] = $count;
                 }
                 
                 // Create week label with date range
@@ -164,8 +201,12 @@ class DashboardController extends Controller
                 $startOfMonth = $date->startOfMonth()->copy();
                 $endOfMonth = $date->endOfMonth()->copy();
                 
-                for ($week = 1; $week <= 4; $week++) {
-                    $weekStart = $startOfMonth->copy()->addWeeks($week - 1);
+                // Calculate the correct number of weeks needed for this month
+                $totalDays = $endOfMonth->day;
+                $weeksNeeded = ceil($totalDays / 7);
+                
+                for ($week = 1; $week <= $weeksNeeded; $week++) {
+                    $weekStart = $startOfMonth->copy()->addDays(($week - 1) * 7);
                     $weekEnd = $weekStart->copy()->addDays(6);
                     
                     if ($weekEnd->gt($endOfMonth)) {
@@ -174,19 +215,39 @@ class DashboardController extends Controller
                     
                     $weekData = [];
                     foreach ($statuses as $status) {
-                        // Count assets that changed to this movement during this week
-                        $count = \App\Models\AssetTimeline::where('action', 'updated')
+                        $assetIds = collect();
+                        
+                        // Get assets that were created with this movement during this week
+                        $createdAssetIds = \App\Models\Asset::where('movement', $status)
+                            ->whereBetween('created_at', [$weekStart, $weekEnd])
+                            ->pluck('id');
+                        $assetIds = $assetIds->merge($createdAssetIds);
+                        
+                        // Get assets that had their movement changed to this status during this week
+                        $timelineAssetIds = \App\Models\AssetTimeline::where('action', 'updated')
                             ->whereJsonContains('new_values->movement', $status)
                             ->whereBetween('performed_at', [$weekStart, $weekEnd])
-                            ->distinct('asset_id')
-                            ->count('asset_id');
+                            ->whereNotIn('asset_id', $createdAssetIds)
+                            ->pluck('asset_id');
+                        $assetIds = $assetIds->merge($timelineAssetIds);
                         
-                        // Also count assets created with this movement during this week
-                        $createdCount = \App\Models\Asset::where('movement', $status)
-                            ->whereBetween('created_at', [$weekStart, $weekEnd])
-                            ->count();
+                        // For Deployed status, also include Deployed Tagged
+                        if ($status === 'Deployed') {
+                            $deployedTaggedCreatedIds = \App\Models\Asset::where('movement', 'Deployed Tagged')
+                                ->whereBetween('created_at', [$weekStart, $weekEnd])
+                                ->pluck('id');
+                            $assetIds = $assetIds->merge($deployedTaggedCreatedIds);
+                            
+                            $deployedTaggedTimelineIds = \App\Models\AssetTimeline::where('action', 'updated')
+                                ->whereJsonContains('new_values->movement', 'Deployed Tagged')
+                                ->whereBetween('performed_at', [$weekStart, $weekEnd])
+                                ->whereNotIn('asset_id', $deployedTaggedCreatedIds)
+                                ->pluck('asset_id');
+                            $assetIds = $assetIds->merge($deployedTaggedTimelineIds);
+                        }
                         
-                        $weekData[$status] = $count + $createdCount;
+                        $count = $assetIds->unique()->count();
+                        $weekData[$status] = $count;
                     }
                     
                     // Create week label with date range
@@ -202,7 +263,7 @@ class DashboardController extends Controller
             }
         }
         
-        return ['statuses' => $statuses, 'months' => $months];
+        return $months;
     }
     
     /**
@@ -225,19 +286,22 @@ class DashboardController extends Controller
             $totalForMonth = 0;
             
             foreach ($statuses as $status) {
-                // Count assets that changed to this status during this month
-                $count = \App\Models\AssetTimeline::where('action', 'updated')
+                // Get unique asset IDs that changed to this status during this month
+                $timelineAssetIds = \App\Models\AssetTimeline::where('action', 'updated')
                     ->whereJsonContains('new_values->status', $status)
                     ->whereBetween('performed_at', [$startOfMonth, $endOfMonth])
                     ->distinct('asset_id')
-                    ->count('asset_id');
+                    ->pluck('asset_id');
                 
-                // Also count assets created with this status during this month
-                $createdCount = Asset::where('status', $status)
+                // Get asset IDs created with this status during this month
+                $createdAssetIds = Asset::where('status', $status)
                     ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
-                    ->count();
+                    ->pluck('id');
                 
-                $totalCount = $count + $createdCount;
+                // Combine and get unique count (same logic as weekly breakdown)
+                $uniqueAssetIds = $timelineAssetIds->merge($createdAssetIds)->unique();
+                $totalCount = $uniqueAssetIds->count();
+                
                 $monthData[$status] = $totalCount;
                 $totalForMonth += $totalCount;
             }
@@ -266,19 +330,22 @@ class DashboardController extends Controller
                 $totalForMonth = 0;
                 
                 foreach ($statuses as $status) {
-                    // Count assets that changed to this status during this month
-                    $count = \App\Models\AssetTimeline::where('action', 'updated')
+                    // Get unique asset IDs that changed to this status during this month
+                    $timelineAssetIds = \App\Models\AssetTimeline::where('action', 'updated')
                         ->whereJsonContains('new_values->status', $status)
                         ->whereBetween('performed_at', [$startOfMonth, $endOfMonth])
                         ->distinct('asset_id')
-                        ->count('asset_id');
+                        ->pluck('asset_id');
                     
-                    // Also count assets created with this status during this month
-                    $createdCount = Asset::where('status', $status)
+                    // Get asset IDs created with this status during this month
+                    $createdAssetIds = Asset::where('status', $status)
                         ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
-                        ->count();
+                        ->pluck('id');
                     
-                    $totalCount = $count + $createdCount;
+                    // Combine and get unique count (same logic as weekly breakdown)
+                    $uniqueAssetIds = $timelineAssetIds->merge($createdAssetIds)->unique();
+                    $totalCount = $uniqueAssetIds->count();
+                    
                     $monthData[$status] = $totalCount;
                     $totalForMonth += $totalCount;
                 }
@@ -297,7 +364,7 @@ class DashboardController extends Controller
             }
         }
         
-        return ['statuses' => $statuses, 'months' => $months];
+        return $months;
     }
     
     /**
@@ -306,48 +373,63 @@ class DashboardController extends Controller
     private function getChartData($filterMonth = null, $filterYear = null)
     {
         $statuses = ['deployed', 'problematic', 'pending_confirm', 'returned', 'disposed', 'new_arrived'];
+        $movements = ['Deployed', 'Disposed', 'New Arrival', 'Returned'];
         
-        // Current status distribution (for pie chart)
+        // Current movement distribution (for pie chart)
         $currentDistribution = [];
         $total = Asset::count();
         
-        foreach ($statuses as $status) {
-            $count = Asset::where('status', $status)->count();
+        foreach ($movements as $movement) {
+            if ($movement === 'Deployed') {
+                // Combine both 'Deployed' and 'Deployed Tagged' into one 'Deployed' count
+                $count = Asset::whereIn('movement', ['Deployed', 'Deployed Tagged'])->count();
+            } else {
+                $count = Asset::where('movement', $movement)->count();
+            }
             $percentage = $total > 0 ? round(($count / $total) * 100, 1) : 0;
-            $currentDistribution[$status] = [
+            $currentDistribution[strtolower(str_replace(' ', '_', $movement))] = [
                 'count' => $count,
                 'percentage' => $percentage
             ];
         }
         
         if ($filterMonth && $filterYear) {
-            // Filter for specific month and year
+            // Filter for specific month and year - show current status distribution
             $date = now()->setYear((int)$filterYear)->setMonth((int)$filterMonth);
             
-            // Monthly trends for problematic assets (single month)
+            // Monthly trends for problematic assets (last 6 months)
             $problematicTrend = [];
-            $monthName = $date->format('M Y');
-            $count = Asset::where('status', 'problematic')
-                ->whereYear('created_at', $filterYear)
-                ->whereMonth('created_at', $filterMonth)
-                ->count();
-            $problematicTrend[] = [
-                'month' => $monthName,
-                'count' => $count
-            ];
-            
-            // Monthly totals by status (single month)
-            $monthlyTotals = [];
-            $monthName = $date->format('F');
-            $monthData = [];
-            foreach ($statuses as $status) {
-                $count = Asset::where('status', $status)
-                    ->whereYear('created_at', $filterYear)
-                    ->whereMonth('created_at', $filterMonth)
+            for ($i = 5; $i >= 0; $i--) {
+                $trendDate = $date->copy()->subMonths($i);
+                $monthName = $trendDate->format('M Y');
+                
+                $count = Asset::where('status', 'problematic')
+                    ->whereYear('created_at', $trendDate->year)
+                    ->whereMonth('created_at', $trendDate->month)
                     ->count();
-                $monthData[$status] = $count;
+                    
+                $problematicTrend[] = [
+                    'month' => $monthName,
+                    'count' => $count
+                ];
             }
-            $monthlyTotals[$monthName] = $monthData;
+            
+            // Monthly totals by status (last 3 months)
+            $monthlyTotals = [];
+            for ($i = 2; $i >= 0; $i--) {
+                $trendDate = $date->copy()->subMonths($i);
+                $monthName = $trendDate->format('F');
+                
+                $monthData = [];
+                foreach ($statuses as $status) {
+                    $count = Asset::where('status', $status)
+                        ->whereYear('created_at', $trendDate->year)
+                        ->whereMonth('created_at', $trendDate->month)
+                        ->count();
+                    $monthData[$status] = $count;
+                }
+                $monthlyTotals[$monthName] = $monthData;
+            }
         } else {
             // Monthly trends for problematic assets (for trend line)
             $problematicTrend = [];
@@ -390,5 +472,78 @@ class DashboardController extends Controller
             'monthlyTotals' => $monthlyTotals,
             'statuses' => $statuses
         ];
+    }
+
+    /**
+     * Show detailed asset movements for a specific week and status
+     */
+    public function assetMovements(Request $request)
+    {
+        $week = $request->get('week');
+        $status = $request->get('status');
+        $month = $request->get('month');
+        $year = $request->get('year');
+        
+        if (!$week || !$status || !$month || !$year) {
+            return redirect()->route('dashboard')->with('error', 'Invalid parameters');
+        }
+        
+        // Parse the month and year
+        $date = now()->setYear((int)$year)->setMonth((int)$month);
+        $startOfMonth = $date->startOfMonth()->copy();
+        $endOfMonth = $date->endOfMonth()->copy();
+        
+        // Calculate week dates
+        $weekNumber = (int)str_replace('Week ', '', $week);
+        $weekStart = $startOfMonth->copy()->addWeeks($weekNumber - 1);
+        $weekEnd = $weekStart->copy()->addDays(6);
+        
+        if ($weekEnd->gt($endOfMonth)) {
+            $weekEnd = $endOfMonth->copy();
+        }
+        
+        // Get assets that had their movement changed to this status during this specific week
+        $assetIds = collect();
+        
+        // Get assets that were created with this movement during this week
+        $createdAssetIds = \App\Models\Asset::where('movement', $status)
+            ->whereBetween('created_at', [$weekStart, $weekEnd])
+            ->pluck('id');
+        $assetIds = $assetIds->merge($createdAssetIds);
+        
+        // Get assets that had their movement changed to this status during this week
+        // (excluding the ones already created with this status)
+        $timelineAssetIds = \App\Models\AssetTimeline::where('action', 'updated')
+            ->whereJsonContains('new_values->movement', $status)
+            ->whereBetween('performed_at', [$weekStart, $weekEnd])
+            ->whereNotIn('asset_id', $createdAssetIds)
+            ->pluck('asset_id');
+        $assetIds = $assetIds->merge($timelineAssetIds);
+        
+        // For Deployed status, also include Deployed Tagged
+        if ($status === 'Deployed') {
+            $deployedTaggedCreatedIds = \App\Models\Asset::where('movement', 'Deployed Tagged')
+                ->whereBetween('created_at', [$weekStart, $weekEnd])
+                ->pluck('id');
+            $assetIds = $assetIds->merge($deployedTaggedCreatedIds);
+            
+            $deployedTaggedTimelineIds = \App\Models\AssetTimeline::where('action', 'updated')
+                ->whereJsonContains('new_values->movement', 'Deployed Tagged')
+                ->whereBetween('performed_at', [$weekStart, $weekEnd])
+                ->whereNotIn('asset_id', $deployedTaggedCreatedIds)
+                ->pluck('asset_id');
+            $assetIds = $assetIds->merge($deployedTaggedTimelineIds);
+        }
+        
+        // Get unique asset IDs
+        $uniqueAssetIds = $assetIds->unique();
+        
+        // Get the actual assets with relationships
+        $assets = \App\Models\Asset::with(['category', 'vendor', 'assignedUser', 'department'])
+            ->whereIn('id', $uniqueAssetIds)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        return view('dashboard.asset-movements', compact('assets', 'week', 'status', 'month', 'year', 'weekStart', 'weekEnd'));
     }
 }

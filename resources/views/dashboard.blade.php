@@ -186,31 +186,28 @@
                 <div class="card-body">
                     <div class="status-overview">
                         <div class="status-main">
-                            <div class="status-percentage">{{ $deployedAssetsPercentage }}%</div>
-                            <div class="status-label">Assets Deployed</div>
+                            <div class="status-percentage">{{ $activeAssetsPercentage }}%</div>
+                            <div class="status-label">Assets Active</div>
                     </div>
                         <div class="status-progress">
                             <div class="progress-ring">
                                 <svg class="progress-ring-svg" width="120" height="120">
                                     <circle class="progress-ring-circle-bg" cx="60" cy="60" r="50"/>
                                     <circle class="progress-ring-circle" cx="60" cy="60" r="50" 
-                                            style="stroke-dasharray: {{ 2 * pi() * 50 }}; stroke-dashoffset: {{ 2 * pi() * 50 * (1 - $deployedAssetsPercentage / 100) }};"/>
+                                            style="stroke-dasharray: {{ 2 * pi() * 50 }}; stroke-dashoffset: {{ 2 * pi() * 50 * (1 - $activeAssetsPercentage / 100) }};"/>
                                 </svg>
-                                <div class="progress-text">{{ $deployedAssetsPercentage }}%</div>
+                                <div class="progress-text">{{ $activeAssetsPercentage }}%</div>
                     </div>
                     </div>
                 </div>
                     <div class="status-breakdown">
+                        @foreach($statusBreakdown as $status => $count)
                         <div class="status-item">
-                            <div class="status-dot deployed"></div>
-                            <span class="status-name">Deployed</span>
-                            <span class="status-count">{{ \App\Models\Asset::where('status', 'deployed')->count() }}</span>
+                            <div class="status-dot status-{{ strtolower(str_replace(' ', '-', $status)) }}"></div>
+                            <span class="status-name">{{ $status }}</span>
+                            <span class="status-count">{{ $count }}</span>
                         </div>
-                        <div class="status-item">
-                            <div class="status-dot pending"></div>
-                            <span class="status-name">Pending</span>
-                            <span class="status-count">{{ $totalAssets - \App\Models\Asset::where('status', 'deployed')->count() }}</span>
-                        </div>
+                        @endforeach
                     </div>
                     
                     <!-- Enhanced Quick Actions Panel -->
@@ -321,7 +318,6 @@
                                             <th class="disposed-column">DISPOSED</th>
                                             <th class="new-arrival-column">NEW ARRIVAL</th>
                                             <th class="returned-column">RETURNED</th>
-                                            <th class="maintenance-column">MAINTENANCE</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -330,15 +326,86 @@
                                             <tr>
                                                 <td class="week-cell">
                                                     <strong>{{ $week }}</strong>
-                                                    @if(isset($weekData['_date_range']))
-                                                        <br><small class="text-muted">{{ $weekData['_date_range'] }}</small>
+                                                </td>
+                                                <td class="deployed-cell">
+                                                    @php
+                                                        $deployedCount = $weekData['Deployed'] ?? 0;
+                                                        $monthNumber = date('n', strtotime($month));
+                                                        $year = date('Y', strtotime($month));
+                                                        $weekNumber = (int)str_replace('Week ', '', $week);
+                                                    @endphp
+                                                    @if($deployedCount > 0)
+                                                        <a href="{{ route('dashboard.asset-movements', [
+                                                            'week' => 'Week ' . $weekNumber,
+                                                            'status' => 'Deployed',
+                                                            'month' => $monthNumber,
+                                                            'year' => $year
+                                                        ]) }}" 
+                                                           class="text-decoration-none fw-bold text-success clickable-number" 
+                                                           title="Click to view {{ $deployedCount }} deployed assets">
+                                                            {{ $deployedCount }}
+                                                        </a>
+                                                    @else
+                                                        <span class="text-muted">{{ $deployedCount }}</span>
                                                     @endif
                                                 </td>
-                                                <td class="deployed-cell">{{ $weekData['Deployed'] ?? 0 }}</td>
-                                                <td class="disposed-cell">{{ $weekData['Disposed'] ?? 0 }}</td>
-                                                <td class="new-arrival-cell">{{ $weekData['New Arrival'] ?? 0 }}</td>
-                                                <td class="returned-cell">{{ $weekData['Returned'] ?? 0 }}</td>
-                                                <td class="maintenance-cell">{{ $weekData['Maintenance'] ?? 0 }}</td>
+                                                <td class="disposed-cell">
+                                                    @php
+                                                        $disposedCount = $weekData['Disposed'] ?? 0;
+                                                    @endphp
+                                                    @if($disposedCount > 0)
+                                                        <a href="{{ route('dashboard.asset-movements', [
+                                                            'week' => 'Week ' . $weekNumber,
+                                                            'status' => 'Disposed',
+                                                            'month' => $monthNumber,
+                                                            'year' => $year
+                                                        ]) }}" 
+                                                           class="text-decoration-none fw-bold text-danger clickable-number" 
+                                                           title="Click to view {{ $disposedCount }} disposed assets">
+                                                            {{ $disposedCount }}
+                                                        </a>
+                                                    @else
+                                                        <span class="text-muted">{{ $disposedCount }}</span>
+                                                    @endif
+                                                </td>
+                                                <td class="new-arrival-cell">
+                                                    @php
+                                                        $newArrivalCount = $weekData['New Arrival'] ?? 0;
+                                                    @endphp
+                                                    @if($newArrivalCount > 0)
+                                                        <a href="{{ route('dashboard.asset-movements', [
+                                                            'week' => 'Week ' . $weekNumber,
+                                                            'status' => 'New Arrival',
+                                                            'month' => $monthNumber,
+                                                            'year' => $year
+                                                        ]) }}" 
+                                                           class="text-decoration-none fw-bold text-primary clickable-number" 
+                                                           title="Click to view {{ $newArrivalCount }} new arrival assets">
+                                                            {{ $newArrivalCount }}
+                                                        </a>
+                                                    @else
+                                                        <span class="text-muted">{{ $newArrivalCount }}</span>
+                                                    @endif
+                                                </td>
+                                                <td class="returned-cell">
+                                                    @php
+                                                        $returnedCount = $weekData['Returned'] ?? 0;
+                                                    @endphp
+                                                    @if($returnedCount > 0)
+                                                        <a href="{{ route('dashboard.asset-movements', [
+                                                            'week' => 'Week ' . $weekNumber,
+                                                            'status' => 'Returned',
+                                                            'month' => $monthNumber,
+                                                            'year' => $year
+                                                        ]) }}" 
+                                                           class="text-decoration-none fw-bold text-warning clickable-number" 
+                                                           title="Click to view {{ $returnedCount }} returned assets">
+                                                            {{ $returnedCount }}
+                                                        </a>
+                                                    @else
+                                                        <span class="text-muted">{{ $returnedCount }}</span>
+                                                    @endif
+                                                </td>
                                             </tr>
                                             @endif
                                         @endforeach
@@ -372,7 +439,7 @@
                 <div class="card-header">
                     <h5 class="card-title">
                         <i class="fas fa-chart-pie me-2"></i>
-                        Asset Distribution
+                        Asset Movement Distribution
                     </h5>
                     <div class="card-actions">
                         <div class="chart-controls">
@@ -391,8 +458,8 @@
                             <div class="empty-chart-icon">
                                 <i class="fas fa-chart-pie"></i>
                             </div>
-                            <div class="empty-chart-text">No Assets Available</div>
-                            <div class="empty-chart-subtext">Create your first asset to see distribution</div>
+                            <div class="empty-chart-text">No Movement Data Available</div>
+                            <div class="empty-chart-subtext">Create your first asset to see movement distribution</div>
                             <a href="{{ route('assets.create') }}" class="btn btn-primary btn-sm mt-3">
                                 <i class="fas fa-plus me-2"></i>Add First Asset
                             </a>
@@ -714,12 +781,32 @@
     border-radius: 50%;
 }
 
-.status-dot.deployed {
+.status-dot.available {
+    background: #3b82f6;
+}
+
+.status-dot.active {
     background: #10b981;
 }
 
-.status-dot.pending {
+.status-dot.inactive {
+    background: #6b7280;
+}
+
+.status-dot.under-maintenance {
     background: #f59e0b;
+}
+
+.status-dot.issue-reported {
+    background: #ef4444;
+}
+
+.status-dot.pending-confirmation {
+    background: #8b5cf6;
+}
+
+.status-dot.disposed {
+    background: #dc2626;
 }
 
 .status-name {
@@ -1555,6 +1642,26 @@
     vertical-align: middle;
 }
 
+/* Clickable Numbers Styling */
+.clickable-number {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.clickable-number:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    transform: scale(1.1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.clickable-number:active {
+    transform: scale(0.95);
+}
+
 .week-cell strong {
     display: block;
     font-size: 0.875rem;
@@ -1635,150 +1742,164 @@
 const distributionCanvas = document.getElementById('distributionChart');
 if (distributionCanvas) {
     const distributionCtx = distributionCanvas.getContext('2d');
-const distributionData = @json($chartData['currentDistribution']);
+    const distributionData = @json($chartData['currentDistribution'] ?? []);
 
-const distributionLabels = [];
-const distributionValues = [];
-const distributionColors = [];
+    const distributionLabels = [];
+    const distributionValues = [];
+    const distributionColors = [];
 
-for (const [status, data] of Object.entries(distributionData)) {
-    if (data.count > 0) {
-        distributionLabels.push(status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()));
-        distributionValues.push(data.count);
-        
-        switch(status) {
-                case 'deployed': distributionColors.push('#10b981'); break;
-                case 'problematic': distributionColors.push('#ef4444'); break;
-                case 'pending_confirm': distributionColors.push('#f59e0b'); break;
-                case 'returned': distributionColors.push('#3b82f6'); break;
-                case 'disposed': distributionColors.push('#6b7280'); break;
-                case 'new_arrived': distributionColors.push('#667eea'); break;
-                default: distributionColors.push('#d1d5db'); break;
+    // Process distribution data
+    if (distributionData && typeof distributionData === 'object') {
+        for (const [movement, data] of Object.entries(distributionData)) {
+            if (data && data.count > 0) {
+                distributionLabels.push(movement.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()));
+                distributionValues.push(data.count);
+                
+                switch(movement) {
+                    case 'deployed': distributionColors.push('#10b981'); break;
+                    case 'disposed': distributionColors.push('#ef4444'); break;
+                    case 'new_arrival': distributionColors.push('#3b82f6'); break;
+                    case 'returned': distributionColors.push('#f59e0b'); break;
+                    default: distributionColors.push('#d1d5db'); break;
+                }
             }
         }
     }
 
-    // Only create chart if we have data
-    if (distributionValues.length > 0) {
-        const distributionChart = new Chart(distributionCtx, {
-    type: 'doughnut',
-    data: {
-        labels: distributionLabels,
-        datasets: [{
-            data: distributionValues,
-            backgroundColor: distributionColors,
-                    borderWidth: 0,
-                    hoverOffset: 10
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'bottom',
-                labels: {
-                    padding: 20,
-                            usePointStyle: true,
-                            font: {
-                                size: 12,
-                                weight: '500'
-                            }
+    // Create chart even if no data (show empty state)
+    if (distributionValues.length === 0) {
+        distributionLabels.push('No Data');
+        distributionValues.push(1);
+        distributionColors.push('#e5e7eb');
+    }
+
+    const distributionChart = new Chart(distributionCtx, {
+        type: 'doughnut',
+        data: {
+            labels: distributionLabels,
+            datasets: [{
+                data: distributionValues,
+                backgroundColor: distributionColors,
+                borderWidth: 0,
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        font: {
+                            size: 12,
+                            weight: '500'
                         }
                     }
-                },
-                cutout: '70%'
-            }
-        });
+                }
+            },
+            cutout: '70%'
+        }
+    });
 
-        // Chart Controls
-        document.querySelectorAll('[data-chart="doughnut"]').forEach(btn => {
-            btn.addEventListener('click', function() {
-                distributionChart.config.type = 'doughnut';
-                distributionChart.update();
-                document.querySelectorAll('.chart-controls .btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-            });
+    // Chart Controls
+    document.querySelectorAll('[data-chart="doughnut"]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            distributionChart.config.type = 'doughnut';
+            distributionChart.update();
+            document.querySelectorAll('.chart-controls .btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
         });
+    });
 
-        document.querySelectorAll('[data-chart="bar"]').forEach(btn => {
-            btn.addEventListener('click', function() {
-                distributionChart.config.type = 'bar';
-                distributionChart.update();
-                document.querySelectorAll('.chart-controls .btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-            });
+    document.querySelectorAll('[data-chart="bar"]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            distributionChart.config.type = 'bar';
+            distributionChart.update();
+            document.querySelectorAll('.chart-controls .btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
         });
-    }
+    });
 }
 
 // Asset Trends Chart
 const trendCanvas = document.getElementById('trendChart');
 if (trendCanvas) {
     const trendCtx = trendCanvas.getContext('2d');
-const trendData = @json($chartData['problematicTrend']);
+    const trendData = @json($chartData['problematicTrend'] ?? []);
 
-const trendLabels = trendData.map(item => item.month);
-const trendValues = trendData.map(item => item.count);
+    const trendLabels = [];
+    const trendValues = [];
 
-    // Only create chart if we have data
-    if (trendValues.length > 0) {
-        const trendChart = new Chart(trendCtx, {
-    type: 'line',
-    data: {
-        labels: trendLabels,
-        datasets: [{
-            label: 'Problematic Assets',
-            data: trendValues,
-                    borderColor: '#ef4444',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-            borderWidth: 3,
-            fill: true,
-            tension: 0.4,
-                    pointBackgroundColor: '#ef4444',
-            pointBorderColor: '#fff',
-            pointBorderWidth: 2,
-                    pointRadius: 6,
-                    pointHoverRadius: 8
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: false
-            }
+    // Process trend data safely
+    if (trendData && Array.isArray(trendData)) {
+        trendLabels.push(...trendData.map(item => item.month));
+        trendValues.push(...trendData.map(item => item.count));
+    }
+
+    // Create chart even if no data (show empty state)
+    if (trendValues.length === 0) {
+        trendLabels.push('No Data');
+        trendValues.push(0);
+    }
+
+    const trendChart = new Chart(trendCtx, {
+        type: 'line',
+        data: {
+            labels: trendLabels,
+            datasets: [{
+                label: 'Problematic Assets',
+                data: trendValues,
+                borderColor: '#ef4444',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#ef4444',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 8
+            }]
         },
-        scales: {
-            y: {
-                beginAtZero: true,
-                grid: {
-                            color: 'rgba(0,0,0,0.05)',
-                            drawBorder: false
-                        },
-                        ticks: {
-                            color: '#6b7280',
-                            font: {
-                                size: 11
-                            }
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
                 }
             },
-            x: {
-                grid: {
-                    display: false
-                        },
-                        ticks: {
-                            color: '#6b7280',
-                            font: {
-                                size: 11
-                            }
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0,0,0,0.05)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: '#6b7280',
+                        font: {
+                            size: 11
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#6b7280',
+                        font: {
+                            size: 11
                         }
                     }
                 }
             }
-        });
-    }
+        }
+    });
 }
 
 // Chart Controls (moved inside chart creation)
