@@ -23,8 +23,14 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     
     // Asset Management API
-    Route::apiResource('assets', AssetApiController::class);
-    Route::get('assets/statistics/overview', [AssetApiController::class, 'statistics'])->name('assets.statistics');
+    Route::apiResource('assets', AssetApiController::class)->names([
+        'index' => 'api.assets.index',
+        'store' => 'api.assets.store',
+        'show' => 'api.assets.show',
+        'update' => 'api.assets.update',
+        'destroy' => 'api.assets.destroy'
+    ]);
+    Route::get('assets/statistics/overview', [AssetApiController::class, 'statistics'])->name('api.assets.statistics');
     
     // Additional API endpoints can be added here
     Route::get('dashboard/stats', function (Request $request) {

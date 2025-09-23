@@ -51,9 +51,17 @@ class RolePermissionSeeder extends Seeder
                 'view_maintenance', 'create_maintenance', 'edit_maintenance', 'delete_maintenance',
                 'view_disposal', 'create_disposal', 'edit_disposal', 'delete_disposal',
                 'view_timeline', 'create_timeline',
-                'view_dashboard', 'view_notifications',
+                'view_dashboard', 'view_notifications', 'manage_notifications',
                 'import_export_access', 'template_download', 'data_export', 'data_import',
                 'view_accountability_forms', 'generate_accountability_forms', 'print_accountability_forms', 'bulk_accountability_forms',
+                // New feature permissions
+                'generate_qr_codes', 'download_qr_codes', 'bulk_generate_qr_codes', 'scan_qr_codes', 'process_qr_scans',
+                'upload_asset_images', 'delete_asset_images', 'view_asset_images', 'get_asset_thumbnails',
+                'global_search', 'advanced_search', 'search_suggestions', 'search_filter_options',
+                'use_keyboard_shortcuts', 'view_keyboard_shortcuts',
+                'mobile_access', 'mobile_asset_management', 'mobile_qr_scanner',
+                'export_assets_excel', 'export_assets_pdf', 'export_assets_csv', 'preview_exports', 'download_exports',
+                'toggle_dark_mode', 'manage_theme_preferences',
                 'admin_access'
             ];
             $adminRole->syncPermissions($adminPermissions);
@@ -72,7 +80,15 @@ class RolePermissionSeeder extends Seeder
                 'view_maintenance', 'create_maintenance',
                 'view_disposal', 'create_disposal',
                 'view_timeline', 'view_dashboard', 'view_notifications',
-                'template_download', 'data_export'
+                'template_download', 'data_export',
+                // New feature permissions for managers
+                'generate_qr_codes', 'download_qr_codes', 'scan_qr_codes', 'process_qr_scans',
+                'view_asset_images', 'get_asset_thumbnails',
+                'global_search', 'advanced_search', 'search_suggestions',
+                'use_keyboard_shortcuts', 'view_keyboard_shortcuts',
+                'mobile_access', 'mobile_asset_management', 'mobile_qr_scanner',
+                'export_assets_excel', 'export_assets_pdf', 'export_assets_csv', 'preview_exports',
+                'toggle_dark_mode'
             ];
             $managerRole->syncPermissions($managerPermissions);
             $this->command->info('✓ Manager permissions assigned to Manager role');
@@ -87,7 +103,15 @@ class RolePermissionSeeder extends Seeder
                 'view_asset_categories',
                 'view_computers', 'view_monitors', 'view_printers', 'view_peripherals',
                 'view_departments', 'view_vendors',
-                'view_timeline', 'view_dashboard', 'view_notifications'
+                'view_timeline', 'view_dashboard', 'view_notifications',
+                // New feature permissions for users
+                'scan_qr_codes', 'process_qr_scans',
+                'view_asset_images', 'get_asset_thumbnails',
+                'global_search', 'search_suggestions',
+                'use_keyboard_shortcuts', 'view_keyboard_shortcuts',
+                'mobile_access', 'mobile_asset_management', 'mobile_qr_scanner',
+                'export_assets_excel', 'export_assets_pdf', 'export_assets_csv',
+                'toggle_dark_mode'
             ];
             $userRole->syncPermissions($userPermissions);
             $this->command->info('✓ User permissions assigned to User role');
@@ -108,7 +132,15 @@ class RolePermissionSeeder extends Seeder
                 'view_maintenance', 'create_maintenance', 'edit_maintenance',
                 'view_timeline', 'create_timeline',
                 'view_dashboard', 'view_notifications',
-                'template_download', 'data_export'
+                'template_download', 'data_export',
+                // New feature permissions for IT Support
+                'generate_qr_codes', 'download_qr_codes', 'bulk_generate_qr_codes', 'scan_qr_codes', 'process_qr_scans',
+                'upload_asset_images', 'delete_asset_images', 'view_asset_images', 'get_asset_thumbnails',
+                'global_search', 'advanced_search', 'search_suggestions', 'search_filter_options',
+                'use_keyboard_shortcuts', 'view_keyboard_shortcuts',
+                'mobile_access', 'mobile_asset_management', 'mobile_qr_scanner',
+                'export_assets_excel', 'export_assets_pdf', 'export_assets_csv', 'preview_exports', 'download_exports',
+                'toggle_dark_mode', 'manage_theme_preferences'
             ];
             $itSupportRole->syncPermissions($itSupportPermissions);
             $this->command->info('✓ IT Support permissions assigned to IT Support role');

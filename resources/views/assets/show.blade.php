@@ -9,6 +9,11 @@
         <i class="fas fa-edit me-2"></i>Edit Asset
     </a>
     @endcan
+    @can('view_assets')
+    <a href="{{ route('assets.qr-code', $asset) }}" class="btn btn-info me-2" target="_blank">
+        <i class="fas fa-qrcode me-2"></i>QR Code
+    </a>
+    @endcan
     <a href="{{ route('assets.index') }}" class="btn btn-secondary">
         <i class="fas fa-arrow-left me-2"></i>Back to Assets
     </a>
@@ -186,6 +191,86 @@
     </div>
     
     <div class="col-lg-4">
+        <!-- Asset Image -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-image me-2"></i>Asset Image
+                </h6>
+            </div>
+            <div class="card-body text-center">
+                <div id="asset-image-container">
+                    @if($asset->hasImage())
+                        <img src="{{ $asset->getImageUrl() }}" 
+                             alt="{{ $asset->getImageAlt() }}" 
+                             class="img-fluid mb-3 rounded"
+                             style="max-width: 100%; max-height: 300px; object-fit: cover;"
+                             id="asset-image">
+                        <div class="image-info mb-3">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Size: {{ $asset->getFormattedImageSize() }}
+                            </small>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-primary btn-sm" onclick="viewFullImage()">
+                                <i class="fas fa-expand me-1"></i>View Full Size
+                            </button>
+                            @can('edit_assets')
+                            <button class="btn btn-outline-warning btn-sm" onclick="openImageUploadModal()">
+                                <i class="fas fa-edit me-1"></i>Change Image
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="deleteAssetImage()">
+                                <i class="fas fa-trash me-1"></i>Delete Image
+                            </button>
+                            @endcan
+                        </div>
+                    @else
+                        <div class="no-image-placeholder mb-3">
+                            <i class="fas fa-image fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No image uploaded</p>
+                        </div>
+                        @can('edit_assets')
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary btn-sm" onclick="openImageUploadModal()">
+                                <i class="fas fa-upload me-1"></i>Upload Image
+                            </button>
+                        </div>
+                        @endcan
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <!-- QR Code -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-qrcode me-2"></i>QR Code
+                </h6>
+            </div>
+            <div class="card-body text-center">
+                <div id="qr-code-container">
+                    <img src="{{ route('assets.qr-code', $asset) }}?size=200" 
+                         alt="QR Code for {{ $asset->asset_tag }}" 
+                         class="img-fluid mb-3"
+                         style="max-width: 200px;">
+                </div>
+                <p class="text-muted small mb-3">
+                    Scan this QR code to quickly access this asset
+                </p>
+                <div class="d-grid gap-2">
+                    <a href="{{ route('assets.qr-code.download', $asset) }}" 
+                       class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-download me-1"></i>Download QR Code
+                    </a>
+                    <button class="btn btn-outline-info btn-sm" onclick="copyQRCodeUrl()">
+                        <i class="fas fa-copy me-1"></i>Copy QR Code URL
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Quick Actions -->
         <div class="card">
             <div class="card-header">
@@ -531,5 +616,277 @@
             }
         }
     }
+    
+    function copyQRCodeUrl() {
+        const qrCodeUrl = '{{ route("assets.qr-code", $asset) }}';
+        
+        // Create a temporary input element
+        const tempInput = document.createElement('input');
+        tempInput.value = qrCodeUrl;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        tempInput.setSelectionRange(0, 99999); // For mobile devices
+        
+        try {
+            // Copy the text
+            document.execCommand('copy');
+            
+            // Show success message
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
+            btn.classList.remove('btn-outline-info');
+            btn.classList.add('btn-success');
+            
+            // Reset button after 2 seconds
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-info');
+            }, 2000);
+            
+        } catch (err) {
+            console.error('Failed to copy: ', err);
+            alert('Failed to copy QR code URL');
+        }
+        
+        // Remove the temporary input
+        document.body.removeChild(tempInput);
+    }
+    
+    // Image upload functions
+    function openImageUploadModal() {
+        $('#imageUploadModal').modal('show');
+    }
+    
+    function uploadAssetImage() {
+        const formData = new FormData();
+        const imageFile = document.getElementById('imageFile').files[0];
+        const altText = document.getElementById('altText').value;
+        
+        if (!imageFile) {
+            alert('Please select an image file.');
+            return;
+        }
+        
+        formData.append('image', imageFile);
+        formData.append('alt_text', altText);
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+        
+        // Show loading state
+        const uploadBtn = document.getElementById('uploadImageBtn');
+        const originalText = uploadBtn.innerHTML;
+        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Uploading...';
+        uploadBtn.disabled = true;
+        
+        fetch('{{ route("assets.upload-image", $asset) }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update the image display
+                updateImageDisplay(data);
+                $('#imageUploadModal').modal('hide');
+                showAlert('success', 'Image uploaded successfully!');
+            } else {
+                showAlert('danger', data.message || 'Error uploading image');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('danger', 'Error uploading image');
+        })
+        .finally(() => {
+            uploadBtn.innerHTML = originalText;
+            uploadBtn.disabled = false;
+        });
+    }
+    
+    function deleteAssetImage() {
+        if (!confirm('Are you sure you want to delete this image? This action cannot be undone.')) {
+            return;
+        }
+        
+        fetch('{{ route("assets.delete-image", $asset) }}', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update the image display to show no image
+                updateImageDisplay(null);
+                showAlert('success', 'Image deleted successfully!');
+            } else {
+                showAlert('danger', data.message || 'Error deleting image');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('danger', 'Error deleting image');
+        });
+    }
+    
+    function updateImageDisplay(imageData) {
+        const container = document.getElementById('asset-image-container');
+        
+        if (imageData) {
+            container.innerHTML = `
+                <img src="${imageData.image_url}" 
+                     alt="${imageData.image_data.alt}" 
+                     class="img-fluid mb-3 rounded"
+                     style="max-width: 100%; max-height: 300px; object-fit: cover;"
+                     id="asset-image">
+                <div class="image-info mb-3">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Size: ${imageData.image_data.size}
+                    </small>
+                </div>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary btn-sm" onclick="viewFullImage()">
+                        <i class="fas fa-expand me-1"></i>View Full Size
+                    </button>
+                    @can('edit_assets')
+                    <button class="btn btn-outline-warning btn-sm" onclick="openImageUploadModal()">
+                        <i class="fas fa-edit me-1"></i>Change Image
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm" onclick="deleteAssetImage()">
+                        <i class="fas fa-trash me-1"></i>Delete Image
+                    </button>
+                    @endcan
+                </div>
+            `;
+        } else {
+            container.innerHTML = `
+                <div class="no-image-placeholder mb-3">
+                    <i class="fas fa-image fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No image uploaded</p>
+                </div>
+                @can('edit_assets')
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary btn-sm" onclick="openImageUploadModal()">
+                        <i class="fas fa-upload me-1"></i>Upload Image
+                    </button>
+                </div>
+                @endcan
+            `;
+        }
+    }
+    
+    function viewFullImage() {
+        const image = document.getElementById('asset-image');
+        if (image) {
+            // Open image in new window
+            const newWindow = window.open('', '_blank');
+            newWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Asset Image - {{ $asset->asset_tag }}</title>
+                        <style>
+                            body { margin: 0; padding: 20px; background: #f8f9fa; text-align: center; }
+                            img { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+                            .image-info { margin-top: 20px; color: #666; }
+                        </style>
+                    </head>
+                    <body>
+                        <img src="${image.src}" alt="${image.alt}">
+                        <div class="image-info">
+                            <h4>{{ $asset->name }}</h4>
+                            <p>Asset Tag: {{ $asset->asset_tag }}</p>
+                        </div>
+                    </body>
+                </html>
+            `);
+        }
+    }
+    
+    function showAlert(type, message) {
+        // Create alert element
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Insert at top of content
+        const content = document.querySelector('.container-fluid');
+        content.insertBefore(alertDiv, content.firstChild);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+</script>
+
+<!-- Image Upload Modal -->
+<div class="modal fade" id="imageUploadModal" tabindex="-1" aria-labelledby="imageUploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageUploadModalLabel">
+                    <i class="fas fa-upload me-2"></i>Upload Asset Image
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="imageUploadForm">
+                    <div class="mb-3">
+                        <label for="imageFile" class="form-label">Select Image</label>
+                        <input type="file" class="form-control" id="imageFile" accept="image/*" required>
+                        <div class="form-text">
+                            Supported formats: JPEG, PNG, GIF, WebP. Maximum size: 10MB.
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="altText" class="form-label">Alt Text (Optional)</label>
+                        <input type="text" class="form-control" id="altText" placeholder="Describe the image for accessibility">
+                        <div class="form-text">
+                            This text will be used for screen readers and when the image cannot be displayed.
+                        </div>
+                    </div>
+                    <div class="image-preview" id="imagePreview" style="display: none;">
+                        <h6>Preview:</h6>
+                        <img id="previewImage" class="img-fluid rounded" style="max-width: 100%; max-height: 200px; object-fit: cover;">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="uploadImageBtn" onclick="uploadAssetImage()">
+                    <i class="fas fa-upload me-1"></i>Upload Image
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Image preview functionality
+document.getElementById('imageFile').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('imagePreview');
+    const previewImage = document.getElementById('previewImage');
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImage.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        preview.style.display = 'none';
+    }
+});
 </script>
 @endsection

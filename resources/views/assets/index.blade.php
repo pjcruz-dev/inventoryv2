@@ -96,7 +96,13 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <i class="fas fa-file-import me-2"></i>Import Assets
                             </a></li>
                             <li><a class="dropdown-item" href="{{ route('assets.export') }}">
-                                <i class="fas fa-file-export me-2"></i>Export Assets
+                                <i class="fas fa-file-export me-2"></i>Export Assets (CSV)
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ route('assets.export.excel') }}">
+                                <i class="fas fa-file-excel me-2"></i>Export Assets (Excel)
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ route('assets.export.pdf') }}">
+                                <i class="fas fa-file-pdf me-2"></i>Export Assets (PDF)
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ route('assets.template') }}">
@@ -110,6 +116,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     <a href="{{ route('accountability.index') }}" class="btn btn-warning btn-sm" title="Accountability Forms">
                         <i class="fas fa-file-contract me-1"></i>
                         <span class="d-none d-md-inline">Forms</span>
+                    </a>
+                    @endcan
+                    
+                    @can('view_assets')
+                    <a href="{{ route('qr-scanner') }}" class="btn btn-info btn-sm" title="QR Code Scanner">
+                        <i class="fas fa-qrcode me-1"></i>
+                        <span class="d-none d-md-inline">QR Scanner</span>
                     </a>
                     @endcan
                     
@@ -249,6 +262,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         <button type="button" class="btn btn-primary btn-sm me-2" onclick="openBulkPrintModal()">
                             <i class="fas fa-print me-1"></i>Print Labels
                         </button>
+                        <button type="button" class="btn btn-info btn-sm me-2" onclick="generateBulkQRCodes()">
+                            <i class="fas fa-qrcode me-1"></i>Generate QR Codes
+                        </button>
                         <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearSelection()">
                             <i class="fas fa-times me-1"></i>Clear Selection
                         </button>
@@ -279,11 +295,31 @@ document.addEventListener('DOMContentLoaded', function() {
                             </td>
                             <td class="fw-bold text-primary">{{ $asset->asset_tag }}</td>
                             <td>
-                                <div>
-                                    <div class="fw-semibold text-dark">{{ $asset->name }}</div>
-                                    @if($asset->model)
-                                        <small class="text-muted">{{ $asset->model }}</small>
-                                    @endif
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        @if($asset->hasImage())
+                                            <img src="{{ $asset->getImageUrl() }}" 
+                                                 alt="{{ $asset->getImageAlt() }}" 
+                                                 class="rounded" 
+                                                 style="width: 40px; height: 40px; object-fit: cover;"
+                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="d-flex align-items-center justify-content-center bg-light rounded" 
+                                                 style="width: 40px; height: 40px; display: none;">
+                                                <i class="fas fa-image text-muted"></i>
+                                            </div>
+                                        @else
+                                            <div class="d-flex align-items-center justify-content-center bg-light rounded" 
+                                                 style="width: 40px; height: 40px;">
+                                                <i class="fas fa-image text-muted"></i>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold text-dark">{{ $asset->name }}</div>
+                                        @if($asset->model)
+                                            <small class="text-muted">{{ $asset->model }}</small>
+                                        @endif
+                                    </div>
                                 </div>
                             </td>
                             <td>
@@ -338,6 +374,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                     @can('view_assets')
                                     <a href="{{ route('assets.show', $asset->id) }}" class="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center" title="View Asset" style="width: 32px; height: 32px;">
                                         <i class="fas fa-eye"></i>
+                                    </a>
+                                    @endcan
+                                    @can('view_assets')
+                                    <a href="{{ route('assets.qr-code', $asset->id) }}" class="btn btn-sm btn-outline-info d-flex align-items-center justify-content-center" title="QR Code" style="width: 32px; height: 32px;" target="_blank">
+                                        <i class="fas fa-qrcode"></i>
                                     </a>
                                     @endcan
                                     @can('edit_assets')
@@ -590,6 +631,87 @@ function openBulkPrintModal() {
     
     // Show the modal
     $('#bulkPrintModal').modal('show');
+}
+
+// Generate bulk QR codes for selected assets
+function generateBulkQRCodes() {
+    const selectedAssets = $('.asset-checkbox:checked');
+    if (selectedAssets.length === 0) {
+        alert('Please select at least one asset to generate QR codes.');
+        return;
+    }
+    
+    const assetIds = [];
+    selectedAssets.each(function() {
+        assetIds.push($(this).val());
+    });
+    
+    // Show loading state
+    const btn = event.target;
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Generating...';
+    btn.disabled = true;
+    
+    // Make AJAX request
+    $.ajax({
+        url: '{{ route("assets.bulk.qr-codes") }}',
+        method: 'POST',
+        data: {
+            asset_ids: assetIds,
+            size: 200,
+            _token: $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+            if (response.success) {
+                // Open QR codes in new window
+                const qrWindow = window.open('', '_blank', 'width=800,height=600');
+                qrWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Asset QR Codes</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; margin: 20px; }
+                            .qr-container { display: flex; flex-wrap: wrap; gap: 20px; }
+                            .qr-item { text-align: center; border: 1px solid #ddd; padding: 10px; border-radius: 8px; }
+                            .qr-code { margin-bottom: 10px; }
+                            .asset-info { font-size: 12px; color: #666; }
+                        </style>
+                    </head>
+                    <body>
+                        <h2>Asset QR Codes (${response.count} assets)</h2>
+                        <div class="qr-container">
+                            ${response.qr_codes.map(qr => `
+                                <div class="qr-item">
+                                    <div class="qr-code">${qr.qr_code}</div>
+                                    <div class="asset-info">
+                                        <strong>${qr.asset.asset_tag}</strong><br>
+                                        ${qr.asset.name}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <script>
+                            window.print();
+                        </script>
+                    </body>
+                    </html>
+                `);
+                qrWindow.document.close();
+            } else {
+                alert('Error generating QR codes: ' + (response.message || 'Unknown error'));
+            }
+        },
+        error: function(xhr) {
+            alert('Error generating QR codes. Please try again.');
+            console.error('QR Code generation error:', xhr);
+        },
+        complete: function() {
+            // Restore button state
+            btn.innerHTML = originalHTML;
+            btn.disabled = false;
+        }
+    });
 }
 </script>
 

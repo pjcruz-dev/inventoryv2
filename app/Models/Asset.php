@@ -25,6 +25,10 @@ class Asset extends Model
         'lifespan',
         'location',
         'notes',
+        'image_path',
+        'image_alt',
+        'image_size',
+        'image_mime_type',
         'status',
         'movement',
         'assigned_to',
@@ -246,5 +250,128 @@ class Asset extends Model
                 'performed_at' => now()
             ]);
         }
+    }
+
+    /**
+     * Generate QR code for this asset
+     */
+    public function generateQRCode($size = 200)
+    {
+        $qrService = app(\App\Services\QRCodeService::class);
+        return $qrService->generateAssetQRCode($this, $size);
+    }
+
+    /**
+     * Generate and save QR code for this asset
+     */
+    public function generateAndSaveQRCode($size = 200)
+    {
+        $qrService = app(\App\Services\QRCodeService::class);
+        return $qrService->generateAndSaveAssetQRCode($this, $size);
+    }
+
+    /**
+     * Get QR code data for this asset
+     */
+    public function getQRCodeData()
+    {
+        $qrService = app(\App\Services\QRCodeService::class);
+        return $qrService->getAssetQRData($this);
+    }
+
+    /**
+     * Get QR code URL for this asset
+     */
+    public function getQRCodeUrl()
+    {
+        return route('assets.qr-code', $this->id);
+    }
+
+    /**
+     * Check if QR code exists for this asset
+     */
+    public function hasQRCode()
+    {
+        $path = "qrcodes/assets/asset_{$this->id}_qr.svg";
+        return \Storage::exists($path);
+    }
+
+    /**
+     * Get QR code file path
+     */
+    public function getQRCodePath()
+    {
+        return "qrcodes/assets/asset_{$this->id}_qr.svg";
+    }
+
+    /**
+     * Get the asset's image URL
+     */
+    public function getImageUrl()
+    {
+        if ($this->image_path) {
+            return \Storage::disk('public')->url($this->image_path);
+        }
+        return null;
+    }
+
+    /**
+     * Get the asset's image path
+     */
+    public function getImagePath()
+    {
+        return $this->image_path;
+    }
+
+    /**
+     * Check if asset has an image
+     */
+    public function hasImage()
+    {
+        return !empty($this->image_path) && \Storage::disk('public')->exists($this->image_path);
+    }
+
+    /**
+     * Get image alt text or fallback
+     */
+    public function getImageAlt()
+    {
+        return $this->image_alt ?: "Image of {$this->name}";
+    }
+
+    /**
+     * Get formatted image size
+     */
+    public function getFormattedImageSize()
+    {
+        if (!$this->image_size) {
+            return null;
+        }
+
+        $bytes = $this->image_size;
+        $units = ['B', 'KB', 'MB', 'GB'];
+        
+        for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
+            $bytes /= 1024;
+        }
+        
+        return round($bytes, 2) . ' ' . $units[$i];
+    }
+
+    /**
+     * Delete the asset's image
+     */
+    public function deleteImage()
+    {
+        if ($this->image_path && \Storage::disk('public')->exists($this->image_path)) {
+            \Storage::disk('public')->delete($this->image_path);
+        }
+        
+        $this->update([
+            'image_path' => null,
+            'image_alt' => null,
+            'image_size' => null,
+            'image_mime_type' => null
+        ]);
     }
 }
