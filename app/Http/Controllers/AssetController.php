@@ -135,7 +135,7 @@ class AssetController extends Controller
         $rules = Asset::validationRules();
         
         // Only validate mobile_number if category is Mobile Devices
-        $category = \App\Models\AssetCategory::find($request->category_id);
+        $category = AssetCategory::find($request->category_id);
         if (!$category || strtolower($category->name) !== 'mobile devices') {
             // Remove mobile_number validation if not a mobile device
             unset($rules['mobile_number']);
@@ -183,7 +183,7 @@ class AssetController extends Controller
         $rules['creation_mode'] = 'required|string|in:bulk';
         
         // Only validate mobile_number if category is Mobile Devices
-        $category = \App\Models\AssetCategory::find($request->category_id);
+        $category = AssetCategory::find($request->category_id);
         if (!$category || strtolower($category->name) !== 'mobile devices') {
             // Remove mobile_number validation if not a mobile device
             unset($rules['mobile_number']);
@@ -209,7 +209,7 @@ class AssetController extends Controller
         $validated['serial_number'] = null;
         
         $createdAssets = [];
-        $categoryName = \App\Models\AssetCategory::find($validated['category_id'])->name;
+        $categoryName = AssetCategory::find($validated['category_id'])->name;
         
         // Create multiple assets with unique asset tags
         for ($i = 1; $i <= $quantity; $i++) {
@@ -285,7 +285,7 @@ class AssetController extends Controller
         $rules['serial_numbers.*'] = 'nullable|string|max:100'; // Removed distinct rule
         
         // Only validate mobile_number if category is Mobile Devices
-        $category = \App\Models\AssetCategory::find($request->category_id);
+        $category = AssetCategory::find($request->category_id);
         if (!$category || strtolower($category->name) !== 'mobile devices') {
             // Remove mobile_number validation if not a mobile device
             unset($rules['mobile_number']);
@@ -375,7 +375,7 @@ class AssetController extends Controller
         }
         
         $createdAssets = [];
-        $categoryName = \App\Models\AssetCategory::find($validated['category_id'])->name;
+        $categoryName = AssetCategory::find($validated['category_id'])->name;
         
         // Create multiple assets with unique asset tags and serial numbers
         for ($i = 0; $i < $quantity; $i++) {
@@ -491,7 +491,7 @@ class AssetController extends Controller
         $rules = Asset::updateValidationRules($asset->id);
         
         // Only validate mobile_number if category is Mobile Devices
-        $category = \App\Models\AssetCategory::find($request->category_id);
+        $category = AssetCategory::find($request->category_id);
         if (!$category || strtolower($category->name) !== 'mobile devices') {
             // Remove mobile_number validation if not a mobile device
             unset($rules['mobile_number']);
