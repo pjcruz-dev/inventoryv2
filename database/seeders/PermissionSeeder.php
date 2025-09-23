@@ -149,6 +149,12 @@ class PermissionSeeder extends Seeder
             // Notification Management
             ['name' => 'view_notifications', 'description' => 'View notifications'],
             ['name' => 'manage_notifications', 'description' => 'Manage notifications'],
+            ['name' => 'mark_notification_read', 'description' => 'Mark notifications as read'],
+            ['name' => 'mark_all_notifications_read', 'description' => 'Mark all notifications as read'],
+            ['name' => 'get_unread_notifications', 'description' => 'Get unread notifications'],
+            ['name' => 'get_all_notifications', 'description' => 'Get all notifications'],
+            ['name' => 'delete_notifications', 'description' => 'Delete notifications'],
+            ['name' => 'delete_read_notifications', 'description' => 'Delete read notifications'],
             
             // Peripheral Management
             ['name' => 'view_peripherals', 'description' => 'View peripheral devices'],
@@ -182,6 +188,48 @@ class PermissionSeeder extends Seeder
             ['name' => 'audit_logs', 'description' => 'View audit logs'],
             ['name' => 'system_monitoring', 'description' => 'Monitor system performance'],
             
+            // QR Code Management
+            ['name' => 'generate_qr_codes', 'description' => 'Generate QR codes for assets'],
+            ['name' => 'download_qr_codes', 'description' => 'Download QR codes'],
+            ['name' => 'bulk_generate_qr_codes', 'description' => 'Generate QR codes in bulk'],
+            ['name' => 'scan_qr_codes', 'description' => 'Scan QR codes'],
+            ['name' => 'process_qr_scans', 'description' => 'Process QR code scans'],
+            
+            // Image Management
+            ['name' => 'upload_asset_images', 'description' => 'Upload images for assets'],
+            ['name' => 'delete_asset_images', 'description' => 'Delete asset images'],
+            ['name' => 'view_asset_images', 'description' => 'View asset images'],
+            ['name' => 'get_asset_thumbnails', 'description' => 'Get asset thumbnails'],
+            
+            // Search Management
+            ['name' => 'global_search', 'description' => 'Use global search functionality'],
+            ['name' => 'advanced_search', 'description' => 'Use advanced search features'],
+            ['name' => 'search_suggestions', 'description' => 'Get search suggestions'],
+            ['name' => 'search_filter_options', 'description' => 'Get search filter options'],
+            ['name' => 'recent_searches', 'description' => 'View recent searches'],
+            ['name' => 'popular_searches', 'description' => 'View popular searches'],
+            
+            // Keyboard Shortcuts
+            ['name' => 'use_keyboard_shortcuts', 'description' => 'Use keyboard shortcuts'],
+            ['name' => 'view_keyboard_shortcuts', 'description' => 'View keyboard shortcuts help'],
+            ['name' => 'manage_keyboard_shortcuts', 'description' => 'Manage keyboard shortcuts'],
+            
+            // Mobile Features
+            ['name' => 'mobile_access', 'description' => 'Access mobile-optimized views'],
+            ['name' => 'mobile_asset_management', 'description' => 'Manage assets on mobile'],
+            ['name' => 'mobile_qr_scanner', 'description' => 'Use QR scanner on mobile'],
+            
+            // Export/Import Enhanced
+            ['name' => 'export_assets_excel', 'description' => 'Export assets to Excel'],
+            ['name' => 'export_assets_pdf', 'description' => 'Export assets to PDF'],
+            ['name' => 'export_assets_csv', 'description' => 'Export assets to CSV'],
+            ['name' => 'preview_exports', 'description' => 'Preview export data'],
+            ['name' => 'download_exports', 'description' => 'Download exported files'],
+            
+            // Dark Mode
+            ['name' => 'toggle_dark_mode', 'description' => 'Toggle dark mode'],
+            ['name' => 'manage_theme_preferences', 'description' => 'Manage theme preferences'],
+            
             // Additional missing permissions found in routes
             ['name' => 'bulk_create_assets', 'description' => 'Create assets in bulk'],
             ['name' => 'bulk_store_assets', 'description' => 'Store bulk asset data'],
@@ -199,10 +247,6 @@ class PermissionSeeder extends Seeder
             ['name' => 'clear_old_logs', 'description' => 'Clear old system logs'],
             ['name' => 'export_logs', 'description' => 'Export system logs'],
             ['name' => 'show_timeline', 'description' => 'Show asset timeline details'],
-            ['name' => 'mark_notification_read', 'description' => 'Mark notifications as read'],
-            ['name' => 'mark_all_notifications_read', 'description' => 'Mark all notifications as read'],
-            ['name' => 'get_unread_notifications', 'description' => 'Get unread notifications'],
-            ['name' => 'get_all_notifications', 'description' => 'Get all notifications'],
             ['name' => 'show_maintenance_details', 'description' => 'Show maintenance record details'],
             ['name' => 'export_maintenance_pdf', 'description' => 'Export maintenance records as PDF'],
             ['name' => 'show_disposal_details', 'description' => 'Show disposal record details'],

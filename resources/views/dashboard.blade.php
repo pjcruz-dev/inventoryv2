@@ -4,51 +4,15 @@
 {{-- Page title removed - using breadcrumbs instead --}}
 
 @section('page-actions')
-    <div class="d-flex flex-column flex-md-row gap-2 align-items-start align-items-md-center">
-        <form method="GET" action="{{ route('dashboard') }}" class="d-flex flex-column flex-md-row gap-2 align-items-stretch align-items-md-center w-100">
-            <div class="row g-2 w-100">
-                <div class="col-6 col-md-3">
-                    <select name="month" class="form-select form-select-sm dashboard-filter-select">
-                <option value="">All Months</option>
-                @for($i = 1; $i <= 12; $i++)
-                    <option value="{{ $i }}" {{ request('month') == $i ? 'selected' : '' }}>
-                        {{ DateTime::createFromFormat('!m', $i)->format('F') }}
-                    </option>
-                @endfor
-            </select>
-                </div>
-                <div class="col-6 col-md-3">
-                    <select name="year" class="form-select form-select-sm dashboard-filter-select">
-                <option value="">All Years</option>
-                @for($year = date('Y'); $year >= 2020; $year--)
-                    <option value="{{ $year }}" {{ request('year') == $year ? 'selected' : '' }}>{{ $year }}</option>
-                @endfor
-            </select>
-                </div>
-                <div class="col-6 col-md-3">
-                    <select name="entity" class="form-select form-select-sm dashboard-filter-select">
-                <option value="">All Entities</option>
-                @foreach($entities as $entity)
-                    <option value="{{ $entity }}" {{ request('entity') == $entity ? 'selected' : '' }}>{{ $entity }}</option>
-                @endforeach
-            </select>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="d-flex gap-1">
-                        <button type="submit" class="btn btn-dashboard-filter btn-sm flex-fill d-flex align-items-center justify-content-center">
-                            <i class="fas fa-filter me-1"></i>
-                            <span class="d-none d-sm-inline">Filter</span>
-            </button>
-            @if(request()->hasAny(['month', 'year', 'entity']))
-                            <a href="{{ route('dashboard') }}" class="btn btn-dashboard-clear btn-sm d-flex align-items-center justify-content-center">
-                                <i class="fas fa-times"></i>
-                                <span class="d-none d-sm-inline ms-1">Clear</span>
-                </a>
-            @endif
-                    </div>
-                </div>
-            </div>
-        </form>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary btn-sm" onclick="refreshDashboard()">
+            <i class="fas fa-sync-alt me-1"></i>
+            <span class="d-none d-md-inline">Refresh</span>
+        </button>
+        <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#filterModal">
+            <i class="fas fa-filter me-1"></i>
+            <span class="d-none d-md-inline">Filters</span>
+        </button>
     </div>
 @endsection
 
@@ -479,9 +443,10 @@
                     </h5>
                     <div class="card-actions">
                         <select class="form-select form-select-sm" id="trendFilter">
-                            <option value="problematic">Problematic Assets</option>
-                            <option value="deployed">Deployed Assets</option>
-                            <option value="maintenance">Maintenance</option>
+                            <option value="Issue Reported">Issue Reported</option>
+                            <option value="Active">Active Assets</option>
+                            <option value="Under Maintenance">Under Maintenance</option>
+                            <option value="Pending Confirmation">Pending Confirmation</option>
                         </select>
                     </div>
                 </div>
@@ -505,6 +470,66 @@
     </div>
 
 </div>
+
+<!-- Filter Modal -->
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="filterModalLabel">
+                    <i class="fas fa-filter me-2"></i>Dashboard Filters
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="GET" action="{{ route('dashboard') }}">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="filterMonth" class="form-label">Month</label>
+                            <select name="month" id="filterMonth" class="form-select">
+                                <option value="">All Months</option>
+                                @for($i = 1; $i <= 12; $i++)
+                                    <option value="{{ $i }}" {{ request('month') == $i ? 'selected' : '' }}>
+                                        {{ DateTime::createFromFormat('!m', $i)->format('F') }}
+                                    </option>
+                                @endfor
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="filterYear" class="form-label">Year</label>
+                            <select name="year" id="filterYear" class="form-select">
+                                <option value="">All Years</option>
+                                @for($year = date('Y'); $year >= 2020; $year--)
+                                    <option value="{{ $year }}" {{ request('year') == $year ? 'selected' : '' }}>{{ $year }}</option>
+                                @endfor
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label for="filterEntity" class="form-label">Entity</label>
+                            <select name="entity" id="filterEntity" class="form-select">
+                                <option value="">All Entities</option>
+                                @foreach($entities as $entity)
+                                    <option value="{{ $entity }}" {{ request('entity') == $entity ? 'selected' : '' }}>{{ $entity }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    @if(request()->hasAny(['month', 'year', 'entity']))
+                        <a href="{{ route('dashboard') }}" class="btn btn-outline-danger">
+                            <i class="fas fa-times me-1"></i>Clear Filters
+                        </a>
+                    @endif
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter me-1"></i>Apply Filters
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('styles')
@@ -512,20 +537,216 @@
 /* Dashboard Styles - Moved to ensure proper loading */
 /* Dashboard Container */
 .dashboard-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* Clean navbar styles */
+.navbar-top {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Page actions cleanup */
+.page-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+/* Filter modal improvements */
+.modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-bottom: none;
+}
+
+.modal-header .btn-close {
+    filter: invert(1);
+}
+
+/* Chart container improvements */
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+/* Empty state improvements */
+.empty-chart-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    color: #6c757d;
+}
+
+.empty-chart-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-chart-text {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+/* Dark mode improvements */
+[data-theme="dark"] .navbar-top {
+    background: rgba(26, 26, 26, 0.95);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .empty-chart-state {
+    color: #adb5bd;
+}
+.dashboard-container {
     padding: 0 1rem;
     max-width: 1400px;
     margin: 0 auto;
 }
 
 /* Welcome Card */
-.welcome-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 20px;
-    padding: 2rem;
-    color: white;
-    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-    margin-bottom: 2rem;
-}
+        .welcome-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 2rem;
+            color: white;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            margin-bottom: 2rem;
+        }
+
+        /* Dark mode dashboard styles */
+        [data-theme="dark"] .welcome-card {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="dark"] .metric-card {
+            background: #2d2d2d;
+            border: 1px solid #404040;
+            color: #e9ecef;
+        }
+
+        [data-theme="dark"] .metric-card:hover {
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="dark"] .metric-number {
+            color: #e9ecef;
+        }
+
+        [data-theme="dark"] .metric-label {
+            color: #adb5bd;
+        }
+
+        [data-theme="dark"] .dashboard-card {
+            background: #2d2d2d;
+            border: 1px solid #404040;
+            color: #e9ecef;
+        }
+
+        [data-theme="dark"] .dashboard-card:hover {
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        [data-theme="dark"] .card-header {
+            background: #343a40;
+            border-bottom: 1px solid #404040;
+        }
+
+        [data-theme="dark"] .card-title {
+            color: #e9ecef;
+        }
+
+        [data-theme="dark"] .status-percentage {
+            color: #10b981;
+        }
+
+        [data-theme="dark"] .status-label {
+            color: #adb5bd;
+        }
+
+        [data-theme="dark"] .progress-ring-circle-bg {
+            stroke: #404040;
+        }
+
+        [data-theme="dark"] .progress-ring-circle {
+            stroke: #10b981;
+        }
+
+        [data-theme="dark"] .progress-text {
+            color: #e9ecef;
+        }
+
+        [data-theme="dark"] .status-name {
+            color: #adb5bd;
+        }
+
+        [data-theme="dark"] .status-count {
+            color: #e9ecef;
+        }
+
+        [data-theme="dark"] .weekly-breakdown-table {
+            background: #2d2d2d;
+            color: #e9ecef;
+        }
+
+        [data-theme="dark"] .weekly-breakdown-table thead th {
+            background-color: #343a40;
+            border-bottom-color: #404040;
+            color: #e9ecef;
+        }
+
+        [data-theme="dark"] .weekly-breakdown-table tbody td {
+            border-bottom-color: #404040;
+        }
+
+        [data-theme="dark"] .weekly-breakdown-table tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.075);
+        }
+
+        [data-theme="dark"] .breakdown-month-title {
+            color: #e9ecef;
+            border-bottom-color: #404040;
+        }
+
+        [data-theme="dark"] .quick-action-card {
+            background: linear-gradient(135deg, #2d2d2d 0%, #343a40 100%);
+            border-color: #404040;
+            color: #e9ecef;
+        }
+
+        [data-theme="dark"] .quick-action-card:hover {
+            background: linear-gradient(135deg, #343a40 0%, #404040 100%);
+            color: #e9ecef;
+        }
+
+        [data-theme="dark"] .action-title {
+            color: #e9ecef;
+        }
+
+        [data-theme="dark"] .action-subtitle {
+            color: #adb5bd;
+        }
+
+        [data-theme="dark"] .scanner-instructions {
+            background: #343a40;
+            border-left-color: #0d6efd;
+        }
+
+        [data-theme="dark"] .scanner-instructions h6 {
+            color: #e9ecef;
+        }
+
+        [data-theme="dark"] .scanner-instructions li {
+            border-bottom-color: #404040;
+        }
 
 .welcome-content {
     display: flex;
@@ -1834,15 +2055,14 @@ if (trendCanvas) {
     const trendValues = [];
 
     // Process trend data safely
-    if (trendData && Array.isArray(trendData)) {
+    if (trendData && Array.isArray(trendData) && trendData.length > 0) {
         trendLabels.push(...trendData.map(item => item.month));
         trendValues.push(...trendData.map(item => item.count));
-    }
-
-    // Create chart even if no data (show empty state)
-    if (trendValues.length === 0) {
-        trendLabels.push('No Data');
-        trendValues.push(0);
+    } else {
+        // Generate sample data for demonstration
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+        trendLabels.push(...months);
+        trendValues.push(...[0, 0, 0, 0, 0, 0]);
     }
 
     const trendChart = new Chart(trendCtx, {
@@ -1960,6 +2180,11 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         
         // Reload page with new parameters
         window.location.href = window.location.pathname + '?' + urlParams.toString();
+    }
+    
+    // Refresh dashboard function
+    function refreshDashboard() {
+        window.location.reload();
     }
 </script>
 @endpush

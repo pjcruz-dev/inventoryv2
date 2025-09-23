@@ -22,6 +22,8 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\DisposalController;
 use App\Http\Controllers\ChangePasswordController;
+use App\Http\Controllers\SearchController;
+use App\Http\Controllers\KeyboardShortcutController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -46,7 +48,42 @@ Route::middleware('auth')->group(function () {
     Route::post('assets/check-tag-uniqueness', [AssetController::class, 'checkAssetTagUniqueness'])->name('assets.check-tag-uniqueness');
     Route::get('assets/export', [AssetController::class, 'export'])->name('assets.export');
     Route::get('assets/export/excel', [AssetController::class, 'exportExcel'])->name('assets.export.excel');
+    Route::get('assets/export/pdf', [AssetController::class, 'exportPdf'])->name('assets.export.pdf');
+    Route::get('assets/export/csv', [AssetController::class, 'exportCsv'])->name('assets.export.csv');
     Route::get('assets/download/template', [AssetController::class, 'downloadTemplate'])->name('assets.template');
+    
+    // QR Code routes
+    Route::get('assets/{asset}/qr-code', [AssetController::class, 'generateQRCode'])->name('assets.qr-code');
+    Route::get('assets/{asset}/qr-code/download', [AssetController::class, 'downloadQRCode'])->name('assets.qr-code.download');
+    Route::post('assets/bulk/qr-codes', [AssetController::class, 'generateBulkQRCodes'])->name('assets.bulk.qr-codes');
+    Route::get('qr-scanner', [AssetController::class, 'qrScanner'])->name('qr-scanner');
+    Route::post('qr-scan', [AssetController::class, 'processQRScan'])->name('qr-scan');
+    
+    // Image routes
+    Route::post('assets/{asset}/upload-image', [AssetController::class, 'uploadImage'])->name('assets.upload-image');
+    Route::delete('assets/{asset}/delete-image', [AssetController::class, 'deleteImage'])->name('assets.delete-image');
+    Route::get('assets/{asset}/image', [AssetController::class, 'getImage'])->name('assets.image');
+    Route::get('assets/{asset}/image/thumbnail', [AssetController::class, 'getThumbnail'])->name('assets.image.thumbnail');
+    
+    // Search routes
+    Route::get('search', [SearchController::class, 'index'])->name('search.index');
+    Route::get('search/results', [SearchController::class, 'search'])->name('search.results');
+    Route::post('search', [SearchController::class, 'search'])->name('search');
+    Route::get('search/suggestions', [SearchController::class, 'suggestions'])->name('search.suggestions');
+    Route::get('search/filter-options', [SearchController::class, 'filterOptions'])->name('search.filter-options');
+    Route::get('search/recent', [SearchController::class, 'recentSearches'])->name('search.recent');
+    Route::get('search/popular', [SearchController::class, 'popularSearches'])->name('search.popular');
+    
+    // Keyboard shortcuts routes
+    Route::get('keyboard-shortcuts', [KeyboardShortcutController::class, 'help'])->name('keyboard-shortcuts.help');
+    Route::get('api/keyboard-shortcuts', [KeyboardShortcutController::class, 'index'])->name('keyboard-shortcuts.index');
+    Route::get('api/keyboard-shortcuts/user', [KeyboardShortcutController::class, 'userShortcuts'])->name('keyboard-shortcuts.user');
+    Route::get('api/keyboard-shortcuts/context', [KeyboardShortcutController::class, 'contextShortcuts'])->name('keyboard-shortcuts.context');
+    Route::post('api/keyboard-shortcuts/execute', [KeyboardShortcutController::class, 'execute'])->name('keyboard-shortcuts.execute');
+    
+    // Mobile routes
+    Route::get('assets/mobile', [AssetController::class, 'mobileIndex'])->name('assets.mobile')->middleware('prevent.maintenance.edit');
+    Route::get('qr-scanner/mobile', [AssetController::class, 'mobileQRScanner'])->name('qr-scanner.mobile');
     
     // Resource route (must come after specific routes)
     Route::resource('assets', AssetController::class)->middleware('prevent.maintenance.edit');
@@ -216,3 +253,32 @@ Route::prefix('asset-confirmation')->name('asset-confirmation.')->group(function
     Route::get('/decline-form/{token}', [AssetConfirmationController::class, 'showDeclineForm'])->name('decline-form');
     Route::post('/decline/{token}', [AssetConfirmationController::class, 'processDecline'])->name('process-decline');
 });
+
+// Notifications
+Route::get('/notifications', [App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
+Route::get('/api/notifications', [App\Http\Controllers\NotificationController::class, 'getNotifications'])->name('api.notifications');
+Route::get('/api/notifications/stats', [App\Http\Controllers\NotificationController::class, 'getStats'])->name('api.notifications.stats');
+Route::get('/api/notifications/dropdown', [App\Http\Controllers\NotificationController::class, 'getDropdownData'])->name('api.notifications.dropdown');
+Route::post('/api/notifications/mark-read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('api.notifications.mark-read');
+Route::post('/api/notifications/mark-all-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('api.notifications.mark-all-read');
+Route::post('/api/notifications/{notification}/read', [App\Http\Controllers\NotificationController::class, 'markAsReadSingle'])->name('api.notifications.mark-single-read');
+Route::delete('/api/notifications/{notification}', [App\Http\Controllers\NotificationController::class, 'delete'])->name('api.notifications.delete');
+Route::delete('/api/notifications/delete-read', [App\Http\Controllers\NotificationController::class, 'deleteRead'])->name('api.notifications.delete-read');
+
+// Debug route to test All Assets link
+Route::get('/debug/assets-link', function () {
+    $user = auth()->user();
+    $canViewAssets = $user ? $user->can('view_assets') : false;
+    
+    return response()->json([
+        'user_authenticated' => auth()->check(),
+        'user_id' => $user ? $user->id : null,
+        'user_name' => $user ? $user->name : null,
+        'can_view_assets' => $canViewAssets,
+        'user_permissions' => $user ? $user->getAllPermissions()->pluck('name') : [],
+        'user_roles' => $user ? $user->getRoleNames() : [],
+        'route_exists' => Route::has('assets.index'),
+        'route_url' => route('assets.index'),
+        'timestamp' => now()
+    ]);
+})->name('debug.assets-link');

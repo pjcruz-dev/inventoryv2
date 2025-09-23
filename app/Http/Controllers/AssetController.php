@@ -31,7 +31,7 @@ class AssetController extends Controller
         $this->middleware('throttle:60,1')->only(['store', 'update', 'destroy']);
         $this->middleware('permission:view_assets')->only(['index', 'show']);
         $this->middleware('permission:create_assets')->only(['create', 'store']);
-        $this->middleware('permission:edit_assets')->only(['edit', 'update']);
+        $this->middleware('permission:edit_assets')->only(['edit', 'update', 'uploadImage', 'deleteImage']);
         $this->middleware('permission:delete_assets')->only(['destroy']);
     }
     /**
@@ -100,6 +100,88 @@ class AssetController extends Controller
         $entities = Asset::distinct()->pluck('entity')->filter()->sort()->values();
         
         return view('assets.index', compact('assets', 'categories', 'statuses', 'movements', 'entities'));
+    }
+
+    /**
+     * Display mobile-optimized listing of assets
+     */
+    public function mobileIndex(Request $request)
+    {
+        $this->authorize('view_assets');
+        
+        $query = Asset::with(['category', 'vendor', 'assignedUser']);
+        
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('asset_tag', 'like', "%{$search}%")
+                  ->orWhere('serial_number', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('category', function($categoryQuery) use ($search) {
+                      $categoryQuery->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('vendor', function($vendorQuery) use ($search) {
+                      $vendorQuery->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('assignedUser', function($userQuery) use ($search) {
+                      $userQuery->where('first_name', 'like', "%{$search}%")
+                               ->orWhere('last_name', 'like', "%{$search}%");
+                  });
+            });
+        }
+        
+        // Category filter
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
+        }
+        
+        // Status filter
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        
+        // Movement filter
+        if ($request->filled('movement')) {
+            $query->where('movement', $request->movement);
+        }
+        
+        // Assignment filter
+        if ($request->filled('assignment')) {
+            if ($request->assignment === 'assigned') {
+                $query->whereNotNull('assigned_to');
+            } elseif ($request->assignment === 'unassigned') {
+                $query->whereNull('assigned_to');
+            }
+        }
+        
+        // Entity filter
+        if ($request->filled('entity')) {
+            $query->where('entity', $request->entity);
+        }
+        
+        // Sorting
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortDirection = $request->input('sort_direction', 'desc');
+        
+        if (in_array($sortBy, ['name', 'asset_tag', 'status', 'created_at', 'updated_at'])) {
+            $query->orderBy($sortBy, $sortDirection);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+        
+        // Use mobile-optimized pagination
+        $paginationLimit = 12; // Mobile-optimized limit
+        $assets = $query->paginate($paginationLimit);
+        
+        // Get filter options
+        $categories = AssetCategory::orderBy('name')->get();
+        $statuses = Asset::distinct()->pluck('status')->filter()->sort()->values();
+        $movements = Asset::distinct()->pluck('movement')->filter()->sort()->values();
+        $entities = Asset::distinct()->pluck('entity')->filter()->sort()->values();
+        
+        return view('assets.mobile-index', compact('assets', 'categories', 'statuses', 'movements', 'entities'));
     }
 
     /**
@@ -899,5 +981,524 @@ class AssetController extends Controller
                 'email' => $asset->vendor->email
             ] : null
         ]);
+    }
+
+    /**
+     * Generate QR code for an asset
+     */
+    public function generateQRCode(Asset $asset)
+    {
+        $this->authorize('view', $asset);
+        
+        $size = request('size', 200);
+        $qrCode = $asset->generateQRCode($size);
+        
+        return response($qrCode)
+            ->header('Content-Type', 'image/svg+xml')
+            ->header('Cache-Control', 'public, max-age=3600');
+    }
+
+    /**
+     * Download QR code for an asset
+     */
+    public function downloadQRCode(Asset $asset)
+    {
+        $this->authorize('view', $asset);
+        
+        $size = request('size', 200);
+        $qrCode = $asset->generateQRCode($size);
+        
+        $filename = "asset_{$asset->asset_tag}_qr_code.svg";
+        
+        return response($qrCode)
+            ->header('Content-Type', 'image/svg+xml')
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+    }
+
+    /**
+     * Generate bulk QR codes for multiple assets
+     */
+    public function generateBulkQRCodes(Request $request)
+    {
+        $request->validate([
+            'asset_ids' => 'required|array|min:1',
+            'asset_ids.*' => 'exists:assets,id',
+            'size' => 'nullable|integer|min:50|max:1000'
+        ]);
+
+        $assetIds = $request->asset_ids;
+        $size = $request->input('size', 200);
+        
+        $qrService = app(\App\Services\QRCodeService::class);
+        $qrCodes = $qrService->generateBulkAssetQRCodes($assetIds, $size);
+        
+        return response()->json([
+            'success' => true,
+            'qr_codes' => $qrCodes,
+            'count' => count($qrCodes)
+        ]);
+    }
+
+    /**
+     * Show QR scanner page
+     */
+    public function qrScanner()
+    {
+        $this->authorize('view_assets');
+        
+        return view('assets.qr-scanner');
+    }
+
+    /**
+     * Show mobile QR scanner page
+     */
+    public function mobileQRScanner()
+    {
+        $this->authorize('view_assets');
+        
+        return view('assets.mobile-qr-scanner');
+    }
+
+    /**
+     * Process QR code scan
+     */
+    public function processQRScan(Request $request)
+    {
+        $request->validate([
+            'qr_data' => 'required|string'
+        ]);
+
+        $qrService = app(\App\Services\QRCodeService::class);
+        $data = $qrService->parseQRCodeData($request->qr_data);
+        
+        if (!$data || !$qrService->validateQRCodeData($data)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid QR code data'
+            ], 400);
+        }
+
+        // Find the asset
+        $asset = Asset::find($data['id']);
+        
+        if (!$asset) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Asset not found'
+            ], 404);
+        }
+
+        // Check if user can view this asset
+        if (!auth()->user()->can('view', $asset)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to view this asset'
+            ], 403);
+        }
+
+        return response()->json([
+            'success' => true,
+            'asset' => [
+                'id' => $asset->id,
+                'asset_tag' => $asset->asset_tag,
+                'name' => $asset->name,
+                'status' => $asset->status,
+                'url' => route('assets.show', $asset->id)
+            ]
+        ]);
+    }
+
+    /**
+     * Upload image for an asset
+     */
+    public function uploadImage(Request $request, Asset $asset)
+    {
+        $this->authorize('update', $asset);
+        
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10240', // 10MB max
+            'alt_text' => 'nullable|string|max:255'
+        ]);
+
+        try {
+            $imageService = app(\App\Services\ImageService::class);
+            
+            // Delete existing image if any
+            if ($asset->hasImage()) {
+                $imageService->deleteAssetImage($asset->image_path);
+            }
+            
+            // Upload new image
+            $imageData = $imageService->uploadAssetImage(
+                $request->file('image'),
+                $asset->id,
+                $asset->name
+            );
+            
+            // Update asset with image data
+            $asset->update([
+                'image_path' => $imageData['path'],
+                'image_alt' => $request->input('alt_text', $imageData['alt']),
+                'image_size' => $imageData['size'],
+                'image_mime_type' => $imageData['mime_type']
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Image uploaded successfully',
+                'image_url' => $asset->getImageUrl(),
+                'thumbnail_url' => $imageService->getThumbnailUrl($imageData['path']),
+                'image_data' => [
+                    'path' => $imageData['path'],
+                    'alt' => $asset->getImageAlt(),
+                    'size' => $asset->getFormattedImageSize(),
+                    'dimensions' => "{$imageData['width']}x{$imageData['height']}"
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error uploading image: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete image for an asset
+     */
+    public function deleteImage(Asset $asset)
+    {
+        $this->authorize('update', $asset);
+        
+        if (!$asset->hasImage()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No image found for this asset'
+            ], 404);
+        }
+        
+        try {
+            $imageService = app(\App\Services\ImageService::class);
+            $imageService->deleteAssetImage($asset->image_path);
+            
+            $asset->deleteImage();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Image deleted successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting image: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get asset image
+     */
+    public function getImage(Asset $asset)
+    {
+        $this->authorize('view', $asset);
+        
+        if (!$asset->hasImage()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No image found for this asset'
+            ], 404);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'image_url' => $asset->getImageUrl(),
+            'alt_text' => $asset->getImageAlt(),
+            'size' => $asset->getFormattedImageSize(),
+            'mime_type' => $asset->image_mime_type
+        ]);
+    }
+
+    /**
+     * Get asset thumbnail
+     */
+    public function getThumbnail(Asset $asset)
+    {
+        $this->authorize('view', $asset);
+        
+        if (!$asset->hasImage()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No image found for this asset'
+            ], 404);
+        }
+        
+        $imageService = app(\App\Services\ImageService::class);
+        $thumbnailUrl = $imageService->getThumbnailUrl($asset->image_path);
+        
+        return response()->json([
+            'success' => true,
+            'thumbnail_url' => $thumbnailUrl,
+            'alt_text' => $asset->getImageAlt()
+        ]);
+    }
+
+    /**
+     * Export assets (main export page)
+     */
+    public function export(Request $request)
+    {
+        $this->authorize('view_assets');
+        
+        // Get the same query as the index method
+        $query = Asset::with(['category', 'vendor', 'assignedUser']);
+        
+        // Apply filters
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('tag', 'like', "%{$search}%")
+                  ->orWhere('serial_number', 'like', "%{$search}%")
+                  ->orWhere('model', 'like', "%{$search}%")
+                  ->orWhere('brand', 'like', "%{$search}%");
+            });
+        }
+        
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->get('category_id'));
+        }
+        
+        if ($request->filled('status')) {
+            $query->where('status', $request->get('status'));
+        }
+        
+        if ($request->filled('vendor_id')) {
+            $query->where('vendor_id', $request->get('vendor_id'));
+        }
+        
+        if ($request->filled('assigned_user_id')) {
+            $query->where('assigned_user_id', $request->get('assigned_user_id'));
+        }
+        
+        $assets = $query->get();
+        
+        return view('assets.export', compact('assets'));
+    }
+    
+    /**
+     * Export assets to Excel
+     */
+    public function exportExcel(Request $request)
+    {
+        $this->authorize('view_assets');
+        
+        $exportService = app(\App\Services\ExportService::class);
+        
+        // Get the same query as the index method
+        $query = Asset::with(['category', 'vendor', 'assignedUser']);
+        
+        // Apply filters
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('tag', 'like', "%{$search}%")
+                  ->orWhere('serial_number', 'like', "%{$search}%")
+                  ->orWhere('model', 'like', "%{$search}%")
+                  ->orWhere('brand', 'like', "%{$search}%");
+            });
+        }
+        
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->get('category_id'));
+        }
+        
+        if ($request->filled('status')) {
+            $query->where('status', $request->get('status'));
+        }
+        
+        if ($request->filled('vendor_id')) {
+            $query->where('vendor_id', $request->get('vendor_id'));
+        }
+        
+        if ($request->filled('assigned_user_id')) {
+            $query->where('assigned_user_id', $request->get('assigned_user_id'));
+        }
+        
+        $assets = $query->get();
+        
+        $options = [
+            'title' => 'Assets Export - ' . now()->format('Y-m-d H:i:s'),
+            'include_images' => $request->boolean('include_images', false),
+            'include_qr_codes' => $request->boolean('include_qr_codes', false),
+            'template' => $request->get('template', 'default')
+        ];
+        
+        $spreadsheet = $exportService->exportAssetsToExcel($assets, $options);
+        
+        // Generate filename
+        $filename = 'assets-export-' . now()->format('Y-m-d-H-i-s') . '.xlsx';
+        
+        // Create writer and save to temporary file
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $tempFile = tempnam(sys_get_temp_dir(), 'assets_export_');
+        $writer->save($tempFile);
+        
+        // Return file download response
+        return response()->download($tempFile, $filename)->deleteFileAfterSend(true);
+    }
+    
+    /**
+     * Export assets to CSV
+     */
+    public function exportCsv(Request $request)
+    {
+        $this->authorize('view_assets');
+        
+        // Get the same query as the index method
+        $query = Asset::with(['category', 'vendor', 'assignedUser']);
+        
+        // Apply filters
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('tag', 'like', "%{$search}%")
+                  ->orWhere('serial_number', 'like', "%{$search}%")
+                  ->orWhere('model', 'like', "%{$search}%")
+                  ->orWhere('brand', 'like', "%{$search}%");
+            });
+        }
+        
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->get('category_id'));
+        }
+        
+        if ($request->filled('status')) {
+            $query->where('status', $request->get('status'));
+        }
+        
+        if ($request->filled('vendor_id')) {
+            $query->where('vendor_id', $request->get('vendor_id'));
+        }
+        
+        if ($request->filled('assigned_user_id')) {
+            $query->where('assigned_user_id', $request->get('assigned_user_id'));
+        }
+        
+        $assets = $query->get();
+        
+        $filename = 'assets-export-' . now()->format('Y-m-d-H-i-s') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+        
+        $callback = function() use ($assets) {
+            $file = fopen('php://output', 'w');
+            
+            // CSV Headers
+            fputcsv($file, [
+                'Tag',
+                'Name',
+                'Category',
+                'Brand',
+                'Model',
+                'Serial Number',
+                'Status',
+                'Location',
+                'Assigned To',
+                'Assigned Date',
+                'Purchase Date',
+                'Warranty End',
+                'Vendor',
+                'Purchase Price',
+                'Notes'
+            ]);
+            
+            // CSV Data
+            foreach ($assets as $asset) {
+                fputcsv($file, [
+                    $asset->tag,
+                    $asset->name,
+                    $asset->category->name ?? '',
+                    $asset->brand ?? '',
+                    $asset->model ?? '',
+                    $asset->serial_number ?? '',
+                    $asset->status,
+                    $asset->location ?? '',
+                    $asset->assignedUser->name ?? '',
+                    $asset->assigned_date ? $asset->assigned_date->format('Y-m-d') : '',
+                    $asset->purchase_date ? $asset->purchase_date->format('Y-m-d') : '',
+                    $asset->warranty_end ? $asset->warranty_end->format('Y-m-d') : '',
+                    $asset->vendor->name ?? '',
+                    $asset->purchase_price ?? '',
+                    $asset->notes ?? ''
+                ]);
+            }
+            
+            fclose($file);
+        };
+        
+        return response()->stream($callback, 200, $headers);
+    }
+    
+    /**
+     * Export assets to PDF
+     */
+    public function exportPdf(Request $request)
+    {
+        $this->authorize('view_assets');
+        
+        $exportService = app(\App\Services\ExportService::class);
+        
+        // Get the same query as the index method
+        $query = Asset::with(['category', 'vendor', 'assignedUser']);
+        
+        // Apply filters
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('asset_tag', 'like', "%{$search}%")
+                  ->orWhere('serial_number', 'like', "%{$search}%")
+                  ->orWhere('location', 'like', "%{$search}%");
+            });
+        }
+        
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+        
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        
+        if ($request->filled('assigned_user_id')) {
+            $query->where('assigned_user_id', $request->assigned_user_id);
+        }
+        
+        $assets = $query->orderBy('created_at', 'desc')->get();
+        
+        $options = [
+            'title' => 'Assets Export - ' . now()->format('Y-m-d H:i:s'),
+            'include_images' => $request->boolean('include_images', false),
+            'include_qr_codes' => $request->boolean('include_qr_codes', false),
+            'template' => $request->get('template', 'default')
+        ];
+        
+        // Generate PDF using DomPDF
+        $pdf = app('dompdf.wrapper');
+        $pdf->loadView('exports.assets-pdf', [
+            'assets' => $assets,
+            'options' => $options
+        ]);
+        
+        $filename = 'assets-export-' . now()->format('Y-m-d-H-i-s') . '.pdf';
+        
+        return $pdf->download($filename);
     }
 }

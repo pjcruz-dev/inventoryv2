@@ -248,6 +248,260 @@
             font-weight: bold;
             color: white !important;
         }
+        
+        /* Dark Mode Styles */
+        [data-theme="dark"] {
+            --bs-body-bg: #1a1a1a;
+            --bs-body-color: #e9ecef;
+            --bs-primary: #0d6efd;
+            --bs-secondary: #6c757d;
+            --bs-success: #198754;
+            --bs-info: #0dcaf0;
+            --bs-warning: #ffc107;
+            --bs-danger: #dc3545;
+            --bs-light: #343a40;
+            --bs-dark: #212529;
+        }
+
+        [data-theme="dark"] body {
+            background: linear-gradient(310deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #e9ecef;
+        }
+
+        [data-theme="dark"] .card {
+            background: #2d2d2d;
+            border: 1px solid #404040;
+            color: #e9ecef;
+        }
+
+        [data-theme="dark"] .card-header {
+            background: #343a40;
+            border-bottom: 1px solid #404040;
+        }
+
+        [data-theme="dark"] .table {
+            color: #e9ecef;
+        }
+
+        [data-theme="dark"] .table-dark {
+            background-color: #343a40;
+        }
+
+        [data-theme="dark"] .table-hover tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.075);
+        }
+
+        [data-theme="dark"] .form-control {
+            background-color: #2d2d2d;
+            border-color: #404040;
+            color: #e9ecef;
+        }
+
+        [data-theme="dark"] .form-control:focus {
+            background-color: #2d2d2d;
+            border-color: #0d6efd;
+            color: #e9ecef;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+
+        [data-theme="dark"] .form-select {
+            background-color: #2d2d2d;
+            border-color: #404040;
+            color: #e9ecef;
+        }
+
+        [data-theme="dark"] .form-select:focus {
+            background-color: #2d2d2d;
+            border-color: #0d6efd;
+            color: #e9ecef;
+        }
+
+        [data-theme="dark"] .btn-outline-primary {
+            color: #0d6efd;
+            border-color: #0d6efd;
+        }
+
+        [data-theme="dark"] .btn-outline-primary:hover {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+            color: #fff;
+        }
+
+        [data-theme="dark"] .btn-outline-secondary {
+            color: #6c757d;
+            border-color: #6c757d;
+        }
+
+        [data-theme="dark"] .btn-outline-secondary:hover {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            color: #fff;
+        }
+
+        [data-theme="dark"] .alert-success {
+            background-color: rgba(25, 135, 84, 0.1);
+            border-color: #198754;
+            color: #75b798;
+        }
+
+        [data-theme="dark"] .alert-danger {
+            background-color: rgba(220, 53, 69, 0.1);
+            border-color: #dc3545;
+            color: #f1aeb5;
+        }
+
+        [data-theme="dark"] .alert-info {
+            background-color: rgba(13, 202, 240, 0.1);
+            border-color: #0dcaf0;
+            color: #6edff6;
+        }
+
+        [data-theme="dark"] .alert-warning {
+            background-color: rgba(255, 193, 7, 0.1);
+            border-color: #ffc107;
+            color: #ffda6a;
+        }
+
+        [data-theme="dark"] .text-muted {
+            color: #adb5bd !important;
+        }
+
+        [data-theme="dark"] .text-white-50 {
+            color: rgba(255, 255, 255, 0.5) !important;
+        }
+
+        [data-theme="dark"] .bg-light {
+            background-color: #343a40 !important;
+        }
+
+        [data-theme="dark"] .bg-white {
+            background-color: #2d2d2d !important;
+        }
+
+        [data-theme="dark"] .border {
+            border-color: #404040 !important;
+        }
+
+        [data-theme="dark"] .border-bottom {
+            border-bottom-color: #404040 !important;
+        }
+
+        [data-theme="dark"] .border-top {
+            border-top-color: #404040 !important;
+        }
+
+        [data-theme="dark"] .dropdown-menu {
+            background-color: #2d2d2d;
+            border-color: #404040;
+        }
+
+        [data-theme="dark"] .dropdown-item {
+            color: #e9ecef;
+        }
+
+        [data-theme="dark"] .dropdown-item:hover {
+            background-color: #404040;
+            color: #e9ecef;
+        }
+
+        [data-theme="dark"] .modal-content {
+            background-color: #2d2d2d;
+            border-color: #404040;
+        }
+
+        [data-theme="dark"] .modal-header {
+            border-bottom-color: #404040;
+        }
+
+        [data-theme="dark"] .modal-footer {
+            border-top-color: #404040;
+        }
+
+        [data-theme="dark"] .pagination .page-link {
+            background-color: #2d2d2d;
+            border-color: #404040;
+            color: #e9ecef;
+        }
+
+        [data-theme="dark"] .pagination .page-link:hover {
+            background-color: #404040;
+            border-color: #404040;
+            color: #e9ecef;
+        }
+
+        [data-theme="dark"] .pagination .page-item.active .page-link {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+
+        /* Dark Mode Sidebar */
+        [data-theme="dark"] .sidebar {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        }
+
+        [data-theme="dark"] .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        [data-theme="dark"] .sidebar .nav-link:hover {
+            color: #fff;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+        }
+
+        [data-theme="dark"] .sidebar .nav-link.active {
+            color: #fff;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+        }
+
+        [data-theme="dark"] .sidebar-heading {
+            color: rgba(255, 255, 255, 0.5) !important;
+        }
+
+        /* Dark Mode Theme Toggle Button */
+        .theme-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .theme-toggle svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .theme-toggle .moon-icon {
+            display: block;
+        }
+
+        .theme-toggle .sun-icon {
+            display: none;
+        }
+
+        [data-theme="dark"] .theme-toggle .moon-icon {
+            display: none;
+        }
+
+        [data-theme="dark"] .theme-toggle .sun-icon {
+            display: block;
+        }
         .card {
             border: none;
             border-radius: 1.5rem;
@@ -867,6 +1121,15 @@
                             </li>
                             @endcan
                             
+                            @can('view_assets')
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('qr-scanner') ? 'active' : '' }}" href="{{ route('qr-scanner') }}">
+                                    <i class="fas fa-qrcode"></i>
+                                    QR Scanner
+                                </a>
+                            </li>
+                            @endcan
+                            
                             @can('view_roles')
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('roles.*') ? 'active' : '' }}" href="{{ route('roles.index') }}">
@@ -881,6 +1144,15 @@
                                 <a class="nav-link {{ request()->routeIs('permissions.*') ? 'active' : '' }}" href="{{ route('permissions.index') }}">
                                     <i class="fas fa-key"></i>
                                     Permissions
+                                </a>
+                            </li>
+                            @endcan
+                            
+                            @can('view_notifications')
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('notifications.*') ? 'active' : '' }}" href="{{ route('notifications.index') }}">
+                                    <i class="fas fa-bell"></i>
+                                    Notifications
                                 </a>
                             </li>
                             @endcan
@@ -912,12 +1184,35 @@
                             <x-breadcrumbs :breadcrumbs="$breadcrumbs ?? []" />
                         </div>
                         <div class="btn-toolbar mb-2 mb-md-0">
+                            <!-- Global Search Bar -->
+                            <div class="position-relative me-3" style="max-width: 300px;">
+                                <div class="input-group">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           placeholder="Search everything..." 
+                                           id="globalSearchInput"
+                                           autocomplete="off">
+                                    <button class="btn btn-outline-secondary" type="button" id="globalSearchBtn">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                    <button class="btn btn-outline-primary" type="button" id="advancedSearchBtn" title="Advanced Search">
+                                        <i class="fas fa-sliders-h"></i>
+                                    </button>
+                                </div>
+                                <!-- Global Search Suggestions -->
+                                <div id="globalSearchSuggestions" class="dropdown-menu w-100 position-absolute" style="display: none; z-index: 1050;">
+                                    <div id="globalSuggestionsContent">
+                                        <!-- Suggestions will be loaded here -->
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <div class="btn-group me-2">
                                 @yield('page-actions')
                             </div>
                             <div class="d-flex align-items-center">
-                                <!-- Notification Bell - Only visible to IT Department -->
-                                @if(auth()->user()->department && auth()->user()->department->name === 'Information Technology')
+                                <!-- Notification Bell - Visible to all authenticated users -->
+                                @auth
                                 <div class="dropdown me-3">
                                     <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="notificationBell">
                                         <i class="fas fa-bell" style="font-size: 1.2rem; color: #6c757d;"></i>
@@ -935,7 +1230,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                @endif
+                                @endauth
                                 
                                 <!-- User Dropdown -->
                                 <div class="dropdown">
@@ -1107,9 +1402,8 @@
         });
     </script>
     
-    <!-- Notification System JavaScript - Only for IT Department -->
+    <!-- Notification System JavaScript - For all authenticated users -->
     @auth
-    @if(auth()->user()->department && auth()->user()->department->name === 'Information Technology')
     <script>
         class NotificationSystem {
             constructor() {
@@ -1260,7 +1554,6 @@
             new NotificationSystem();
         });
     </script>
-    @endif
     @endauth
     
     <!-- Mobile Sidebar JavaScript -->
@@ -1308,6 +1601,142 @@
     
     <script src="{{ asset('js/searchable-dropdown.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
+    <!-- Keyboard Shortcuts -->
+    <script src="{{ asset('js/keyboard-shortcuts.js') }}"></script>
+    
+    <!-- Global Search JavaScript -->
+    <script>
+        // Global Search Functionality
+        class GlobalSearch {
+            constructor() {
+                this.searchInput = document.getElementById('globalSearchInput');
+                this.searchBtn = document.getElementById('globalSearchBtn');
+                this.advancedBtn = document.getElementById('advancedSearchBtn');
+                this.suggestionsDropdown = document.getElementById('globalSearchSuggestions');
+                this.suggestionsContent = document.getElementById('globalSuggestionsContent');
+                
+                this.init();
+            }
+            
+            init() {
+                if (this.searchInput) {
+                    this.setupEventListeners();
+                }
+            }
+            
+            setupEventListeners() {
+                // Search input events
+                this.searchInput.addEventListener('input', (e) => {
+                    this.handleSearchInput(e.target.value);
+                });
+                
+                this.searchInput.addEventListener('focus', () => {
+                    if (this.searchInput.value.trim().length >= 2) {
+                        this.loadSuggestions(this.searchInput.value.trim());
+                    }
+                });
+                
+                this.searchInput.addEventListener('blur', () => {
+                    setTimeout(() => this.hideSuggestions(), 200);
+                });
+                
+                this.searchInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        this.performSearch();
+                    } else if (e.key === 'Escape') {
+                        this.hideSuggestions();
+                    }
+                });
+                
+                // Button events
+                if (this.searchBtn) {
+                    this.searchBtn.addEventListener('click', () => this.performSearch());
+                }
+                if (this.advancedBtn) {
+                    this.advancedBtn.addEventListener('click', () => {
+                        window.location.href = '{{ route("search.index") }}';
+                    });
+                }
+            }
+            
+            handleSearchInput(query) {
+                if (query.length >= 2) {
+                    this.loadSuggestions(query);
+                } else {
+                    this.hideSuggestions();
+                }
+            }
+            
+            async loadSuggestions(query) {
+                try {
+                    const response = await fetch(`{{ route('search.suggestions') }}?q=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.displaySuggestions(data.suggestions);
+                    }
+                } catch (error) {
+                    console.error('Error loading suggestions:', error);
+                }
+            }
+            
+            displaySuggestions(suggestions) {
+                if (suggestions.length === 0) {
+                    this.hideSuggestions();
+                    return;
+                }
+                
+                this.suggestionsContent.innerHTML = suggestions.map(suggestion => `
+                    <div class="dropdown-item d-flex align-items-center" onclick="selectGlobalSuggestion('${suggestion.text}', '${suggestion.url}')">
+                        <i class="${suggestion.icon} me-2 text-muted"></i>
+                        <div>
+                            <div class="fw-medium">${suggestion.text}</div>
+                            <small class="text-muted">${suggestion.subtext}</small>
+                        </div>
+                    </div>
+                `).join('');
+                
+                this.suggestionsDropdown.style.display = 'block';
+            }
+            
+            hideSuggestions() {
+                this.suggestionsDropdown.style.display = 'none';
+            }
+            
+            performSearch() {
+                const query = this.searchInput.value.trim();
+                if (query) {
+                    window.location.href = `{{ route('search.results') }}?q=${encodeURIComponent(query)}`;
+                }
+            }
+        }
+        
+        // Initialize global search when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            const globalSearch = new GlobalSearch();
+            
+            // Make it globally available
+            window.globalSearch = globalSearch;
+        });
+        
+        // Global functions
+        function selectGlobalSuggestion(text, url) {
+            if (url) {
+                window.location.href = url;
+            } else {
+                const searchInput = document.getElementById('globalSearchInput');
+                if (searchInput) {
+                    searchInput.value = text;
+                    if (window.globalSearch) {
+                        window.globalSearch.performSearch();
+                    }
+                }
+            }
+        }
+    </script>
+    
     @yield('scripts')
     @stack('scripts')
 </body>

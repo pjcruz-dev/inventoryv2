@@ -191,8 +191,8 @@ class DashboardController extends Controller
             
             $months[$monthName] = $monthData;
         } else {
-            // Get last 3 months (default behavior)
-            for ($i = 2; $i >= 0; $i--) {
+            // Get last 3 months (default behavior) - latest month first
+            for ($i = 0; $i <= 2; $i++) {
                 $date = now()->subMonths($i);
                 $monthName = $date->format('F Y');
                 $monthData = [];
@@ -318,8 +318,8 @@ class DashboardController extends Controller
             
             $months[$monthName] = $monthDataWithPercentages;
         } else {
-            // Get last 3 months (default behavior)
-            for ($i = 2; $i >= 0; $i--) {
+                // Get last 3 months (default behavior) - latest month first
+            for ($i = 0; $i <= 2; $i++) {
                 $date = now()->subMonths($i);
                 $monthName = $date->format('F');
                 
@@ -372,7 +372,7 @@ class DashboardController extends Controller
      */
     private function getChartData($filterMonth = null, $filterYear = null)
     {
-        $statuses = ['deployed', 'problematic', 'pending_confirm', 'returned', 'disposed', 'new_arrived'];
+        $statuses = ['Active', 'Issue Reported', 'Pending Confirmation', 'Under Maintenance', 'Disposed', 'New Arrival'];
         $movements = ['Deployed', 'Disposed', 'New Arrival', 'Returned'];
         
         // Current movement distribution (for pie chart)
@@ -403,7 +403,7 @@ class DashboardController extends Controller
                 $trendDate = $date->copy()->subMonths($i);
                 $monthName = $trendDate->format('M Y');
                 
-                $count = Asset::where('status', 'problematic')
+                $count = Asset::where('status', 'Issue Reported')
                     ->whereYear('created_at', $trendDate->year)
                     ->whereMonth('created_at', $trendDate->month)
                     ->count();
@@ -437,7 +437,7 @@ class DashboardController extends Controller
                 $date = now()->subMonths($i);
                 $monthName = $date->format('M Y');
                 
-                $count = Asset::where('status', 'problematic')
+                $count = Asset::where('status', 'Issue Reported')
                     ->whereYear('created_at', $date->year)
                     ->whereMonth('created_at', $date->month)
                     ->count();

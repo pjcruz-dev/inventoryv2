@@ -3,112 +3,216 @@
 namespace App\Http\Controllers;
 
 use App\Models\Notification;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\View\View;
 
 class NotificationController extends Controller
 {
-    public function __construct()
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
     {
-        $this->middleware('auth');
-        $this->middleware('permission:view_notifications')->only(['getUnread', 'getAll']);
-        $this->middleware('permission:manage_notifications')->only(['markAsRead', 'markAllAsRead']);
+        $this->notificationService = $notificationService;
     }
 
     /**
-     * Get unread notifications for the authenticated user
+     * Display the notifications page.
      */
-    public function getUnread(): JsonResponse
+    public function index(Request $request): View
     {
-        if (!auth()->check()) {
-            return response()->json(['notifications' => [], 'count' => 0]);
-        }
+        $user = $request->user();
+        $notifications = $this->notificationService->getNotificationsForUser($user, 50);
+        $stats = $this->notificationService->getNotificationStats($user);
 
-        $notifications = Notification::where('user_id', auth()->id())
-            ->unread()
-            ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get();
+        return view('notifications.index', compact('notifications', 'stats'));
+    }
+
+    /**
+     * Get notifications for the current user (API).
+     */
+    public function getNotifications(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $unreadOnly = $request->boolean('unread_only', false);
+        $limit = $request->integer('limit', 20);
+
+        $notifications = $this->notificationService->getNotificationsForUser(
+            $user,
+            $limit,
+            $unreadOnly
+        );
 
         return response()->json([
-            'notifications' => $notifications,
-            'count' => $notifications->count()
+            'success' => true,
+            'notifications' => $notifications->map(function ($notification) {
+                return [
+                    'id' => $notification->id,
+                    'type' => $notification->type,
+                    'title' => $notification->title,
+                    'message' => $notification->message,
+                    'icon' => $notification->icon,
+                    'color' => $notification->color,
+                    'is_read' => $notification->isRead(),
+                    'is_urgent' => $notification->is_urgent,
+                    'action_url' => $notification->action_url,
+                    'action_text' => $notification->action_text,
+                    'time_ago' => $notification->time_ago,
+                    'created_at' => $notification->created_at->toISOString(),
+                ];
+            }),
+            'unread_count' => $this->notificationService->getUnreadCountForUser($user),
         ]);
     }
 
     /**
-     * Get all notifications for the authenticated user
+     * Get notification statistics.
      */
-    public function getAll(): JsonResponse
+    public function getStats(Request $request): JsonResponse
     {
-        if (!auth()->check()) {
-            return response()->json(['notifications' => []]);
-        }
+        $user = $request->user();
+        $stats = $this->notificationService->getNotificationStats($user);
 
-        $notifications = Notification::where('user_id', auth()->id())
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
-
-        return response()->json($notifications);
+        return response()->json([
+            'success' => true,
+            'stats' => $stats,
+        ]);
     }
 
     /**
-     * Mark a notification as read
+     * Mark notifications as read.
      */
-    public function markAsRead(Request $request, $id): JsonResponse
+    public function markAsRead(Request $request): JsonResponse
     {
-        if (!auth()->check()) {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
+        $request->validate([
+            'notification_ids' => 'required|array',
+            'notification_ids.*' => 'integer|exists:notifications,id',
+        ]);
 
-        $notification = Notification::where('user_id', auth()->id())
-            ->where('id', $id)
-            ->first();
+        $user = $request->user();
+        $count = $this->notificationService->markAsRead(
+            $request->notification_ids,
+            $user
+        );
 
-        if (!$notification) {
-            return response()->json(['error' => 'Notification not found'], 404);
+        return response()->json([
+            'success' => true,
+            'message' => "Marked {$count} notifications as read",
+            'unread_count' => $this->notificationService->getUnreadCountForUser($user),
+        ]);
+    }
+
+    /**
+     * Mark all notifications as read.
+     */
+    public function markAllAsRead(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $count = $this->notificationService->markAllAsRead($user);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Marked {$count} notifications as read",
+            'unread_count' => 0,
+        ]);
+    }
+
+    /**
+     * Mark a single notification as read.
+     */
+    public function markAsReadSingle(Request $request, Notification $notification): JsonResponse
+    {
+        $user = $request->user();
+
+        // Verify the notification belongs to the user
+        if ($notification->notifiable_type !== get_class($user) || 
+            $notification->notifiable_id !== $user->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Notification not found',
+            ], 404);
         }
 
         $notification->markAsRead();
 
-        return response()->json(['success' => true]);
+        return response()->json([
+            'success' => true,
+            'message' => 'Notification marked as read',
+            'unread_count' => $this->notificationService->getUnreadCountForUser($user),
+        ]);
     }
 
     /**
-     * Mark all notifications as read
+     * Delete a notification.
      */
-    public function markAllAsRead(): JsonResponse
+    public function delete(Request $request, Notification $notification): JsonResponse
     {
-        if (!auth()->check()) {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
+        $user = $request->user();
 
-        Notification::where('user_id', auth()->id())
-            ->unread()
-            ->update(['read_at' => now()]);
-
-        return response()->json(['success' => true]);
-    }
-
-    /**
-     * Delete a notification
-     */
-    public function delete($id): JsonResponse
-    {
-        if (!auth()->check()) {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
-
-        $notification = Notification::where('user_id', auth()->id())
-            ->where('id', $id)
-            ->first();
-
-        if (!$notification) {
-            return response()->json(['error' => 'Notification not found'], 404);
+        // Verify the notification belongs to the user
+        if ($notification->notifiable_type !== get_class($user) || 
+            $notification->notifiable_id !== $user->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Notification not found',
+            ], 404);
         }
 
         $notification->delete();
 
-        return response()->json(['success' => true]);
+        return response()->json([
+            'success' => true,
+            'message' => 'Notification deleted',
+            'unread_count' => $this->notificationService->getUnreadCountForUser($user),
+        ]);
+    }
+
+    /**
+     * Delete all read notifications.
+     */
+    public function deleteRead(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        
+        $count = Notification::where('notifiable_type', get_class($user))
+            ->where('notifiable_id', $user->id)
+            ->read()
+            ->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => "Deleted {$count} read notifications",
+            'unread_count' => $this->notificationService->getUnreadCountForUser($user),
+        ]);
+    }
+
+    /**
+     * Get notification dropdown data for the header.
+     */
+    public function getDropdownData(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $notifications = $this->notificationService->getNotificationsForUser($user, 10, true);
+        $unreadCount = $this->notificationService->getUnreadCountForUser($user);
+
+        return response()->json([
+            'success' => true,
+            'notifications' => $notifications->map(function ($notification) {
+                return [
+                    'id' => $notification->id,
+                    'type' => $notification->type,
+                    'title' => $notification->title,
+                    'message' => $notification->message,
+                    'icon' => $notification->icon,
+                    'color' => $notification->color,
+                    'is_urgent' => $notification->is_urgent,
+                    'action_url' => $notification->action_url,
+                    'action_text' => $notification->action_text,
+                    'time_ago' => $notification->time_ago,
+                ];
+            }),
+            'unread_count' => $unreadCount,
+        ]);
     }
 }
