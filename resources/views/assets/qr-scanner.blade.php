@@ -82,15 +82,33 @@
                     <!-- Scanner Controls -->
                     <div id="scanner-controls" class="scanner-controls d-none">
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-3">
                                 <button id="start-btn" class="btn btn-success btn-lg w-100" onclick="startScanner()">
                                     <i class="fas fa-play me-2"></i>Start Scanner
                                 </button>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-3">
+                                <button id="auto-detect-btn" class="btn btn-warning btn-lg w-100" onclick="toggleAutoDetect()">
+                                    <i class="fas fa-magic me-2"></i>Auto Detect
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <button id="switch-camera-btn" class="btn btn-info btn-lg w-100" onclick="switchCamera()">
+                                    <i class="fas fa-sync-alt me-2"></i>Switch Camera
+                                </button>
+                            </div>
+                            <div class="col-md-3">
                                 <button id="stop-btn" class="btn btn-danger btn-lg w-100" onclick="stopScanner()">
                                     <i class="fas fa-stop me-2"></i>Stop Scanner
                                 </button>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-12 text-center">
+                                <small id="auto-detect-status" class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Auto-detect is enabled - will automatically try different cameras for better detection
+                                </small>
                             </div>
                         </div>
                     </div>
@@ -189,6 +207,14 @@
                             <li class="mb-2">
                                 <i class="fas fa-desktop text-info me-2"></i>
                                 <strong>Desktop:</strong> Allow camera access when prompted
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-magic text-warning me-2"></i>
+                                <strong>Auto Detect:</strong> Enable auto-detect to automatically try different cameras for better QR code detection
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-sync-alt text-info me-2"></i>
+                                <strong>Switch Camera:</strong> Click "Switch Camera" to manually toggle between front and back cameras
                             </li>
                             <li class="mb-2">
                                 <i class="fas fa-qrcode text-warning me-2"></i>
@@ -300,6 +326,38 @@
 
 .scanner-controls {
     margin: 2rem 0;
+}
+
+.scanner-controls .btn {
+    margin-bottom: 0.5rem;
+}
+
+#switch-camera-btn {
+    transition: all 0.3s ease;
+}
+
+#switch-camera-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#auto-detect-btn {
+    transition: all 0.3s ease;
+}
+
+#auto-detect-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#auto-detect-status {
+    font-size: 0.875rem;
+    transition: color 0.3s ease;
+}
+
+#auto-detect-status.updating {
+    color: #ffc107 !important;
+    font-weight: 500;
 }
 
 .scan-results {
@@ -423,6 +481,14 @@ class QRScanner {
         this.stream = null;
         this.scanning = false;
         this.scanInterval = null;
+        this.currentCameraIndex = 0;
+        this.availableCameras = [];
+        this.currentFacingMode = 'environment'; // Start with back camera
+        this.autoDetectMode = true;
+        this.detectionAttempts = 0;
+        this.maxDetectionAttempts = 3;
+        this.lastDetectionTime = 0;
+        this.detectionCooldown = 2000; // 2 seconds between detection attempts
         
         this.initializeElements();
     }
@@ -436,6 +502,9 @@ class QRScanner {
         this.errorMessage = document.getElementById('error-message');
         this.startBtn = document.getElementById('start-btn');
         this.stopBtn = document.getElementById('stop-btn');
+        this.switchBtn = document.getElementById('switch-camera-btn');
+        this.autoDetectBtn = document.getElementById('auto-detect-btn');
+        this.autoDetectStatus = document.getElementById('auto-detect-status');
     }
     
     async startScanner() {
@@ -468,16 +537,16 @@ class QRScanner {
             const constraintOptions = [
                 {
                     video: { 
-                        facingMode: 'environment',
+                        facingMode: this.currentFacingMode,
                         width: { ideal: 1280 },
                         height: { ideal: 720 }
                     }
                 },
                 {
                     video: { 
-                        facingMode: 'user',
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
+                        facingMode: this.currentFacingMode,
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
                     }
                 },
                 {
@@ -527,6 +596,12 @@ class QRScanner {
                 this.controls.classList.remove('d-none');
                 this.startBtn.classList.add('d-none');
                 this.stopBtn.classList.remove('d-none');
+                this.switchBtn.classList.remove('d-none');
+                this.autoDetectBtn.classList.remove('d-none');
+                
+                // Update button texts
+                this.updateSwitchButtonText();
+                this.updateAutoDetectButton();
                 
                 this.scanning = true;
                 this.startScanning();
@@ -605,6 +680,47 @@ class QRScanner {
         
         if (code) {
             this.processQRCode(code.data);
+        } else if (this.autoDetectMode && this.shouldTryAutoDetect()) {
+            this.attemptAutoDetect();
+        }
+    }
+    
+    shouldTryAutoDetect() {
+        const now = Date.now();
+        return (now - this.lastDetectionTime) > this.detectionCooldown && 
+               this.detectionAttempts < this.maxDetectionAttempts;
+    }
+    
+    async attemptAutoDetect() {
+        this.detectionAttempts++;
+        this.lastDetectionTime = Date.now();
+        
+        console.log(`Auto-detect attempt ${this.detectionAttempts}/${this.maxDetectionAttempts}`);
+        
+        // Show auto-detect status
+        this.updateAutoDetectStatus(`Auto-detecting... (${this.detectionAttempts}/${this.maxDetectionAttempts})`);
+        
+        try {
+            // Try switching to the other camera
+            const newFacingMode = this.currentFacingMode === 'environment' ? 'user' : 'environment';
+            
+            // Stop current stream
+            if (this.stream) {
+                this.stream.getTracks().forEach(track => track.stop());
+            }
+            
+            // Update facing mode
+            this.currentFacingMode = newFacingMode;
+            
+            // Restart with new camera
+            await this.startScanner();
+            
+            // Update status
+            this.updateAutoDetectStatus(`Switched to ${newFacingMode === 'environment' ? 'back' : 'front'} camera`);
+            
+        } catch (error) {
+            console.warn('Auto-detect failed:', error);
+            this.updateAutoDetectStatus('Auto-detect failed, using current camera');
         }
     }
     
@@ -696,13 +812,81 @@ class QRScanner {
         }
     }
     
+    async switchCamera() {
+        if (!this.scanning) {
+            return;
+        }
+        
+        try {
+            this.showLoading('Switching camera...');
+            
+            // Stop current stream
+            if (this.stream) {
+                this.stream.getTracks().forEach(track => track.stop());
+            }
+            
+            // Toggle between front and back camera
+            this.currentFacingMode = this.currentFacingMode === 'environment' ? 'user' : 'environment';
+            
+            // Restart scanner with new camera
+            await this.startScanner();
+            
+        } catch (error) {
+            console.error('Error switching camera:', error);
+            this.showError('Failed to switch camera. Please try again.');
+        }
+    }
+    
+    toggleAutoDetect() {
+        this.autoDetectMode = !this.autoDetectMode;
+        this.detectionAttempts = 0; // Reset attempts when toggling
+        this.updateAutoDetectButton();
+        this.updateAutoDetectStatus();
+    }
+    
+    updateAutoDetectButton() {
+        if (this.autoDetectBtn) {
+            const icon = this.autoDetectMode ? 'fa-magic' : 'fa-magic';
+            const text = this.autoDetectMode ? 'Auto Detect ON' : 'Auto Detect OFF';
+            const btnClass = this.autoDetectMode ? 'btn-warning' : 'btn-outline-warning';
+            
+            this.autoDetectBtn.className = `btn ${btnClass} btn-lg w-100`;
+            this.autoDetectBtn.innerHTML = `<i class="fas ${icon} me-2"></i>${text}`;
+        }
+    }
+    
+    updateAutoDetectStatus(customMessage = null) {
+        if (this.autoDetectStatus) {
+            if (customMessage) {
+                this.autoDetectStatus.innerHTML = `<i class="fas fa-info-circle me-1"></i>${customMessage}`;
+            } else if (this.autoDetectMode) {
+                this.autoDetectStatus.innerHTML = `<i class="fas fa-info-circle me-1"></i>Auto-detect is enabled - will automatically try different cameras for better detection`;
+            } else {
+                this.autoDetectStatus.innerHTML = `<i class="fas fa-info-circle me-1"></i>Auto-detect is disabled - use manual camera switching`;
+            }
+        }
+    }
+    
+    updateSwitchButtonText() {
+        if (this.switchBtn) {
+            const cameraType = this.currentFacingMode === 'environment' ? 'Front' : 'Back';
+            this.switchBtn.innerHTML = `<i class="fas fa-sync-alt me-2"></i>Switch to ${cameraType}`;
+        }
+    }
+    
     resetInterface() {
         this.placeholder.classList.remove('d-none');
         this.videoContainer.classList.add('d-none');
         this.controls.classList.add('d-none');
         this.startBtn.classList.remove('d-none');
         this.stopBtn.classList.add('d-none');
+        this.switchBtn.classList.add('d-none');
+        this.autoDetectBtn.classList.add('d-none');
         this.hideAllMessages();
+        
+        // Reset auto-detect state
+        this.detectionAttempts = 0;
+        this.updateAutoDetectStatus();
     }
     
     getStatusColor(status) {
@@ -732,6 +916,18 @@ function startScanner() {
 function stopScanner() {
     if (scanner) {
         scanner.stopScanner();
+    }
+}
+
+function switchCamera() {
+    if (scanner) {
+        scanner.switchCamera();
+    }
+}
+
+function toggleAutoDetect() {
+    if (scanner) {
+        scanner.toggleAutoDetect();
     }
 }
 

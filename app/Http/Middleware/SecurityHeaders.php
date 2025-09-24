@@ -41,7 +41,7 @@ class SecurityHeaders
         $response->headers->set('Permissions-Policy', 
             'geolocation=(), ' .
             'microphone=(), ' .
-            'camera=(), ' .
+            'camera=(self), ' .
             'payment=(), ' .
             'usb=(), ' .
             'magnetometer=(), ' .
