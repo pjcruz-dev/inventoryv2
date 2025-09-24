@@ -282,6 +282,10 @@
                 <div class="info-label">Location</div>
                 <div class="info-value">{{ $formData['asset']->location ?? 'N/A' }}</div>
             </div>
+            <div class="info-item" style="grid-column: 1 / -1;">
+                <div class="info-label">Notes</div>
+                <div class="info-value">{{ $formData['asset']->notes ?? 'N/A' }}</div>
+            </div>
         </div>
     </div>
 

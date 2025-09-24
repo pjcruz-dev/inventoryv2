@@ -90,6 +90,7 @@ class Asset extends Model
             'entity' => 'nullable|in:MIDC,PHILTOWER,PRIMUS',
             'lifespan' => 'nullable|integer|min:1|max:50',
             'location' => 'nullable|string|max:255',
+            'notes' => 'nullable|string|max:1000',
             'status' => 'required|in:Available,Active,Inactive,Under Maintenance,Issue Reported,Pending Confirmation,Disposed',
             'movement' => 'required|in:New Arrival,Deployed,Deployed Tagged,Returned,Disposed',
             'assigned_to' => 'nullable|exists:users,id',

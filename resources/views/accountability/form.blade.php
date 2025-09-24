@@ -89,6 +89,12 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-12">
+                    <div class="info-item">
+                        <div class="info-label">Notes</div>
+                        <div class="info-value">{{ $formData['asset']->notes ?? 'N/A' }}</div>
+                    </div>
+                </div>
             </div>
 
             <!-- Current Assignment -->
