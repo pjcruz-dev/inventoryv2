@@ -151,6 +151,11 @@ class AssetController extends Controller
             $validated['movement'] = 'New Arrival';
         }
 
+        // Handle empty vendor_id (convert empty string to null)
+        if (isset($validated['vendor_id']) && $validated['vendor_id'] === '') {
+            $validated['vendor_id'] = null;
+        }
+
         $asset = Asset::create($validated);
         
         // Create AssetAssignment record if asset is assigned during creation

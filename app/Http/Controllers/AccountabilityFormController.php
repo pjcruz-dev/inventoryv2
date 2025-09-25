@@ -62,7 +62,30 @@ class AccountabilityFormController extends Controller
             $query->where('status', $request->status);
         }
 
+        // Filter by print status
+        if ($request->has('print_status') && $request->print_status) {
+            if ($request->print_status === 'printed') {
+                $query->whereHas('assignments', function($q) {
+                    $q->where('accountability_printed', true);
+                });
+            } elseif ($request->print_status === 'not_printed') {
+                $query->whereHas('assignments', function($q) {
+                    $q->where('accountability_printed', false);
+                });
+            }
+        }
+
         $assets = $query->orderBy('assigned_date', 'desc')->paginate(20);
+        
+        // Load the current assignment with print tracking for each asset
+        foreach ($assets as $asset) {
+            $asset->currentAssignment = AssetAssignment::where('asset_id', $asset->id)
+                ->where('user_id', $asset->assigned_to)
+                ->where('status', '!=', 'declined')
+                ->with('accountabilityPrintedBy')
+                ->latest()
+                ->first();
+        }
         $users = User::orderBy('first_name')->get();
         $departments = \App\Models\Department::orderBy('name')->get();
 
@@ -168,7 +191,7 @@ class AccountabilityFormController extends Controller
         ])->findOrFail($assetId);
 
         $assignments = AssetAssignment::where('asset_id', $assetId)
-            ->with(['user', 'assignedBy'])
+            ->with(['user', 'assignedBy', 'accountabilityPrintedBy'])
             ->orderBy('assigned_date', 'desc')
             ->get();
 
@@ -183,6 +206,33 @@ class AccountabilityFormController extends Controller
             ->limit(10)
             ->get();
 
+        // Mark the current assignment as printed
+        $currentAssignment = AssetAssignment::where('asset_id', $assetId)
+            ->where('user_id', $asset->assigned_to)
+            ->where('status', '!=', 'declined')
+            ->latest()
+            ->first();
+
+        if ($currentAssignment && !$currentAssignment->accountability_printed) {
+            $currentAssignment->update([
+                'accountability_printed' => true,
+                'accountability_printed_at' => now(),
+                'accountability_printed_by' => auth()->id()
+            ]);
+
+            // Log the print action
+            Log::create([
+                'asset_id' => $assetId,
+                'user_id' => auth()->id(),
+                'category' => 'Accountability',
+                'event_type' => 'printed',
+                'description' => 'Accountability form printed',
+                'remarks' => "Accountability form for asset {$asset->asset_tag} printed by " . auth()->user()->first_name . ' ' . auth()->user()->last_name,
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+        }
+
         $formData = [
             'generated_at' => now(),
             'generated_by' => auth()->user(),
@@ -195,5 +245,49 @@ class AccountabilityFormController extends Controller
         ];
 
         return view('accountability.print', compact('formData'));
+    }
+
+    /**
+     * Mark accountability form as printed without actually printing
+     */
+    public function markAsPrinted($assetId)
+    {
+        $asset = Asset::findOrFail($assetId);
+        
+        $currentAssignment = AssetAssignment::where('asset_id', $assetId)
+            ->where('user_id', $asset->assigned_to)
+            ->where('status', '!=', 'declined')
+            ->latest()
+            ->first();
+
+        if ($currentAssignment && !$currentAssignment->accountability_printed) {
+            $currentAssignment->update([
+                'accountability_printed' => true,
+                'accountability_printed_at' => now(),
+                'accountability_printed_by' => auth()->id()
+            ]);
+
+            // Log the manual mark as printed action
+            Log::create([
+                'asset_id' => $assetId,
+                'user_id' => auth()->id(),
+                'category' => 'Accountability',
+                'event_type' => 'marked_printed',
+                'description' => 'Accountability form marked as printed manually',
+                'remarks' => "Accountability form for asset {$asset->asset_tag} marked as printed by " . auth()->user()->first_name . ' ' . auth()->user()->last_name,
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Accountability form marked as printed successfully.'
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Form already marked as printed or no assignment found.'
+        ]);
     }
 }

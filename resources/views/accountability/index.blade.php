@@ -75,6 +75,14 @@
                         <option value="Pending Confirmation" {{ request('status') == 'Pending Confirmation' ? 'selected' : '' }}>Pending Confirmation</option>
                     </select>
                 </div>
+                <div class="col-md-2">
+                    <label for="print_status" class="form-label">Print Status</label>
+                    <select class="form-select" id="print_status" name="print_status">
+                        <option value="">All</option>
+                        <option value="printed" {{ request('print_status') == 'printed' ? 'selected' : '' }}>Printed</option>
+                        <option value="not_printed" {{ request('print_status') == 'not_printed' ? 'selected' : '' }}>Not Printed</option>
+                    </select>
+                </div>
                 <div class="col-md-3 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary me-2">
                         <i class="fas fa-search me-1"></i>
@@ -115,6 +123,7 @@
                                 <th>Assigned To</th>
                                 <th>Assignment Date</th>
                                 <th>Status</th>
+                                <th>Print Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -184,6 +193,31 @@
                                         </span>
                                     </td>
                                     <td>
+                                        @if($asset->currentAssignment && $asset->currentAssignment->accountability_printed)
+                                            <div>
+                                                <span class="badge bg-success mb-1">
+                                                    <i class="fas fa-check-circle me-1"></i>
+                                                    Printed
+                                                </span>
+                                                <br>
+                                                <small class="text-muted">
+                                                    {{ $asset->currentAssignment->accountability_printed_at->format('M d, Y g:i A') }}
+                                                </small>
+                                                @if($asset->currentAssignment->accountabilityPrintedBy)
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        by {{ $asset->currentAssignment->accountabilityPrintedBy->first_name }} {{ $asset->currentAssignment->accountabilityPrintedBy->last_name }}
+                                                    </small>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <span class="badge bg-warning">
+                                                <i class="fas fa-clock me-1"></i>
+                                                Not Printed
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td>
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('accountability.generate', $asset->id) }}" 
                                                class="btn btn-sm btn-outline-primary" target="_blank">
@@ -191,10 +225,22 @@
                                                 View
                                             </a>
                                             <a href="{{ route('accountability.print', $asset->id) }}" 
-                                               class="btn btn-sm btn-primary" target="_blank">
+                                               class="btn btn-sm {{ ($asset->currentAssignment && $asset->currentAssignment->accountability_printed) ? 'btn-success' : 'btn-primary' }}" 
+                                               target="_blank"
+                                               title="{{ ($asset->currentAssignment && $asset->currentAssignment->accountability_printed) ? 'Already printed - click to reprint' : 'Print accountability form' }}">
                                                 <i class="fas fa-print me-1"></i>
-                                                Print
+                                                {{ ($asset->currentAssignment && $asset->currentAssignment->accountability_printed) ? 'Reprint' : 'Print' }}
                                             </a>
+                                            @if(!$asset->currentAssignment || !$asset->currentAssignment->accountability_printed)
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-outline-success mark-printed-btn" 
+                                                    data-asset-id="{{ $asset->id }}"
+                                                    data-asset-tag="{{ $asset->asset_tag }}"
+                                                    title="Mark as printed (for manual printing)">
+                                                <i class="fas fa-check me-1"></i>
+                                                Mark Printed
+                                            </button>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -320,6 +366,71 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize state
     updateSelectAllState();
     updateBulkForm();
+    
+    // Handle "Mark as Printed" button clicks
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.mark-printed-btn')) {
+            const button = e.target.closest('.mark-printed-btn');
+            const assetId = button.dataset.assetId;
+            const assetTag = button.dataset.assetTag;
+            
+            if (confirm(`Mark accountability form for asset ${assetTag} as printed?`)) {
+                // Show loading state
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
+                button.disabled = true;
+                
+                // Make AJAX request
+                fetch(`/accountability/mark-printed/${assetId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        showAlert('success', data.message);
+                        
+                        // Reload the page to update the UI
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        showAlert('error', data.message);
+                        button.innerHTML = originalText;
+                        button.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('error', 'An error occurred. Please try again.');
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                });
+            }
+        }
+    });
+    
+    function showAlert(type, message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Insert at the top of the page
+        const container = document.querySelector('.container-fluid');
+        container.insertBefore(alertDiv, container.firstChild);
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
 });
 </script>
 @endpush

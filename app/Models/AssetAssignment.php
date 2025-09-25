@@ -22,12 +22,16 @@ class AssetAssignment extends Model
         'assigned_date',
         'return_date',
         'status',
-        'notes'
+        'notes',
+        'accountability_printed',
+        'accountability_printed_at',
+        'accountability_printed_by'
     ];
 
     protected $casts = [
         'assigned_date' => 'datetime',
-        'return_date' => 'datetime'
+        'return_date' => 'datetime',
+        'accountability_printed_at' => 'datetime'
     ];
 
     // Relationships
@@ -44,6 +48,11 @@ class AssetAssignment extends Model
     public function assignedBy()
     {
         return $this->belongsTo(User::class, 'assigned_by');
+    }
+
+    public function accountabilityPrintedBy()
+    {
+        return $this->belongsTo(User::class, 'accountability_printed_by');
     }
 
     public function confirmation()

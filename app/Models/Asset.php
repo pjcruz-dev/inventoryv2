@@ -165,6 +165,11 @@ class Asset extends Model
         return $this->hasMany(AssetTimeline::class)->orderBy('performed_at', 'desc');
     }
 
+    public function assignments()
+    {
+        return $this->hasMany(AssetAssignment::class);
+    }
+
     protected static function booted()
     {
         static::created(function ($asset) {
