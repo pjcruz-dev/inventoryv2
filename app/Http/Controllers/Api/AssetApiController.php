@@ -306,7 +306,8 @@ class AssetApiController extends Controller
                 });
 
             // Get recent notifications for the user related to assets
-            $notifications = Notification::where('user_id', $targetUser->id)
+            $notifications = Notification::where('notifiable_type', 'App\Models\User')
+                ->where('notifiable_id', $targetUser->id)
                 ->where('type', 'asset')
                 ->latest()
                 ->take(10)

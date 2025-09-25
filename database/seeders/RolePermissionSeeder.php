@@ -30,6 +30,7 @@ class RolePermissionSeeder extends Seeder
             $adminPermissions = [
                 'view_assets', 'create_assets', 'edit_assets', 'delete_assets', 'assign_assets',
                 'view_asset_assignments', 'create_asset_assignments', 'edit_asset_assignments', 'delete_asset_assignments',
+                'view_assignment_confirmations', 'create_assignment_confirmations', 'edit_assignment_confirmations', 'delete_assignment_confirmations', 'manage_assignment_confirmations',
                 'view_asset_categories', 'create_asset_categories', 'edit_asset_categories', 'delete_asset_categories',
                 'view_computers', 'create_computers', 'edit_computers', 'delete_computers',
                 'view_monitors', 'create_monitors', 'edit_monitors', 'delete_monitors',
@@ -56,6 +57,7 @@ class RolePermissionSeeder extends Seeder
             $managerPermissions = [
                 'view_assets', 'assign_assets',
                 'view_asset_assignments', 'create_asset_assignments', 'edit_asset_assignments',
+                'view_assignment_confirmations', 'manage_assignment_confirmations',
                 'view_asset_categories',
                 'view_computers', 'view_monitors', 'view_printers', 'view_peripherals',
                 'view_departments', 'view_vendors', 'view_users',
@@ -89,6 +91,7 @@ class RolePermissionSeeder extends Seeder
             $itSupportPermissions = [
                 'view_assets', 'create_assets', 'edit_assets',
                 'view_asset_assignments', 'create_asset_assignments', 'edit_asset_assignments',
+                'view_assignment_confirmations', 'manage_assignment_confirmations',
                 'view_asset_categories',
                 'view_computers', 'create_computers', 'edit_computers',
                 'view_monitors', 'create_monitors', 'edit_monitors',

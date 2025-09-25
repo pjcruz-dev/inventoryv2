@@ -24,7 +24,8 @@ class NotificationController extends Controller
             return response()->json(['notifications' => [], 'count' => 0]);
         }
 
-        $notifications = Notification::where('user_id', auth()->id())
+        $notifications = Notification::where('notifiable_type', 'App\Models\User')
+            ->where('notifiable_id', auth()->id())
             ->unread()
             ->orderBy('created_at', 'desc')
             ->limit(10)
@@ -45,7 +46,8 @@ class NotificationController extends Controller
             return response()->json(['notifications' => []]);
         }
 
-        $notifications = Notification::where('user_id', auth()->id())
+        $notifications = Notification::where('notifiable_type', 'App\Models\User')
+            ->where('notifiable_id', auth()->id())
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
@@ -61,7 +63,8 @@ class NotificationController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        $notification = Notification::where('user_id', auth()->id())
+        $notification = Notification::where('notifiable_type', 'App\Models\User')
+            ->where('notifiable_id', auth()->id())
             ->where('id', $id)
             ->first();
 
@@ -83,7 +86,8 @@ class NotificationController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        Notification::where('user_id', auth()->id())
+        Notification::where('notifiable_type', 'App\Models\User')
+            ->where('notifiable_id', auth()->id())
             ->unread()
             ->update(['read_at' => now()]);
 
@@ -99,7 +103,7 @@ class NotificationController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        $notification = Notification::where('user_id', auth()->id())
+        $notification = Notification::where('notifiable_id', auth()->id())
             ->where('id', $id)
             ->first();
 

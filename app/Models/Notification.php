@@ -11,12 +11,17 @@ class Notification extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
+        'notifiable_type',
+        'notifiable_id',
         'type',
         'title',
         'message',
         'data',
-        'read_at'
+        'read_at',
+        'expires_at',
+        'is_urgent',
+        'action_url',
+        'action_text'
     ];
 
     protected $casts = [
@@ -27,11 +32,19 @@ class Notification extends Model
     ];
 
     /**
-     * Get the user that owns the notification
+     * Get the notifiable entity (user) that owns the notification
+     */
+    public function notifiable()
+    {
+        return $this->morphTo();
+    }
+
+    /**
+     * Get the user that owns the notification (for backward compatibility)
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'notifiable_id')->where('notifiable_type', 'App\Models\User');
     }
 
     /**

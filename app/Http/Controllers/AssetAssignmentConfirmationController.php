@@ -301,9 +301,19 @@ class AssetAssignmentConfirmationController extends Controller
     public function sendReminder(AssetAssignmentConfirmation $assetAssignmentConfirmation)
     {
         if ($assetAssignmentConfirmation->status !== 'pending') {
+            $statusMessage = match($assetAssignmentConfirmation->status) {
+                'confirmed' => 'This confirmation has already been confirmed.',
+                'declined' => 'This confirmation has been declined.',
+                'expired' => 'This confirmation has expired.',
+                default => 'This confirmation is not in pending status.'
+            };
+            
             return redirect()->back()
-                           ->with('error', 'Cannot send reminder for non-pending confirmation.');
+                           ->with('warning', "Cannot send reminder: {$statusMessage}");
         }
+        
+        // Load the asset and user relationships
+        $assetAssignmentConfirmation->load(['asset', 'user']);
         
         // Update reminder count and timestamp
         $assetAssignmentConfirmation->update([
@@ -311,15 +321,208 @@ class AssetAssignmentConfirmationController extends Controller
             'last_reminder_sent_at' => now()
         ]);
         
-        // Log activity
-        Log::info('Asset assignment confirmation reminder sent', [
+        // Send reminder email
+        try {
+            \Illuminate\Support\Facades\Mail::to($assetAssignmentConfirmation->user->email)
+                ->send(new \App\Mail\AssetAssignmentConfirmation(
+                    $assetAssignmentConfirmation->asset,
+                    $assetAssignmentConfirmation->user,
+                    $assetAssignmentConfirmation->confirmation_token,
+                    true // This is a follow-up/reminder email
+                ));
+            
+            $emailSent = true;
+        } catch (\Exception $e) {
+            // Log email error but don't fail the reminder
+            Log::error('Failed to send asset assignment confirmation reminder email', [
+                'confirmation_id' => $assetAssignmentConfirmation->id,
+                'user_email' => $assetAssignmentConfirmation->user->email,
+                'error' => $e->getMessage()
+            ]);
+            $emailSent = false;
+        }
+        
+        // Log activity to custom Log model
+        \App\Models\Log::create([
+            'loggable_type' => get_class($assetAssignmentConfirmation),
+            'loggable_id' => $assetAssignmentConfirmation->id,
+            'category' => 'Asset Assignment Confirmation',
+            'event_type' => 'reminder_sent',
+            'description' => 'Individual reminder sent for asset assignment confirmation',
             'user_id' => Auth::id(),
-            'confirmation_id' => $assetAssignmentConfirmation->id,
-            'reminder_count' => $assetAssignmentConfirmation->reminder_count
+            'asset_id' => $assetAssignmentConfirmation->asset_id,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'remarks' => "Reminder sent to {$assetAssignmentConfirmation->user->email} for asset {$assetAssignmentConfirmation->asset->asset_tag}. Reminder count: {$assetAssignmentConfirmation->reminder_count}. Email sent: " . ($emailSent ? 'Yes' : 'No'),
+            'action_details' => [
+                'confirmation_id' => $assetAssignmentConfirmation->id,
+                'reminder_count' => $assetAssignmentConfirmation->reminder_count,
+                'email_sent' => $emailSent,
+                'recipient_email' => $assetAssignmentConfirmation->user->email,
+                'asset_tag' => $assetAssignmentConfirmation->asset->asset_tag,
+                'action_type' => 'individual_reminder'
+            ],
+            'action_timestamp' => now(),
         ]);
         
+        $message = $emailSent 
+            ? 'Reminder sent successfully to ' . $assetAssignmentConfirmation->user->email
+            : 'Reminder count updated, but email failed to send. Please check logs.';
+        
         return redirect()->back()
-                        ->with('success', 'Reminder sent successfully.');
+                        ->with($emailSent ? 'success' : 'warning', $message);
+    }
+    
+    /**
+     * Send bulk reminders for pending confirmations
+     */
+    public function sendBulkReminders(Request $request)
+    {
+        $request->validate([
+            'confirmation_ids' => 'required|array|min:1',
+            'confirmation_ids.*' => 'exists:asset_assignment_confirmations,id'
+        ]);
+        
+        // Get all selected confirmations first
+        $allConfirmations = AssetAssignmentConfirmation::whereIn('id', $request->confirmation_ids)
+            ->with(['asset', 'user'])
+            ->get();
+        
+        // Filter only pending confirmations
+        $confirmations = $allConfirmations->where('status', 'pending');
+        $skippedCount = $allConfirmations->where('status', '!=', 'pending')->count();
+        
+        $successCount = 0;
+        $errorCount = 0;
+        $errors = [];
+        
+        // Add info about skipped confirmations
+        if ($skippedCount > 0) {
+            $skippedConfirmations = $allConfirmations->where('status', '!=', 'pending');
+            $skippedStatuses = $skippedConfirmations->groupBy('status')->map->count();
+            $skippedMessage = 'Skipped ' . $skippedCount . ' non-pending confirmations: ' . 
+                $skippedStatuses->map(function($count, $status) {
+                    return $count . ' ' . $status;
+                })->join(', ');
+            $errors[] = $skippedMessage;
+        }
+        
+        foreach ($confirmations as $confirmation) {
+            try {
+                // Update reminder count and timestamp
+                $confirmation->update([
+                    'reminder_count' => $confirmation->reminder_count + 1,
+                    'last_reminder_sent_at' => now()
+                ]);
+                
+                // Send reminder email
+                \Illuminate\Support\Facades\Mail::to($confirmation->user->email)
+                    ->send(new \App\Mail\AssetAssignmentConfirmation(
+                        $confirmation->asset,
+                        $confirmation->user,
+                        $confirmation->confirmation_token,
+                        true // This is a follow-up/reminder email
+                    ));
+                
+                $successCount++;
+                
+                // Log individual success to custom Log model
+                \App\Models\Log::create([
+                    'loggable_type' => get_class($confirmation),
+                    'loggable_id' => $confirmation->id,
+                    'category' => 'Asset Assignment Confirmation',
+                    'event_type' => 'bulk_reminder_sent',
+                    'description' => 'Bulk reminder sent for asset assignment confirmation',
+                    'user_id' => Auth::id(),
+                    'asset_id' => $confirmation->asset_id,
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent(),
+                    'remarks' => "Bulk reminder sent to {$confirmation->user->email} for asset {$confirmation->asset->asset_tag}. Reminder count: {$confirmation->reminder_count}",
+                    'action_details' => [
+                        'confirmation_id' => $confirmation->id,
+                        'reminder_count' => $confirmation->reminder_count,
+                        'recipient_email' => $confirmation->user->email,
+                        'asset_tag' => $confirmation->asset->asset_tag,
+                        'action_type' => 'bulk_reminder'
+                    ],
+                    'action_timestamp' => now(),
+                ]);
+                
+            } catch (\Exception $e) {
+                $errorCount++;
+                $errors[] = "Failed to send reminder to {$confirmation->user->email}: " . $e->getMessage();
+                
+                // Log individual error to custom Log model
+                \App\Models\Log::create([
+                    'loggable_type' => get_class($confirmation),
+                    'loggable_id' => $confirmation->id,
+                    'category' => 'Asset Assignment Confirmation',
+                    'event_type' => 'bulk_reminder_failed',
+                    'description' => 'Bulk reminder failed for asset assignment confirmation',
+                    'user_id' => Auth::id(),
+                    'asset_id' => $confirmation->asset_id,
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent(),
+                    'remarks' => "Bulk reminder failed for {$confirmation->user->email} for asset {$confirmation->asset->asset_tag}. Error: {$e->getMessage()}",
+                    'action_details' => [
+                        'confirmation_id' => $confirmation->id,
+                        'recipient_email' => $confirmation->user->email,
+                        'asset_tag' => $confirmation->asset->asset_tag,
+                        'error_message' => $e->getMessage(),
+                        'action_type' => 'bulk_reminder_failed'
+                    ],
+                    'action_timestamp' => now(),
+                ]);
+            }
+        }
+        
+        // Log bulk operation summary to custom Log model
+        \App\Models\Log::create([
+            'loggable_type' => 'App\Models\AssetAssignmentConfirmation',
+            'loggable_id' => null,
+            'category' => 'Asset Assignment Confirmation',
+            'event_type' => 'bulk_reminder_operation',
+            'description' => 'Bulk reminder operation completed',
+            'user_id' => Auth::id(),
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'remarks' => "Bulk reminder operation completed. Total selected: " . count($request->confirmation_ids) . ", Success: {$successCount}, Errors: {$errorCount}, Skipped: {$skippedCount}",
+            'action_details' => [
+                'total_selected' => count($request->confirmation_ids),
+                'success_count' => $successCount,
+                'error_count' => $errorCount,
+                'skipped_count' => $skippedCount,
+                'action_type' => 'bulk_reminder_operation'
+            ],
+            'action_timestamp' => now(),
+        ]);
+        
+        if ($errorCount === 0 && $successCount > 0) {
+            $message = "Successfully sent {$successCount} reminder emails.";
+            if ($skippedCount > 0) {
+                $message .= " ({$skippedCount} non-pending confirmations were skipped.)";
+            }
+            return redirect()->back()->with('success', $message);
+        } elseif ($successCount === 0) {
+            $message = "No reminders were sent.";
+            if ($skippedCount > 0) {
+                $message .= " All {$skippedCount} selected confirmations were non-pending and were skipped.";
+            }
+            if ($errorCount > 0) {
+                $message .= " Errors: " . implode('; ', $errors);
+            }
+            return redirect()->back()->with('warning', $message);
+        } else {
+            $message = "Sent {$successCount} reminders successfully";
+            if ($errorCount > 0) {
+                $message .= ", {$errorCount} failed";
+            }
+            if ($skippedCount > 0) {
+                $message .= ", {$skippedCount} non-pending confirmations were skipped";
+            }
+            $message .= ". Errors: " . implode('; ', $errors);
+            return redirect()->back()->with('warning', $message);
+        }
     }
     
     /**

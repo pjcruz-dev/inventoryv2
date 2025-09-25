@@ -227,7 +227,7 @@
                             </a>
                             <div>
                                 @if($confirmation->status == 'pending')
-                                    @can('manage_asset_assignment_confirmations')
+                                    @can('manage_assignment_confirmations')
                                     <a href="{{ route('asset-assignment-confirmations.send-reminder', $confirmation) }}" 
                                        class="btn btn-outline-warning me-2">
                                         <i class="fas fa-bell me-1"></i>Send Reminder

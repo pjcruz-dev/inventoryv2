@@ -181,7 +181,10 @@ class AssetConfirmationController extends Controller
             ]
         ];
         
-        Notification::create(array_merge($notificationData, ['user_id' => $confirmation->user_id]));
+        Notification::create(array_merge($notificationData, [
+            'notifiable_type' => 'App\Models\User',
+            'notifiable_id' => $confirmation->user_id
+        ]));
         
         // Create identical notification for super administrator
         $this->notifySuperAdmin($notificationData);
@@ -351,7 +354,10 @@ class AssetConfirmationController extends Controller
             ]
         ];
         
-        Notification::create(array_merge($notificationData, ['user_id' => $confirmation->user_id]));
+        Notification::create(array_merge($notificationData, [
+            'notifiable_type' => 'App\Models\User',
+            'notifiable_id' => $confirmation->user_id
+        ]));
         
         // Create identical notification for super administrator
         $this->notifySuperAdmin($notificationData);
@@ -642,7 +648,10 @@ class AssetConfirmationController extends Controller
             ]
         ];
         
-        Notification::create(array_merge($notificationData, ['user_id' => $confirmation->user_id]));
+        Notification::create(array_merge($notificationData, [
+            'notifiable_type' => 'App\Models\User',
+            'notifiable_id' => $confirmation->user_id
+        ]));
         
         // Create identical notification for super administrator
         $this->notifySuperAdmin($notificationData);
@@ -691,7 +700,10 @@ class AssetConfirmationController extends Controller
         })->first();
 
         if ($superAdmin) {
-            Notification::create(array_merge($notificationData, ['user_id' => $superAdmin->id]));
+            Notification::create(array_merge($notificationData, [
+                'notifiable_type' => 'App\Models\User',
+                'notifiable_id' => $superAdmin->id
+            ]));
         }
     }
 }

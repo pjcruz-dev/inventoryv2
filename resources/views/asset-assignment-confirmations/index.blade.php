@@ -17,7 +17,7 @@
                             <i class="fas fa-plus me-1"></i>New Confirmation
                         </a>
                         @endcan
-                        @can('manage_asset_assignment_confirmations')
+                        @can('manage_assignment_confirmations')
                         <div class="btn-group" role="group">
                             <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
                                 <i class="fas fa-download me-1"></i>Import/Export
@@ -35,6 +35,11 @@
                                 </a></li>
                             </ul>
                         </div>
+                        @endcan
+                        @can('manage_assignment_confirmations')
+                        <button type="button" class="btn btn-warning" id="sendBulkRemindersBtn" disabled>
+                            <i class="fas fa-bell me-1"></i>Send Bulk Reminders
+                        </button>
                         @endcan
                     </div>
                 </div>
@@ -139,6 +144,9 @@
                         <table class="table table-striped table-hover">
                             <thead class="table-dark">
                                 <tr>
+                                    <th width="50">
+                                        <input type="checkbox" id="selectAllCheckbox" class="form-check-input">
+                                    </th>
                                     <th>Asset</th>
                                     <th>User</th>
                                     <th>Assigned At</th>
@@ -151,6 +159,12 @@
                             <tbody>
                                 @forelse($confirmations as $confirmation)
                                     <tr>
+                                        <td>
+                                            <input type="checkbox" class="form-check-input confirmation-checkbox" 
+                                                   value="{{ $confirmation->id }}" 
+                                                   data-status="{{ $confirmation->status }}"
+                                                   {{ $confirmation->status !== 'pending' ? 'disabled' : '' }}>
+                                        </td>
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="asset-icon me-2">
@@ -209,7 +223,7 @@
                                             <div class="d-flex align-items-center">
                                                 <span class="badge bg-info me-2">{{ $confirmation->reminder_count ?? 0 }}</span>
                                                 @if($confirmation->status == 'pending')
-                                                    @can('manage_asset_assignment_confirmations')
+                                                    @can('manage_assignment_confirmations')
                                                     <a href="{{ route('asset-assignment-confirmations.send-reminder', $confirmation) }}" 
                                                        class="btn btn-sm btn-outline-warning" title="Send Reminder">
                                                         <i class="fas fa-bell"></i>
@@ -220,13 +234,13 @@
                                         </td>
                                         <td>
                                             <div class="btn-group btn-group-sm">
-                                                @can('view_asset_assignment_confirmations')
+                                                @can('view_assignment_confirmations')
                                                 <a href="{{ route('asset-assignment-confirmations.show', $confirmation) }}" 
                                                    class="btn btn-outline-info" title="View">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                                 @endcan
-                                                @can('edit_asset_assignment_confirmations')
+                                                @can('edit_assignment_confirmations')
                                                 <a href="{{ route('asset-assignment-confirmations.edit', $confirmation) }}" 
                                                    class="btn btn-outline-warning" title="Edit">
                                                     <i class="fas fa-edit"></i>
@@ -329,5 +343,93 @@ setInterval(function() {
         location.reload();
     }
 }, 30000);
+
+// Bulk reminder functionality
+$(document).ready(function() {
+    const selectAllCheckbox = $('#selectAllCheckbox');
+    const confirmationCheckboxes = $('.confirmation-checkbox');
+    const sendBulkRemindersBtn = $('#sendBulkRemindersBtn');
+    
+    // Handle select all checkbox
+    selectAllCheckbox.on('change', function() {
+        const isChecked = $(this).is(':checked');
+        confirmationCheckboxes.filter(':not(:disabled)').prop('checked', isChecked);
+        updateBulkReminderButton();
+    });
+    
+    // Handle individual checkboxes
+    confirmationCheckboxes.on('change', function() {
+        updateSelectAllState();
+        updateBulkReminderButton();
+    });
+    
+    // Update select all checkbox state
+    function updateSelectAllState() {
+        const pendingCheckboxes = confirmationCheckboxes.filter(':not(:disabled)');
+        const checkedPendingCheckboxes = pendingCheckboxes.filter(':checked');
+        
+        if (checkedPendingCheckboxes.length === 0) {
+            selectAllCheckbox.prop('checked', false).prop('indeterminate', false);
+        } else if (checkedPendingCheckboxes.length === pendingCheckboxes.length) {
+            selectAllCheckbox.prop('checked', true).prop('indeterminate', false);
+        } else {
+            selectAllCheckbox.prop('checked', false).prop('indeterminate', true);
+        }
+    }
+    
+    // Update bulk reminder button state
+    function updateBulkReminderButton() {
+        const selectedPendingCheckboxes = confirmationCheckboxes.filter(':checked').filter('[data-status="pending"]');
+        sendBulkRemindersBtn.prop('disabled', selectedPendingCheckboxes.length === 0);
+        
+        if (selectedPendingCheckboxes.length > 0) {
+            sendBulkRemindersBtn.text(`Send Bulk Reminders (${selectedPendingCheckboxes.length})`);
+        } else {
+            sendBulkRemindersBtn.text('Send Bulk Reminders');
+        }
+    }
+    
+    // Handle bulk reminder sending
+    sendBulkRemindersBtn.on('click', function() {
+        const selectedCheckboxes = confirmationCheckboxes.filter(':checked').filter('[data-status="pending"]');
+        const confirmationIds = selectedCheckboxes.map(function() {
+            return $(this).val();
+        }).get();
+        
+        if (confirmationIds.length === 0) {
+            alert('Please select at least one pending confirmation to send reminders.');
+            return;
+        }
+        
+        if (confirm(`Send reminders to ${confirmationIds.length} selected confirmations?`)) {
+            // Show loading state
+            const originalText = sendBulkRemindersBtn.html();
+            sendBulkRemindersBtn.html('<i class="fas fa-spinner fa-spin me-1"></i>Sending...').prop('disabled', true);
+            
+            // Make AJAX request
+            $.ajax({
+                url: '{{ route("asset-assignment-confirmations.send-bulk-reminders") }}',
+                method: 'POST',
+                data: {
+                    confirmation_ids: confirmationIds,
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    // Reload page to show updated reminder counts
+                    location.reload();
+                },
+                error: function(xhr) {
+                    console.error('Error sending bulk reminders:', xhr);
+                    alert('Error sending bulk reminders. Please try again.');
+                    sendBulkRemindersBtn.html(originalText).prop('disabled', false);
+                }
+            });
+        }
+    });
+    
+    // Initialize state
+    updateSelectAllState();
+    updateBulkReminderButton();
+});
 </script>
 @endpush
