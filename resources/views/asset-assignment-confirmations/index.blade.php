@@ -225,7 +225,10 @@
                                                 @if($confirmation->status == 'pending')
                                                     @can('manage_assignment_confirmations')
                                                     <a href="{{ route('asset-assignment-confirmations.send-reminder', $confirmation) }}" 
-                                                       class="btn btn-sm btn-outline-warning" title="Send Reminder">
+                                                       class="btn btn-sm btn-outline-warning send-reminder-btn" 
+                                                       title="Send Reminder"
+                                                       data-confirmation-id="{{ $confirmation->id }}"
+                                                       data-asset-tag="{{ $confirmation->asset->asset_tag }}">
                                                         <i class="fas fa-bell"></i>
                                                     </a>
                                                     @endcan
@@ -426,6 +429,96 @@ $(document).ready(function() {
             });
         }
     });
+    
+    // Debug: Check if buttons are found
+    console.log('Found send reminder buttons:', $('.send-reminder-btn').length);
+    
+    // Handle individual send reminder buttons
+    $('.send-reminder-btn').on('click', function(e) {
+        e.preventDefault();
+        
+        console.log('Send reminder button clicked!'); // Debug log
+        
+        const $btn = $(this);
+        const originalHtml = $btn.html();
+        const confirmationId = $btn.data('confirmation-id');
+        const assetTag = $btn.data('asset-tag');
+        
+        console.log('Confirmation ID:', confirmationId); // Debug log
+        console.log('Asset Tag:', assetTag); // Debug log
+        console.log('URL:', $btn.attr('href')); // Debug log
+        
+        // Show loading state
+        $btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
+        
+        // Make AJAX request
+        $.ajax({
+            url: $btn.attr('href'),
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                console.log('AJAX Success:', response); // Debug log
+                
+                // Show success message
+                if (response && response.message) {
+                    showAlert('success', response.message);
+                } else {
+                    showAlert('success', 'Reminder sent successfully!');
+                }
+                
+                // Reload page to show updated reminder counts
+                setTimeout(function() {
+                    location.reload();
+                }, 1500);
+            },
+            error: function(xhr) {
+                console.error('AJAX Error:', xhr); // Debug log
+                console.error('Error sending reminder:', xhr);
+                
+                let errorMessage = 'Error sending reminder. Please try again.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                } else if (xhr.responseText) {
+                    // Try to extract error message from response
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(xhr.responseText, 'text/html');
+                    const alertElement = doc.querySelector('.alert-danger, .alert-warning');
+                    if (alertElement) {
+                        errorMessage = alertElement.textContent.trim();
+                    }
+                }
+                
+                showAlert('error', errorMessage);
+                $btn.html(originalHtml).prop('disabled', false);
+            }
+        });
+    });
+    
+    // Function to show alerts
+    function showAlert(type, message) {
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const alertHtml = `
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+        
+        // Remove existing alerts
+        $('.alert').remove();
+        
+        // Add new alert at the top of the content
+        $('.card-body').first().prepend(alertHtml);
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(function() {
+            $('.alert').fadeOut();
+        }, 5000);
+    }
     
     // Initialize state
     updateSelectAllState();

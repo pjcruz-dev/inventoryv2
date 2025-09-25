@@ -290,7 +290,7 @@ class ErrorHandlingService
     {
         $logContext = array_merge([
             'user_id' => auth()->id(),
-            'session_id' => session()->getId(),
+            'session_id' => request()->hasSession() ? request()->session()->getId() : null,
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent()
         ], $context, $error);

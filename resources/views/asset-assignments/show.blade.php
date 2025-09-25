@@ -247,7 +247,9 @@
                                             <div class="row">
                                                 <div class="col-12">
                                                     <a href="{{ route('asset-assignment-confirmations.send-reminder', $assetAssignment->confirmation) }}" 
-                                                       class="btn btn-sm btn-outline-warning">
+                                                       class="btn btn-sm btn-outline-warning send-reminder-btn"
+                                                       data-confirmation-id="{{ $assetAssignment->confirmation->id }}"
+                                                       data-asset-tag="{{ $assetAssignment->asset->asset_tag }}">
                                                         <i class="fas fa-bell me-1"></i>Send Reminder
                                                     </a>
                                                 </div>

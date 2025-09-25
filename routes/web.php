@@ -74,7 +74,7 @@ Route::middleware('auth')->group(function () {
     Route::get('asset-assignment-confirmations/download/template', [AssetAssignmentConfirmationController::class, 'downloadTemplate'])->name('asset-assignment-confirmations.download-template')->middleware('check.permission:manage_assignment_confirmations');
     Route::get('asset-assignment-confirmations/import/form', [AssetAssignmentConfirmationController::class, 'importForm'])->name('asset-assignment-confirmations.import-form')->middleware('check.permission:manage_assignment_confirmations');
     Route::post('asset-assignment-confirmations/import', [AssetAssignmentConfirmationController::class, 'import'])->name('asset-assignment-confirmations.import')->middleware('check.permission:manage_assignment_confirmations');
-    Route::get('asset-assignment-confirmations/{confirmation}/send-reminder', [AssetAssignmentConfirmationController::class, 'sendReminder'])->name('asset-assignment-confirmations.send-reminder')->middleware('check.permission:manage_assignment_confirmations');
+    Route::get('asset-assignment-confirmations/{assetAssignmentConfirmation}/send-reminder', [AssetAssignmentConfirmationController::class, 'sendReminder'])->name('asset-assignment-confirmations.send-reminder')->middleware('check.permission:manage_assignment_confirmations');
     Route::post('asset-assignment-confirmations/send-bulk-reminders', [AssetAssignmentConfirmationController::class, 'sendBulkReminders'])->name('asset-assignment-confirmations.send-bulk-reminders')->middleware('check.permission:manage_assignment_confirmations');
     
     Route::resource('computers', ComputerController::class)->middleware('check.permission:view_computers');

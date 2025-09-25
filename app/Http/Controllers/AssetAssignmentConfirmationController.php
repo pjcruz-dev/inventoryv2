@@ -300,6 +300,15 @@ class AssetAssignmentConfirmationController extends Controller
      */
     public function sendReminder(AssetAssignmentConfirmation $assetAssignmentConfirmation)
     {
+        // Debug logging
+        \Log::info('SendReminder method called', [
+            'confirmation_id' => $assetAssignmentConfirmation->id,
+            'is_ajax' => request()->ajax(),
+            'wants_json' => request()->wantsJson(),
+            'user_agent' => request()->userAgent(),
+            'ip' => request()->ip()
+        ]);
+        
         if ($assetAssignmentConfirmation->status !== 'pending') {
             $statusMessage = match($assetAssignmentConfirmation->status) {
                 'confirmed' => 'This confirmation has already been confirmed.',
@@ -368,6 +377,16 @@ class AssetAssignmentConfirmationController extends Controller
         $message = $emailSent 
             ? 'Reminder sent successfully to ' . $assetAssignmentConfirmation->user->email
             : 'Reminder count updated, but email failed to send. Please check logs.';
+        
+        // Return JSON response for AJAX requests
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json([
+                'success' => $emailSent,
+                'message' => $message,
+                'reminder_count' => $assetAssignmentConfirmation->reminder_count,
+                'recipient_email' => $assetAssignmentConfirmation->user->email
+            ]);
+        }
         
         return redirect()->back()
                         ->with($emailSent ? 'success' : 'warning', $message);
