@@ -52,7 +52,7 @@ class ImportExportController extends Controller
      */
     public function downloadTemplate($module)
     {
-        $validModules = ['users', 'assets', 'computers', 'monitors', 'printers', 'peripherals', 'departments', 'vendors'];
+        $validModules = ['users', 'assets', 'computers', 'monitors', 'printers', 'peripherals', 'departments', 'vendors', 'asset_categories'];
         
         if (!in_array($module, $validModules)) {
             return response()->json(['error' => 'Invalid module specified'], 400);
@@ -70,7 +70,7 @@ class ImportExportController extends Controller
             // Log template download
             Log::info('Template downloaded', [
                 'module' => $module,
-                'user_id' => auth()->id(),
+                'user_id' => auth()->id() ?? 'guest',
                 'filename' => $filename,
                 'timestamp' => now()
             ]);
@@ -97,7 +97,7 @@ class ImportExportController extends Controller
      */
     public function downloadPublicTemplate($module)
     {
-        $validModules = ['users', 'assets', 'computers', 'monitors', 'printers', 'peripherals', 'departments', 'vendors'];
+        $validModules = ['users', 'assets', 'computers', 'monitors', 'printers', 'peripherals', 'departments', 'vendors', 'asset_categories'];
         
         if (!in_array($module, $validModules)) {
             return response()->json(['error' => 'Invalid module specified'], 400);
@@ -144,11 +144,50 @@ class ImportExportController extends Controller
     {
         $output = fopen('php://temp', 'r+');
         
-        // Add validation info as comments
+        // Add comprehensive instructions as comments
+        fwrite($output, "# ===========================================\n");
+        fwrite($output, "# IMPORT TEMPLATE - READ INSTRUCTIONS CAREFULLY\n");
+        fwrite($output, "# ===========================================\n");
         fwrite($output, "# Template Version: 2.0\n");
         fwrite($output, "# Generated: " . now()->toISOString() . "\n");
-        fwrite($output, "# Required fields are marked with *\n");
         fwrite($output, "# \n");
+        fwrite($output, "# IMPORTANT INSTRUCTIONS:\n");
+        fwrite($output, "# 1. DO NOT DELETE OR MODIFY THE HEADER ROW\n");
+        fwrite($output, "# 2. Fill in your data starting from row 2\n");
+        fwrite($output, "# 3. Required fields are marked with * in descriptions below\n");
+        fwrite($output, "# 4. Use EXACT values as shown in sample data\n");
+        fwrite($output, "# 5. Status fields: Use 1 for Active, 0 for Inactive\n");
+        fwrite($output, "# 6. Department names must match exactly (case-sensitive)\n");
+        fwrite($output, "# 7. Email addresses must be valid format\n");
+        fwrite($output, "# \n");
+        
+        // Add field descriptions
+        fwrite($output, "# FIELD DESCRIPTIONS:\n");
+        foreach ($templateData['headers'] as $key => $field) {
+            $required = $field['required'] ? ' *REQUIRED*' : ' (Optional)';
+            fwrite($output, "# {$field['name']}: {$field['description']}{$required}\n");
+            if (isset($field['options'])) {
+                fwrite($output, "#   Valid values: " . implode(', ', $field['options']) . "\n");
+            }
+            if (isset($field['max_length'])) {
+                fwrite($output, "#   Max length: {$field['max_length']} characters\n");
+            }
+        }
+        fwrite($output, "# \n");
+        
+        // Add valid values reference if available
+        if (isset($templateData['auto_populated_data'])) {
+            fwrite($output, "# VALID VALUES REFERENCE:\n");
+            foreach ($templateData['auto_populated_data'] as $type => $values) {
+                if (!empty($values)) {
+                    fwrite($output, "# Valid {$type}: " . implode(', ', array_slice($values, 0, 10)) . "\n");
+                }
+            }
+            fwrite($output, "# \n");
+        }
+        
+        fwrite($output, "# SAMPLE DATA BELOW - REPLACE WITH YOUR DATA:\n");
+        fwrite($output, "# ===========================================\n");
         
         // Extract field keys from the template headers structure
         $headerNames = array_keys($templateData['headers']);
@@ -166,6 +205,11 @@ class ImportExportController extends Controller
             fputcsv($output, $rowData);
         }
         
+        // Add empty rows for user data
+        fputcsv($output, array_fill(0, count($headerNames), ''));
+        fputcsv($output, array_fill(0, count($headerNames), ''));
+        fputcsv($output, array_fill(0, count($headerNames), ''));
+        
         rewind($output);
         $csv = stream_get_contents($output);
         fclose($output);
@@ -179,14 +223,15 @@ class ImportExportController extends Controller
     private function getSampleData($module)
     {
         $samples = [
-            'users' => 'EMP001,12345,John,Doe,john.doe@company.com,IT Department,Software Developer,Admin,Active',
-            'assets' => 'AST001,Computer Hardware,Dell Inc,Dell OptiPlex 7090,Desktop Computer,ABC123456,2024-01-15,2027-01-15,50000.00,Available',
-            'computers' => 'AST001,Computer Hardware,Dell Inc,Dell OptiPlex 7090,Desktop Computer,ABC123456,2024-01-15,2027-01-15,50000.00,Available,Intel Core i7-11700,16GB DDR4,512GB SSD,Windows 11 Pro',
-            'monitors' => 'MON001,Monitors & Displays,Samsung,Samsung 24" Monitor,24-inch LED Monitor,MON123456,2024-01-15,2027-01-15,15000.00,Available,24",1920x1080,IPS',
-            'printers' => 'PRT001,Printers & Scanners,HP,HP LaserJet Pro,Laser Printer,PRT123456,2024-01-15,2027-01-15,25000.00,Available,Laser,1,1',
-            'peripherals' => 'PER001,Peripherals,Logitech,Wireless Mouse,Optical Mouse,PER123456,2024-01-15,2027-01-15,2000.00,Available,Mouse,Wireless',
+            'users' => 'EMP001,John,Doe,john.doe@company.com,IT Department,Software Developer,Admin,Active',
+            'assets' => 'AST001,Dell OptiPlex 7090,Computer Hardware,Dell Inc,Desktop Computer,ABC123456,2024-01-15,2027-01-15,50000.00,Available',
+            'computers' => 'AST001,Dell OptiPlex 7090,Intel Core i7-11700,16GB DDR4,512GB SSD,Windows 11 Pro,RTX 3060,Desktop',
+            'monitors' => 'MON001,Samsung 24" Monitor,24",1920x1080,IPS,HDMI,USB-C',
+            'printers' => 'PRT001,HP LaserJet Pro,Laser,1,1,Network',
+            'peripherals' => 'PER001,Wireless Mouse,Mouse,Wireless,USB,Optical',
             'departments' => 'Information Technology,IT Department managing all technology assets,admin@company.com',
-            'vendors' => 'Dell Technologies,John Smith,sales@dell.com,+1-800-DELL,Round Rock TX USA'
+            'vendors' => 'Dell Technologies,John Smith,sales@dell.com,+1-800-DELL,Round Rock TX USA',
+            'asset_categories' => 'Computer Hardware,Desktop and laptop computers,COMP001,20,5,Active'
         ];
 
         return $samples[$module] ?? '';
@@ -198,11 +243,11 @@ class ImportExportController extends Controller
     public function import(Request $request, $module)
     {
         $request->validate([
-            'csv_file' => 'required|file|mimes:csv,txt|max:10240', // Increased to 10MB
+            'file' => 'required|file|mimes:csv,txt,xlsx,xls|max:10240', // Support Excel and CSV
             'validate_only' => 'boolean' // Option to validate without importing
         ]);
 
-        $file = $request->file('csv_file');
+        $file = $request->file('file');
         $validateOnly = $request->boolean('validate_only', false);
         $path = $file->getRealPath();
         
@@ -217,15 +262,24 @@ class ImportExportController extends Controller
                 ]]);
         }
         
-        // Read CSV file with error handling
+        // Read file based on type
         try {
-            $csvData = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            $fileExtension = strtolower($file->getClientOriginalExtension());
+            
+            if (in_array($fileExtension, ['xlsx', 'xls'])) {
+                // Handle Excel files
+                $csvData = $this->readExcelFile($path);
+            } else {
+                // Handle CSV files
+                $csvData = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            }
+            
             if ($csvData === false || empty($csvData)) {
                 return redirect()->route('import-export.results')
                     ->with('import_errors', [[
                         'row' => 1,
                         'field' => 'file',
-                        'message' => 'CSV file is empty or could not be read.',
+                        'message' => 'File is empty or could not be read.',
                         'value' => ''
                     ]]);
             }
@@ -243,7 +297,7 @@ class ImportExportController extends Controller
                     ->with('import_errors', [[
                         'row' => 1,
                         'field' => 'file',
-                        'message' => 'No valid CSV data found after filtering comments.',
+                        'message' => 'No valid data found after filtering comments.',
                         'value' => ''
                     ]]);
             }
@@ -252,7 +306,7 @@ class ImportExportController extends Controller
                 ->with('import_errors', [[
                     'row' => 1,
                     'field' => 'file',
-                    'message' => 'Error reading CSV file: ' . $e->getMessage(),
+                    'message' => 'Error reading file: ' . $e->getMessage(),
                     'value' => ''
                 ]]);
         }
@@ -434,6 +488,20 @@ class ImportExportController extends Controller
                 'duplicates' => count($duplicates)
             ];
             
+            // Check if this is an AJAX request
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => empty($allErrors),
+                    'message' => 'Validation completed. ' . (empty($allErrors) ? 'No errors found.' : count($allErrors) . ' errors found.'),
+                    'imported' => 0,
+                    'errors' => count($allErrors),
+                    'warnings' => count($warnings),
+                    'error_details' => $allErrors,
+                    'warning_details' => $warnings,
+                    'summary' => $summary
+                ]);
+            }
+            
             return redirect()->route('import-export.results')
                 ->with('import_errors', $allErrors)
                 ->with('import_warnings', $warnings)
@@ -443,14 +511,29 @@ class ImportExportController extends Controller
 
         // Check for duplicates before proceeding with import
         if (!empty($duplicates)) {
+            $summary = [
+                'total' => $totalRows,
+                'successful' => 0,
+                'failed' => count($duplicates),
+                'warnings' => 0
+            ];
+            
+            // Check if this is an AJAX request
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Duplicate entries found. Please fix duplicates before importing.',
+                    'imported' => 0,
+                    'errors' => count($duplicates),
+                    'warnings' => 0,
+                    'error_details' => $duplicates,
+                    'summary' => $summary
+                ]);
+            }
+            
             return redirect()->route('import-export.results')
                 ->with('import_errors', $duplicates)
-                ->with('import_summary', [
-                    'total' => $totalRows,
-                    'successful' => 0,
-                    'failed' => count($duplicates),
-                    'warnings' => 0
-                ]);
+                ->with('import_summary', $summary);
         }
 
         DB::beginTransaction();
@@ -525,7 +608,7 @@ class ImportExportController extends Controller
                 ]);
             }
 
-            // Prepare session data
+            // Prepare response data
             $summary = [
                 'total' => $totalRows,
                 'successful' => $successCount,
@@ -533,6 +616,33 @@ class ImportExportController extends Controller
                 'warnings' => count($warnings)
             ];
 
+            // Check if this is an AJAX request
+            if (request()->ajax()) {
+                if (count($errors) > 0) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Import completed with errors',
+                        'imported' => $successCount,
+                        'errors' => count($errors),
+                        'warnings' => count($warnings),
+                        'error_details' => $errors,
+                        'warning_details' => $warnings,
+                        'summary' => $summary
+                    ]);
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => "Successfully imported {$successCount} {$module} records.",
+                    'imported' => $successCount,
+                    'errors' => count($errors),
+                    'warnings' => count($warnings),
+                    'warning_details' => $warnings,
+                    'summary' => $summary
+                ]);
+            }
+
+            // Non-AJAX request handling
             if (count($errors) > 0) {
                 return redirect()->route('import-export.results')
                     ->with('import_errors', $errors)
@@ -560,19 +670,55 @@ class ImportExportController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             
-            return redirect()->route('import-export.results')
-                ->with('import_errors', [[
-                    'row' => 0,
-                    'field' => 'general',
+            $errorData = [[
+                'row' => 0,
+                'field' => 'general',
+                'message' => 'Import failed: ' . $e->getMessage(),
+                'value' => ''
+            ]];
+            
+            // Check if this is an AJAX request
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => false,
                     'message' => 'Import failed: ' . $e->getMessage(),
-                    'value' => ''
-                ]]);
+                    'imported' => 0,
+                    'errors' => 1,
+                    'warnings' => 0,
+                    'error_details' => $errorData,
+                    'summary' => [
+                        'total' => 0,
+                        'successful' => 0,
+                        'failed' => 1,
+                        'warnings' => 0
+                    ]
+                ], 500);
+            }
+            
+            return redirect()->route('import-export.results')
+                ->with('import_errors', $errorData);
         }
     }
 
     /**
      * Get required fields for module validation
      */
+    private function getRequiredFields($module)
+    {
+        $requiredFields = [
+            'users' => ['employee_id', 'first_name', 'last_name', 'email_address', 'department'],
+            'assets' => ['asset_tag', 'asset_name', 'category', 'vendor'],
+            'computers' => ['asset_id', 'asset_name', 'processor', 'memory_ram', 'storage', 'operating_system'],
+            'monitors' => ['asset_id', 'asset_name', 'size', 'resolution'],
+            'printers' => ['asset_id', 'asset_name', 'type'],
+            'peripherals' => ['asset_id', 'asset_name', 'type', 'interface'],
+            'departments' => ['name'],
+            'vendors' => ['name', 'contact_person', 'email', 'phone', 'address'],
+            'asset_categories' => ['name']
+        ];
+
+        return $requiredFields[$module] ?? [];
+    }
 
     /**
      * Get template preview for specified module
@@ -646,6 +792,324 @@ class ImportExportController extends Controller
     }
 
     /**
+     * Find the closest match from a list of options (for suggestions)
+     */
+    private function findClosestMatch($input, $options)
+    {
+        if (empty($input) || empty($options)) {
+            return null;
+        }
+        
+        $input = strtolower(trim($input));
+        $bestMatch = null;
+        $bestScore = 0;
+        
+        foreach ($options as $option) {
+            $option = strtolower(trim($option));
+            
+            // Exact match
+            if ($input === $option) {
+                return $option;
+            }
+            
+            // Check if input is contained in option or vice versa
+            if (strpos($option, $input) !== false || strpos($input, $option) !== false) {
+                $score = max(strlen($input), strlen($option)) / max(strlen($input), strlen($option));
+                if ($score > $bestScore) {
+                    $bestScore = $score;
+                    $bestMatch = $option;
+                }
+            }
+            
+            // Calculate similarity using similar_text
+            similar_text($input, $option, $percent);
+            if ($percent > 60 && $percent > $bestScore * 100) {
+                $bestScore = $percent / 100;
+                $bestMatch = $option;
+            }
+        }
+        
+        return $bestMatch;
+    }
+
+    /**
+     * Generate import preview data
+     */
+    public function generateImportPreview(Request $request, $module)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt,xlsx,xls|max:10240',
+        ]);
+
+        $file = $request->file('file');
+        $path = $file->getRealPath();
+        
+        try {
+            // Read and parse file
+            $fileExtension = strtolower($file->getClientOriginalExtension());
+            
+            if (in_array($fileExtension, ['xlsx', 'xls'])) {
+                $csvData = $this->readExcelFile($path);
+            } else {
+                $csvData = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            }
+            
+            // Filter out comment lines
+            $csvData = array_filter($csvData, function($line) {
+                return !empty(trim($line)) && !str_starts_with(trim($line), '#');
+            });
+            $csvData = array_values($csvData);
+            
+            if (empty($csvData)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No valid data found in file'
+                ]);
+            }
+            
+            // Parse CSV data
+            $data = [];
+            foreach ($csvData as $line) {
+                $parsedLine = str_getcsv($line);
+                if ($parsedLine !== false) {
+                    $data[] = $parsedLine;
+                }
+            }
+            
+            $headers = array_shift($data);
+            $headers = array_map(function($header) {
+                return str_replace(["\xEF\xBB\xBF", "\xFF\xFE", "\xFE\xFF"], '', trim($header));
+            }, $headers);
+            
+            // Generate preview data
+            $previewData = [];
+            $errors = [];
+            $warnings = [];
+            
+            foreach ($data as $index => $row) {
+                $rowNumber = $index + 2;
+                $rowData = array_combine($headers, array_pad($row, count($headers), ''));
+                
+                // Skip empty rows
+                if (empty(array_filter($row))) {
+                    $warnings[] = [
+                        'row' => $rowNumber,
+                        'message' => 'Empty row will be skipped',
+                        'field' => 'general'
+                    ];
+                    continue;
+                }
+                
+                // Validate row and generate preview
+                try {
+                    $previewRow = $this->generateRowPreview($module, $rowData, $rowNumber);
+                    $previewData[] = $previewRow;
+                } catch (\Exception $e) {
+                    $errors[] = [
+                        'row' => $rowNumber,
+                        'field' => 'general',
+                        'message' => $e->getMessage(),
+                        'value' => implode(', ', array_slice($row, 0, 3))
+                    ];
+                }
+            }
+            
+            return response()->json([
+                'success' => true,
+                'preview_data' => $previewData,
+                'headers' => $headers,
+                'errors' => $errors,
+                'warnings' => $warnings,
+                'summary' => [
+                    'total_rows' => count($data),
+                    'valid_rows' => count($previewData),
+                    'errors' => count($errors),
+                    'warnings' => count($warnings)
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error processing file: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Generate preview data for a single row
+     */
+    private function generateRowPreview($module, $data, $rowNumber)
+    {
+        $preview = [
+            'row_number' => $rowNumber,
+            'original_data' => $data,
+            'processed_data' => [],
+            'status' => 'valid',
+            'warnings' => [],
+            'errors' => []
+        ];
+        
+        try {
+            switch ($module) {
+                case 'users':
+                    $preview['processed_data'] = $this->generateUserPreview($data);
+                    break;
+                case 'assets':
+                    $preview['processed_data'] = $this->generateAssetPreview($data);
+                    break;
+                case 'computers':
+                    $preview['processed_data'] = $this->generateComputerPreview($data);
+                    break;
+                case 'monitors':
+                    $preview['processed_data'] = $this->generateMonitorPreview($data);
+                    break;
+                case 'printers':
+                    $preview['processed_data'] = $this->generatePrinterPreview($data);
+                    break;
+                case 'peripherals':
+                    $preview['processed_data'] = $this->generatePeripheralPreview($data);
+                    break;
+                case 'departments':
+                    $preview['processed_data'] = $this->generateDepartmentPreview($data);
+                    break;
+                case 'vendors':
+                    $preview['processed_data'] = $this->generateVendorPreview($data);
+                    break;
+                case 'asset_categories':
+                    $preview['processed_data'] = $this->generateAssetCategoryPreview($data);
+                    break;
+                default:
+                    throw new \Exception('Invalid module specified.');
+            }
+        } catch (\Exception $e) {
+            $preview['status'] = 'error';
+            $preview['errors'][] = $e->getMessage();
+        }
+        
+        return $preview;
+    }
+
+    /**
+     * Generate user preview data
+     */
+    private function generateUserPreview($data)
+    {
+        $preview = [];
+        
+        // Basic field mapping
+        $preview['employee_id'] = $data['employee_id'] ?? '';
+        $preview['first_name'] = $data['first_name'] ?? '';
+        $preview['last_name'] = $data['last_name'] ?? '';
+        $preview['email'] = $data['email_address'] ?? '';
+        $preview['phone'] = $data['phone_number'] ?? '';
+        $preview['job_title'] = $data['job_title'] ?? '';
+        $preview['company'] = $data['company'] ?? '';
+        $preview['status'] = $data['status'] ?? '1';
+        $preview['password'] = '***HIDDEN***';
+        
+        // Department lookup
+        if (!empty($data['department'])) {
+            $department = Department::where('name', $data['department'])->first();
+            if ($department) {
+                $preview['department'] = $department->name;
+                $preview['department_id'] = $department->id;
+            } else {
+                $preview['department'] = $data['department'] . ' ❌ NOT FOUND';
+                $preview['department_id'] = null;
+            }
+        }
+        
+        // Role lookup
+        if (!empty($data['role'])) {
+            $role = Role::where('name', $data['role'])->first();
+            if ($role) {
+                $preview['role'] = $role->name;
+                $preview['role_id'] = $role->id;
+            } else {
+                $preview['role'] = $data['role'] . ' ❌ NOT FOUND';
+                $preview['role_id'] = null;
+            }
+        }
+        
+        // Check for duplicates
+        if (!empty($data['employee_id'])) {
+            $existingUser = User::where('employee_id', $data['employee_id'])->first();
+            if ($existingUser) {
+                $preview['duplicate_employee_id'] = '⚠️ Employee ID already exists';
+            }
+        }
+        
+        if (!empty($data['email_address'])) {
+            $existingUser = User::where('email', $data['email_address'])->first();
+            if ($existingUser) {
+                $preview['duplicate_email'] = '⚠️ Email already exists';
+            }
+        }
+        
+        return $preview;
+    }
+
+    /**
+     * Generate asset preview data
+     */
+    private function generateAssetPreview($data)
+    {
+        $preview = [];
+        
+        $preview['asset_tag'] = $data['asset_tag'] ?? 'AUTO-GENERATED';
+        $preview['asset_name'] = $data['asset_name'] ?? '';
+        $preview['model'] = $data['model'] ?? '';
+        $preview['serial_number'] = $data['serial_number'] ?? '';
+        $preview['purchase_date'] = $data['purchase_date'] ?? '';
+        $preview['purchase_cost'] = $data['purchase_cost'] ?? '';
+        $preview['po_number'] = $data['po_number'] ?? '';
+        $preview['entity'] = $data['entity'] ?? '';
+        $preview['lifespan'] = $data['lifespan'] ?? '';
+        $preview['location'] = $data['location'] ?? '';
+        $preview['notes'] = $data['notes'] ?? '';
+        $preview['status'] = $data['status'] ?? 'Available';
+        $preview['movement'] = $data['movement'] ?? 'New Arrival';
+        
+        // Category lookup
+        if (!empty($data['category'])) {
+            $category = AssetCategory::where('name', $data['category'])->first();
+            if ($category) {
+                $preview['category'] = $category->name;
+                $preview['category_id'] = $category->id;
+            } else {
+                $preview['category'] = $data['category'] . ' ❌ NOT FOUND';
+                $preview['category_id'] = null;
+            }
+        }
+        
+        // Vendor lookup
+        if (!empty($data['vendor'])) {
+            $vendor = Vendor::where('name', $data['vendor'])->first();
+            if ($vendor) {
+                $preview['vendor'] = $vendor->name;
+                $preview['vendor_id'] = $vendor->id;
+            } else {
+                $preview['vendor'] = $data['vendor'] . ' ❌ NOT FOUND';
+                $preview['vendor_id'] = null;
+            }
+        }
+        
+        return $preview;
+    }
+
+    /**
+     * Generate other module previews (simplified)
+     */
+    private function generateComputerPreview($data) { return $this->generateAssetPreview($data); }
+    private function generateMonitorPreview($data) { return $this->generateAssetPreview($data); }
+    private function generatePrinterPreview($data) { return $this->generateAssetPreview($data); }
+    private function generatePeripheralPreview($data) { return $this->generateAssetPreview($data); }
+    private function generateDepartmentPreview($data) { return $data; }
+    private function generateVendorPreview($data) { return $data; }
+    private function generateAssetCategoryPreview($data) { return $data; }
+
+    /**
      * Get import status for ongoing imports
      */
     public function getImportStatus(Request $request)
@@ -684,6 +1148,38 @@ class ImportExportController extends Controller
                 'success' => false,
                 'message' => 'Error retrieving import history: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Read Excel file and convert to array
+     */
+    private function readExcelFile($path)
+    {
+        try {
+            $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader('Xlsx');
+            $spreadsheet = $reader->load($path);
+            $worksheet = $spreadsheet->getActiveSheet();
+            $data = [];
+            
+            foreach ($worksheet->getRowIterator() as $row) {
+                $rowData = [];
+                $cellIterator = $row->getCellIterator();
+                $cellIterator->setIterateOnlyExistingCells(false);
+                
+                foreach ($cellIterator as $cell) {
+                    $rowData[] = $cell->getCalculatedValue();
+                }
+                
+                // Skip empty rows
+                if (!empty(array_filter($rowData))) {
+                    $data[] = implode(',', $rowData);
+                }
+            }
+            
+            return $data;
+        } catch (\Exception $e) {
+            throw new \Exception('Error reading Excel file: ' . $e->getMessage());
         }
     }
 
@@ -755,21 +1251,6 @@ class ImportExportController extends Controller
         return date('Y-m-d', $timestamp);
     }
 
-    private function getRequiredFields($module)
-    {
-        $requiredFields = [
-            'users' => ['employee_no', 'first_name', 'last_name', 'email', 'department_name'],
-            'assets' => ['asset_tag', 'category_name', 'vendor_name', 'name'],
-            'computers' => ['asset_tag', 'category_name', 'vendor_name', 'name', 'processor', 'ram', 'storage', 'os'],
-            'monitors' => ['asset_tag', 'category_name', 'vendor_name', 'name', 'size', 'resolution'],
-            'printers' => ['asset_tag', 'category_name', 'vendor_name', 'name', 'type'],
-            'peripherals' => ['asset_tag', 'category_name', 'vendor_name', 'name', 'type', 'interface'],
-            'departments' => ['name'],
-            'vendors' => ['name']
-        ];
-
-        return $requiredFields[$module] ?? [];
-    }
 
     /**
      * Validate individual import row based on module
@@ -858,42 +1339,108 @@ class ImportExportController extends Controller
         if (!empty($data['employee_id'])) {
             $existingUser = User::where('employee_id', $data['employee_id'])->first();
             if ($existingUser) {
-                throw new \Exception("User with employee ID '{$data['employee_id']}' already exists. Skipping duplicate entry.");
+                throw new \Exception("❌ DUPLICATE EMPLOYEE ID: Employee ID '{$data['employee_id']}' already exists in the system. Please use a unique employee ID or update the existing record.");
             }
         }
         
         if (!empty($data['email_address'])) {
             $existingUser = User::where('email', $data['email_address'])->first();
             if ($existingUser) {
-                throw new \Exception("User with email '{$data['email_address']}' already exists. Skipping duplicate entry.");
+                throw new \Exception("❌ DUPLICATE EMAIL: Email address '{$data['email_address']}' already exists in the system. Please use a unique email address or update the existing record.");
             }
         }
 
-        // Validate required fields
+        // Enhanced validation with specific error messages
         $validator = Validator::make($data, [
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email_address' => 'required|email|max:255',
             'employee_id' => 'required|string|max:255',
-            'department' => 'required|string'
+            'department' => 'required|string',
+            'phone_number' => 'nullable|string|max:50',
+            'status' => 'nullable|integer|in:0,1',
+            'role' => 'nullable|string',
+            'company' => 'nullable|string|in:Philtower,MIDC,PRIMUS',
+            'job_title' => 'nullable|string|max:255'
+        ], [
+            'first_name.required' => '❌ MISSING FIRST NAME: First name is required. Please provide the employee\'s first name.',
+            'first_name.string' => '❌ INVALID FIRST NAME: First name must be text. Please enter a valid first name.',
+            'first_name.max' => '❌ FIRST NAME TOO LONG: First name cannot exceed 255 characters. Please shorten the name.',
+            
+            'last_name.required' => '❌ MISSING LAST NAME: Last name is required. Please provide the employee\'s last name.',
+            'last_name.string' => '❌ INVALID LAST NAME: Last name must be text. Please enter a valid last name.',
+            'last_name.max' => '❌ LAST NAME TOO LONG: Last name cannot exceed 255 characters. Please shorten the name.',
+            
+            'email_address.required' => '❌ MISSING EMAIL: Email address is required. Please provide the employee\'s email address.',
+            'email_address.email' => '❌ INVALID EMAIL FORMAT: Email address format is invalid. Please use a valid email format (e.g., john.doe@company.com).',
+            'email_address.max' => '❌ EMAIL TOO LONG: Email address cannot exceed 255 characters. Please use a shorter email address.',
+            
+            'employee_id.required' => '❌ MISSING EMPLOYEE ID: Employee ID is required. Please provide a unique employee ID.',
+            'employee_id.string' => '❌ INVALID EMPLOYEE ID: Employee ID must be text. Please enter a valid employee ID.',
+            'employee_id.max' => '❌ EMPLOYEE ID TOO LONG: Employee ID cannot exceed 255 characters. Please use a shorter ID.',
+            
+            'department.required' => '❌ MISSING DEPARTMENT: Department is required. Please specify the employee\'s department.',
+            'department.string' => '❌ INVALID DEPARTMENT: Department must be text. Please enter a valid department name.',
+            
+            'phone_number.string' => '❌ INVALID PHONE: Phone number must be text. Please enter a valid phone number.',
+            'phone_number.max' => '❌ PHONE TOO LONG: Phone number cannot exceed 50 characters. Please use a shorter phone number.',
+            
+            'status.in' => '❌ INVALID STATUS: Status must be 1 (Active) or 0 (Inactive). Please use a valid status number.',
+            
+            'role.string' => '❌ INVALID ROLE: Role must be text. Please enter a valid role name.',
+            
+            'company.in' => '❌ INVALID COMPANY: Company must be one of: Philtower, MIDC, PRIMUS. Please use a valid company name.',
+            
+            'job_title.string' => '❌ INVALID JOB TITLE: Job title must be text. Please enter a valid job title.',
+            'job_title.max' => '❌ JOB TITLE TOO LONG: Job title cannot exceed 255 characters. Please shorten the job title.'
         ]);
 
         if ($validator->fails()) {
             throw new \Illuminate\Validation\ValidationException($validator);
         }
 
-        // Find department by name
+        // Find department by name with enhanced error message
         $department = Department::where('name', $data['department'])->first();
         if (!$department) {
-            throw new \Exception("Department '{$data['department']}' not found.");
+            $availableDepartments = Department::pluck('name')->take(10)->toArray();
+            $suggestion = $this->findClosestMatch($data['department'], Department::pluck('name')->toArray());
+            
+            $errorMessage = "❌ DEPARTMENT NOT FOUND: Department '{$data['department']}' does not exist in the system.\n\n";
+            $errorMessage .= "📋 AVAILABLE DEPARTMENTS (first 10):\n";
+            foreach ($availableDepartments as $dept) {
+                $errorMessage .= "   • {$dept}\n";
+            }
+            
+            if ($suggestion) {
+                $errorMessage .= "\n💡 SUGGESTION: Did you mean '{$suggestion}'?\n";
+            }
+            
+            $errorMessage .= "\n🔧 ACTION REQUIRED: Please use one of the exact department names listed above (case-sensitive).";
+            
+            throw new \Exception($errorMessage);
         }
 
-        // Find role by name (optional)
+        // Find role by name with enhanced error message
         $role = null;
         if (!empty($data['role'])) {
             $role = Role::where('name', $data['role'])->first();
             if (!$role) {
-                throw new \Exception("Role '{$data['role']}' not found.");
+                $availableRoles = Role::pluck('name')->toArray();
+                $suggestion = $this->findClosestMatch($data['role'], $availableRoles);
+                
+                $errorMessage = "❌ ROLE NOT FOUND: Role '{$data['role']}' does not exist in the system.\n\n";
+                $errorMessage .= "📋 AVAILABLE ROLES:\n";
+                foreach ($availableRoles as $roleName) {
+                    $errorMessage .= "   • {$roleName}\n";
+                }
+                
+                if ($suggestion) {
+                    $errorMessage .= "\n💡 SUGGESTION: Did you mean '{$suggestion}'?\n";
+                }
+                
+                $errorMessage .= "\n🔧 ACTION REQUIRED: Please use one of the exact role names listed above (case-sensitive).";
+                
+                throw new \Exception($errorMessage);
             }
         }
 
@@ -907,7 +1454,7 @@ class ImportExportController extends Controller
             'position' => $data['job_title'] ?? null,
             'phone' => $data['phone_number'] ?? null,
             'role_id' => $role ? $role->id : null,
-            'status' => $data['status'] ?? 'Active',
+            'status' => $data['status'] ?? 1,
             'password' => bcrypt($data['password'] ?? 'password123')
         ]);
     }
@@ -917,30 +1464,102 @@ class ImportExportController extends Controller
      */
     private function importAsset($data, $rowNumber)
     {
-        // Validate required fields (asset_tag is now optional for auto-generation)
+        // Enhanced validation with specific error messages
         $validator = Validator::make($data, [
             'asset_tag' => 'nullable|string|max:255',
             'asset_name' => 'required|string|max:255',
             'category' => 'required|string',
             'vendor' => 'required|string',
             'purchase_date' => 'nullable|date',
-            'purchase_cost' => 'nullable|numeric|min:0'
+            'purchase_cost' => 'nullable|numeric|min:0',
+            'status' => 'nullable|string|in:Available,Active,Inactive,Under Maintenance,Issue Reported,Pending Confirmation,Disposed',
+            'movement' => 'nullable|string|in:New Arrival,Transfer,Return,Disposal',
+            'entity' => 'nullable|string|in:MIDC,Philtower,PRIMUS',
+            'serial_number' => 'nullable|string|max:100',
+            'lifespan' => 'nullable|integer|min:1',
+            'location' => 'nullable|string|max:255',
+            'notes' => 'nullable|string'
+        ], [
+            'asset_name.required' => '❌ MISSING ASSET NAME: Asset name is required. Please provide a descriptive name for the asset.',
+            'asset_name.string' => '❌ INVALID ASSET NAME: Asset name must be text. Please enter a valid asset name.',
+            'asset_name.max' => '❌ ASSET NAME TOO LONG: Asset name cannot exceed 255 characters. Please shorten the name.',
+            
+            'category.required' => '❌ MISSING CATEGORY: Category is required. Please specify the asset category.',
+            'category.string' => '❌ INVALID CATEGORY: Category must be text. Please enter a valid category name.',
+            
+            'vendor.required' => '❌ MISSING VENDOR: Vendor is required. Please specify the vendor/supplier.',
+            'vendor.string' => '❌ INVALID VENDOR: Vendor must be text. Please enter a valid vendor name.',
+            
+            'asset_tag.string' => '❌ INVALID ASSET TAG: Asset tag must be text. Please enter a valid asset tag.',
+            'asset_tag.max' => '❌ ASSET TAG TOO LONG: Asset tag cannot exceed 255 characters. Please shorten the tag.',
+            
+            'purchase_date.date' => '❌ INVALID PURCHASE DATE: Purchase date must be a valid date. Please use format YYYY-MM-DD (e.g., 2024-01-15).',
+            
+            'purchase_cost.numeric' => '❌ INVALID PURCHASE COST: Purchase cost must be a number. Please enter a valid cost amount.',
+            'purchase_cost.min' => '❌ INVALID PURCHASE COST: Purchase cost cannot be negative. Please enter a positive number.',
+            
+            'status.in' => '❌ INVALID STATUS: Status must be one of: Available, Active, Inactive, Under Maintenance, Issue Reported, Pending Confirmation, Disposed. Please use a valid status.',
+            
+            'movement.in' => '❌ INVALID MOVEMENT: Movement must be one of: New Arrival, Transfer, Return, Disposal. Please use a valid movement type.',
+            
+            'entity.in' => '❌ INVALID ENTITY: Entity must be one of: MIDC, Philtower, PRIMUS. Please use a valid entity name.',
+            
+            'serial_number.string' => '❌ INVALID SERIAL NUMBER: Serial number must be text. Please enter a valid serial number.',
+            'serial_number.max' => '❌ SERIAL NUMBER TOO LONG: Serial number cannot exceed 100 characters. Please shorten the serial number.',
+            
+            'lifespan.integer' => '❌ INVALID LIFESPAN: Lifespan must be a whole number. Please enter a valid number of years.',
+            'lifespan.min' => '❌ INVALID LIFESPAN: Lifespan must be at least 1 year. Please enter a valid number.',
+            
+            'location.string' => '❌ INVALID LOCATION: Location must be text. Please enter a valid location.',
+            'location.max' => '❌ LOCATION TOO LONG: Location cannot exceed 255 characters. Please shorten the location.',
+            
+            'notes.string' => '❌ INVALID NOTES: Notes must be text. Please enter valid notes.'
         ]);
 
         if ($validator->fails()) {
             throw new \Illuminate\Validation\ValidationException($validator);
         }
 
-        // Find category by name
+        // Find category by name with enhanced error message
         $category = AssetCategory::where('name', $data['category'])->first();
         if (!$category) {
-            throw new \Exception("Category '{$data['category']}' not found.");
+            $availableCategories = AssetCategory::pluck('name')->take(10)->toArray();
+            $suggestion = $this->findClosestMatch($data['category'], AssetCategory::pluck('name')->toArray());
+            
+            $errorMessage = "❌ CATEGORY NOT FOUND: Category '{$data['category']}' does not exist in the system.\n\n";
+            $errorMessage .= "📋 AVAILABLE CATEGORIES (first 10):\n";
+            foreach ($availableCategories as $cat) {
+                $errorMessage .= "   • {$cat}\n";
+            }
+            
+            if ($suggestion) {
+                $errorMessage .= "\n💡 SUGGESTION: Did you mean '{$suggestion}'?\n";
+            }
+            
+            $errorMessage .= "\n🔧 ACTION REQUIRED: Please use one of the exact category names listed above (case-sensitive).";
+            
+            throw new \Exception($errorMessage);
         }
 
-        // Find vendor by name
+        // Find vendor by name with enhanced error message
         $vendor = Vendor::where('name', $data['vendor'])->first();
         if (!$vendor) {
-            throw new \Exception("Vendor '{$data['vendor']}' not found.");
+            $availableVendors = Vendor::pluck('name')->take(10)->toArray();
+            $suggestion = $this->findClosestMatch($data['vendor'], Vendor::pluck('name')->toArray());
+            
+            $errorMessage = "❌ VENDOR NOT FOUND: Vendor '{$data['vendor']}' does not exist in the system.\n\n";
+            $errorMessage .= "📋 AVAILABLE VENDORS (first 10):\n";
+            foreach ($availableVendors as $vend) {
+                $errorMessage .= "   • {$vend}\n";
+            }
+            
+            if ($suggestion) {
+                $errorMessage .= "\n💡 SUGGESTION: Did you mean '{$suggestion}'?\n";
+            }
+            
+            $errorMessage .= "\n🔧 ACTION REQUIRED: Please use one of the exact vendor names listed above (case-sensitive).";
+            
+            throw new \Exception($errorMessage);
         }
 
         // Auto-generate unique asset tag if not provided or if it already exists
@@ -1359,7 +1978,7 @@ class ImportExportController extends Controller
                             'model' => $asset->model,
                             'serial_number' => $asset->serial_number,
                             'vendor' => $asset->vendor->name ?? '',
-                            'purchase_date' => $asset->purchase_date ? $asset->purchase_date->format('Y-m-d') : '',
+                            'purchase_date' => $asset->purchase_date ? (is_string($asset->purchase_date) ? $asset->purchase_date : (method_exists($asset->purchase_date, 'format') ? $asset->purchase_date->format('Y-m-d') : $asset->purchase_date)) : '',
                             'purchase_cost' => $asset->cost,
                             'po_number' => $asset->po_number,
                             'entity' => $asset->entity,
@@ -2074,6 +2693,9 @@ class ImportExportController extends Controller
         $missingFields = array_diff($requiredFields, $headers);
         
         if (!empty($missingFields)) {
+            // Get valid values reference for the module
+            $validValues = $this->getValidValuesReference($module);
+            
             return response()->json([
                 'success' => false,
                 'errors' => [[
@@ -2081,7 +2703,14 @@ class ImportExportController extends Controller
                     'field' => 'header',
                     'message' => 'Missing required columns: ' . implode(', ', $missingFields),
                     'value' => implode(', ', $headers)
-                ]]
+                ]],
+                'warnings' => [],
+                'summary' => [
+                    'total' => count($data),
+                    'errors' => 1,
+                    'warnings' => 0
+                ],
+                'valid_values' => $validValues
             ]);
         }
 
@@ -2128,6 +2757,9 @@ class ImportExportController extends Controller
             }
         }
 
+        // Get valid values reference for the module
+        $validValues = $this->getValidValuesReference($module);
+
         return response()->json([
             'success' => empty($errors),
             'summary' => [
@@ -2136,8 +2768,55 @@ class ImportExportController extends Controller
                 'warnings' => count($warnings)
             ],
             'errors' => $errors,
-            'warnings' => $warnings
+            'warnings' => $warnings,
+            'valid_values' => $validValues
         ]);
+    }
+
+    /**
+     * Get valid values reference for a module
+     */
+    private function getValidValuesReference($module)
+    {
+        $validValues = [];
+
+        switch ($module) {
+            case 'assets':
+                $validValues['categories'] = \App\Models\AssetCategory::pluck('name')->toArray();
+                $validValues['vendors'] = \App\Models\Vendor::pluck('name')->toArray();
+                $validValues['departments'] = \App\Models\Department::pluck('name')->toArray();
+                $validValues['required_columns'] = [
+                    'asset_tag', 'asset_name', 'category', 'vendor', 'status', 'movement', 
+                    'model', 'serial_number', 'purchase_date', 'purchase_cost', 'po_number', 
+                    'entity', 'lifespan', 'location', 'notes'
+                ];
+                break;
+                
+            case 'users':
+                $validValues['departments'] = \App\Models\Department::pluck('name')->toArray();
+                $validValues['companies'] = ['Philtower', 'MIDC', 'PRIMUS'];
+                $validValues['roles'] = ['User', 'Manager', 'Admin'];
+                $validValues['statuses'] = ['0', '1'];
+                $validValues['required_columns'] = [
+                    'employee_id', 'first_name', 'last_name', 'email_address', 'department', 
+                    'company', 'job_title', 'phone_number', 'status', 'role', 'password', 'confirm_password'
+                ];
+                break;
+                
+            case 'departments':
+                $validValues['required_columns'] = ['name', 'description', 'parent_id', 'manager_id'];
+                break;
+                
+            case 'vendors':
+                $validValues['required_columns'] = ['name', 'contact_person', 'email', 'phone', 'address'];
+                break;
+                
+            case 'asset_categories':
+                $validValues['required_columns'] = ['name', 'description'];
+                break;
+        }
+
+        return $validValues;
     }
 
     /**

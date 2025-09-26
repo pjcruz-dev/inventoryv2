@@ -474,15 +474,15 @@
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Asset Name</span>
-                        <span class="detail-value">{{ $asset->asset_name }}</span>
+                        <span class="detail-value">{{ $asset->name ?? 'N/A' }}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Category</span>
-                        <span class="detail-value">{{ $asset->assetCategory->category_name ?? 'N/A' }}</span>
+                        <span class="detail-value">{{ $asset->category->name ?? 'N/A' }}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Brand</span>
-                        <span class="detail-value">{{ $asset->brand ?? 'N/A' }}</span>
+                        <span class="detail-value">{{ $asset->vendor->name ?? 'N/A' }}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Model</span>

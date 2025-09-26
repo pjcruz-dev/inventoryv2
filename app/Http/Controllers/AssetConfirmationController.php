@@ -135,7 +135,7 @@ class AssetConfirmationController extends Controller
                 'asset_name' => $confirmation->asset->name,
                 'asset_tag' => $confirmation->asset->asset_tag
             ],
-            'session_id' => request()->request()->hasSession() ? request()->session()->getId() : null,
+            'session_id' => request()->hasSession() ? request()->session()->getId() : null,
             'request_method' => request()->method(),
             'request_url' => request()->fullUrl(),
             'action_timestamp' => now()
@@ -304,7 +304,7 @@ class AssetConfirmationController extends Controller
                 'asset_name' => $confirmation->asset->name,
                 'asset_tag' => $confirmation->asset->asset_tag
             ],
-            'session_id' => request()->request()->hasSession() ? request()->session()->getId() : null,
+            'session_id' => request()->hasSession() ? request()->session()->getId() : null,
             'request_method' => request()->method(),
             'request_url' => request()->fullUrl(),
             'action_timestamp' => now()
@@ -573,7 +573,7 @@ class AssetConfirmationController extends Controller
                 'decline_severity' => $declineData['decline_severity'] ?? null,
                 'follow_up_required' => $followUpRequired
             ],
-            'session_id' => request()->request()->hasSession() ? request()->session()->getId() : null,
+            'session_id' => request()->hasSession() ? request()->session()->getId() : null,
             'request_method' => request()->method(),
             'request_url' => request()->fullUrl(),
             'action_timestamp' => now()

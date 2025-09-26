@@ -43,7 +43,7 @@ class TemplateGenerationService
                 'movement' => ['name' => 'Movement', 'required' => true, 'type' => 'enum', 'options' => ['New Arrival', 'Transfer', 'Return', 'Disposal'], 'default' => 'New Arrival', 'description' => 'Asset movement type'],
                 'model' => ['name' => 'Model', 'required' => true, 'type' => 'string', 'max_length' => 255, 'description' => 'Asset model/brand'],
                 'serial_number' => ['name' => 'Serial Number', 'required' => true, 'type' => 'string', 'max_length' => 100, 'unique' => true, 'description' => 'Manufacturer serial number'],
-                'vendor' => ['name' => 'Vendor', 'required' => false, 'type' => 'enum', 'options' => ['Northlink', 'AMTI'], 'description' => 'Vendor/supplier name'],
+                'vendor' => ['name' => 'Vendor', 'required' => false, 'type' => 'string', 'description' => 'Vendor/supplier name (must exist in system)'],
                 'purchase_date' => ['name' => 'Purchase Date', 'required' => false, 'type' => 'date', 'format' => 'YYYY-MM-DD', 'description' => 'Date of purchase'],
                 'purchase_cost' => ['name' => 'Purchase Cost', 'required' => false, 'type' => 'decimal', 'min' => 0, 'description' => 'Purchase cost in local currency'],
                 'po_number' => ['name' => 'PO Number', 'required' => false, 'type' => 'string', 'max_length' => 100, 'description' => 'Purchase order number'],
@@ -63,34 +63,30 @@ class TemplateGenerationService
                 'operating_system' => ['name' => 'Operating System', 'required' => false, 'type' => 'enum', 'options' => ['Windows 10', 'Windows 11', 'MacOS', 'Ubuntu', 'CentOS'], 'description' => 'Installed operating system']
             ],
             'users' => [
+                'employee_id' => ['name' => 'Employee ID', 'required' => true, 'type' => 'string', 'max_length' => 50, 'description' => 'Internal employee ID (unique)'],
                 'first_name' => ['name' => 'First Name', 'required' => true, 'type' => 'string', 'max_length' => 255, 'description' => 'Employee first name'],
                 'last_name' => ['name' => 'Last Name', 'required' => true, 'type' => 'string', 'max_length' => 255, 'description' => 'Employee last name'],
-                'email_address' => ['name' => 'Email Address', 'required' => true, 'type' => 'email', 'unique' => true, 'description' => 'Employee email address'],
-                'employee_id' => ['name' => 'Employee ID', 'required' => false, 'type' => 'string', 'max_length' => 50, 'description' => 'Internal employee ID'],
-                'department' => ['name' => 'Department', 'required' => false, 'type' => 'string', 'description' => 'Department name (must exist in system)'],
-                'company' => ['name' => 'Company', 'required' => false, 'type' => 'enum', 'options' => ['Philtower', 'MIDC'], 'description' => 'Company/organization'],
+                'email_address' => ['name' => 'Email Address', 'required' => true, 'type' => 'email', 'unique' => true, 'description' => 'Employee email address (unique)'],
+                'department' => ['name' => 'Department', 'required' => true, 'type' => 'string', 'description' => 'Department name (must exist in system - see valid values below)'],
+                'company' => ['name' => 'Company', 'required' => false, 'type' => 'enum', 'options' => ['Philtower', 'MIDC', 'PRIMUS'], 'description' => 'Company/organization'],
                 'job_title' => ['name' => 'Job Title', 'required' => false, 'type' => 'string', 'max_length' => 255, 'description' => 'Job title/position'],
                 'phone_number' => ['name' => 'Phone Number', 'required' => false, 'type' => 'string', 'max_length' => 50, 'description' => 'Contact phone number'],
-                'status' => ['name' => 'Status', 'required' => true, 'type' => 'enum', 'options' => ['Active', 'Inactive', 'Suspended'], 'default' => 'Active', 'description' => 'Employee status'],
-                'role' => ['name' => 'Role', 'required' => false, 'type' => 'enum', 'options' => ['Admin', 'IT Support', 'Manager', 'User'], 'description' => 'System role'],
+                'status' => ['name' => 'Status', 'required' => true, 'type' => 'integer', 'options' => [0, 1], 'default' => 1, 'description' => 'Employee status: 1=Active, 0=Inactive'],
+                'role' => ['name' => 'Role', 'required' => false, 'type' => 'string', 'description' => 'System role (User, Manager, Admin)'],
                 'password' => ['name' => 'Password', 'required' => false, 'type' => 'string', 'default' => '1234', 'description' => 'User password (default: 1234)'],
                 'confirm_password' => ['name' => 'Confirm Password', 'required' => false, 'type' => 'string', 'default' => '1234', 'description' => 'Password confirmation (default: 1234)']
             ],
             'departments' => [
-                'department_name' => ['name' => 'Department Name', 'required' => true, 'type' => 'string', 'max_length' => 255, 'unique' => true, 'description' => 'Department name'],
-                'department_code' => ['name' => 'Department Code', 'required' => false, 'type' => 'string', 'max_length' => 50, 'description' => 'Department code/abbreviation'],
+                'name' => ['name' => 'Department Name', 'required' => true, 'type' => 'string', 'max_length' => 100, 'unique' => true, 'description' => 'Department name'],
                 'description' => ['name' => 'Description', 'required' => false, 'type' => 'text', 'description' => 'Department description'],
-                'status' => ['name' => 'Status', 'required' => true, 'type' => 'enum', 'options' => ['Active', 'Inactive'], 'default' => 'Active', 'description' => 'Department status'],
-                'location' => ['name' => 'Location', 'required' => false, 'type' => 'string', 'max_length' => 255, 'description' => 'Department physical location'],
-                'annual_budget' => ['name' => 'Annual Budget', 'required' => false, 'type' => 'decimal', 'min' => 0, 'description' => 'Annual budget allocation'],
-                'phone_number' => ['name' => 'Phone Number', 'required' => false, 'type' => 'string', 'max_length' => 50, 'description' => 'Department contact phone'],
-                'department_email' => ['name' => 'Department Email', 'required' => false, 'type' => 'email', 'description' => 'Department contact email']
+                'parent_id' => ['name' => 'Parent Department ID', 'required' => false, 'type' => 'integer', 'description' => 'ID of parent department (leave empty for root departments)'],
+                'manager_id' => ['name' => 'Manager User ID', 'required' => false, 'type' => 'integer', 'description' => 'ID of department manager user']
             ],
             'vendors' => [
-                'vendor_name' => ['name' => 'Vendor Name', 'required' => true, 'type' => 'string', 'max_length' => 255, 'unique' => true, 'description' => 'Vendor/supplier name'],
+                'name' => ['name' => 'Vendor Name', 'required' => true, 'type' => 'string', 'max_length' => 255, 'unique' => true, 'description' => 'Vendor/supplier name'],
                 'contact_person' => ['name' => 'Contact Person', 'required' => true, 'type' => 'string', 'max_length' => 255, 'description' => 'Primary contact person'],
-                'email_address' => ['name' => 'Email Address', 'required' => true, 'type' => 'email', 'description' => 'Vendor contact email'],
-                'phone_number' => ['name' => 'Phone Number', 'required' => false, 'type' => 'string', 'max_length' => 50, 'description' => 'Vendor contact phone'],
+                'email' => ['name' => 'Email Address', 'required' => true, 'type' => 'email', 'description' => 'Vendor contact email'],
+                'phone' => ['name' => 'Phone Number', 'required' => false, 'type' => 'string', 'max_length' => 50, 'description' => 'Vendor contact phone'],
                 'address' => ['name' => 'Address', 'required' => false, 'type' => 'text', 'description' => 'Vendor address']
             ],
             'monitors' => [
@@ -114,7 +110,7 @@ class TemplateGenerationService
                 'interface' => ['name' => 'Interface', 'required' => false, 'type' => 'enum', 'options' => ['USB', 'Bluetooth', 'Wireless', 'Wired'], 'description' => 'Connection interface type']
             ],
             'asset_categories' => [
-                'category_name' => ['name' => 'Category Name', 'required' => true, 'type' => 'string', 'max_length' => 255, 'unique' => true, 'description' => 'Asset category name'],
+                'name' => ['name' => 'Category Name', 'required' => true, 'type' => 'string', 'max_length' => 100, 'unique' => true, 'description' => 'Asset category name'],
                 'description' => ['name' => 'Description', 'required' => false, 'type' => 'text', 'description' => 'Category description']
             ]
         ];
@@ -165,47 +161,47 @@ class TemplateGenerationService
                 'movement' => 'New Arrival',
                 'model' => 'Latitude 7420',
                 'serial_number' => 'SN000001',
-                'vendor' => 'Northlink',
+                'vendor' => 'Dell Technologies',
                 'purchase_date' => now()->subDays(30)->format('Y-m-d'),
                 'purchase_cost' => '85000.00',
                 'po_number' => 'PO-2024-001',
                 'entity' => 'MIDC',
                 'lifespan' => '5',
-                'location' => 'IT Department',
+                'location' => 'Information and Communications Technology',
                 'notes' => 'Business laptop with Intel i7 processor'
             ],
             [
                 'asset_tag' => 'MON001',
                 'asset_name' => 'Samsung 27" Monitor',
-                'category' => 'Office Equipment',
+                'category' => 'Monitors',
                 'status' => 'Available',
                 'movement' => 'New Arrival',
                 'model' => 'Samsung 27" 4K',
                 'serial_number' => 'SN000002',
-                'vendor' => 'AMTI',
+                'vendor' => 'Samsung Electronics',
                 'purchase_date' => now()->subDays(45)->format('Y-m-d'),
                 'purchase_cost' => '25000.00',
                 'po_number' => 'PO-2024-002',
                 'entity' => 'Philtower',
                 'lifespan' => '7',
-                'location' => 'Admin Office',
+                'location' => 'Human Resources and Administration',
                 'notes' => '27-inch 4K display monitor'
             ],
             [
                 'asset_tag' => 'PRT001',
                 'asset_name' => 'HP LaserJet Pro',
-                'category' => 'Printer',
+                'category' => 'Printers',
                 'status' => 'Available',
                 'movement' => 'New Arrival',
                 'model' => 'LaserJet Pro M404n',
                 'serial_number' => 'SN000003',
-                'vendor' => 'Northlink',
+                'vendor' => 'HP Inc.',
                 'purchase_date' => now()->subDays(60)->format('Y-m-d'),
                 'purchase_cost' => '15000.00',
                 'po_number' => 'PO-2024-003',
                 'entity' => 'PRIMUS',
                 'lifespan' => '3',
-                'location' => 'Print Room',
+                'location' => 'Finance',
                 'notes' => 'Color laser printer with duplex printing'
             ]
         ];
@@ -219,23 +215,33 @@ class TemplateGenerationService
         return [
             [
                 'asset_id' => '1',
-                'asset_name' => 'Dell OptiPlex 7090',
-                'processor' => 'Intel Core i7-11700',
-                'memory_ram' => '16GB DDR4',
-                'storage' => '512GB SSD',
+                'asset_name' => 'Dell OptiPlex 7090 Desktop',
+                'processor' => 'Intel Core i7-11700 @ 2.50GHz',
+                'memory_ram' => '16GB DDR4-3200',
+                'storage' => '512GB NVMe SSD',
                 'graphics_card' => 'Intel UHD Graphics 750',
                 'computer_type' => 'Desktop',
-                'operating_system' => 'Windows 11'
+                'operating_system' => 'Windows 11 Pro'
             ],
             [
                 'asset_id' => '2',
-                'asset_name' => 'HP EliteDesk 800',
-                'processor' => 'Intel Core i5-11500',
-                'memory_ram' => '8GB DDR4',
-                'storage' => '256GB SSD',
-                'graphics_card' => 'Intel UHD Graphics 730',
-                'computer_type' => 'Desktop',
-                'operating_system' => 'Windows 10'
+                'asset_name' => 'HP EliteBook 850 Laptop',
+                'processor' => 'Intel Core i5-1235U @ 1.30GHz',
+                'memory_ram' => '8GB DDR4-3200',
+                'storage' => '256GB NVMe SSD',
+                'graphics_card' => 'Intel Iris Xe Graphics',
+                'computer_type' => 'Laptop',
+                'operating_system' => 'Windows 11 Pro'
+            ],
+            [
+                'asset_id' => '3',
+                'asset_name' => 'Dell PowerEdge T340 Server',
+                'processor' => 'Intel Xeon E-2224 @ 3.40GHz',
+                'memory_ram' => '32GB DDR4 ECC',
+                'storage' => '1TB SATA SSD',
+                'graphics_card' => 'Integrated',
+                'computer_type' => 'Server',
+                'operating_system' => 'Windows Server 2022'
             ]
         ];
     }
@@ -247,30 +253,44 @@ class TemplateGenerationService
     {
         return [
             [
+                'employee_id' => 'EMP001',
                 'first_name' => 'John',
                 'last_name' => 'Doe',
                 'email_address' => 'john.doe@company.com',
-                'employee_id' => '12345',
-                'department' => 'IT Department',
+                'department' => 'Human Resources and Administration',
                 'company' => 'Philtower',
                 'job_title' => 'Software Developer',
                 'phone_number' => '+63 912 345 6789',
-                'status' => 'Active',
+                'status' => '1',
                 'role' => 'User',
                 'password' => '1234',
                 'confirm_password' => '1234'
             ],
             [
+                'employee_id' => 'EMP002',
                 'first_name' => 'Jane',
                 'last_name' => 'Smith',
                 'email_address' => 'jane.smith@company.com',
-                'employee_id' => '12346',
-                'department' => 'HR Department',
+                'department' => 'Human Resources and Administration',
                 'company' => 'MIDC',
                 'job_title' => 'HR Manager',
                 'phone_number' => '+63 912 345 6790',
-                'status' => 'Active',
+                'status' => '1',
                 'role' => 'Manager',
+                'password' => '1234',
+                'confirm_password' => '1234'
+            ],
+            [
+                'employee_id' => 'EMP003',
+                'first_name' => 'Mike',
+                'last_name' => 'Johnson',
+                'email_address' => 'mike.johnson@company.com',
+                'department' => 'Finance',
+                'company' => 'PRIMUS',
+                'job_title' => 'Accountant',
+                'phone_number' => '+63 912 345 6791',
+                'status' => '0',
+                'role' => 'User',
                 'password' => '1234',
                 'confirm_password' => '1234'
             ]
@@ -284,24 +304,22 @@ class TemplateGenerationService
     {
         return [
             [
-                'department_name' => 'Information Technology',
-                'department_code' => 'IT',
-                'description' => 'Manages all IT infrastructure and systems',
-                'status' => 'Active',
-                'location' => 'Building A, 3rd Floor',
-                'annual_budget' => '5000000.00',
-                'phone_number' => '+63 2 8123 4567',
-                'department_email' => 'it@company.com'
+                'name' => 'Human Resources and Administration',
+                'description' => 'HR and administrative division managing personnel and office operations',
+                'parent_id' => '',
+                'manager_id' => ''
             ],
             [
-                'department_name' => 'Human Resources',
-                'department_code' => 'HR',
-                'description' => 'Handles employee relations and recruitment',
-                'status' => 'Active',
-                'location' => 'Building B, 2nd Floor',
-                'annual_budget' => '3000000.00',
-                'phone_number' => '+63 2 8123 4568',
-                'department_email' => 'hr@company.com'
+                'name' => 'Finance',
+                'description' => 'Finance division handling financial operations',
+                'parent_id' => '',
+                'manager_id' => ''
+            ],
+            [
+                'name' => 'Operations & Maintenance',
+                'description' => 'Division managing operational activities and maintenance',
+                'parent_id' => '',
+                'manager_id' => ''
             ]
         ];
     }
@@ -313,18 +331,25 @@ class TemplateGenerationService
     {
         return [
             [
-                'vendor_name' => 'Dell Technologies Philippines',
+                'name' => 'Dell Technologies',
                 'contact_person' => 'Maria Santos',
-                'email_address' => 'maria.santos@dell.com',
-                'phone_number' => '+63 2 8567 1234',
+                'email' => 'maria.santos@dell.com',
+                'phone' => '+63 2 8567 1234',
                 'address' => '30th Floor, One Corporate Centre, Meralco Avenue, Ortigas Center, Pasig City'
             ],
             [
-                'vendor_name' => 'HP Philippines Inc.',
+                'name' => 'HP Inc.',
                 'contact_person' => 'Juan Dela Cruz',
-                'email_address' => 'juan.delacruz@hp.com',
-                'phone_number' => '+63 2 8567 5678',
+                'email' => 'juan.delacruz@hp.com',
+                'phone' => '+63 2 8567 5678',
                 'address' => '6750 Ayala Avenue, Makati City, Metro Manila'
+            ],
+            [
+                'name' => 'Samsung Electronics',
+                'contact_person' => 'Ana Rodriguez',
+                'email' => 'ana.rodriguez@samsung.com',
+                'phone' => '+63 2 8567 9999',
+                'address' => 'BGC Corporate Center, Taguig City, Metro Manila'
             ]
         ];
     }
@@ -336,18 +361,25 @@ class TemplateGenerationService
     {
         return [
             [
-                'asset_id' => '3',
-                'asset_name' => 'Samsung 27" 4K Monitor',
+                'asset_id' => '1',
+                'asset_name' => 'Samsung 27" 4K UHD Monitor',
                 'size' => '27"',
                 'resolution' => '3840x2160 (4K UHD)',
                 'panel_type' => 'LED'
             ],
             [
-                'asset_id' => '4',
-                'asset_name' => 'LG 24" Full HD Monitor',
+                'asset_id' => '2',
+                'asset_name' => 'Dell 24" Full HD Monitor',
                 'size' => '24"',
                 'resolution' => '1920x1080 (FullHD)',
-                'panel_type' => 'LCD'
+                'panel_type' => 'IPS'
+            ],
+            [
+                'asset_id' => '3',
+                'asset_name' => 'HP 32" QHD Monitor',
+                'size' => '32"',
+                'resolution' => '2560x1440 (QHD)',
+                'panel_type' => 'VA'
             ]
         ];
     }
@@ -359,18 +391,25 @@ class TemplateGenerationService
     {
         return [
             [
-                'asset_id' => '5',
+                'asset_id' => '1',
                 'asset_name' => 'HP LaserJet Pro M404n',
                 'printer_type' => 'Laser',
                 'color_support' => 'Monochrome Only',
                 'duplex_printing' => 'Duplex Support'
             ],
             [
-                'asset_id' => '6',
-                'asset_name' => 'Canon PIXMA G3020',
+                'asset_id' => '2',
+                'asset_name' => 'Canon PIXMA G3110',
                 'printer_type' => 'Inkjet',
                 'color_support' => 'Color Printing',
                 'duplex_printing' => 'Single-sided Only'
+            ],
+            [
+                'asset_id' => '3',
+                'asset_name' => 'Brother MFC-L2750DW',
+                'printer_type' => 'Laser',
+                'color_support' => 'Monochrome Only',
+                'duplex_printing' => 'Duplex Support'
             ]
         ];
     }
@@ -382,15 +421,27 @@ class TemplateGenerationService
     {
         return [
             [
-                'asset_id' => '7',
-                'asset_name' => 'Logitech MX Master 3',
+                'asset_id' => '1',
+                'asset_name' => 'Logitech MX Master 3 Mouse',
                 'type' => 'Mouse',
                 'interface' => 'Wireless'
             ],
             [
-                'asset_id' => '8',
-                'asset_name' => 'Logitech K380',
+                'asset_id' => '2',
+                'asset_name' => 'Logitech K380 Keyboard',
                 'type' => 'Keyboard',
+                'interface' => 'Bluetooth'
+            ],
+            [
+                'asset_id' => '3',
+                'asset_name' => 'Logitech C920 Webcam',
+                'type' => 'Webcam',
+                'interface' => 'USB'
+            ],
+            [
+                'asset_id' => '4',
+                'asset_name' => 'JBL Go 3 Speaker',
+                'type' => 'Speaker',
                 'interface' => 'Bluetooth'
             ]
         ];
@@ -403,12 +454,24 @@ class TemplateGenerationService
     {
         return [
             [
-                'category_name' => 'Computer Hardware',
-                'description' => 'Desktop computers, laptops, and related hardware'
+                'name' => 'Computer Hardware',
+                'description' => 'Desktop computers, laptops, servers, and internal computer components (RAM, CPU, motherboards, etc.)'
             ],
             [
-                'category_name' => 'Office Equipment',
-                'description' => 'Printers, scanners, and general office equipment'
+                'name' => 'Monitors',
+                'description' => 'Computer monitors, displays, and screen-related equipment'
+            ],
+            [
+                'name' => 'Printers',
+                'description' => 'Printers, scanners, multifunction devices, and printing equipment'
+            ],
+            [
+                'name' => 'Peripherals',
+                'description' => 'External devices like keyboards, mice, webcams, speakers, and other computer accessories'
+            ],
+            [
+                'name' => 'Network Equipment',
+                'description' => 'Routers, switches, access points, cables, and networking hardware'
             ]
         ];
     }
@@ -448,15 +511,16 @@ class TemplateGenerationService
                 'os' => 'required|string|max:255'
             ],
             'users' => [
-                'employee_no' => 'required|string|max:50|unique:users,employee_no',
-                'employee_id' => 'nullable|string|max:50',
+                'employee_id' => 'required|string|max:50',
                 'first_name' => 'required|string|max:255',
                 'last_name' => 'required|string|max:255',
-                'email' => 'required|email|unique:users,email',
-                'department_name' => 'required|string|exists:departments,name',
-                'position' => 'nullable|string|max:255',
-                'role_name' => 'nullable|string|exists:roles,name',
-                'status' => 'nullable|in:active,inactive'
+                'email_address' => 'required|email|max:255',
+                'department' => 'required|string|exists:departments,name',
+                'company' => 'nullable|string|max:255',
+                'job_title' => 'nullable|string|max:255',
+                'phone_number' => 'nullable|string|max:50',
+                'status' => 'nullable|string|max:255',
+                'role' => 'nullable|string|max:255'
             ],
             'departments' => [
                 'name' => 'required|string|max:255|unique:departments,name',
@@ -508,8 +572,8 @@ class TemplateGenerationService
                 'vendor_name' => ['table' => 'vendors', 'field' => 'name', 'target' => 'vendor_id']
             ],
             'users' => [
-                'department_name' => ['table' => 'departments', 'field' => 'name', 'target' => 'department_id'],
-                'role_name' => ['table' => 'roles', 'field' => 'name', 'target' => 'role_id']
+                'department' => ['table' => 'departments', 'field' => 'name', 'target' => 'department_id'],
+                'role' => ['table' => 'roles', 'field' => 'name', 'target' => 'role_id']
             ],
             'departments' => [],
             'vendors' => [],
@@ -557,7 +621,7 @@ class TemplateGenerationService
     {
         return [
             'generated_at' => now()->toISOString(),
-            'generated_by' => auth()->user()->name ?? 'System',
+            'generated_by' => auth()->check() ? auth()->user()->name : 'System',
             'module' => $module,
             'version' => '1.0',
             'total_existing_records' => $this->getExistingRecordCount($module),

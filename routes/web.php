@@ -31,6 +31,20 @@ Auth::routes();
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
+// Public template download routes (no authentication required)
+Route::get('/templates/{module}', [App\Http\Controllers\TemplateController::class, 'downloadTemplate'])
+    ->where('module', 'assets|users|computers|departments|vendors|monitors|printers|peripherals|asset_categories')
+    ->name('templates.download');
+
+// Public validation endpoint (no authentication required)
+Route::post('/validate-csv', [App\Http\Controllers\ValidationController::class, 'validateCsv'])
+    ->name('validate.csv');
+
+// Legacy template route for backward compatibility
+Route::get('/import-export/template/{module}', [App\Http\Controllers\TemplateController::class, 'downloadTemplate'])
+    ->where('module', 'assets|users|computers|departments|vendors|monitors|printers|peripherals|asset_categories')
+    ->name('import-export.template');
+
 // Public token-based confirmation routes (no auth required)
 Route::get('asset-assignment-confirmations/confirm/{token}', [AssetAssignmentConfirmationController::class, 'confirmByToken'])->name('asset-assignment-confirmations.confirm');
 Route::get('asset-assignment-confirmations/decline/{token}', [AssetAssignmentConfirmationController::class, 'declineByToken'])->name('asset-assignment-confirmations.decline');

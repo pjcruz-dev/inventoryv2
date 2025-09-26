@@ -28,7 +28,7 @@ class SecurityAuditService
             'redirect_url' => $redirectUrl,
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
-            'session_id' => $request->request()->hasSession() ? request()->session()->getId() : null,
+            'session_id' => $request->hasSession() ? $request->session()->getId() : null,
             'timestamp' => now(),
             'login_method' => 'web'
         ]);
@@ -71,7 +71,7 @@ class SecurityAuditService
             'role' => $user->role->name ?? 'No Role',
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
-            'session_id' => $request->request()->hasSession() ? request()->session()->getId() : null,
+            'session_id' => $request->hasSession() ? $request->session()->getId() : null,
             'timestamp' => now()
         ]);
     }
@@ -145,7 +145,7 @@ class SecurityAuditService
             'email' => $user->email,
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
-            'session_id' => $request->request()->hasSession() ? request()->session()->getId() : null,
+            'session_id' => $request->hasSession() ? $request->session()->getId() : null,
             'timestamp' => now()
         ], $context));
     }

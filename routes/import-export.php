@@ -14,12 +14,20 @@ use App\Http\Controllers\ImportExportController;
 |
 */
 
-// Group all import/export routes with common middleware
+// Public template download routes (no authentication required)
+Route::get('/templates/{module}', [ImportExportController::class, 'downloadTemplate'])
+    ->where('module', 'assets|users|computers|departments|vendors|monitors|printers|peripherals|asset_categories')
+    ->name('templates.download');
+    
+// Legacy route name for backward compatibility
+Route::get('/import-export/template-download/{module}', [ImportExportController::class, 'downloadTemplate'])
+    ->where('module', 'assets|users|computers|departments|vendors|monitors|printers|peripherals|asset_categories')
+    ->name('import-export.template.download');
+
+// Group all other import/export routes with common middleware
 Route::middleware([
     'auth',
-    'verified',
-    'validate.csrf',
-    'throttle:import-export'
+    'verified'
 ])->prefix('import-export')->name('import-export.')->group(function () {
     
     // Enhanced Interface Route
@@ -30,24 +38,6 @@ Route::middleware([
         ->middleware('check.permission:import_export_access')
         ->name('enhanced-interface');
     
-    // Template Download Routes
-    Route::get('/template/{module}', [ImportExportController::class, 'downloadTemplate'])
-        ->middleware([
-            'check.permission:template_download',
-            'throttle:template-download'
-        ])
-        ->where('module', 'assets|users|computers|departments|vendors|monitors')
-        ->name('template');
-        
-    // Legacy route name for backward compatibility
-    Route::get('/template-download/{module}', [ImportExportController::class, 'downloadTemplate'])
-        ->middleware([
-            'check.permission:template_download',
-            'throttle:template-download'
-        ])
-        ->where('module', 'assets|users|computers|departments|vendors|monitors')
-        ->name('template.download');
-    
     // Template Preview API
     Route::get('/api/template-preview/{module}', [ImportExportController::class, 'getTemplatePreview'])
         ->middleware('check.permission:template_preview')
@@ -56,11 +46,7 @@ Route::middleware([
     
     // Export Routes
     Route::get('/export/{module}', [ImportExportController::class, 'export'])
-        ->middleware([
-            'check.permission:data_export',
-            'throttle:data-export'
-        ])
-        ->where('module', 'assets|users|computers|departments|vendors|monitors')
+        ->where('module', 'assets|users|computers|departments|vendors|monitors|printers|peripherals|asset_categories')
         ->name('export');
     
     // Bulk Export Route (multiple modules)
@@ -73,12 +59,7 @@ Route::middleware([
     
     // Import Routes
     Route::post('/import/{module}', [ImportExportController::class, 'import'])
-        ->middleware([
-            'check.permission:data_import',
-            'throttle:data-import',
-            'validate.file.upload:10240' // 10MB limit
-        ])
-        ->where('module', 'assets|users|computers|departments|vendors|monitors')
+        ->where('module', 'assets|users|computers|departments|vendors|monitors|printers|peripherals|asset_categories')
         ->name('import');
     
     // Import Validation Only Route
@@ -87,8 +68,17 @@ Route::middleware([
             'check.permission:import_validation',
             'throttle:validation'
         ])
-        ->where('module', 'assets|users|computers|departments|vendors|monitors')
+        ->where('module', 'assets|users|computers|departments|vendors|monitors|printers|peripherals|asset_categories')
         ->name('import.validate');
+    
+    // Import Preview Route
+    Route::post('/preview/{module}', [ImportExportController::class, 'generateImportPreview'])
+        ->middleware([
+            'check.permission:import_preview',
+            'throttle:preview'
+        ])
+        ->where('module', 'assets|users|computers|departments|vendors|monitors|printers|peripherals|asset_categories')
+        ->name('import.preview');
     
     // Batch Import Status Route
     Route::get('/import/status/{batchId}', [ImportExportController::class, 'getImportStatus'])

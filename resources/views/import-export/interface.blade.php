@@ -3,6 +3,79 @@
 @section('title', 'Import/Export Manager')
 @section('page-title', 'Import/Export Manager')
 
+<script>
+// Global variables
+let selectedModule = null;
+let selectedAction = null;
+let currentStep = 1;
+
+// Global function for testing module selection
+function selectUsersModule() {
+    console.log('Manually selecting users module');
+    $('.module-card').removeClass('selected');
+    $('.module-card[data-module="users"]').addClass('selected');
+    
+    // Update both local and global selectedModule variables
+    selectedModule = 'users';
+    window.selectedModule = selectedModule;
+    
+    console.log('Module selected:', selectedModule);
+    console.log('Global selectedModule:', window.selectedModule);
+    
+    $('#next-step-1').prop('disabled', false).removeClass('btn-secondary').addClass('btn-primary');
+    
+    console.log('Next button enabled:', !$('#next-step-1').prop('disabled'));
+    console.log('Next button classes:', $('#next-step-1').attr('class'));
+    
+    // Also trigger the updateSelectionStatus if it exists
+    if (typeof updateSelectionStatus === 'function') {
+        updateSelectionStatus();
+    }
+    
+    console.log('Users module selected successfully');
+}
+
+// Global function for testing action selection
+function selectImportAction() {
+    console.log('Manually selecting import action');
+    $('.action-card').removeClass('selected');
+    $('.action-card[data-action="import"]').addClass('selected');
+    
+    // Update both local and global selectedAction variables
+    selectedAction = 'import';
+    window.selectedAction = selectedAction;
+    
+    console.log('Action selected:', selectedAction);
+    console.log('Global selectedAction:', window.selectedAction);
+    
+    $('#next-step-2').prop('disabled', false).removeClass('btn-secondary').addClass('btn-primary');
+    
+    console.log('Next button enabled:', !$('#next-step-2').prop('disabled'));
+    console.log('Next button classes:', $('#next-step-2').attr('class'));
+    
+    // Also trigger the updateSelectionStatus if it exists
+    if (typeof updateSelectionStatus === 'function') {
+        updateSelectionStatus();
+    }
+    
+    console.log('Import action selected successfully');
+}
+
+// Global function for downloading template
+function downloadTemplate() {
+    if (selectedModule) {
+        window.location.href = '/templates/' + selectedModule;
+    } else {
+        alert('Please select a module first');
+    }
+}
+
+// Make functions globally accessible immediately
+window.selectUsersModule = selectUsersModule;
+window.selectImportAction = selectImportAction;
+window.downloadTemplate = downloadTemplate;
+</script>
+
 @section('styles')
 <style>
     .step-wizard {
@@ -53,6 +126,20 @@
         color: white;
         border-color: #007bff;
         box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.25);
+        transform: scale(1.1);
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.25);
+        }
+        50% {
+            box-shadow: 0 0 0 8px rgba(0, 123, 255, 0.1);
+        }
+        100% {
+            box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.25);
+        }
     }
     
     .step-item.completed .step-circle {
@@ -103,6 +190,8 @@
         transition: all 0.3s ease;
         cursor: pointer;
         height: 100%;
+        position: relative;
+        z-index: 1;
     }
     
     .module-card:hover, .action-card:hover {
@@ -111,10 +200,70 @@
         box-shadow: 0 8px 25px rgba(0, 123, 255, 0.15);
     }
     
-    .module-card.selected, .action-card.selected {
+    .module-card.selected {
         border-color: #007bff;
         background: #f8f9ff;
-        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.2);
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        transform: translateY(-2px);
+    }
+    
+    .module-card * {
+        pointer-events: none;
+    }
+    
+    .module-card {
+        pointer-events: auto;
+    }
+    
+    .action-card.selected {
+        border-color: #28a745;
+        background: #f8fff9;
+        box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.25);
+        transform: translateY(-2px);
+    }
+    
+    .action-card[data-action="import"].selected {
+        border-color: #ffc107;
+        background: #fffdf5;
+        box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.25);
+    }
+    
+    .action-card[data-action="export"].selected {
+        border-color: #17a2b8;
+        background: #f5fdff;
+        box-shadow: 0 0 0 3px rgba(23, 162, 184, 0.25);
+    }
+    
+    .action-card[data-action="template"].selected {
+        border-color: #fd7e14;
+        background: #fff8f5;
+        box-shadow: 0 0 0 3px rgba(253, 126, 20, 0.25);
+    }
+    
+    .selection-status {
+        animation: slideDown 0.3s ease-out;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .selection-item {
+        display: flex;
+        align-items: center;
+        font-size: 14px;
+    }
+    
+    .selection-item .badge {
+        font-size: 12px;
+        padding: 4px 8px;
     }
     
     .upload-zone {
@@ -201,6 +350,19 @@
         border: none;
         position: relative;
         overflow: hidden;
+        cursor: pointer;
+    }
+    
+    .btn-action:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+        background-color: #6c757d !important;
+        border-color: #6c757d !important;
+    }
+    
+    .btn-action:not(:disabled) {
+        cursor: pointer;
+        opacity: 1;
     }
     
     .btn-action::before {
@@ -273,14 +435,38 @@
     <!-- Summary Card -->
     <div class="summary-card">
         <div class="row align-items-center">
-            <div class="col-md-8">
-                <h4 class="mb-2">🚀 Advanced Import/Export Manager</h4>
-                <p class="mb-0">Streamlined data management with intelligent validation, bulk operations, and real-time progress tracking.</p>
-            </div>
+                    <div class="col-md-8">
+                        <h4 class="mb-2">🚀 Advanced Import/Export Manager</h4>
+                        <p class="mb-0">Streamlined data management with intelligent validation, bulk operations, and real-time progress tracking.</p>
+                        <button class="btn btn-sm btn-warning mt-2" onclick="selectUsersModule()">🔧 Test: Select Users Module</button>
+                        <button class="btn btn-sm btn-info mt-2" onclick="selectImportAction()">🔧 Test: Select Import Action</button>
+                    </div>
             <div class="col-md-4 text-end">
                 <div class="d-flex justify-content-end gap-2">
                     <span class="status-badge status-pending">Ready</span>
                     <span class="badge bg-light text-dark">v2.0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Selection Status Bar -->
+    <div id="selection-status" class="selection-status mb-4" style="display: none;">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body py-3">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <div class="selection-item">
+                            <i class="fas fa-cube me-2 text-primary"></i>
+                            <strong>Module:</strong> <span id="selected-module-display" class="badge bg-primary">-</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="selection-item">
+                            <i class="fas fa-tasks me-2 text-success"></i>
+                            <strong>Action:</strong> <span id="selected-action-display" class="badge bg-success">-</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -565,14 +751,14 @@
                             <form id="import-form" enctype="multipart/form-data">
                                 @csrf
                                 <input type="hidden" id="import-module" name="module">
-                                <div class="upload-zone" id="upload-zone">
+                                <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click();" style="cursor: pointer;">
                                     <div class="upload-icon">
                                         <i class="fas fa-cloud-upload-alt"></i>
                                     </div>
                                     <h5 class="mb-3">Drop your Excel file here</h5>
                                     <p class="text-muted mb-4">or click to browse and select a file</p>
                                     <input type="file" id="file-input" name="file" accept=".xlsx,.xls,.csv" style="display: none;">
-                                    <button type="button" class="btn btn-outline-primary btn-action" id="browse-btn">
+                                    <button type="button" class="btn btn-outline-primary btn-action" id="browse-btn" onclick="document.getElementById('file-input').click();">
                                         <i class="fas fa-folder-open me-2"></i>Browse Files
                                     </button>
                                     <div class="mt-3">
@@ -640,7 +826,8 @@
                             </div>
                             <div class="alert alert-danger" id="error-summary" style="display: none;">
                                 <h6><i class="fas fa-times-circle me-2"></i>Validation Errors</h6>
-                                <p class="mb-0">Critical errors found that must be fixed before import.</p>
+                                <p class="mb-0">Please fix the following errors before importing:</p>
+                                <div id="error-details" class="mt-3"></div>
                             </div>
                         </div>
                         <div class="d-flex justify-content-between mt-4">
@@ -760,52 +947,156 @@
 
 @section('scripts')
 <script>
+
 $(document).ready(function() {
-    let selectedModule = null;
-    let selectedAction = null;
-    let currentStep = 1;
+    console.log('Import/Export interface loaded');
+    console.log('jQuery version:', $.fn.jquery);
+    console.log('Module cards found:', $('.module-card').length);
+    console.log('Action cards found:', $('.action-card').length);
+    console.log('Step 2 content visible:', $('#step-2-content').is(':visible'));
+    
+    // Use global variables
+    console.log('Global selectedModule:', window.selectedModule);
+    console.log('Global selectedAction:', window.selectedAction);
     
     // Step navigation
     function goToStep(step) {
+        console.log('Going to step:', step);
+        
         // Hide all step contents
-        $('.step-content').removeClass('active');
-        $('.step-item').removeClass('active completed error');
+        $('.step-content').removeClass('active').hide();
         
         // Show current step content
-        $(`#step-${step}-content`).addClass('active');
-        
-        // Update step indicators
-        for (let i = 1; i <= 5; i++) {
-            if (i < step) {
-                $(`.step-item[data-step="${i}"]`).addClass('completed');
-            } else if (i === step) {
-                $(`.step-item[data-step="${i}"]`).addClass('active');
-            }
-        }
+        $(`#step-${step}-content`).addClass('active').show();
         
         currentStep = step;
+        
+        console.log('Step changed to:', step);
+        console.log('Active step content:', $(`#step-${step}-content`).length);
+        console.log('Step 2 content visible:', $('#step-2-content').is(':visible'));
+    }
+    
+    // Update selection status display
+    function updateSelectionStatus() {
+        if (selectedModule || selectedAction) {
+            $('#selection-status').show();
+            
+            if (selectedModule) {
+                const moduleName = selectedModule.charAt(0).toUpperCase() + selectedModule.slice(1).replace('_', ' ');
+                $('#selected-module-display').text(moduleName);
+            }
+            
+            if (selectedAction) {
+                const actionName = selectedAction.charAt(0).toUpperCase() + selectedAction.slice(1);
+                $('#selected-action-display').text(actionName);
+            }
+        } else {
+            $('#selection-status').hide();
+        }
     }
     
     // Module selection
-    $('.module-card').click(function() {
+    $('.module-card').click(function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        console.log('Module card clicked:', $(this).data('module'));
+        
         $('.module-card').removeClass('selected');
         $(this).addClass('selected');
         selectedModule = $(this).data('module');
-        $('#next-step-1').prop('disabled', false);
+        window.selectedModule = selectedModule; // Update global reference
+        
+        console.log('Module selected:', selectedModule);
+        console.log('Global selectedModule:', window.selectedModule);
+        
+        $('#next-step-1').prop('disabled', false).removeClass('btn-secondary').addClass('btn-primary');
+        
+        console.log('Next button enabled:', !$('#next-step-1').prop('disabled'));
+        console.log('Next button classes:', $('#next-step-1').attr('class'));
+        
+        // Update selection status
+        updateSelectionStatus();
     });
     
+    // Alternative click handler for better compatibility
+    $('.module-card').on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        console.log('Module card clicked (alternative):', $(this).data('module'));
+        
+        $('.module-card').removeClass('selected');
+        $(this).addClass('selected');
+        selectedModule = $(this).data('module');
+        window.selectedModule = selectedModule; // Update global reference
+        $('#next-step-1').prop('disabled', false).removeClass('btn-secondary').addClass('btn-primary');
+        
+        console.log('Module selected (alternative):', selectedModule);
+        
+        // Update selection status
+        updateSelectionStatus();
+    });
+    
+    // Make selectedModule accessible globally for debugging
+    window.selectedModule = selectedModule;
+    
     // Action selection
-    $('.action-card').click(function() {
+    $('.action-card').click(function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        console.log('Action card clicked:', $(this).data('action'));
+        console.log('Action card element:', $(this));
+        
         $('.action-card').removeClass('selected');
         $(this).addClass('selected');
         selectedAction = $(this).data('action');
-        $('#next-step-2').prop('disabled', false);
+        window.selectedAction = selectedAction; // Update global reference
+        
+        $('#next-step-2').prop('disabled', false).removeClass('btn-secondary').addClass('btn-primary');
+        
+        console.log('Action selected:', selectedAction);
+        console.log('Global selectedAction:', window.selectedAction);
+        console.log('Next button enabled:', !$('#next-step-2').prop('disabled'));
+        console.log('Next button classes:', $('#next-step-2').attr('class'));
+        
+        // Update selection status
+        updateSelectionStatus();
+    });
+    
+    // Alternative click handler for action cards
+    $('.action-card').on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        console.log('Action card clicked (alternative):', $(this).data('action'));
+        
+        $('.action-card').removeClass('selected');
+        $(this).addClass('selected');
+        selectedAction = $(this).data('action');
+        window.selectedAction = selectedAction; // Update global reference
+        
+        $('#next-step-2').prop('disabled', false).removeClass('btn-secondary').addClass('btn-primary');
+        
+        console.log('Action selected (alternative):', selectedAction);
+        
+        // Update selection status
+        updateSelectionStatus();
     });
     
     // Step navigation buttons
     $('#next-step-1').click(function() {
+        console.log('Next step 1 clicked, selectedModule:', selectedModule);
+        console.log('Button disabled state:', $(this).prop('disabled'));
+        console.log('Button classes:', $(this).attr('class'));
+        
         if (selectedModule) {
+            console.log('Proceeding to step 2');
             goToStep(2);
+        } else {
+            console.log('No module selected');
+            alert('Please select a module first');
         }
     });
     
@@ -815,9 +1106,14 @@ $(document).ready(function() {
     });
     
     $('#next-step-2').click(function() {
+        console.log('Next step 2 clicked, selectedAction:', selectedAction);
         if (selectedAction) {
+            console.log('Proceeding to step 3');
             setupStep3();
             goToStep(3);
+        } else {
+            console.log('No action selected');
+            alert('Please select an action first');
         }
     });
     
@@ -841,22 +1137,138 @@ $(document).ready(function() {
         }
     }
     
-    // File upload handling
-    $('#browse-btn, #upload-zone').click(function() {
-        $('#file-input').click();
+    // File upload handling - Multiple approaches for better compatibility
+    function triggerFileInput() {
+        console.log('Triggering file input');
+        const fileInput = document.getElementById('file-input');
+        if (fileInput) {
+            fileInput.click();
+        } else {
+            console.error('File input not found');
+        }
+    }
+    
+    // Event delegation for dynamically loaded content
+    $(document).on('click', '#browse-btn', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Browse button clicked');
+        triggerFileInput();
     });
     
-    $('#file-input').change(function() {
-        const file = this.files[0];
-        if (file) {
-            $('#file-name').text(file.name);
-            $('#file-size').text((file.size / 1024 / 1024).toFixed(2) + ' MB');
-            $('#file-info').show();
-            $('#next-step-3').prop('disabled', false);
+    $(document).on('click', '#upload-zone', function(e) {
+        // Only trigger if not clicking on the button
+        if (!$(e.target).closest('#browse-btn').length) {
+            console.log('Upload zone clicked');
+            triggerFileInput();
         }
     });
     
-    $('#remove-file').click(function() {
+    $(document).on('change', '#file-input', function() {
+        console.log('File input changed');
+        const file = this.files[0];
+        if (file) {
+            console.log('File selected:', {
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                lastModified: file.lastModified
+            });
+            
+            // Validate file type
+            const allowedTypes = ['.xlsx', '.xls', '.csv'];
+            const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+            
+            if (!allowedTypes.includes(fileExtension)) {
+                alert('Please select a valid file type (.xlsx, .xls, or .csv)');
+                this.value = '';
+                $('#file-info').hide();
+                $('#next-step-3').prop('disabled', true);
+                return;
+            }
+            
+            // Check if file is empty
+            if (file.size === 0) {
+                alert('The selected file is empty (0 bytes). Please select a valid file with data.');
+                this.value = '';
+                $('#file-info').hide();
+                $('#next-step-3').prop('disabled', true);
+                return;
+            }
+            
+            // Validate file size (10MB limit)
+            const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+            if (file.size > maxSize) {
+                alert('File size must be less than 10MB');
+                this.value = '';
+                $('#file-info').hide();
+                $('#next-step-3').prop('disabled', true);
+                return;
+            }
+            
+            // Format file size with better handling
+            let fileSizeText;
+            let actualSize = file.size || 0;
+            
+            // If size is 0, try to read the file to get actual size
+            if (actualSize === 0) {
+                console.warn('File size is 0, attempting to read file...');
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const actualSize = e.target.result.byteLength || e.target.result.length || 0;
+                    console.log('FileReader determined size:', actualSize);
+                    updateFileSizeDisplay(actualSize);
+                };
+                reader.readAsArrayBuffer(file);
+                fileSizeText = 'Reading file...';
+            } else {
+                if (actualSize === 0) {
+                    fileSizeText = '0 bytes (Empty file)';
+                } else if (actualSize < 1024) {
+                    fileSizeText = actualSize + ' bytes';
+                } else if (actualSize < 1024 * 1024) {
+                    fileSizeText = (actualSize / 1024).toFixed(2) + ' KB';
+                } else {
+                    fileSizeText = (actualSize / 1024 / 1024).toFixed(2) + ' MB';
+                }
+            }
+            
+            function updateFileSizeDisplay(size) {
+                let sizeText;
+                if (size === 0) {
+                    sizeText = '0 bytes (Empty file)';
+                } else if (size < 1024) {
+                    sizeText = size + ' bytes';
+                } else if (size < 1024 * 1024) {
+                    sizeText = (size / 1024).toFixed(2) + ' KB';
+                } else {
+                    sizeText = (size / 1024 / 1024).toFixed(2) + ' MB';
+                }
+                $('#file-size').text(sizeText);
+                console.log('File size updated:', sizeText);
+            }
+            
+            $('#file-name').text(file.name);
+            $('#file-size').text(fileSizeText);
+            $('#file-info').show();
+            $('#next-step-3').prop('disabled', false);
+            
+            console.log('File validation successful:', {
+                name: file.name,
+                size: file.size,
+                formattedSize: fileSizeText
+            });
+        } else {
+            // No file selected
+            $('#file-info').hide();
+            $('#next-step-3').prop('disabled', true);
+        }
+    });
+    
+    $(document).on('click', '#remove-file', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Remove file clicked');
         $('#file-input').val('');
         $('#file-info').hide();
         $('#next-step-3').prop('disabled', true);
@@ -878,28 +1290,56 @@ $(document).ready(function() {
         $(this).removeClass('dragover');
         
         const files = e.originalEvent.dataTransfer.files;
+        console.log('Files dropped:', files.length);
+        
         if (files.length > 0) {
-            $('#file-input')[0].files = files;
-            $('#file-input').trigger('change');
+            const file = files[0];
+            console.log('Dropped file:', {
+                name: file.name,
+                size: file.size,
+                type: file.type
+            });
+            
+            // Create a new FileList with the dropped file
+            const fileInput = document.getElementById('file-input');
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            fileInput.files = dataTransfer.files;
+            
+            // Trigger change event
+            $(fileInput).trigger('change');
         }
     });
     
     // Download template
     $('#download-template-btn').click(function() {
-        window.location.href = '/import-export/template/' + selectedModule;
+        if (!selectedModule) {
+            alert('Please select a module first');
+            return;
+        }
+        showProgress('Downloading template...');
+        window.location.href = '/templates/' + selectedModule;
     });
     
     // Export data
     $('#export-data-btn').click(function() {
+        if (!selectedModule) {
+            alert('Please select a module first');
+            return;
+        }
+        showProgress('Exporting data...');
         window.location.href = '/import-export/export/' + selectedModule;
     });
     
     // Step 3 to 4
     $('#next-step-3').click(function() {
+        console.log('Next step 3 clicked, selectedAction:', selectedAction);
         if (selectedAction === 'import') {
+            console.log('Starting import process');
             // Start import process
             performImport();
         } else {
+            console.log('Going directly to completion for template/export');
             // For template/export, go directly to completion
             goToStep(5);
             showCompletion();
@@ -907,18 +1347,70 @@ $(document).ready(function() {
     });
     
     function performImport() {
-        goToStep(4);
-        $('#progress-container').show();
+        if (!selectedModule) {
+            alert('Please select a module first');
+            return;
+        }
         
-        const formData = new FormData();
         const fileInput = document.getElementById('file-input');
-        
         if (fileInput.files.length === 0) {
             alert('Please select a file to import.');
             return;
         }
         
-        formData.append('file', fileInput.files[0]);
+        goToStep(4);
+        showProgress('Validating data...');
+        
+        const formData = new FormData();
+        formData.append('csv_file', fileInput.files[0]);
+        formData.append('module', selectedModule);
+        formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+        
+        // Show progress container
+        $('#progress-container').show();
+        $('#validation-results').hide();
+        
+        // First validate and show preview
+        $.ajax({
+            url: '/import-export/validate/' + selectedModule,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                hideProgress();
+                $('#validation-results').show();
+                
+                if (response.success) {
+                    // Validation passed, show preview before import
+                    showImportPreviewFromValidation(response);
+                } else {
+                    // Show detailed validation errors
+                    showValidationErrors(response);
+                }
+            },
+            error: function(xhr, status, error) {
+                hideProgress();
+                $('#validation-results').show();
+                $('#error-summary').show();
+                $('#success-summary').hide();
+                $('#warning-summary').hide();
+                $('#next-step-4').prop('disabled', false);
+                
+                let errorMessage = 'Validation failed. Please try again.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                $('#error-summary .alert-text').text(errorMessage);
+            }
+        });
+    }
+    
+    function performActualImport() {
+        showProgress('Importing data...');
+        
+        const formData = new FormData();
+        formData.append('file', document.getElementById('file-input').files[0]);
         formData.append('module', selectedModule);
         formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
         
@@ -933,35 +1425,593 @@ $(document).ready(function() {
                 xhr.upload.addEventListener('progress', function(evt) {
                     if (evt.lengthComputable) {
                         const percentComplete = (evt.loaded / evt.total) * 100;
-                        $('#progress-bar').css('width', percentComplete + '%');
-                        $('#progress-text').text(Math.round(percentComplete) + '%');
+                        updateProgress(percentComplete, 'Uploading file...');
                     }
                 }, false);
                 return xhr;
             },
             success: function(response) {
-                $('#progress-container').hide();
+                hideProgress();
                 $('#validation-results').show();
                 
-                if (response.success) {
+                if (response.success || response.imported > 0) {
                     $('#success-summary').show();
+                    $('#warning-summary').hide();
+                    $('#error-summary').hide();
+                    $('#success-count').text(response.imported || 0);
+                    $('#warning-count').text(response.warnings || 0);
+                    $('#error-count').text(response.errors || 0);
+                } else if (response.warnings && response.warnings > 0) {
+                    $('#warning-summary').show();
+                    $('#success-summary').hide();
+                    $('#error-summary').hide();
                     $('#success-count').text(response.imported || 0);
                     $('#warning-count').text(response.warnings || 0);
                     $('#error-count').text(response.errors || 0);
                 } else {
                     $('#error-summary').show();
+                    $('#success-summary').hide();
+                    $('#warning-summary').hide();
+                    $('#success-count').text(0);
+                    $('#warning-count').text(0);
+                    $('#error-count').text(response.errors || 0);
                 }
                 
                 $('#next-step-4').prop('disabled', false);
             },
             error: function(xhr, status, error) {
-                $('#progress-container').hide();
+                hideProgress();
                 $('#validation-results').show();
                 $('#error-summary').show();
+                $('#success-summary').hide();
+                $('#warning-summary').hide();
                 $('#next-step-4').prop('disabled', false);
+                
+                let errorMessage = 'Import failed. Please try again.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                
                 console.error('Import failed:', error);
+                alert(errorMessage);
             }
         });
+    }
+    
+    function showImportPreviewFromValidation(response) {
+        // Show preview when validation passes
+        let previewHtml = '<div class="import-preview">';
+        previewHtml += '<h4 class="text-success mb-3"><i class="fas fa-check-circle"></i> Validation Passed - Import Preview</h4>';
+        
+        // Summary
+        previewHtml += '<div class="alert alert-success mb-3">';
+        previewHtml += '<strong>✅ Validation Successful!</strong> ';
+        previewHtml += 'Your data has been validated and is ready for import. ';
+        previewHtml += 'Review the preview below before proceeding.';
+        previewHtml += '</div>';
+        
+        // Show file info
+        const fileInput1 = document.getElementById('file-input');
+        if (fileInput1.files.length > 0) {
+            const file = fileInput1.files[0];
+            previewHtml += '<div class="alert alert-info mb-3">';
+            previewHtml += '<strong>📁 File:</strong> ' + file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+            previewHtml += '</div>';
+        }
+        
+        // Preview table
+        previewHtml += '<div class="table-responsive mb-3">';
+        previewHtml += '<table id="preview-table" class="table table-striped table-hover">';
+        previewHtml += '<thead class="table-dark">';
+        previewHtml += '<tr>';
+        previewHtml += '<th>Row</th>';
+        previewHtml += '<th>Status</th>';
+        
+        // Add headers based on module
+        if (selectedModule === 'users') {
+            previewHtml += '<th>Employee ID</th>';
+            previewHtml += '<th>Name</th>';
+            previewHtml += '<th>Email</th>';
+            previewHtml += '<th>Department</th>';
+            previewHtml += '<th>Role</th>';
+            previewHtml += '<th>Company</th>';
+            previewHtml += '<th>Status</th>';
+        } else if (selectedModule === 'assets') {
+            previewHtml += '<th>Asset Tag</th>';
+            previewHtml += '<th>Asset Name</th>';
+            previewHtml += '<th>Category</th>';
+            previewHtml += '<th>Vendor</th>';
+            previewHtml += '<th>Status</th>';
+            previewHtml += '<th>Serial Number</th>';
+        }
+        
+        previewHtml += '</tr>';
+        previewHtml += '</thead>';
+        previewHtml += '<tbody>';
+        
+        // Show sample data from the file
+        const fileInput2 = document.getElementById('file-input');
+        if (fileInput2.files.length > 0) {
+            const file = fileInput2.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const csv = e.target.result;
+                const lines = csv.split('\n').filter(line => line.trim());
+                const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+                
+                let tableBody = '';
+                for (let i = 1; i < Math.min(lines.length, 6); i++) { // Show first 5 data rows
+                    const row = lines[i].split(',').map(cell => cell.trim().replace(/"/g, ''));
+                    const rowData = {};
+                    headers.forEach((header, index) => {
+                        rowData[header] = row[index] || '';
+                    });
+                    
+                    tableBody += '<tr class="table-success">';
+                    tableBody += '<td>' + (i + 1) + '</td>';
+                    tableBody += '<td><span class="badge bg-success">✅ Valid</span></td>';
+                    
+                    if (selectedModule === 'users') {
+                        tableBody += '<td>' + (rowData.employee_id || '') + '</td>';
+                        tableBody += '<td>' + (rowData.first_name || '') + ' ' + (rowData.last_name || '') + '</td>';
+                        tableBody += '<td>' + (rowData.email_address || '') + '</td>';
+                        tableBody += '<td>' + (rowData.department || '') + '</td>';
+                        tableBody += '<td>' + (rowData.role || '') + '</td>';
+                        tableBody += '<td>' + (rowData.company || '') + '</td>';
+                        tableBody += '<td>' + (rowData.status || '') + '</td>';
+                    } else if (selectedModule === 'assets') {
+                        tableBody += '<td>' + (rowData.asset_tag || 'AUTO-GENERATED') + '</td>';
+                        tableBody += '<td>' + (rowData.asset_name || '') + '</td>';
+                        tableBody += '<td>' + (rowData.category || '') + '</td>';
+                        tableBody += '<td>' + (rowData.vendor || '') + '</td>';
+                        tableBody += '<td>' + (rowData.status || '') + '</td>';
+                        tableBody += '<td>' + (rowData.serial_number || '') + '</td>';
+                    }
+                    
+                    tableBody += '</tr>';
+                }
+                
+                // Update the table body
+                const tbody = document.querySelector('#preview-table tbody');
+                if (tbody) {
+                    tbody.innerHTML = tableBody;
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        previewHtml += '<tbody id="preview-table-body">';
+        previewHtml += '<tr><td colspan="8" class="text-center">Loading preview...</td></tr>';
+        previewHtml += '</tbody>';
+        previewHtml += '</table>';
+        previewHtml += '</div>';
+        
+        // Action buttons
+        previewHtml += '<div class="text-center mt-4">';
+        previewHtml += '<button class="btn btn-success me-2" onclick="proceedWithImport()">';
+        previewHtml += '<i class="fas fa-check"></i> Proceed with Import';
+        previewHtml += '</button>';
+        previewHtml += '<button class="btn btn-secondary me-2" onclick="goBackToStep(3)">';
+        previewHtml += '<i class="fas fa-arrow-left"></i> Back to Upload';
+        previewHtml += '</button>';
+        previewHtml += '<button class="btn btn-info" onclick="downloadPreviewReport()">';
+        previewHtml += '<i class="fas fa-download"></i> Download Preview Report';
+        previewHtml += '</button>';
+        previewHtml += '</div>';
+        
+        previewHtml += '</div>';
+        
+        // Replace step 4 content with preview
+        $('#step-4 .step-content').html(previewHtml);
+    }
+
+    function showImportPreview(response) {
+        // Store response for download feature
+        window.lastPreviewResponse = response;
+        
+        let previewHtml = '<div class="import-preview">';
+        previewHtml += '<h4 class="text-primary mb-3"><i class="fas fa-eye"></i> Import Preview</h4>';
+        
+        // Summary
+        if (response.summary) {
+            previewHtml += '<div class="alert alert-info mb-3">';
+            previewHtml += '<strong>📊 Summary:</strong> ';
+            previewHtml += response.summary.total_rows + ' total rows, ';
+            previewHtml += response.summary.valid_rows + ' valid rows, ';
+            previewHtml += response.summary.errors + ' errors, ';
+            previewHtml += response.summary.warnings + ' warnings';
+            previewHtml += '</div>';
+        }
+        
+        // Preview table
+        if (response.preview_data && response.preview_data.length > 0) {
+            previewHtml += '<div class="table-responsive mb-3">';
+            previewHtml += '<table class="table table-striped table-hover">';
+            previewHtml += '<thead class="table-dark">';
+            previewHtml += '<tr>';
+            previewHtml += '<th>Row</th>';
+            previewHtml += '<th>Status</th>';
+            
+            // Add headers based on module
+            if (selectedModule === 'users') {
+                previewHtml += '<th>Employee ID</th>';
+                previewHtml += '<th>Name</th>';
+                previewHtml += '<th>Email</th>';
+                previewHtml += '<th>Department</th>';
+                previewHtml += '<th>Role</th>';
+                previewHtml += '<th>Company</th>';
+                previewHtml += '<th>Status</th>';
+            } else if (selectedModule === 'assets') {
+                previewHtml += '<th>Asset Tag</th>';
+                previewHtml += '<th>Asset Name</th>';
+                previewHtml += '<th>Category</th>';
+                previewHtml += '<th>Vendor</th>';
+                previewHtml += '<th>Status</th>';
+                previewHtml += '<th>Serial Number</th>';
+            }
+            
+            previewHtml += '<th>Issues</th>';
+            previewHtml += '</tr>';
+            previewHtml += '</thead>';
+            previewHtml += '<tbody>';
+            
+            response.preview_data.forEach(function(row) {
+                previewHtml += '<tr class="' + (row.status === 'error' ? 'table-danger' : 'table-success') + '">';
+                previewHtml += '<td>' + row.row_number + '</td>';
+                previewHtml += '<td>';
+                if (row.status === 'error') {
+                    previewHtml += '<span class="badge bg-danger">❌ Error</span>';
+                } else {
+                    previewHtml += '<span class="badge bg-success">✅ Valid</span>';
+                }
+                previewHtml += '</td>';
+                
+                // Add data based on module
+                if (selectedModule === 'users') {
+                    previewHtml += '<td>' + (row.processed_data.employee_id || '') + '</td>';
+                    previewHtml += '<td>' + (row.processed_data.first_name || '') + ' ' + (row.processed_data.last_name || '') + '</td>';
+                    previewHtml += '<td>' + (row.processed_data.email || '') + '</td>';
+                    previewHtml += '<td>' + (row.processed_data.department || '') + '</td>';
+                    previewHtml += '<td>' + (row.processed_data.role || '') + '</td>';
+                    previewHtml += '<td>' + (row.processed_data.company || '') + '</td>';
+                    previewHtml += '<td>' + (row.processed_data.status || '') + '</td>';
+                } else if (selectedModule === 'assets') {
+                    previewHtml += '<td>' + (row.processed_data.asset_tag || '') + '</td>';
+                    previewHtml += '<td>' + (row.processed_data.asset_name || '') + '</td>';
+                    previewHtml += '<td>' + (row.processed_data.category || '') + '</td>';
+                    previewHtml += '<td>' + (row.processed_data.vendor || '') + '</td>';
+                    previewHtml += '<td>' + (row.processed_data.status || '') + '</td>';
+                    previewHtml += '<td>' + (row.processed_data.serial_number || '') + '</td>';
+                }
+                
+                // Issues column
+                previewHtml += '<td>';
+                if (row.errors && row.errors.length > 0) {
+                    previewHtml += '<span class="text-danger">' + row.errors.join(', ') + '</span>';
+                }
+                if (row.processed_data.duplicate_employee_id) {
+                    previewHtml += '<span class="text-warning">' + row.processed_data.duplicate_employee_id + '</span><br>';
+                }
+                if (row.processed_data.duplicate_email) {
+                    previewHtml += '<span class="text-warning">' + row.processed_data.duplicate_email + '</span><br>';
+                }
+                previewHtml += '</td>';
+                previewHtml += '</tr>';
+            });
+            
+            previewHtml += '</tbody>';
+            previewHtml += '</table>';
+            previewHtml += '</div>';
+        }
+        
+        // Action buttons
+        previewHtml += '<div class="text-center mt-4">';
+        previewHtml += '<button class="btn btn-success me-2" onclick="proceedWithImport()">';
+        previewHtml += '<i class="fas fa-check"></i> Proceed with Import';
+        previewHtml += '</button>';
+        previewHtml += '<button class="btn btn-secondary me-2" onclick="goBackToStep(3)">';
+        previewHtml += '<i class="fas fa-arrow-left"></i> Back to Upload';
+        previewHtml += '</button>';
+        previewHtml += '<button class="btn btn-info" onclick="downloadPreviewReport()">';
+        previewHtml += '<i class="fas fa-download"></i> Download Preview Report';
+        previewHtml += '</button>';
+        previewHtml += '</div>';
+        
+        previewHtml += '</div>';
+        
+        // Replace step 4 content with preview
+        $('#step-4 .step-content').html(previewHtml);
+    }
+    
+    function proceedWithImport() {
+        showProgress('Importing data...');
+        
+        const formData = new FormData();
+        formData.append('file', document.getElementById('file-input').files[0]);
+        formData.append('module', selectedModule);
+        formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+        
+        $.ajax({
+            url: '/import-export/import/' + selectedModule,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                hideProgress();
+                $('#validation-results').show();
+                
+                if (response.success || response.imported > 0) {
+                    $('#success-summary').show();
+                    $('#warning-summary').hide();
+                    $('#error-summary').hide();
+                    $('#success-count').text(response.imported || 0);
+                    $('#warning-count').text(response.warnings || 0);
+                    $('#error-count').text(response.errors || 0);
+                } else if (response.warnings && response.warnings > 0) {
+                    $('#warning-summary').show();
+                    $('#success-summary').hide();
+                    $('#error-summary').hide();
+                    $('#success-count').text(response.imported || 0);
+                    $('#warning-count').text(response.warnings || 0);
+                    $('#error-count').text(response.errors || 0);
+                } else {
+                    $('#error-summary').show();
+                    $('#success-summary').hide();
+                    $('#warning-summary').hide();
+                    $('#error-count').text(response.errors || 0);
+                }
+                $('#next-step-4').prop('disabled', false);
+            },
+            error: function(xhr, status, error) {
+                hideProgress();
+                $('#validation-results').show();
+                $('#error-summary').show();
+                $('#success-summary').hide();
+                $('#warning-summary').hide();
+                $('#next-step-4').prop('disabled', false);
+                
+                let errorMessage = 'Import failed. Please try again.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                $('#error-summary .alert-text').text(errorMessage);
+            }
+        });
+    }
+    
+    function goBackToStep(stepNumber) {
+        // Reset current step
+        $('.step').removeClass('active');
+        $('.step-content').removeClass('active');
+        
+        // Go to specified step
+        goToStep(stepNumber);
+    }
+    
+    function downloadPreviewReport() {
+        // Generate and download preview report
+        const reportData = {
+            module: selectedModule,
+            timestamp: new Date().toISOString(),
+            summary: window.lastPreviewResponse ? window.lastPreviewResponse.summary : null,
+            preview_data: window.lastPreviewResponse ? window.lastPreviewResponse.preview_data : []
+        };
+        
+        const dataStr = JSON.stringify(reportData, null, 2);
+        const dataBlob = new Blob([dataStr], {type: 'application/json'});
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'import_preview_report_' + selectedModule + '_' + new Date().toISOString().split('T')[0] + '.json';
+        link.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function showValidationErrors(response) {
+        // Show the error summary with specific details
+        $('#validation-results').show();
+        $('#error-summary').show();
+        $('#success-summary').hide();
+        $('#warning-summary').hide();
+        $('#next-step-4').prop('disabled', true);
+        
+        let errorDetailsHtml = '';
+        
+        // Beginner-friendly introduction
+        errorDetailsHtml += '<div class="alert alert-warning mb-3">';
+        errorDetailsHtml += '<h6><i class="fas fa-info-circle"></i> Don\'t worry! This is normal for first-time users.</h6>';
+        errorDetailsHtml += '<p class="mb-2">Your data has some issues that need to be fixed before importing. Follow the steps below to correct them:</p>';
+        errorDetailsHtml += '<ol class="mb-0 small">';
+        errorDetailsHtml += '<li><strong>Read the errors below</strong> - Each error tells you exactly what\'s wrong</li>';
+        errorDetailsHtml += '<li><strong>Fix your file</strong> - Update the values in your CSV/Excel file</li>';
+        errorDetailsHtml += '<li><strong>Re-upload</strong> - Upload the corrected file</li>';
+        errorDetailsHtml += '<li><strong>See the preview</strong> - Once fixed, you\'ll see a preview before importing</li>';
+        errorDetailsHtml += '</ol>';
+        errorDetailsHtml += '</div>';
+        
+        if (response.summary) {
+            errorDetailsHtml += '<div class="alert alert-info mb-3">';
+            errorDetailsHtml += '<strong>📊 File Summary:</strong> ';
+            errorDetailsHtml += response.summary.total_rows + ' rows in your file, ';
+            errorDetailsHtml += response.summary.errors + ' errors need fixing, ';
+            errorDetailsHtml += response.summary.warnings + ' warnings (optional)';
+            errorDetailsHtml += '</div>';
+        }
+        
+        // Use errors field from validation response
+        const errorList = response.errors || [];
+        
+        if (errorList.length > 0) {
+            errorDetailsHtml += '<div class="errors-section mb-3">';
+            errorDetailsHtml += '<h6 class="text-danger"><i class="fas fa-times-circle"></i> Specific Errors to Fix:</h6>';
+            errorDetailsHtml += '<div class="table-responsive">';
+            errorDetailsHtml += '<table class="table table-sm table-bordered table-hover">';
+            errorDetailsHtml += '<thead class="table-danger">';
+            errorDetailsHtml += '<tr><th>#</th><th>Row</th><th>Field</th><th>What\'s Wrong</th><th>Your Value</th><th>How to Fix It</th></tr>';
+            errorDetailsHtml += '</thead><tbody>';
+            
+            errorList.forEach(function(error, index) {
+                errorDetailsHtml += '<tr>';
+                errorDetailsHtml += '<td><span class="badge bg-danger">' + (index + 1) + '</span></td>';
+                errorDetailsHtml += '<td><strong>Row ' + (error.row || 'N/A') + '</strong></td>';
+                errorDetailsHtml += '<td><strong>' + (error.field || 'General') + '</strong></td>';
+                errorDetailsHtml += '<td class="text-danger"><i class="fas fa-exclamation-triangle"></i> ' + error.message + '</td>';
+                errorDetailsHtml += '<td><code class="text-muted">' + (error.value || 'Empty') + '</code></td>';
+                errorDetailsHtml += '<td class="text-success"><i class="fas fa-lightbulb"></i> ' + (error.suggestion || 'See valid values below') + '</td>';
+                errorDetailsHtml += '</tr>';
+            });
+            
+            errorDetailsHtml += '</tbody></table>';
+            errorDetailsHtml += '</div>';
+            errorDetailsHtml += '</div>';
+        } else {
+            // Fallback if no specific errors are found
+            errorDetailsHtml += '<div class="alert alert-warning mb-3">';
+            errorDetailsHtml += '<h6><i class="fas fa-exclamation-triangle"></i> No specific error details available</h6>';
+            errorDetailsHtml += '<p class="mb-2">The validation failed but no detailed error information was provided.</p>';
+            errorDetailsHtml += '<p class="mb-0">Please check your file format and try again, or contact support if the issue persists.</p>';
+            errorDetailsHtml += '</div>';
+        }
+        
+        // Use warnings field from validation response
+        const warningList = response.warnings || [];
+        
+        if (warningList.length > 0) {
+            errorDetailsHtml += '<div class="warnings-section mb-3">';
+            errorDetailsHtml += '<h6 class="text-warning">Warnings:</h6>';
+            errorDetailsHtml += '<ul class="list-group">';
+            
+            warningList.forEach(function(warning) {
+                errorDetailsHtml += '<li class="list-group-item list-group-item-warning">';
+                errorDetailsHtml += '<strong>Row ' + (warning.row || 'N/A') + ':</strong> ' + warning.message;
+                errorDetailsHtml += '</li>';
+            });
+            
+            errorDetailsHtml += '</ul>';
+            errorDetailsHtml += '</div>';
+        }
+        
+        console.log('Valid values response:', response.valid_values);
+        
+        if (response.valid_values) {
+            errorDetailsHtml += '<div class="valid-values-section mb-3">';
+            errorDetailsHtml += '<h6 class="text-info"><i class="fas fa-list"></i> Copy These Exact Values to Fix Your File:</h6>';
+            
+            // Show required columns if available
+            if (response.valid_values.required_columns && response.valid_values.required_columns.length > 0) {
+                errorDetailsHtml += '<div class="mb-3">';
+                errorDetailsHtml += '<h6><i class="fas fa-table"></i> Required Column Headers (Copy exactly as shown):</h6>';
+                errorDetailsHtml += '<div class="alert alert-light">';
+                errorDetailsHtml += '<div class="row">';
+                response.valid_values.required_columns.forEach(function(column, index) {
+                    errorDetailsHtml += '<div class="col-md-4 mb-2"><span class="badge bg-success me-2">' + (index + 1) + '</span><code class="text-dark">' + column + '</code></div>';
+                });
+                errorDetailsHtml += '</div>';
+                errorDetailsHtml += '<small class="text-muted"><i class="fas fa-info-circle"></i> <strong>Tip:</strong> Your CSV file must have these exact column headers in the first row!</small>';
+                errorDetailsHtml += '</div></div>';
+            }
+            
+            if (response.valid_values.departments && response.valid_values.departments.length > 0) {
+                errorDetailsHtml += '<div class="mb-3">';
+                errorDetailsHtml += '<h6><i class="fas fa-building"></i> Valid Department Names (Copy exactly as shown):</h6>';
+                errorDetailsHtml += '<div class="alert alert-light">';
+                errorDetailsHtml += '<div class="row">';
+                response.valid_values.departments.forEach(function(dept, index) {
+                    if (index < 10) { // Show first 10
+                        errorDetailsHtml += '<div class="col-md-6 mb-2"><span class="badge bg-primary me-2">' + (index + 1) + '</span><code class="text-dark">' + dept + '</code></div>';
+                    }
+                });
+                if (response.valid_values.departments.length > 10) {
+                    errorDetailsHtml += '<div class="col-12 text-muted">... and ' + (response.valid_values.departments.length - 10) + ' more departments available</div>';
+                }
+                errorDetailsHtml += '</div>';
+                errorDetailsHtml += '<small class="text-muted"><i class="fas fa-info-circle"></i> <strong>Tip:</strong> Copy and paste these exact names into your file. Case and spelling must match exactly!</small>';
+                errorDetailsHtml += '</div></div>';
+            }
+            
+            if (response.valid_values.vendors && response.valid_values.vendors.length > 0) {
+                errorDetailsHtml += '<div class="mb-3">';
+                errorDetailsHtml += '<h6><i class="fas fa-truck"></i> Valid Vendors (Copy exactly as shown):</h6>';
+                errorDetailsHtml += '<div class="alert alert-light">';
+                errorDetailsHtml += '<div class="row">';
+                response.valid_values.vendors.forEach(function(vendor, index) {
+                    if (index < 10) { // Show first 10
+                        errorDetailsHtml += '<div class="col-md-6 mb-2"><span class="badge bg-info me-2">' + (index + 1) + '</span><code class="text-dark">' + vendor + '</code></div>';
+                    }
+                });
+                if (response.valid_values.vendors.length > 10) {
+                    errorDetailsHtml += '<div class="col-12 text-muted">... and ' + (response.valid_values.vendors.length - 10) + ' more vendors available</div>';
+                }
+                errorDetailsHtml += '</div>';
+                errorDetailsHtml += '<small class="text-muted"><i class="fas fa-info-circle"></i> <strong>Tip:</strong> Copy and paste these exact names into your file. Case and spelling must match exactly!</small>';
+                errorDetailsHtml += '</div></div>';
+            }
+            
+            if (response.valid_values.categories && response.valid_values.categories.length > 0) {
+                errorDetailsHtml += '<div class="mb-3">';
+                errorDetailsHtml += '<h6><i class="fas fa-tags"></i> Valid Categories (Copy exactly as shown):</h6>';
+                errorDetailsHtml += '<div class="alert alert-light">';
+                errorDetailsHtml += '<div class="row">';
+                response.valid_values.categories.forEach(function(category, index) {
+                    if (index < 10) { // Show first 10
+                        errorDetailsHtml += '<div class="col-md-6 mb-2"><span class="badge bg-warning me-2">' + (index + 1) + '</span><code class="text-dark">' + category + '</code></div>';
+                    }
+                });
+                if (response.valid_values.categories.length > 10) {
+                    errorDetailsHtml += '<div class="col-12 text-muted">... and ' + (response.valid_values.categories.length - 10) + ' more categories available</div>';
+                }
+                errorDetailsHtml += '</div>';
+                errorDetailsHtml += '<small class="text-muted"><i class="fas fa-info-circle"></i> <strong>Tip:</strong> Copy and paste these exact names into your file. Case and spelling must match exactly!</small>';
+                errorDetailsHtml += '</div></div>';
+            }
+            
+            errorDetailsHtml += '</div>';
+        }
+        
+        // Helpful action buttons
+        errorDetailsHtml += '<div class="text-center mt-3">';
+        errorDetailsHtml += '<div class="alert alert-success mb-3">';
+        errorDetailsHtml += '<h6><i class="fas fa-lightbulb"></i> Quick Fix Guide:</h6>';
+        errorDetailsHtml += '<ol class="text-start mb-0 small">';
+        errorDetailsHtml += '<li><strong>Open your file</strong> in Excel or a text editor</li>';
+        errorDetailsHtml += '<li><strong>Find the errors</strong> using the row numbers above</li>';
+        errorDetailsHtml += '<li><strong>Copy the correct values</strong> from the lists above</li>';
+        errorDetailsHtml += '<li><strong>Save your file</strong> and upload it again</li>';
+        errorDetailsHtml += '</ol>';
+        errorDetailsHtml += '</div>';
+        
+        errorDetailsHtml += '<button class="btn btn-primary me-2" onclick="goBackToStep(3)">';
+        errorDetailsHtml += '<i class="fas fa-arrow-left"></i> Back to Upload Fixed File';
+        errorDetailsHtml += '</button>';
+        errorDetailsHtml += '<button class="btn btn-info" onclick="downloadTemplate()">';
+        errorDetailsHtml += '<i class="fas fa-download"></i> Download Template (Recommended)';
+        errorDetailsHtml += '</button>';
+        errorDetailsHtml += '</div>';
+        
+        // Display the error details in the error-details div
+        $('#error-details').html(errorDetailsHtml);
+    }
+    
+    function goBackToStep(stepNumber) {
+        goToStep(stepNumber);
+    }
+    
+    function showProgress(message) {
+        $('#progress-container').show();
+        updateProgress(0, message);
+    }
+    
+    function updateProgress(percent, message) {
+        $('#progress-bar').css('width', percent + '%');
+        $('#progress-text').text(Math.round(percent) + '%');
+        if (message) {
+            $('.progress-container .text-muted').first().text(message);
+        }
+    }
+    
+    function hideProgress() {
+        $('#progress-container').hide();
     }
     
     function startValidation() {
@@ -1011,6 +2061,7 @@ $(document).ready(function() {
         $('#file-info').hide();
         $('.step-content').removeClass('active');
         $('#validation-results, #completion-success').hide();
+        $('#selection-status').hide();
         goToStep(1);
     });
 });
