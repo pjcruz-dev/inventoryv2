@@ -72,7 +72,8 @@ class TemplateGenerationService
                 'job_title' => ['name' => 'Job Title', 'required' => false, 'type' => 'string', 'max_length' => 255, 'description' => 'Job title/position'],
                 'phone_number' => ['name' => 'Phone Number', 'required' => false, 'type' => 'string', 'max_length' => 50, 'description' => 'Contact phone number'],
                 'status' => ['name' => 'Status', 'required' => true, 'type' => 'integer', 'options' => [0, 1], 'default' => 1, 'description' => 'Employee status: 1=Active, 0=Inactive'],
-                'role' => ['name' => 'Role', 'required' => false, 'type' => 'string', 'description' => 'System role (User, Manager, Admin)'],
+                'role' => ['name' => 'Role', 'required' => false, 'type' => 'string', 'description' => 'System role name (User, Manager, Admin) - use either role or role_id'],
+                'role_id' => ['name' => 'Role ID', 'required' => false, 'type' => 'integer', 'options' => [1, 2, 3, 4, 5], 'description' => 'System role ID: 1=Super Admin, 2=Admin, 3=Manager, 4=User, 5=IT Support'],
                 'password' => ['name' => 'Password', 'required' => false, 'type' => 'string', 'default' => '1234', 'description' => 'User password (default: 1234)'],
                 'confirm_password' => ['name' => 'Confirm Password', 'required' => false, 'type' => 'string', 'default' => '1234', 'description' => 'Password confirmation (default: 1234)']
             ],
@@ -263,6 +264,7 @@ class TemplateGenerationService
                 'phone_number' => '+63 912 345 6789',
                 'status' => '1',
                 'role' => 'User',
+                'role_id' => '4',
                 'password' => '1234',
                 'confirm_password' => '1234'
             ],
@@ -277,6 +279,7 @@ class TemplateGenerationService
                 'phone_number' => '+63 912 345 6790',
                 'status' => '1',
                 'role' => 'Manager',
+                'role_id' => '3',
                 'password' => '1234',
                 'confirm_password' => '1234'
             ],
@@ -291,6 +294,7 @@ class TemplateGenerationService
                 'phone_number' => '+63 912 345 6791',
                 'status' => '0',
                 'role' => 'User',
+                'role_id' => '4',
                 'password' => '1234',
                 'confirm_password' => '1234'
             ]
@@ -520,7 +524,8 @@ class TemplateGenerationService
                 'job_title' => 'nullable|string|max:255',
                 'phone_number' => 'nullable|string|max:50',
                 'status' => 'nullable|string|max:255',
-                'role' => 'nullable|string|max:255'
+                'role' => 'nullable|string|max:255',
+                'role_id' => 'nullable|integer|exists:roles,id'
             ],
             'departments' => [
                 'name' => 'required|string|max:255|unique:departments,name',

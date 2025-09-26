@@ -879,10 +879,10 @@ window.downloadTemplate = downloadTemplate;
                             </div>
                         </div>
                         <div class="mt-4">
-                            <button class="btn btn-primary btn-action me-3" id="start-over">
+                            <button type="button" class="btn btn-primary btn-action me-3" id="start-over">
                                 <i class="fas fa-redo me-2"></i>Start Over
                             </button>
-                            <button class="btn btn-outline-secondary btn-action" id="view-results">
+                            <button type="button" class="btn btn-outline-secondary btn-action" id="view-results">
                                 <i class="fas fa-eye me-2"></i>View Results
                             </button>
                         </div>
@@ -1603,6 +1603,9 @@ $(document).ready(function() {
         
         // Replace step 4 content with preview
         $('#step-4 .step-content').html(previewHtml);
+            
+        // Enable the Next: Complete button
+        $('#next-step-4').prop('disabled', false);
     }
 
     function showImportPreview(response) {
@@ -2041,9 +2044,74 @@ $(document).ready(function() {
     }
     
     $('#next-step-4').click(function() {
-        goToStep(5);
-        showCompletion();
+        // Actually perform the import instead of just showing completion
+        performActualImport();
     });
+    
+    function performActualImport() {
+        // Show progress
+        $('#progress-container').show();
+        $('#validation-results').hide();
+        $('#progress-bar').css('width', '0%');
+        $('#progress-text').text('Starting import...');
+        
+        // Get the uploaded file
+        const fileInput = document.getElementById('file-input');
+        const file = fileInput.files[0];
+        
+        if (!file) {
+            alert('No file selected. Please go back and select a file.');
+            return;
+        }
+        
+        // Create form data for actual import (not validation)
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('module', selectedModule);
+        formData.append('validate_only', 'false'); // Actually import, don't just validate
+        formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+        
+        // Debug: Log what we're sending
+        console.log('FormData contents:');
+        for (let [key, value] of formData.entries()) {
+            console.log(key + ': ' + value + ' (type: ' + typeof value + ')');
+        }
+        
+        // Perform the actual import
+        $.ajax({
+            url: `/import-export/import/${selectedModule}`,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                console.log('Import successful:', response);
+                goToStep(5);
+                showActualCompletion(response);
+            },
+            error: function(xhr, status, error) {
+                console.error('Import failed:', error);
+                alert('Import failed: ' + (xhr.responseJSON?.message || error));
+                $('#progress-container').hide();
+            }
+        });
+    }
+    
+    function showActualCompletion(response) {
+        // Store response data for View Results functionality
+        window.lastImportResponse = response;
+        
+        $('#completion-success').show();
+        $('#success-count').text(response.imported || response.summary?.total || 0);
+        $('#warning-count').text(response.warnings || response.summary?.warnings || 0);
+        $('#error-count').text(response.errors || response.summary?.errors || 0);
+        
+        // Hide progress
+        $('#progress-container').hide();
+    }
     
     function showCompletion() {
         $('#completion-success').show();
@@ -2064,6 +2132,159 @@ $(document).ready(function() {
         $('#selection-status').hide();
         goToStep(1);
     });
+    
+    // Use event delegation in case button is dynamically created
+    $(document).on('click', '#view-results', function(e) {
+        e.preventDefault(); // Prevent any default form submission
+        console.log('View Results button clicked');
+        console.log('lastImportResponse:', window.lastImportResponse);
+        showImportResults();
+    });
+    
+    function showImportResults() {
+        console.log('showImportResults function called');
+        console.log('window.lastImportResponse:', window.lastImportResponse);
+        
+        if (!window.lastImportResponse) {
+            console.log('No import response data available');
+            alert('No import results available. Please perform an import first.');
+            return;
+        }
+        
+        const response = window.lastImportResponse;
+        console.log('Response data:', response);
+        
+        let resultsHtml = '<div class="import-results-detail">';
+        resultsHtml += '<h4 class="text-success mb-3"><i class="fas fa-check-circle"></i> Import Results Details</h4>';
+        
+        // Summary
+        resultsHtml += '<div class="alert alert-success mb-3">';
+        resultsHtml += '<h5><i class="fas fa-chart-bar"></i> Summary</h5>';
+        resultsHtml += '<div class="row">';
+        resultsHtml += '<div class="col-md-4"><strong>Successfully Imported:</strong> ' + (response.imported || response.summary?.total || 0) + '</div>';
+        resultsHtml += '<div class="col-md-4"><strong>Warnings:</strong> ' + (response.warnings || response.summary?.warnings || 0) + '</div>';
+        resultsHtml += '<div class="col-md-4"><strong>Errors:</strong> ' + (response.errors || response.summary?.errors || 0) + '</div>';
+        resultsHtml += '</div>';
+        resultsHtml += '</div>';
+        
+        // Show imported data if available
+        if (response.imported_data && response.imported_data.length > 0) {
+            resultsHtml += '<div class="alert alert-info mb-3">';
+            resultsHtml += '<h5><i class="fas fa-database"></i> Imported Records</h5>';
+            resultsHtml += '<div class="table-responsive">';
+            resultsHtml += '<table class="table table-striped table-sm">';
+            resultsHtml += '<thead class="table-dark">';
+            resultsHtml += '<tr><th>#</th>';
+            
+            // Add headers based on module
+            if (selectedModule === 'assets') {
+                resultsHtml += '<th>Asset Tag</th><th>Asset Name</th><th>Category</th><th>Vendor</th><th>Status</th>';
+            } else if (selectedModule === 'users') {
+                resultsHtml += '<th>Employee ID</th><th>Name</th><th>Email</th><th>Department</th>';
+            }
+            
+            resultsHtml += '</tr></thead><tbody>';
+            
+            response.imported_data.forEach((record, index) => {
+                resultsHtml += '<tr class="table-success">';
+                resultsHtml += '<td>' + (index + 1) + '</td>';
+                
+                if (selectedModule === 'assets') {
+                    resultsHtml += '<td>' + (record.asset_tag || 'AUTO-GENERATED') + '</td>';
+                    resultsHtml += '<td>' + (record.asset_name || '') + '</td>';
+                    resultsHtml += '<td>' + (record.category || '') + '</td>';
+                    resultsHtml += '<td>' + (record.vendor || '') + '</td>';
+                    resultsHtml += '<td>' + (record.status || '') + '</td>';
+                } else if (selectedModule === 'users') {
+                    resultsHtml += '<td>' + (record.employee_id || '') + '</td>';
+                    resultsHtml += '<td>' + (record.first_name || '') + ' ' + (record.last_name || '') + '</td>';
+                    resultsHtml += '<td>' + (record.email || '') + '</td>';
+                    resultsHtml += '<td>' + (record.department || '') + '</td>';
+                }
+                
+                resultsHtml += '</tr>';
+            });
+            
+            resultsHtml += '</tbody></table>';
+            resultsHtml += '</div>';
+            resultsHtml += '</div>';
+        }
+        
+        // Show any warnings or errors if available
+        if (response.warnings && response.warnings > 0) {
+            resultsHtml += '<div class="alert alert-warning mb-3">';
+            resultsHtml += '<h5><i class="fas fa-exclamation-triangle"></i> Warnings</h5>';
+            resultsHtml += '<p>There were ' + response.warnings + ' warnings during import. Please review your data.</p>';
+            resultsHtml += '</div>';
+        }
+        
+        if (response.errors && response.errors > 0) {
+            resultsHtml += '<div class="alert alert-danger mb-3">';
+            resultsHtml += '<h5><i class="fas fa-times-circle"></i> Errors</h5>';
+            resultsHtml += '<p>There were ' + response.errors + ' errors during import. Please check your data and try again.</p>';
+            resultsHtml += '</div>';
+        }
+        
+        // Action buttons
+        resultsHtml += '<div class="text-center mt-4">';
+        resultsHtml += '<button class="btn btn-primary me-2" onclick="closeResults()">';
+        resultsHtml += '<i class="fas fa-times"></i> Close';
+        resultsHtml += '</button>';
+        resultsHtml += '<button class="btn btn-success me-2" onclick="downloadResults()">';
+        resultsHtml += '<i class="fas fa-download"></i> Download Report';
+        resultsHtml += '</button>';
+        resultsHtml += '</div>';
+        
+        resultsHtml += '</div>';
+        
+        console.log('Generated HTML:', resultsHtml);
+        console.log('Step 5 element:', $('#step-5-content'));
+        
+        // Show results in a modal or replace step content
+        $('#step-5-content').html(resultsHtml);
+        
+        console.log('HTML updated, step 5 content length:', $('#step-5-content').html().length);
+    }
+    
+    // Make functions globally accessible for onclick handlers
+    window.downloadResults = function() {
+        if (!window.lastImportResponse) {
+            alert('No results to download.');
+            return;
+        }
+        
+        // Create a simple CSV report
+        const response = window.lastImportResponse;
+        let csvContent = 'Import Results Report\n';
+        csvContent += 'Date: ' + new Date().toLocaleString() + '\n';
+        csvContent += 'Module: ' + selectedModule + '\n';
+        csvContent += 'Successfully Imported: ' + (response.imported || 0) + '\n';
+        csvContent += 'Warnings: ' + (response.warnings || 0) + '\n';
+        csvContent += 'Errors: ' + (response.errors || 0) + '\n\n';
+        
+        if (response.imported_data && response.imported_data.length > 0) {
+            csvContent += 'Imported Records:\n';
+            response.imported_data.forEach((record, index) => {
+                csvContent += (index + 1) + ',' + (record.asset_name || record.first_name || '') + '\n';
+            });
+        }
+        
+        // Download the file
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'import-results-' + selectedModule + '-' + new Date().getTime() + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    };
+    
+    window.closeResults = function() {
+        // Go back to the completion view
+        showActualCompletion(window.lastImportResponse);
+    };
 });
 </script>
 @endsection

@@ -805,7 +805,24 @@ class ImportExportManager {
             this.updateStep(4, 'error');
         } else {
             this.updateStep(4, 'completed');
+            // Show import options after successful validation
+            this.showImportOptions();
         }
+    }
+    
+    showImportOptions() {
+        // Show the import section with options
+        document.getElementById('import-section').style.display = 'block';
+        document.getElementById('serialGeneratorCard').style.display = 'block';
+        
+        // Show the Start Import button
+        document.getElementById('startImportBtn').style.display = 'block';
+        
+        // Uncheck "Validate only" checkbox so the import will actually import data
+        document.getElementById('validateOnly').checked = false;
+        
+        // Update step to show we're ready for import
+        this.updateStep(5, 'active');
     }
     
     showErrorDetails() {

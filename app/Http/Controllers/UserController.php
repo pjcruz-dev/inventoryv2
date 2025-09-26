@@ -33,7 +33,7 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::with('department');
+        $query = User::with(['department', 'role']);
         
         if ($request->filled('search')) {
             $search = $request->search;

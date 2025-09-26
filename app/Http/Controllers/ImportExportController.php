@@ -144,7 +144,31 @@ class ImportExportController extends Controller
     {
         $output = fopen('php://temp', 'r+');
         
-        // Add comprehensive instructions as comments
+        // Extract field keys from the template headers structure
+        $headerKeys = array_keys($templateData['headers']);
+        $headerNames = array_map(function($key) use ($templateData) {
+            return $templateData['headers'][$key]['name'] ?? $key;
+        }, $headerKeys);
+        
+        // Add headers FIRST - this is critical for validation
+        fputcsv($output, $headerNames);
+        
+        // Add sample data rows
+        foreach ($templateData['sample_data'] as $row) {
+            // Convert associative array to indexed array in correct order
+            $rowData = [];
+            foreach ($headerKeys as $key) {
+                $rowData[] = $row[$key] ?? '';
+            }
+            fputcsv($output, $rowData);
+        }
+        
+        // Add one empty row for user data
+        fputcsv($output, array_fill(0, count($headerKeys), ''));
+        
+        // Add clear separator between data and instructions
+        fwrite($output, "\n# ===========================================\n");
+        fwrite($output, "# END OF DATA - INSTRUCTIONS BELOW\n");
         fwrite($output, "# ===========================================\n");
         fwrite($output, "# IMPORT TEMPLATE - READ INSTRUCTIONS CAREFULLY\n");
         fwrite($output, "# ===========================================\n");
@@ -152,13 +176,15 @@ class ImportExportController extends Controller
         fwrite($output, "# Generated: " . now()->toISOString() . "\n");
         fwrite($output, "# \n");
         fwrite($output, "# IMPORTANT INSTRUCTIONS:\n");
-        fwrite($output, "# 1. DO NOT DELETE OR MODIFY THE HEADER ROW\n");
+        fwrite($output, "# 1. DO NOT DELETE OR MODIFY THE HEADER ROW (Row 1)\n");
         fwrite($output, "# 2. Fill in your data starting from row 2\n");
         fwrite($output, "# 3. Required fields are marked with * in descriptions below\n");
         fwrite($output, "# 4. Use EXACT values as shown in sample data\n");
-        fwrite($output, "# 5. Status fields: Use 1 for Active, 0 for Inactive\n");
-        fwrite($output, "# 6. Department names must match exactly (case-sensitive)\n");
-        fwrite($output, "# 7. Email addresses must be valid format\n");
+        fwrite($output, "# 5. Status: Use Available, Active, Inactive, Under Maintenance, Issue Reported, Pending Confirmation, Disposed\n");
+        fwrite($output, "# 6. Movement: Use New Arrival, Transfer, Return, Disposal\n");
+        fwrite($output, "# 7. Entity: Use MIDC, Philtower, PRIMUS\n");
+        fwrite($output, "# 8. Department names must match exactly (case-sensitive)\n");
+        fwrite($output, "# 9. Email addresses must be valid format\n");
         fwrite($output, "# \n");
         
         // Add field descriptions
@@ -167,7 +193,17 @@ class ImportExportController extends Controller
             $required = $field['required'] ? ' *REQUIRED*' : ' (Optional)';
             fwrite($output, "# {$field['name']}: {$field['description']}{$required}\n");
             if (isset($field['options'])) {
-                fwrite($output, "#   Valid values: " . implode(', ', $field['options']) . "\n");
+                // Split long option lists into multiple lines to prevent truncation
+                $options = $field['options'];
+                if (count($options) > 6) {
+                    $chunks = array_chunk($options, 6);
+                    foreach ($chunks as $index => $chunk) {
+                        $prefix = $index === 0 ? "#   Valid values: " : "#   ";
+                        fwrite($output, $prefix . implode(', ', $chunk) . "\n");
+                    }
+                } else {
+                    fwrite($output, "#   Valid values: " . implode(', ', $options) . "\n");
+                }
             }
             if (isset($field['max_length'])) {
                 fwrite($output, "#   Max length: {$field['max_length']} characters\n");
@@ -185,30 +221,6 @@ class ImportExportController extends Controller
             }
             fwrite($output, "# \n");
         }
-        
-        fwrite($output, "# SAMPLE DATA BELOW - REPLACE WITH YOUR DATA:\n");
-        fwrite($output, "# ===========================================\n");
-        
-        // Extract field keys from the template headers structure
-        $headerNames = array_keys($templateData['headers']);
-        
-        // Add headers - ensure they match exactly what validation expects
-        fputcsv($output, $headerNames);
-        
-        // Add sample data rows
-        foreach ($templateData['sample_data'] as $row) {
-            // Convert associative array to indexed array in correct order
-            $rowData = [];
-            foreach ($headerNames as $key) {
-                $rowData[] = $row[$key] ?? '';
-            }
-            fputcsv($output, $rowData);
-        }
-        
-        // Add empty rows for user data
-        fputcsv($output, array_fill(0, count($headerNames), ''));
-        fputcsv($output, array_fill(0, count($headerNames), ''));
-        fputcsv($output, array_fill(0, count($headerNames), ''));
         
         rewind($output);
         $csv = stream_get_contents($output);
@@ -244,7 +256,7 @@ class ImportExportController extends Controller
     {
         $request->validate([
             'file' => 'required|file|mimes:csv,txt,xlsx,xls|max:10240', // Support Excel and CSV
-            'validate_only' => 'boolean' // Option to validate without importing
+            'validate_only' => 'nullable|in:true,false,1,0' // Option to validate without importing
         ]);
 
         $file = $request->file('file');
@@ -284,9 +296,26 @@ class ImportExportController extends Controller
                     ]]);
             }
             
-            // Filter out comment lines (lines starting with #)
+            // Filter out comment lines and instruction lines
             $csvData = array_filter($csvData, function($line) {
-                return !empty(trim($line)) && !str_starts_with(trim($line), '#');
+                $trimmed = trim($line);
+                return !empty($trimmed) && 
+                       !str_starts_with($trimmed, '#') && 
+                       !str_starts_with($trimmed, 'IMPORT TEMPLATE') &&
+                       !str_starts_with($trimmed, 'Template Version') &&
+                       !str_starts_with($trimmed, 'Generated:') &&
+                       !str_starts_with($trimmed, 'IMPORTANT INSTRUCTIONS') &&
+                       !str_starts_with($trimmed, 'FIELD DESCRIPTIONS') &&
+                       !str_starts_with($trimmed, 'VALID VALUES REFERENCE') &&
+                       !str_starts_with($trimmed, 'DO NOT DELETE') &&
+                       !str_starts_with($trimmed, 'Fill in your data') &&
+                       !str_starts_with($trimmed, 'Required fields') &&
+                       !str_starts_with($trimmed, 'Use EXACT values') &&
+                       !str_starts_with($trimmed, 'Status fields') &&
+                       !str_starts_with($trimmed, 'Department names') &&
+                       !str_starts_with($trimmed, 'Email addresses') &&
+                       !str_starts_with($trimmed, 'END OF DATA') &&
+                       !str_starts_with($trimmed, '=====');
             });
             
             // Reindex array after filtering
@@ -315,16 +344,42 @@ class ImportExportController extends Controller
         try {
             $data = [];
             foreach ($csvData as $lineNumber => $line) {
-                $parsedLine = str_getcsv($line);
-                if ($parsedLine === false) {
-                    return redirect()->route('import-export.results')
-                        ->with('import_errors', [[
-                            'row' => $lineNumber + 1,
-                            'field' => 'csv_parsing',
-                            'message' => 'Error parsing CSV line.',
-                            'value' => substr($line, 0, 100) . '...'
-                        ]]);
+                // Use a more robust CSV parsing approach
+                $parsedLine = str_getcsv($line, ',', '"', '\\');
+                if ($parsedLine === false || empty($parsedLine)) {
+                    continue; // Skip empty lines
                 }
+                
+                // Skip lines that are all empty or contain only instruction text
+                $nonEmptyFields = array_filter($parsedLine, function($field) { 
+                    $trimmed = trim($field);
+                    return !empty($trimmed) && 
+                           !str_starts_with($trimmed, '#') &&
+                           !str_starts_with($trimmed, 'IMPORT TEMPLATE') &&
+                           !str_starts_with($trimmed, 'Template Version') &&
+                           !str_starts_with($trimmed, 'Generated:') &&
+                           !str_starts_with($trimmed, 'IMPORTANT INSTRUCTIONS') &&
+                           !str_starts_with($trimmed, 'FIELD DESCRIPTIONS') &&
+                           !str_starts_with($trimmed, 'VALID VALUES REFERENCE');
+                });
+                
+                if (empty($nonEmptyFields)) {
+                    continue; // Skip empty lines and instruction lines
+                }
+                
+                // Additional check: Skip rows that are completely empty (all fields are empty strings)
+                $hasAnyData = false;
+                foreach ($parsedLine as $field) {
+                    if (!empty(trim($field))) {
+                        $hasAnyData = true;
+                        break;
+                    }
+                }
+                
+                if (!$hasAnyData) {
+                    continue; // Skip completely empty rows
+                }
+                
                 $data[] = $parsedLine;
             }
             
@@ -356,6 +411,9 @@ class ImportExportController extends Controller
             // Trim whitespace and normalize
             return trim($header);
         }, $headers);
+        
+        // Map display names back to field keys for processing
+        $fieldKeys = $this->mapDisplayNamesToKeys($module, $headers);
         
         // Validate headers are not empty
         if (empty($headers) || empty(array_filter($headers))) {
@@ -395,7 +453,7 @@ class ImportExportController extends Controller
         
         foreach ($data as $index => $row) {
             $rowNumber = $index + 2;
-            $rowData = array_combine($headers, array_pad($row, count($headers), ''));
+            $rowData = array_combine($fieldKeys, array_pad($row, count($fieldKeys), ''));
             
             // Check for duplicate serial numbers within file
             if (!empty($rowData['serial_number'])) {
@@ -444,10 +502,18 @@ class ImportExportController extends Controller
         if ($validateOnly) {
             foreach ($data as $index => $row) {
                 $rowNumber = $index + 2;
-                $rowData = array_combine($headers, array_pad($row, count($headers), ''));
+                $rowData = array_combine($fieldKeys, array_pad($row, count($fieldKeys), ''));
                 
-                // Skip empty rows
-                if (empty(array_filter($row))) {
+                // Skip empty rows - check if all fields are empty or whitespace
+                $hasData = false;
+                foreach ($row as $field) {
+                    if (!empty(trim($field))) {
+                        $hasData = true;
+                        break;
+                    }
+                }
+                
+                if (!$hasData) {
                     $warnings[] = [
                         'row' => $rowNumber,
                         'message' => 'Empty row will be skipped',
@@ -536,8 +602,6 @@ class ImportExportController extends Controller
                 ->with('import_summary', $summary);
         }
 
-        DB::beginTransaction();
-        
         // Log import start
         Log::info('Import started', [
             'module' => $module,
@@ -550,8 +614,16 @@ class ImportExportController extends Controller
             foreach ($data as $index => $row) {
                 $rowNumber = $index + 2; // +2 because we removed headers and arrays are 0-indexed
                 
-                // Skip empty rows
-                if (empty(array_filter($row))) {
+                // Skip empty rows - check if all fields are empty or whitespace
+                $hasData = false;
+                foreach ($row as $field) {
+                    if (!empty(trim($field))) {
+                        $hasData = true;
+                        break;
+                    }
+                }
+                
+                if (!$hasData) {
                     $warnings[] = [
                         'row' => $rowNumber,
                         'message' => 'Empty row skipped',
@@ -560,12 +632,16 @@ class ImportExportController extends Controller
                     continue;
                 }
                 
-                $rowData = array_combine($headers, array_pad($row, count($headers), ''));
+                $rowData = array_combine($fieldKeys, array_pad($row, count($fieldKeys), ''));
                 
+                // Process each row in its own transaction
+                DB::beginTransaction();
                 try {
                     $this->processImportRow($module, $rowData, $rowNumber);
+                    DB::commit();
                     $successCount++;
                 } catch (\Illuminate\Validation\ValidationException $e) {
+                    DB::rollback();
                     foreach ($e->errors() as $field => $messages) {
                         foreach ($messages as $message) {
                             $errors[] = [
@@ -577,6 +653,7 @@ class ImportExportController extends Controller
                         }
                     }
                 } catch (\Exception $e) {
+                    DB::rollback();
                     $errors[] = [
                         'row' => $rowNumber,
                         'field' => 'general',
@@ -586,25 +663,21 @@ class ImportExportController extends Controller
                 }
             }
 
-            if (empty($errors)) {
-                DB::commit();
-                
-                // Log successful import
-                Log::info('Import completed successfully', [
+            // Log import completion
+            if ($successCount > 0) {
+                Log::info('Import completed with mixed results', [
                     'module' => $module,
                     'user_id' => auth()->id(),
                     'imported_records' => $successCount,
+                    'failed_records' => count($errors),
                     'warnings' => count($warnings)
                 ]);
             } else {
-                DB::rollback();
-                
-                // Log failed import
-                Log::error('Import failed', [
+                Log::error('Import failed - no records imported', [
                     'module' => $module,
                     'user_id' => auth()->id(),
-                    'errors' => count($errors),
-                    'processed' => $successCount
+                    'failed_records' => count($errors),
+                    'warnings' => count($warnings)
                 ]);
             }
 
@@ -705,19 +778,36 @@ class ImportExportController extends Controller
      */
     private function getRequiredFields($module)
     {
-        $requiredFields = [
-            'users' => ['employee_id', 'first_name', 'last_name', 'email_address', 'department'],
-            'assets' => ['asset_tag', 'asset_name', 'category', 'vendor'],
-            'computers' => ['asset_id', 'asset_name', 'processor', 'memory_ram', 'storage', 'operating_system'],
-            'monitors' => ['asset_id', 'asset_name', 'size', 'resolution'],
-            'printers' => ['asset_id', 'asset_name', 'type'],
-            'peripherals' => ['asset_id', 'asset_name', 'type', 'interface'],
-            'departments' => ['name'],
-            'vendors' => ['name', 'contact_person', 'email', 'phone', 'address'],
-            'asset_categories' => ['name']
-        ];
+        // Get the template headers to extract display names for required fields
+        $templateService = app(TemplateGenerationService::class);
+        $templateData = $templateService->generateTemplate($module);
+        
+        $requiredFields = [];
+        foreach ($templateData['headers'] as $key => $field) {
+            if ($field['required']) {
+                $requiredFields[] = $field['name'];
+            }
+        }
 
-        return $requiredFields[$module] ?? [];
+        return $requiredFields;
+    }
+
+    /**
+     * Map display names back to field keys for data processing
+     */
+    private function mapDisplayNamesToKeys($module, $headers)
+    {
+        $templateService = app(TemplateGenerationService::class);
+        $templateData = $templateService->generateTemplate($module);
+        
+        $nameToKeyMap = [];
+        foreach ($templateData['headers'] as $key => $field) {
+            $nameToKeyMap[$field['name']] = $key;
+        }
+        
+        return array_map(function($header) use ($nameToKeyMap) {
+            return $nameToKeyMap[$header] ?? $header;
+        }, $headers);
     }
 
     /**
@@ -854,9 +944,26 @@ class ImportExportController extends Controller
                 $csvData = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
             }
             
-            // Filter out comment lines
+            // Filter out comment lines and instruction lines
             $csvData = array_filter($csvData, function($line) {
-                return !empty(trim($line)) && !str_starts_with(trim($line), '#');
+                $trimmed = trim($line);
+                return !empty($trimmed) && 
+                       !str_starts_with($trimmed, '#') && 
+                       !str_starts_with($trimmed, 'IMPORT TEMPLATE') &&
+                       !str_starts_with($trimmed, 'Template Version') &&
+                       !str_starts_with($trimmed, 'Generated:') &&
+                       !str_starts_with($trimmed, 'IMPORTANT INSTRUCTIONS') &&
+                       !str_starts_with($trimmed, 'FIELD DESCRIPTIONS') &&
+                       !str_starts_with($trimmed, 'VALID VALUES REFERENCE') &&
+                       !str_starts_with($trimmed, 'DO NOT DELETE') &&
+                       !str_starts_with($trimmed, 'Fill in your data') &&
+                       !str_starts_with($trimmed, 'Required fields') &&
+                       !str_starts_with($trimmed, 'Use EXACT values') &&
+                       !str_starts_with($trimmed, 'Status fields') &&
+                       !str_starts_with($trimmed, 'Department names') &&
+                       !str_starts_with($trimmed, 'Email addresses') &&
+                       !str_starts_with($trimmed, 'END OF DATA') &&
+                       !str_starts_with($trimmed, '=====');
             });
             $csvData = array_values($csvData);
             
@@ -881,6 +988,9 @@ class ImportExportController extends Controller
                 return str_replace(["\xEF\xBB\xBF", "\xFF\xFE", "\xFE\xFF"], '', trim($header));
             }, $headers);
             
+            // Map display names back to field keys for processing
+            $fieldKeys = $this->mapDisplayNamesToKeys($module, $headers);
+            
             // Generate preview data
             $previewData = [];
             $errors = [];
@@ -888,10 +998,18 @@ class ImportExportController extends Controller
             
             foreach ($data as $index => $row) {
                 $rowNumber = $index + 2;
-                $rowData = array_combine($headers, array_pad($row, count($headers), ''));
+                $rowData = array_combine($fieldKeys, array_pad($row, count($fieldKeys), ''));
                 
-                // Skip empty rows
-                if (empty(array_filter($row))) {
+                // Skip empty rows - check if all fields are empty or whitespace
+                $hasData = false;
+                foreach ($row as $field) {
+                    if (!empty(trim($field))) {
+                        $hasData = true;
+                        break;
+                    }
+                }
+                
+                if (!$hasData) {
                     $warnings[] = [
                         'row' => $rowNumber,
                         'message' => 'Empty row will be skipped',
@@ -1360,6 +1478,7 @@ class ImportExportController extends Controller
             'phone_number' => 'nullable|string|max:50',
             'status' => 'nullable|integer|in:0,1',
             'role' => 'nullable|string',
+            'role_id' => 'nullable|integer|exists:roles,id',
             'company' => 'nullable|string|in:Philtower,MIDC,PRIMUS',
             'job_title' => 'nullable|string|max:255'
         ], [
@@ -1388,6 +1507,9 @@ class ImportExportController extends Controller
             'status.in' => '❌ INVALID STATUS: Status must be 1 (Active) or 0 (Inactive). Please use a valid status number.',
             
             'role.string' => '❌ INVALID ROLE: Role must be text. Please enter a valid role name.',
+            
+            'role_id.integer' => '❌ INVALID ROLE ID: Role ID must be a number. Please enter a valid role ID.',
+            'role_id.exists' => '❌ ROLE NOT FOUND: Role ID does not exist in the system. Please use a valid role ID (1-5).',
             
             'company.in' => '❌ INVALID COMPANY: Company must be one of: Philtower, MIDC, PRIMUS. Please use a valid company name.',
             
@@ -1420,9 +1542,27 @@ class ImportExportController extends Controller
             throw new \Exception($errorMessage);
         }
 
-        // Find role by name with enhanced error message
+        // Find role by ID or name with enhanced error message
         $role = null;
-        if (!empty($data['role'])) {
+        $roleId = null;
+        
+        // Priority 1: Use role_id if provided
+        if (!empty($data['role_id'])) {
+            $role = Role::find($data['role_id']);
+            if (!$role) {
+                $availableRoles = Role::pluck('name', 'id')->toArray();
+                $errorMessage = "❌ ROLE ID NOT FOUND: Role ID '{$data['role_id']}' does not exist in the system.\n\n";
+                $errorMessage .= "📋 AVAILABLE ROLE IDS:\n";
+                foreach ($availableRoles as $id => $name) {
+                    $errorMessage .= "   • {$id} - {$name}\n";
+                }
+                $errorMessage .= "\n🔧 ACTION REQUIRED: Please use one of the exact role IDs listed above.";
+                throw new \Exception($errorMessage);
+            }
+            $roleId = $role->id;
+        }
+        // Priority 2: Use role name if provided and no role_id
+        elseif (!empty($data['role'])) {
             $role = Role::where('name', $data['role'])->first();
             if (!$role) {
                 $availableRoles = Role::pluck('name')->toArray();
@@ -1442,6 +1582,7 @@ class ImportExportController extends Controller
                 
                 throw new \Exception($errorMessage);
             }
+            $roleId = $role->id;
         }
 
         User::create([
@@ -1453,7 +1594,7 @@ class ImportExportController extends Controller
             'company' => $data['company'] ?? null,
             'position' => $data['job_title'] ?? null,
             'phone' => $data['phone_number'] ?? null,
-            'role_id' => $role ? $role->id : null,
+            'role_id' => $roleId,
             'status' => $data['status'] ?? 1,
             'password' => bcrypt($data['password'] ?? 'password123')
         ]);
@@ -2126,6 +2267,7 @@ class ImportExportController extends Controller
             'phone' => 'nullable|string|max:20',
             'status' => 'nullable|string|max:255',
             'role' => 'nullable|string|max:255',
+            'role_id' => 'nullable|integer|exists:roles,id',
             'password' => 'nullable|string|min:8|max:255'
         ]);
 
@@ -2158,9 +2300,42 @@ class ImportExportController extends Controller
 
         // Validate status if provided
         if (!empty($data['status'])) {
-            $validStatuses = ['Active', 'Inactive', 'Suspended', 'Terminated', 'On Leave'];
-            if (!in_array($data['status'], $validStatuses)) {
-                throw new \Exception("Invalid status '{$data['status']}'. Valid statuses: " . implode(', ', $validStatuses));
+            // Accept both integer and text values, convert to integer
+            $statusValue = $data['status'];
+            
+            // Handle string values (from CSV)
+            if (is_string($statusValue)) {
+                $statusValue = trim($statusValue);
+                
+                // Check if it's a numeric string
+                if (is_numeric($statusValue)) {
+                    $statusValue = (int) $statusValue;
+                    if (!in_array($statusValue, [0, 1])) {
+                        throw new \Exception("Invalid status '{$data['status']}'. Valid statuses: 0 (Inactive), 1 (Active)");
+                    }
+                    $data['status'] = $statusValue;
+                } else {
+                    // Handle text status values
+                    $statusMap = [
+                        'active' => 1,
+                        'inactive' => 0,
+                        'suspended' => 0, // Map to inactive for now
+                        'terminated' => 0, // Map to inactive for now
+                        'on leave' => 0, // Map to inactive for now
+                    ];
+                    
+                    $statusValue = strtolower($statusValue);
+                    if (isset($statusMap[$statusValue])) {
+                        $data['status'] = $statusMap[$statusValue];
+                    } else {
+                        throw new \Exception("Invalid status '{$data['status']}'. Valid statuses: 0 (Inactive), 1 (Active), or text: Active, Inactive");
+                    }
+                }
+            } else {
+                // Validate integer status
+                if (!in_array($statusValue, [0, 1])) {
+                    throw new \Exception("Invalid status '{$data['status']}'. Valid statuses: 0 (Inactive), 1 (Active)");
+                }
             }
         }
 
@@ -2246,7 +2421,7 @@ class ImportExportController extends Controller
 
         // Validate status if provided
         if (!empty($data['status'])) {
-            $validStatuses = ['Active', 'Inactive', 'In Repair', 'Disposed', 'Lost', 'Stolen', 'Reserved'];
+            $validStatuses = ['Available', 'Active', 'Inactive', 'Under Maintenance', 'Issue Reported', 'Pending Confirmation', 'Disposed'];
             if (!in_array($data['status'], $validStatuses)) {
                 throw new \Exception("Invalid status '{$data['status']}'. Valid statuses: " . implode(', ', $validStatuses));
             }
@@ -2688,6 +2863,9 @@ class ImportExportController extends Controller
             return trim(str_replace("\xEF\xBB\xBF", '', $header));
         }, $headers);
         
+        // Map display names back to field keys for processing
+        $fieldKeys = $this->mapDisplayNamesToKeys($module, $headers);
+        
         // Validate header
         $requiredFields = $this->getRequiredFields($module);
         $missingFields = array_diff($requiredFields, $headers);
@@ -2732,7 +2910,7 @@ class ImportExportController extends Controller
                 continue;
             }
             
-            $rowData = array_combine($headers, array_pad($row, count($headers), ''));
+            $rowData = array_combine($fieldKeys, array_pad($row, count($fieldKeys), ''));
             
             try {
                 $this->validateImportRow($module, $rowData, $rowNumber);

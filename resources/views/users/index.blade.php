@@ -82,6 +82,7 @@
                             <th>Email</th>
                             <th>Department</th>
                             <th>Job Title</th>
+                            <th>Role</th>
                             <th>Status</th>
                             <th>Assets</th>
                             <th width="120">Actions</th>
@@ -119,6 +120,13 @@
                                     @endif
                                 </td>
                                 <td>{{ $user->job_title ?? '-' }}</td>
+                                <td>
+                                    @if($user->role)
+                                        <span class="badge bg-primary">{{ $user->role->name }}</span>
+                                    @else
+                                        <span class="text-muted">No Role</span>
+                                    @endif
+                                </td>
                                 <td>
                                     @php
                                         $statusConfig = [
