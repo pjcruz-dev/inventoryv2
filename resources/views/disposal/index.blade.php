@@ -10,11 +10,16 @@
                         <h3 class="card-title mb-0">
                             <i class="fas fa-trash-alt me-2"></i>Asset Disposals
                         </h3>
-                        @can('create_disposal')
-                            <a href="{{ route('disposal.create') }}" class="btn btn-primary">
-                                <i class="fas fa-plus me-1"></i>Add New Disposal
-                            </a>
-                        @endcan
+                        <div class="btn-group" role="group">
+                            @can('create_disposal')
+                                <a href="{{ route('disposal.bulk-create') }}" class="btn btn-danger">
+                                    <i class="fas fa-plus-circle me-1"></i>Bulk Dispose
+                                </a>
+                                <a href="{{ route('disposal.create') }}" class="btn btn-primary">
+                                    <i class="fas fa-plus me-1"></i>Add New
+                                </a>
+                            @endcan
+                        </div>
                     </div>
                 </div>
                 

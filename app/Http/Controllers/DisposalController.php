@@ -86,6 +86,102 @@ class DisposalController extends Controller
     }
 
     /**
+     * Show the form for bulk creating disposal records.
+     */
+    public function bulkCreate()
+    {
+        $assets = Asset::whereIn('status', ['Available', 'Retired', 'Damaged'])
+                      ->where('status', '!=', 'Disposed')
+                      ->orderBy('name')
+                      ->get();
+        
+        return view('disposal.bulk-create', compact('assets'));
+    }
+
+    /**
+     * Store bulk created disposal records.
+     */
+    public function bulkStore(Request $request)
+    {
+        // Get only the selected assets from the request
+        $selectedAssets = $request->input('selected_assets', []);
+        
+        if (empty($selectedAssets)) {
+            return redirect()->back()
+                           ->withErrors(['selected_assets' => 'Please select at least one asset.'])
+                           ->withInput();
+        }
+
+        // Validate only the selected disposal records
+        $validationRules = [];
+        foreach ($selectedAssets as $index => $assetId) {
+            $validationRules["disposal.{$index}.asset_id"] = 'required|exists:assets,id';
+            $validationRules["disposal.{$index}.disposal_date"] = 'required|date';
+            $validationRules["disposal.{$index}.disposal_type"] = 'required|in:Sold,Donated,Recycled,Destroyed,Lost,Stolen,Trade-in,Return to Vendor,Upgrade Replacement,Damaged Beyond Repair,End of Life,Security Risk,Theft/Loss,Obsolete Technology,Cost of Repair Exceeds Value,Recycling,Donation';
+            $validationRules["disposal.{$index}.disposal_value"] = 'nullable|numeric|min:0|max:999999.99';
+            $validationRules["disposal.{$index}.remarks"] = 'nullable|string|max:1000';
+        }
+
+        $request->validate($validationRules);
+
+        $created = 0;
+        $errors = [];
+
+        \DB::beginTransaction();
+        try {
+            foreach ($selectedAssets as $index => $assetId) {
+                $disposalData = $request->input("disposal.{$index}");
+                
+                // Create disposal record
+                $disposal = Disposal::create($disposalData);
+
+                // Update asset status to Disposed
+                $asset = Asset::find($assetId);
+                $oldAssetStatus = $asset->status;
+                $oldAssetMovement = $asset->movement;
+                
+                $asset->update([
+                    'status' => 'Disposed',
+                    'movement' => 'Disposed',
+                    'assigned_to' => null
+                ]);
+                
+                // Create timeline entry
+                $asset->createTimelineEntry(
+                    'asset_disposed',
+                    null,
+                    null,
+                    "Asset disposed: {$disposalData['disposal_type']} - {$disposalData['remarks']}",
+                    ['status' => $oldAssetStatus, 'movement' => $oldAssetMovement],
+                    ['status' => 'Disposed', 'movement' => 'Disposed']
+                );
+
+                $created++;
+            }
+
+            \DB::commit();
+
+            $message = "Successfully created {$created} disposal records.";
+            if (!empty($errors)) {
+                $message .= " " . count($errors) . " records were skipped due to errors.";
+                return redirect()->route('disposal.index')
+                               ->with('warning', $message)
+                               ->with('errors', $errors);
+            }
+
+            return redirect()->route('disposal.index')
+                           ->with('success', $message);
+
+        } catch (\Exception $e) {
+            \DB::rollback();
+            
+            return redirect()->back()
+                           ->withErrors(['bulk_create' => 'Failed to create disposal records: ' . $e->getMessage()])
+                           ->withInput();
+        }
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)

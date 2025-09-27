@@ -9,11 +9,16 @@
                     <h3 class="card-title mb-0">
                         <i class="fas fa-tools me-2"></i>Maintenance Management
                     </h3>
-                    @can('manage_maintenance')
-                        <a href="{{ route('maintenance.create') }}" class="btn btn-primary">
-                            <i class="fas fa-plus me-1"></i>Add Maintenance
-                        </a>
-                    @endcan
+                    <div class="btn-group" role="group">
+                        @can('create_maintenance')
+                            <a href="{{ route('maintenance.bulk-create') }}" class="btn btn-success">
+                                <i class="fas fa-plus-circle me-1"></i>Bulk Create
+                            </a>
+                            <a href="{{ route('maintenance.create') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i>Add New
+                            </a>
+                        @endcan
+                    </div>
                 </div>
                 
                 <div class="card-body">
