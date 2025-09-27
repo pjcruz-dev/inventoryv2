@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Middleware\SecurityValidationMiddleware;
+use App\Http\Middleware\SecurityHeadersMiddleware;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\AssetCategoryController;
 use App\Http\Controllers\AssetAssignmentController;
@@ -21,6 +23,7 @@ use App\Http\Controllers\AssetConfirmationController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\DisposalController;
+use App\Http\Controllers\SecurityAuditController;
 use App\Http\Controllers\ChangePasswordController;
 
 Route::get('/', function () {
@@ -217,4 +220,15 @@ Route::prefix('asset-confirmation')->name('asset-confirmation.')->group(function
     Route::get('/decline/{token}', [AssetConfirmationController::class, 'decline'])->name('decline');
     Route::get('/decline-form/{token}', [AssetConfirmationController::class, 'showDeclineForm'])->name('decline-form');
     Route::post('/decline/{token}', [AssetConfirmationController::class, 'processDecline'])->name('process-decline');
+});
+
+// Security Audit routes
+Route::prefix('security')->name('security.')->middleware(['auth', 'check.permission:view_security_audit'])->group(function () {
+    Route::get('/audit', [SecurityAuditController::class, 'index'])->name('audit.index');
+    Route::get('/audit/logs', [SecurityAuditController::class, 'logs'])->name('audit.logs');
+    Route::get('/audit/user-activity/{userId}', [SecurityAuditController::class, 'userActivity'])->name('audit.user-activity');
+    Route::get('/audit/security-events', [SecurityAuditController::class, 'securityEvents'])->name('audit.security-events');
+    Route::get('/audit/export', [SecurityAuditController::class, 'export'])->name('audit.export');
+    Route::get('/audit/model-trail/{modelType}/{modelId}', [SecurityAuditController::class, 'modelAuditTrail'])->name('audit.model-trail');
+    Route::post('/audit/clear-old-logs', [SecurityAuditController::class, 'clearOldLogs'])->name('audit.clear-old-logs');
 });

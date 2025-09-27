@@ -837,7 +837,7 @@
                             </li>
                             @endcan
                             
-                            @if(auth()->user()->can('view_logs') || auth()->user()->can('view_assets') || auth()->user()->can('view_roles') || auth()->user()->can('view_permissions'))
+                            @if(auth()->user()->can('view_logs') || auth()->user()->can('view_assets') || auth()->user()->can('view_roles') || auth()->user()->can('view_permissions') || auth()->user()->can('view_security_audit'))
                             <li class="nav-item mt-3">
                                 <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-white-50">
                                     <span>SYSTEM</span>
@@ -886,6 +886,15 @@
                                 <a class="nav-link {{ request()->routeIs('permissions.*') ? 'active' : '' }}" href="{{ route('permissions.index') }}">
                                     <i class="fas fa-key"></i>
                                     Permissions
+                                </a>
+                            </li>
+                            @endcan
+                            
+                            @can('view_security_audit')
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('security.*') ? 'active' : '' }}" href="{{ route('security.audit.index') }}">
+                                    <i class="fas fa-shield-alt"></i>
+                                    Security Audit
                                 </a>
                             </li>
                             @endcan
