@@ -3,218 +3,225 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class CacheService
 {
-    private const DEFAULT_TTL = 3600; // 1 hour
-    private const SHORT_TTL = 300;    // 5 minutes
-    private const LONG_TTL = 86400;   // 24 hours
+    /**
+     * Cache duration constants
+     */
+    const CACHE_SHORT = 300; // 5 minutes
+    const CACHE_MEDIUM = 1800; // 30 minutes
+    const CACHE_LONG = 3600; // 1 hour
+    const CACHE_VERY_LONG = 86400; // 24 hours
 
     /**
-     * Cache dashboard statistics
+     * Cache statistics
      */
-    public function cacheDashboardStats(array $stats, string $entity = null): void
-    {
-        $key = $entity ? "dashboard_stats_{$entity}" : 'dashboard_stats';
-        Cache::put($key, $stats, self::SHORT_TTL);
-    }
-
-    /**
-     * Get cached dashboard statistics
-     */
-    public function getDashboardStats(string $entity = null): ?array
-    {
-        $key = $entity ? "dashboard_stats_{$entity}" : 'dashboard_stats';
-        return Cache::get($key);
-    }
-
-    /**
-     * Cache asset counts by category
-     */
-    public function cacheAssetCounts(): void
-    {
-        $counts = \App\Models\Asset::selectRaw('category_id, COUNT(*) as count')
-            ->groupBy('category_id')
-            ->pluck('count', 'category_id')
-            ->toArray();
-            
-        Cache::put('asset_counts_by_category', $counts, self::DEFAULT_TTL);
-    }
-
-    /**
-     * Get cached asset counts
-     */
-    public function getAssetCounts(): ?array
-    {
-        return Cache::get('asset_counts_by_category');
-    }
-
-    /**
-     * Cache user permissions
-     */
-    public function cacheUserPermissions(int $userId, array $permissions): void
-    {
-        $key = "user_permissions_{$userId}";
-        Cache::put($key, $permissions, self::LONG_TTL);
-    }
-
-    /**
-     * Get cached user permissions
-     */
-    public function getUserPermissions(int $userId): ?array
-    {
-        $key = "user_permissions_{$userId}";
-        return Cache::get($key);
-    }
-
-    /**
-     * Cache department hierarchy
-     */
-    public function cacheDepartmentHierarchy(): void
-    {
-        $hierarchy = \App\Models\Department::with('children')
-            ->whereNull('parent_id')
-            ->get()
-            ->toArray();
-            
-        Cache::put('department_hierarchy', $hierarchy, self::LONG_TTL);
-    }
-
-    /**
-     * Get cached department hierarchy
-     */
-    public function getDepartmentHierarchy(): ?array
-    {
-        return Cache::get('department_hierarchy');
-    }
-
-    /**
-     * Cache asset categories
-     */
-    public function cacheAssetCategories(): void
-    {
-        $categories = \App\Models\AssetCategory::orderBy('name')->get()->toArray();
-        Cache::put('asset_categories', $categories, self::LONG_TTL);
-    }
-
-    /**
-     * Get cached asset categories
-     */
-    public function getAssetCategories(): ?array
-    {
-        return Cache::get('asset_categories');
-    }
-
-    /**
-     * Cache vendors list
-     */
-    public function cacheVendors(): void
-    {
-        $vendors = \App\Models\Vendor::orderBy('name')->get()->toArray();
-        Cache::put('vendors_list', $vendors, self::LONG_TTL);
-    }
-
-    /**
-     * Get cached vendors
-     */
-    public function getVendors(): ?array
-    {
-        return Cache::get('vendors_list');
-    }
-
-    /**
-     * Clear all application caches
-     */
-    public function clearAllCaches(): void
-    {
-        $cacheKeys = [
-            'dashboard_stats',
-            'asset_counts_by_category',
-            'department_hierarchy',
-            'asset_categories',
-            'vendors_list'
-        ];
-
-        foreach ($cacheKeys as $key) {
-            Cache::forget($key);
-        }
-
-        // Clear user permission caches
-        $this->clearUserPermissionCaches();
-
-        Log::info('All application caches cleared');
-    }
-
-    /**
-     * Clear user permission caches
-     */
-    public function clearUserPermissionCaches(): void
-    {
-        $users = \App\Models\User::pluck('id');
-        foreach ($users as $userId) {
-            Cache::forget("user_permissions_{$userId}");
-        }
-    }
-
-    /**
-     * Cache search results for better performance
-     */
-    public function cacheSearchResults(string $query, array $results, string $type): void
-    {
-        $key = "search_{$type}_" . md5($query);
-        Cache::put($key, $results, self::SHORT_TTL);
-    }
-
-    /**
-     * Get cached search results
-     */
-    public function getSearchResults(string $query, string $type): ?array
-    {
-        $key = "search_{$type}_" . md5($query);
-        return Cache::get($key);
-    }
-
-    /**
-     * Warm up essential caches
-     */
-    public function warmupCaches(): void
-    {
-        try {
-            $this->cacheAssetCategories();
-            $this->cacheVendors();
-            $this->cacheDepartmentHierarchy();
-            $this->cacheAssetCounts();
-            
-            Log::info('Essential caches warmed up successfully');
-        } catch (\Exception $e) {
-            Log::error('Failed to warm up caches: ' . $e->getMessage());
-        }
-    }
+    private static $cacheStats = [
+        'hits' => 0,
+        'misses' => 0,
+        'sets' => 0,
+        'deletes' => 0
+    ];
 
     /**
      * Get cache statistics
      */
-    public function getCacheStats(): array
+    public static function getStats()
     {
-        return [
-            'driver' => config('cache.default'),
-            'store' => config('cache.stores.' . config('cache.default')),
-            'permissions_cache' => Cache::get('spatie.permission.cache') ? 'Active' : 'Empty',
-            'cache_size' => $this->getCacheSize(),
-        ];
+        return self::$cacheStats;
     }
 
     /**
-     * Get approximate cache size
+     * Remember data with automatic cache invalidation
      */
-    private function getCacheSize(): string
+    public static function remember($key, $duration, $callback, $tags = [])
     {
-        if (config('cache.default') === 'database') {
-            $count = \DB::table('cache')->count();
-            return "{$count} entries";
+        try {
+            $result = Cache::tags($tags)->remember($key, $duration, $callback);
+            self::$cacheStats['hits']++;
+            return $result;
+        } catch (\Exception $e) {
+            self::$cacheStats['misses']++;
+            return $callback();
         }
+    }
+
+    /**
+     * Cache database query results
+     */
+    public static function rememberQuery($key, $duration, $query, $tags = [])
+    {
+        return self::remember($key, $duration, function() use ($query) {
+            return $query();
+        }, $tags);
+    }
+
+    /**
+     * Cache model counts with automatic invalidation
+     */
+    public static function rememberCount($model, $conditions = [], $duration = self::CACHE_MEDIUM)
+    {
+        $key = 'count_' . strtolower(class_basename($model)) . '_' . md5(serialize($conditions));
+        $tags = [strtolower(class_basename($model))];
         
-        return 'Unknown';
+        return self::remember($key, $duration, function() use ($model, $conditions) {
+            $query = $model::query();
+            foreach ($conditions as $field => $value) {
+                $query->where($field, $value);
+            }
+            return $query->count();
+        }, $tags);
+    }
+
+    /**
+     * Cache paginated results
+     */
+    public static function rememberPaginated($key, $duration, $query, $perPage = 15, $tags = [])
+    {
+        return self::remember($key, $duration, function() use ($query, $perPage) {
+            return $query->paginate($perPage);
+        }, $tags);
+    }
+
+    /**
+     * Cache report data
+     */
+    public static function rememberReport($reportType, $params = [], $duration = self::CACHE_MEDIUM)
+    {
+        $key = 'report_' . $reportType . '_' . md5(serialize($params));
+        $tags = ['reports', $reportType];
+        
+        return self::remember($key, $duration, function() use ($reportType, $params) {
+            // This will be implemented by the specific report methods
+            return null;
+        }, $tags);
+    }
+
+    /**
+     * Invalidate cache by tags
+     */
+    public static function invalidateByTags($tags)
+    {
+        try {
+            Cache::tags($tags)->flush();
+            self::$cacheStats['deletes']++;
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Invalidate model cache
+     */
+    public static function invalidateModel($model)
+    {
+        $modelName = strtolower(class_basename($model));
+        return self::invalidateByTags([$modelName]);
+    }
+
+    /**
+     * Invalidate report cache
+     */
+    public static function invalidateReports($reportType = null)
+    {
+        if ($reportType) {
+            return self::invalidateByTags(['reports', $reportType]);
+        }
+        return self::invalidateByTags(['reports']);
+    }
+
+    /**
+     * Warm up cache for frequently accessed data
+     */
+    public static function warmUp()
+    {
+        $warmUpTasks = [
+            'asset_counts' => function() {
+                return [
+                    'total' => \App\Models\Asset::count(),
+                    'active' => \App\Models\Asset::where('status', 'active')->count(),
+                    'inactive' => \App\Models\Asset::where('status', 'inactive')->count(),
+                    'disposed' => \App\Models\Asset::where('status', 'disposed')->count(),
+                ];
+            },
+            'user_counts' => function() {
+                return [
+                    'total' => \App\Models\User::count(),
+                    'active' => \App\Models\User::where('status', 'active')->count(),
+                ];
+            },
+            'maintenance_counts' => function() {
+                return [
+                    'total' => \App\Models\Maintenance::count(),
+                    'pending' => \App\Models\Maintenance::where('status', 'pending')->count(),
+                    'completed' => \App\Models\Maintenance::where('status', 'completed')->count(),
+                ];
+            }
+        ];
+
+        foreach ($warmUpTasks as $key => $callback) {
+            try {
+                Cache::put($key, $callback(), self::CACHE_MEDIUM);
+                self::$cacheStats['sets']++;
+            } catch (\Exception $e) {
+                // Log error but continue
+                \Log::warning("Cache warm-up failed for {$key}: " . $e->getMessage());
+            }
+        }
+    }
+
+    /**
+     * Get cache memory usage
+     */
+    public static function getMemoryUsage()
+    {
+        try {
+            if (config('cache.default') === 'redis') {
+                $info = Redis::info('memory');
+                return [
+                    'used_memory' => $info['used_memory_human'] ?? 'Unknown',
+                    'used_memory_peak' => $info['used_memory_peak_human'] ?? 'Unknown',
+                    'connected_clients' => $info['connected_clients'] ?? 0,
+                ];
+            }
+            
+            return ['driver' => config('cache.default'), 'memory' => 'Not available'];
+        } catch (\Exception $e) {
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Clear all cache
+     */
+    public static function clearAll()
+    {
+        try {
+            Cache::flush();
+            self::$cacheStats['deletes']++;
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Get cache keys by pattern
+     */
+    public static function getKeys($pattern = '*')
+    {
+        try {
+            if (config('cache.default') === 'redis') {
+                return Redis::keys($pattern);
+            }
+            return [];
+        } catch (\Exception $e) {
+            return [];
+        }
     }
 }

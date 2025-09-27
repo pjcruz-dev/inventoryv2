@@ -17,6 +17,8 @@ use App\Models\Disposal;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Services\AuditService;
+use App\Services\CacheService;
+use App\Services\PerformanceService;
 use App\Helpers\CurrencyHelper;
 
 class ReportController extends Controller

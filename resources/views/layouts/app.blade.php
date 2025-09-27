@@ -899,14 +899,23 @@
                             </li>
                             @endcan
                             
-                            @can('view_reports')
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}" href="{{ route('reports.index') }}">
-                                    <i class="fas fa-chart-bar"></i>
-                                    Reports & Analytics
-                                </a>
-                            </li>
-                            @endcan
+        @can('view_reports')
+        <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}" href="{{ route('reports.index') }}">
+                <i class="fas fa-chart-bar"></i>
+                Reports & Analytics
+            </a>
+        </li>
+        @endcan
+        
+        @can('view_system_health')
+        <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('system.*') ? 'active' : '' }}" href="{{ route('system.health') }}">
+                <i class="fas fa-heartbeat"></i>
+                System Health
+            </a>
+        </li>
+        @endcan
                         </ul>
                         
                         <hr class="my-3" style="border-color: rgba(255,255,255,0.2);">

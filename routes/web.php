@@ -25,6 +25,7 @@ use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\DisposalController;
 use App\Http\Controllers\SecurityAuditController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SystemHealthController;
 use App\Http\Controllers\ChangePasswordController;
 
 Route::get('/', function () {
@@ -242,5 +243,13 @@ Route::prefix('reports')->name('reports.')->middleware(['auth', 'check.permissio
     Route::get('/financial', [ReportController::class, 'financial'])->name('financial');
     Route::get('/maintenance', [ReportController::class, 'maintenance'])->name('maintenance');
     Route::get('/security', [SecurityAuditController::class, 'index'])->name('security');
-    Route::post('/export', [ReportController::class, 'export'])->name('export');
-});
+        Route::post('/export', [ReportController::class, 'export'])->name('export');
+    });
+
+    // System Health Routes
+    Route::prefix('system')->name('system.')->middleware(['auth', 'check.permission:view_system_health'])->group(function () {
+        Route::get('/health', [SystemHealthController::class, 'index'])->name('health');
+        Route::get('/health/metrics', [SystemHealthController::class, 'metrics'])->name('health.metrics');
+        Route::post('/health/clear-cache', [SystemHealthController::class, 'clearCache'])->name('health.clear-cache');
+        Route::post('/health/warm-cache', [SystemHealthController::class, 'warmUpCache'])->name('health.warm-cache');
+    });
