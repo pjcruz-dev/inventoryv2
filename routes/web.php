@@ -24,6 +24,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\DisposalController;
 use App\Http\Controllers\SecurityAuditController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ChangePasswordController;
 
 Route::get('/', function () {
@@ -231,4 +232,15 @@ Route::prefix('security')->name('security.')->middleware(['auth', 'check.permiss
     Route::get('/audit/export', [SecurityAuditController::class, 'export'])->name('audit.export');
     Route::get('/audit/model-trail/{modelType}/{modelId}', [SecurityAuditController::class, 'modelAuditTrail'])->name('audit.model-trail');
     Route::post('/audit/clear-old-logs', [SecurityAuditController::class, 'clearOldLogs'])->name('audit.clear-old-logs');
+});
+
+// Reports Routes
+Route::prefix('reports')->name('reports.')->middleware(['auth', 'check.permission:view_reports'])->group(function () {
+    Route::get('/', [ReportController::class, 'index'])->name('index');
+    Route::get('/asset-analytics', [ReportController::class, 'assetAnalytics'])->name('asset-analytics');
+    Route::get('/user-activity', [ReportController::class, 'userActivity'])->name('user-activity');
+    Route::get('/financial', [ReportController::class, 'financial'])->name('financial');
+    Route::get('/maintenance', [ReportController::class, 'maintenance'])->name('maintenance');
+    Route::get('/security', [SecurityAuditController::class, 'index'])->name('security');
+    Route::post('/export', [ReportController::class, 'export'])->name('export');
 });
