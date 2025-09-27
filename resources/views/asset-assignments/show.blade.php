@@ -22,6 +22,27 @@
                 </div>
                 
                 <div class="card-body">
+                    @if (session('success'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+
+                    @if (session('warning'))
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>{{ session('warning') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+
+                    @if (session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-times-circle me-2"></i>{{ session('error') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+
                     <div class="row">
                         <!-- Asset Information -->
                         <div class="col-md-6">
@@ -282,7 +303,7 @@
                         <div>
                             @if($assetAssignment->status !== 'returned')
                                 @can('edit_asset_assignments')
-                                <button type="button" class="btn btn-success me-2" onclick="markAsReturned()">
+                                <button type="button" class="btn btn-success me-2" onclick="markAsReturned()" data-bs-toggle="modal" data-bs-target="#returnModal">
                                     <i class="fas fa-undo me-1"></i>Mark as Returned
                                 </button>
                                 @endcan
@@ -337,28 +358,53 @@
                 <h5 class="modal-title">Mark as Returned</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ route('asset-assignments.return', $assetAssignment) }}" method="POST">
+            <form action="{{ route('asset-assignments.return', $assetAssignment) }}" method="POST" id="returnForm">
                 @csrf
                 <div class="modal-body">
-                    <p>Mark this asset assignment as returned?</p>
-                    <div class="mb-3">
-                        <label for="return_date_modal" class="form-label">Return Date</label>
-                        <input type="date" name="return_date" id="return_date_modal" 
-                               class="form-control" value="{{ date('Y-m-d') }}" required>
+                    @if($errors->any())
+                        <div class="alert alert-danger">
+                            <h6><i class="fas fa-exclamation-triangle me-2"></i>Please fix the following errors:</h6>
+                            <ul class="mb-0">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Asset:</strong> {{ $assetAssignment->asset->name }} ({{ $assetAssignment->asset->asset_tag }})<br>
+                        <strong>Assigned to:</strong> {{ $assetAssignment->user->first_name }} {{ $assetAssignment->user->last_name }}
                     </div>
+                    <p>Are you sure you want to mark this asset assignment as returned?</p>
+                    
+                    <div class="mb-3">
+                        <label for="return_date_modal" class="form-label">Return Date <span class="text-danger">*</span></label>
+                        <input type="date" name="return_date" id="return_date_modal" 
+                               class="form-control @error('return_date') is-invalid @enderror" 
+                               value="{{ old('return_date', date('Y-m-d')) }}" 
+                               max="{{ date('Y-m-d') }}" 
+                               required>
+                        @error('return_date')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    
                     <div class="mb-3">
                         <label for="return_notes" class="form-label">Return Notes</label>
-                        <textarea name="notes" id="return_notes" class="form-control" rows="3" 
-                                  placeholder="Add any notes about the return...">{{ $assetAssignment->notes }}</textarea>
+                        <textarea name="notes" id="return_notes" class="form-control @error('notes') is-invalid @enderror" 
+                                  rows="3" placeholder="Add any notes about the return...">{{ old('notes', $assetAssignment->notes) }}</textarea>
+                        @error('notes')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
-                    <input type="hidden" name="status" value="returned">
-                    <input type="hidden" name="asset_id" value="{{ $assetAssignment->asset_id }}">
-                    <input type="hidden" name="user_id" value="{{ $assetAssignment->user_id }}">
-                    <input type="hidden" name="assigned_date" value="{{ $assetAssignment->assigned_date?->format('Y-m-d') }}">
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">Mark as Returned</button>
+                    <button type="submit" class="btn btn-success" id="returnSubmitBtn">
+                        <i class="fas fa-undo me-1"></i>Mark as Returned
+                    </button>
                 </div>
             </form>
         </div>
@@ -370,18 +416,177 @@
 @push('scripts')
 <script>
 function confirmDelete() {
-    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
-    modal.show();
+    // Use jQuery if Bootstrap JS is loaded via jQuery, otherwise try vanilla JS
+    if (typeof $ !== 'undefined' && $.fn.modal) {
+        $('#deleteModal').modal('show');
+    } else if (typeof bootstrap !== 'undefined') {
+        const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        modal.show();
+    } else {
+        // Fallback: try to show modal by adding show class
+        const modal = document.getElementById('deleteModal');
+        if (modal) {
+            modal.classList.add('show');
+            modal.style.display = 'block';
+            modal.setAttribute('aria-modal', 'true');
+            modal.setAttribute('role', 'dialog');
+            
+            // Add backdrop
+            const backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop fade show';
+            backdrop.id = 'deleteModalBackdrop';
+            document.body.appendChild(backdrop);
+            
+            // Close modal when clicking backdrop
+            backdrop.onclick = function() {
+                closeDeleteModal();
+            };
+            
+            // Close modal when clicking close button
+            const closeBtn = modal.querySelector('.btn-close');
+            if (closeBtn) {
+                closeBtn.onclick = closeDeleteModal;
+            }
+            
+            // Close modal when clicking cancel button
+            const cancelBtn = modal.querySelector('[data-bs-dismiss="modal"]');
+            if (cancelBtn) {
+                cancelBtn.onclick = closeDeleteModal;
+            }
+        }
+    }
+}
+
+function closeDeleteModal() {
+    const modal = document.getElementById('deleteModal');
+    const backdrop = document.getElementById('deleteModalBackdrop');
+    
+    if (modal) {
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+        modal.removeAttribute('aria-modal');
+        modal.removeAttribute('role');
+    }
+    
+    if (backdrop) {
+        backdrop.remove();
+    }
 }
 
 function markAsReturned() {
-    const modal = new bootstrap.Modal(document.getElementById('returnModal'));
-    modal.show();
+    // Use jQuery if Bootstrap JS is loaded via jQuery, otherwise try vanilla JS
+    if (typeof $ !== 'undefined' && $.fn.modal) {
+        $('#returnModal').modal('show');
+    } else if (typeof bootstrap !== 'undefined') {
+        const modal = new bootstrap.Modal(document.getElementById('returnModal'));
+        modal.show();
+    } else {
+        // Fallback: try to show modal by adding show class
+        const modal = document.getElementById('returnModal');
+        if (modal) {
+            modal.classList.add('show');
+            modal.style.display = 'block';
+            modal.setAttribute('aria-modal', 'true');
+            modal.setAttribute('role', 'dialog');
+            
+            // Add backdrop
+            const backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop fade show';
+            backdrop.id = 'returnModalBackdrop';
+            document.body.appendChild(backdrop);
+            
+            // Close modal when clicking backdrop
+            backdrop.onclick = function() {
+                closeModal();
+            };
+            
+            // Close modal when clicking close button
+            const closeBtn = modal.querySelector('.btn-close');
+            if (closeBtn) {
+                closeBtn.onclick = function() {
+                    if (typeof window.customCloseModal === 'function') {
+                        window.customCloseModal();
+                    } else {
+                        closeModal();
+                    }
+                };
+            }
+            
+            // Close modal when clicking cancel button
+            const cancelBtn = modal.querySelector('[data-bs-dismiss="modal"]');
+            if (cancelBtn) {
+                cancelBtn.onclick = function() {
+                    if (typeof window.customCloseModal === 'function') {
+                        window.customCloseModal();
+                    } else {
+                        closeModal();
+                    }
+                };
+            }
+        }
+    }
+}
+
+function closeModal() {
+    const modal = document.getElementById('returnModal');
+    const backdrop = document.getElementById('returnModalBackdrop');
+    
+    if (modal) {
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+        modal.removeAttribute('aria-modal');
+        modal.removeAttribute('role');
+    }
+    
+    if (backdrop) {
+        backdrop.remove();
+    }
 }
 
 function printAssignment() {
     window.print();
 }
+
+// Enhanced return form handling
+document.addEventListener('DOMContentLoaded', function() {
+    const returnForm = document.getElementById('returnForm');
+    const returnSubmitBtn = document.getElementById('returnSubmitBtn');
+    
+    if (returnForm && returnSubmitBtn) {
+        returnForm.addEventListener('submit', function(e) {
+            // Prevent double submission
+            returnSubmitBtn.disabled = true;
+            returnSubmitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
+            
+            // Re-enable button after 5 seconds as fallback
+            setTimeout(() => {
+                returnSubmitBtn.disabled = false;
+                returnSubmitBtn.innerHTML = '<i class="fas fa-undo me-1"></i>Mark as Returned';
+            }, 5000);
+        });
+        
+        // Reset form when modal is hidden
+        const returnModal = document.getElementById('returnModal');
+        if (returnModal) {
+            // Handle modal close events
+            const resetForm = function() {
+                returnSubmitBtn.disabled = false;
+                returnSubmitBtn.innerHTML = '<i class="fas fa-undo me-1"></i>Mark as Returned';
+                returnForm.reset();
+            };
+            
+            // Try Bootstrap event first, then fallback to custom close function
+            returnModal.addEventListener('hidden.bs.modal', resetForm);
+            returnModal.addEventListener('modalHidden', resetForm);
+            
+            // Also handle when our custom closeModal function is called
+            window.customCloseModal = function() {
+                resetForm();
+                closeModal();
+            };
+        }
+    }
+});
 </script>
 
 <style>

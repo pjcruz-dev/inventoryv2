@@ -339,37 +339,77 @@ class AssetAssignmentController extends Controller
      */
     public function markAsReturned(Request $request, AssetAssignment $assignment)
     {
+        // Check if assignment is already returned
+        if ($assignment->status === 'returned') {
+            return redirect()->back()
+                           ->with('warning', 'This asset assignment is already marked as returned.');
+        }
+        
         $request->validate([
-            'return_date' => 'required|date',
+            'return_date' => 'required|date|before_or_equal:today',
             'notes' => 'nullable|string|max:1000'
         ]);
         
         $oldData = $assignment->toArray();
+        $oldAssetData = $assignment->asset->toArray();
         
-        // Update assignment status to returned
-        $assignment->update([
-            'status' => 'returned',
-            'return_date' => $request->return_date,
-            'notes' => $request->notes
-        ]);
-        
-        // Update asset status to Available
-        $assignment->asset->update([
-            'status' => 'Available',
-            'assigned_to' => null,
-            'assigned_date' => null
-        ]);
-        
-        // Log activity
-        Log::info('Asset assignment marked as returned', [
-            'user_id' => Auth::id(),
-            'assignment_id' => $assignment->id,
-            'asset_id' => $assignment->asset_id,
-            'return_date' => $request->return_date,
-            'old_data' => $oldData
-        ]);
-        
-        return redirect()->route('asset-assignments.show', $assignment)
-                        ->with('success', 'Asset assignment marked as returned successfully.');
+        try {
+            \DB::beginTransaction();
+            
+            // Update assignment status to returned
+            $assignment->update([
+                'status' => 'returned',
+                'return_date' => $request->return_date,
+                'notes' => $request->notes
+            ]);
+            
+            // Update asset status to Available
+            $assignment->asset->update([
+                'status' => 'Available',
+                'assigned_to' => null,
+                'assigned_date' => null,
+                'movement' => 'Returned'
+            ]);
+            
+            // Mark any pending confirmations as completed (asset returned)
+            \App\Models\AssetAssignmentConfirmation::where('asset_id', $assignment->asset_id)
+                ->where('status', 'pending')
+                ->update([
+                    'status' => 'confirmed',
+                    'confirmed_at' => now(),
+                    'notes' => 'Asset returned - confirmation automatically completed'
+                ]);
+            
+            \DB::commit();
+            
+            // Log activity
+            Log::info('Asset assignment marked as returned', [
+                'user_id' => Auth::id(),
+                'assignment_id' => $assignment->id,
+                'asset_id' => $assignment->asset_id,
+                'return_date' => $request->return_date,
+                'old_assignment_data' => $oldData,
+                'old_asset_data' => $oldAssetData,
+                'new_assignment_data' => $assignment->fresh()->toArray(),
+                'new_asset_data' => $assignment->asset->fresh()->toArray()
+            ]);
+            
+            return redirect()->route('asset-assignments.show', $assignment)
+                            ->with('success', 'Asset assignment marked as returned successfully. Asset status updated to Available.');
+                            
+        } catch (\Exception $e) {
+            \DB::rollback();
+            
+            Log::error('Failed to mark asset assignment as returned', [
+                'user_id' => Auth::id(),
+                'assignment_id' => $assignment->id,
+                'asset_id' => $assignment->asset_id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->back()
+                           ->withErrors(['return_error' => 'Failed to mark assignment as returned: ' . $e->getMessage()]);
+        }
     }
 }
