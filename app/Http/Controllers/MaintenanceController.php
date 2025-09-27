@@ -78,6 +78,93 @@ class MaintenanceController extends Controller
     }
 
     /**
+     * Show the form for bulk creating maintenance records.
+     */
+    public function bulkCreate()
+    {
+        $assets = Asset::whereIn('status', ['Available', 'Assigned', 'Issue Reported'])
+                      ->where('status', '!=', 'Under Maintenance')
+                      ->orderBy('name')
+                      ->get();
+        $vendors = Vendor::orderBy('name')->get();
+        
+        return view('maintenance.bulk-create', compact('assets', 'vendors'));
+    }
+
+    /**
+     * Store bulk created maintenance records.
+     */
+    public function bulkStore(Request $request)
+    {
+        // Get only the selected assets from the request
+        $selectedAssets = $request->input('selected_assets', []);
+        
+        if (empty($selectedAssets)) {
+            return redirect()->back()
+                           ->withErrors(['selected_assets' => 'Please select at least one asset.'])
+                           ->withInput();
+        }
+
+        // Validate only the selected maintenance records
+        $validationRules = [];
+        foreach ($selectedAssets as $index => $assetId) {
+            $validationRules["maintenance.{$index}.asset_id"] = 'required|exists:assets,id';
+            $validationRules["maintenance.{$index}.vendor_id"] = 'nullable|exists:vendors,id';
+            $validationRules["maintenance.{$index}.issue_reported"] = 'required|string|max:1000';
+            $validationRules["maintenance.{$index}.repair_action"] = 'nullable|string|max:1000';
+            $validationRules["maintenance.{$index}.cost"] = 'nullable|numeric|min:0|max:999999.99';
+            $validationRules["maintenance.{$index}.start_date"] = 'required|date';
+            $validationRules["maintenance.{$index}.end_date"] = 'nullable|date|after_or_equal:maintenance.{$index}.start_date';
+            $validationRules["maintenance.{$index}.status"] = 'required|in:Scheduled,In Progress,Completed,On Hold,Cancelled';
+            $validationRules["maintenance.{$index}.remarks"] = 'nullable|string|max:1000';
+        }
+
+        $request->validate($validationRules);
+
+        $created = 0;
+        $errors = [];
+
+        \DB::beginTransaction();
+        try {
+            foreach ($selectedAssets as $index => $assetId) {
+                $maintenanceData = $request->input("maintenance.{$index}");
+                
+                // Create maintenance record
+                $maintenance = Maintenance::create($maintenanceData);
+
+                // Update asset status to Under Maintenance
+                $asset = Asset::find($assetId);
+                $asset->update([
+                    'status' => 'Under Maintenance',
+                    'movement' => 'Transferred'
+                ]);
+
+                $created++;
+            }
+
+            \DB::commit();
+
+            $message = "Successfully created {$created} maintenance records.";
+            if (!empty($errors)) {
+                $message .= " " . count($errors) . " records were skipped due to errors.";
+                return redirect()->route('maintenance.index')
+                               ->with('warning', $message)
+                               ->with('errors', $errors);
+            }
+
+            return redirect()->route('maintenance.index')
+                           ->with('success', $message);
+
+        } catch (\Exception $e) {
+            \DB::rollback();
+            
+            return redirect()->back()
+                           ->withErrors(['bulk_create' => 'Failed to create maintenance records: ' . $e->getMessage()])
+                           ->withInput();
+        }
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)

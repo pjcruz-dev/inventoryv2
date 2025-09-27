@@ -171,6 +171,8 @@ Route::get('/dashboard/asset-movements', [App\Http\Controllers\DashboardControll
         Route::get('/', [MaintenanceController::class, 'index'])->name('index');
         Route::get('/create', [MaintenanceController::class, 'create'])->name('create')->middleware('check.permission:create_maintenance');
         Route::post('/', [MaintenanceController::class, 'store'])->name('store')->middleware('check.permission:create_maintenance');
+        Route::get('/bulk/create', [MaintenanceController::class, 'bulkCreate'])->name('bulk-create')->middleware('check.permission:create_maintenance');
+        Route::post('/bulk/store', [MaintenanceController::class, 'bulkStore'])->name('bulk-store')->middleware('check.permission:create_maintenance');
         Route::get('/{maintenance}', [MaintenanceController::class, 'show'])->name('show');
         Route::get('/{maintenance}/edit', [MaintenanceController::class, 'edit'])->name('edit')->middleware('check.permission:edit_maintenance');
         Route::put('/{maintenance}', [MaintenanceController::class, 'update'])->name('update')->middleware('check.permission:edit_maintenance');
@@ -184,6 +186,8 @@ Route::get('/dashboard/asset-movements', [App\Http\Controllers\DashboardControll
         Route::get('/', [DisposalController::class, 'index'])->name('index');
         Route::get('/create', [DisposalController::class, 'create'])->name('create')->middleware('check.permission:create_disposal');
         Route::post('/', [DisposalController::class, 'store'])->name('store')->middleware('check.permission:create_disposal');
+        Route::get('/bulk/create', [DisposalController::class, 'bulkCreate'])->name('bulk-create')->middleware('check.permission:create_disposal');
+        Route::post('/bulk/store', [DisposalController::class, 'bulkStore'])->name('bulk-store')->middleware('check.permission:create_disposal');
         Route::get('/{disposal}', [DisposalController::class, 'show'])->name('show');
         Route::get('/{disposal}/edit', [DisposalController::class, 'edit'])->name('edit')->middleware('check.permission:edit_disposal');
         Route::put('/{disposal}', [DisposalController::class, 'update'])->name('update')->middleware('check.permission:edit_disposal');
