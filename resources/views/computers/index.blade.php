@@ -197,10 +197,11 @@
                     <div class="alert alert-info">
                         <h6><i class="fas fa-info-circle me-2"></i>Import Guidelines:</h6>
                         <ul class="mb-0">
-                            <li>CSV must include: asset_tag, category_name, vendor_name, name, description, serial_number, purchase_date, warranty_end, cost, status, processor, ram, storage, os</li>
-                            <li>Category and vendor must exist in the system</li>
-                            <li>Asset tags must be unique</li>
-                            <li>Dates should be in YYYY-MM-DD format</li>
+                            <li>CSV must include: asset_id, processor, memory_ram, storage, operating_system, computer_type</li>
+                            <li>asset_id must reference an existing Computer Hardware asset</li>
+                            <li>Asset must not already be used for a computer</li>
+                            <li>Optional fields: graphics_card</li>
+                            <li>Computer types: Desktop, Laptop, Server, Workstation</li>
                         </ul>
                     </div>
                 </div>

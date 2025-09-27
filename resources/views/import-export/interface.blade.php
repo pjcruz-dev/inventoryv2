@@ -9,58 +9,6 @@ let selectedModule = null;
 let selectedAction = null;
 let currentStep = 1;
 
-// Global function for testing module selection
-function selectUsersModule() {
-    console.log('Manually selecting users module');
-    $('.module-card').removeClass('selected');
-    $('.module-card[data-module="users"]').addClass('selected');
-    
-    // Update both local and global selectedModule variables
-    selectedModule = 'users';
-    window.selectedModule = selectedModule;
-    
-    console.log('Module selected:', selectedModule);
-    console.log('Global selectedModule:', window.selectedModule);
-    
-    $('#next-step-1').prop('disabled', false).removeClass('btn-secondary').addClass('btn-primary');
-    
-    console.log('Next button enabled:', !$('#next-step-1').prop('disabled'));
-    console.log('Next button classes:', $('#next-step-1').attr('class'));
-    
-    // Also trigger the updateSelectionStatus if it exists
-    if (typeof updateSelectionStatus === 'function') {
-        updateSelectionStatus();
-    }
-    
-    console.log('Users module selected successfully');
-}
-
-// Global function for testing action selection
-function selectImportAction() {
-    console.log('Manually selecting import action');
-    $('.action-card').removeClass('selected');
-    $('.action-card[data-action="import"]').addClass('selected');
-    
-    // Update both local and global selectedAction variables
-    selectedAction = 'import';
-    window.selectedAction = selectedAction;
-    
-    console.log('Action selected:', selectedAction);
-    console.log('Global selectedAction:', window.selectedAction);
-    
-    $('#next-step-2').prop('disabled', false).removeClass('btn-secondary').addClass('btn-primary');
-    
-    console.log('Next button enabled:', !$('#next-step-2').prop('disabled'));
-    console.log('Next button classes:', $('#next-step-2').attr('class'));
-    
-    // Also trigger the updateSelectionStatus if it exists
-    if (typeof updateSelectionStatus === 'function') {
-        updateSelectionStatus();
-    }
-    
-    console.log('Import action selected successfully');
-}
-
 // Global function for downloading template
 function downloadTemplate() {
     if (selectedModule) {
@@ -70,9 +18,7 @@ function downloadTemplate() {
     }
 }
 
-// Make functions globally accessible immediately
-window.selectUsersModule = selectUsersModule;
-window.selectImportAction = selectImportAction;
+// Make function globally accessible
 window.downloadTemplate = downloadTemplate;
 </script>
 
@@ -172,12 +118,12 @@ window.downloadTemplate = downloadTemplate;
     }
     
     .step-content {
-        display: none;
+        display: none !important;
         animation: fadeIn 0.5s ease-in;
     }
     
     .step-content.active {
-        display: block;
+        display: block !important;
     }
     
     @keyframes fadeIn {
@@ -438,8 +384,6 @@ window.downloadTemplate = downloadTemplate;
                     <div class="col-md-8">
                         <h4 class="mb-2">🚀 Advanced Import/Export Manager</h4>
                         <p class="mb-0">Streamlined data management with intelligent validation, bulk operations, and real-time progress tracking.</p>
-                        <button class="btn btn-sm btn-warning mt-2" onclick="selectUsersModule()">🔧 Test: Select Users Module</button>
-                        <button class="btn btn-sm btn-info mt-2" onclick="selectImportAction()">🔧 Test: Select Import Action</button>
                     </div>
             <div class="col-md-4 text-end">
                 <div class="d-flex justify-content-end gap-2">
@@ -949,20 +893,15 @@ window.downloadTemplate = downloadTemplate;
 <script>
 
 $(document).ready(function() {
-    console.log('Import/Export interface loaded');
-    console.log('jQuery version:', $.fn.jquery);
-    console.log('Module cards found:', $('.module-card').length);
-    console.log('Action cards found:', $('.action-card').length);
-    console.log('Step 2 content visible:', $('#step-2-content').is(':visible'));
-    
     // Use global variables
-    console.log('Global selectedModule:', window.selectedModule);
-    console.log('Global selectedAction:', window.selectedAction);
+    
+    // Ensure only Step 1 is visible on page load
+    $('.step-content').removeClass('active').hide();
+    $('#step-1-content').addClass('active').show();
+    currentStep = 1;
     
     // Step navigation
     function goToStep(step) {
-        console.log('Going to step:', step);
-        
         // Hide all step contents
         $('.step-content').removeClass('active').hide();
         
@@ -970,10 +909,6 @@ $(document).ready(function() {
         $(`#step-${step}-content`).addClass('active').show();
         
         currentStep = step;
-        
-        console.log('Step changed to:', step);
-        console.log('Active step content:', $(`#step-${step}-content`).length);
-        console.log('Step 2 content visible:', $('#step-2-content').is(':visible'));
     }
     
     // Update selection status display
@@ -1000,20 +935,12 @@ $(document).ready(function() {
         e.preventDefault();
         e.stopPropagation();
         
-        console.log('Module card clicked:', $(this).data('module'));
-        
         $('.module-card').removeClass('selected');
         $(this).addClass('selected');
         selectedModule = $(this).data('module');
         window.selectedModule = selectedModule; // Update global reference
         
-        console.log('Module selected:', selectedModule);
-        console.log('Global selectedModule:', window.selectedModule);
-        
         $('#next-step-1').prop('disabled', false).removeClass('btn-secondary').addClass('btn-primary');
-        
-        console.log('Next button enabled:', !$('#next-step-1').prop('disabled'));
-        console.log('Next button classes:', $('#next-step-1').attr('class'));
         
         // Update selection status
         updateSelectionStatus();
@@ -1024,21 +951,17 @@ $(document).ready(function() {
         e.preventDefault();
         e.stopPropagation();
         
-        console.log('Module card clicked (alternative):', $(this).data('module'));
-        
         $('.module-card').removeClass('selected');
         $(this).addClass('selected');
         selectedModule = $(this).data('module');
         window.selectedModule = selectedModule; // Update global reference
         $('#next-step-1').prop('disabled', false).removeClass('btn-secondary').addClass('btn-primary');
         
-        console.log('Module selected (alternative):', selectedModule);
-        
         // Update selection status
         updateSelectionStatus();
     });
     
-    // Make selectedModule accessible globally for debugging
+    // Make selectedModule accessible globally
     window.selectedModule = selectedModule;
     
     // Action selection
@@ -1046,20 +969,12 @@ $(document).ready(function() {
         e.preventDefault();
         e.stopPropagation();
         
-        console.log('Action card clicked:', $(this).data('action'));
-        console.log('Action card element:', $(this));
-        
         $('.action-card').removeClass('selected');
         $(this).addClass('selected');
         selectedAction = $(this).data('action');
         window.selectedAction = selectedAction; // Update global reference
         
         $('#next-step-2').prop('disabled', false).removeClass('btn-secondary').addClass('btn-primary');
-        
-        console.log('Action selected:', selectedAction);
-        console.log('Global selectedAction:', window.selectedAction);
-        console.log('Next button enabled:', !$('#next-step-2').prop('disabled'));
-        console.log('Next button classes:', $('#next-step-2').attr('class'));
         
         // Update selection status
         updateSelectionStatus();
@@ -1070,8 +985,6 @@ $(document).ready(function() {
         e.preventDefault();
         e.stopPropagation();
         
-        console.log('Action card clicked (alternative):', $(this).data('action'));
-        
         $('.action-card').removeClass('selected');
         $(this).addClass('selected');
         selectedAction = $(this).data('action');
@@ -1079,23 +992,15 @@ $(document).ready(function() {
         
         $('#next-step-2').prop('disabled', false).removeClass('btn-secondary').addClass('btn-primary');
         
-        console.log('Action selected (alternative):', selectedAction);
-        
         // Update selection status
         updateSelectionStatus();
     });
     
     // Step navigation buttons
     $('#next-step-1').click(function() {
-        console.log('Next step 1 clicked, selectedModule:', selectedModule);
-        console.log('Button disabled state:', $(this).prop('disabled'));
-        console.log('Button classes:', $(this).attr('class'));
-        
         if (selectedModule) {
-            console.log('Proceeding to step 2');
             goToStep(2);
         } else {
-            console.log('No module selected');
             alert('Please select a module first');
         }
     });
@@ -1106,13 +1011,10 @@ $(document).ready(function() {
     });
     
     $('#next-step-2').click(function() {
-        console.log('Next step 2 clicked, selectedAction:', selectedAction);
         if (selectedAction) {
-            console.log('Proceeding to step 3');
             setupStep3();
             goToStep(3);
         } else {
-            console.log('No action selected');
             alert('Please select an action first');
         }
     });
@@ -1139,12 +1041,9 @@ $(document).ready(function() {
     
     // File upload handling - Multiple approaches for better compatibility
     function triggerFileInput() {
-        console.log('Triggering file input');
         const fileInput = document.getElementById('file-input');
         if (fileInput) {
             fileInput.click();
-        } else {
-            console.error('File input not found');
         }
     }
     
@@ -1152,28 +1051,19 @@ $(document).ready(function() {
     $(document).on('click', '#browse-btn', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        console.log('Browse button clicked');
         triggerFileInput();
     });
     
     $(document).on('click', '#upload-zone', function(e) {
         // Only trigger if not clicking on the button
         if (!$(e.target).closest('#browse-btn').length) {
-            console.log('Upload zone clicked');
             triggerFileInput();
         }
     });
     
     $(document).on('change', '#file-input', function() {
-        console.log('File input changed');
         const file = this.files[0];
         if (file) {
-            console.log('File selected:', {
-                name: file.name,
-                size: file.size,
-                type: file.type,
-                lastModified: file.lastModified
-            });
             
             // Validate file type
             const allowedTypes = ['.xlsx', '.xls', '.csv'];
@@ -1212,11 +1102,9 @@ $(document).ready(function() {
             
             // If size is 0, try to read the file to get actual size
             if (actualSize === 0) {
-                console.warn('File size is 0, attempting to read file...');
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const actualSize = e.target.result.byteLength || e.target.result.length || 0;
-                    console.log('FileReader determined size:', actualSize);
                     updateFileSizeDisplay(actualSize);
                 };
                 reader.readAsArrayBuffer(file);
@@ -1245,19 +1133,12 @@ $(document).ready(function() {
                     sizeText = (size / 1024 / 1024).toFixed(2) + ' MB';
                 }
                 $('#file-size').text(sizeText);
-                console.log('File size updated:', sizeText);
             }
             
             $('#file-name').text(file.name);
             $('#file-size').text(fileSizeText);
             $('#file-info').show();
             $('#next-step-3').prop('disabled', false);
-            
-            console.log('File validation successful:', {
-                name: file.name,
-                size: file.size,
-                formattedSize: fileSizeText
-            });
         } else {
             // No file selected
             $('#file-info').hide();
@@ -1268,7 +1149,6 @@ $(document).ready(function() {
     $(document).on('click', '#remove-file', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        console.log('Remove file clicked');
         $('#file-input').val('');
         $('#file-info').hide();
         $('#next-step-3').prop('disabled', true);
@@ -1290,15 +1170,9 @@ $(document).ready(function() {
         $(this).removeClass('dragover');
         
         const files = e.originalEvent.dataTransfer.files;
-        console.log('Files dropped:', files.length);
         
         if (files.length > 0) {
             const file = files[0];
-            console.log('Dropped file:', {
-                name: file.name,
-                size: file.size,
-                type: file.type
-            });
             
             // Create a new FileList with the dropped file
             const fileInput = document.getElementById('file-input');
@@ -1333,13 +1207,10 @@ $(document).ready(function() {
     
     // Step 3 to 4
     $('#next-step-3').click(function() {
-        console.log('Next step 3 clicked, selectedAction:', selectedAction);
         if (selectedAction === 'import') {
-            console.log('Starting import process');
             // Start import process
             performImport();
         } else {
-            console.log('Going directly to completion for template/export');
             // For template/export, go directly to completion
             goToStep(5);
             showCompletion();
@@ -1785,12 +1656,108 @@ $(document).ready(function() {
     
     function goBackToStep(stepNumber) {
         // Reset current step
-        $('.step').removeClass('active');
-        $('.step-content').removeClass('active');
+        $('.step-content').removeClass('active').hide();
+        
+        // If going back to step 3 (upload), reset file input
+        if (stepNumber === 3) {
+            $('#file-input').val('');
+            $('#file-info').hide();
+            $('#next-step-3').prop('disabled', true);
+        }
         
         // Go to specified step
         goToStep(stepNumber);
     }
+    
+    // Make goBackToStep globally accessible
+    window.goBackToStep = goBackToStep;
+    
+    // Function to proceed with partial import
+    function proceedWithPartialImport() {
+        if (!selectedModule) {
+            alert('Please select a module first');
+            return;
+        }
+        
+        const fileInput = document.getElementById('file-input');
+        if (fileInput.files.length === 0) {
+            alert('Please select a file to import.');
+            return;
+        }
+        
+        // Show confirmation dialog
+        if (!confirm('Are you sure you want to proceed with partial import? This will import only valid records and skip invalid ones.')) {
+            return;
+        }
+        
+        goToStep(4);
+        showProgress('Importing valid records only...');
+        
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        formData.append('module', selectedModule);
+        formData.append('partial_import', 'true'); // Flag for partial import
+        formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+        
+        // Perform the partial import
+        $.ajax({
+            url: `/import-export/import/${selectedModule}`,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                hideProgress();
+                $('#validation-results').show();
+                
+                if (response.success || response.imported > 0) {
+                    $('#success-summary').show();
+                    $('#warning-summary').hide();
+                    $('#error-summary').hide();
+                    $('#success-count').text(response.imported || 0);
+                    $('#warning-count').text(response.warnings || 0);
+                    $('#error-count').text(response.errors || 0);
+                    
+                    // Show partial import notice
+                    if (response.errors > 0) {
+                        $('#success-summary .alert-text').html(
+                            '<strong>Partial Import Completed!</strong><br>' +
+                            'Successfully imported ' + (response.imported || 0) + ' valid records.<br>' +
+                            '<small class="text-muted">' + (response.errors || 0) + ' invalid records were skipped.</small>'
+                        );
+                    }
+                } else {
+                    $('#error-summary').show();
+                    $('#success-summary').hide();
+                    $('#warning-summary').hide();
+                    $('#success-count').text(0);
+                    $('#warning-count').text(0);
+                    $('#error-count').text(response.errors || 0);
+                }
+                
+                $('#next-step-4').prop('disabled', false);
+            },
+            error: function(xhr, status, error) {
+                hideProgress();
+                $('#validation-results').show();
+                $('#error-summary').show();
+                $('#success-summary').hide();
+                $('#warning-summary').hide();
+                
+                let errorMessage = 'Partial import failed. Please try again.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                $('#error-summary .alert-text').text(errorMessage);
+            }
+        });
+    }
+    
+    // Make proceedWithPartialImport globally accessible
+    window.proceedWithPartialImport = proceedWithPartialImport;
     
     function downloadPreviewReport() {
         // Generate and download preview report
@@ -1895,7 +1862,6 @@ $(document).ready(function() {
             errorDetailsHtml += '</div>';
         }
         
-        console.log('Valid values response:', response.valid_values);
         
         if (response.valid_values) {
             errorDetailsHtml += '<div class="valid-values-section mb-3">';
@@ -1972,10 +1938,48 @@ $(document).ready(function() {
             errorDetailsHtml += '</div>';
         }
         
-        // Helpful action buttons
-        errorDetailsHtml += '<div class="text-center mt-3">';
-        errorDetailsHtml += '<div class="alert alert-success mb-3">';
-        errorDetailsHtml += '<h6><i class="fas fa-lightbulb"></i> Quick Fix Guide:</h6>';
+        // Import choice section
+        errorDetailsHtml += '<div class="text-center mt-4">';
+        errorDetailsHtml += '<div class="card border-warning">';
+        errorDetailsHtml += '<div class="card-header bg-warning text-dark">';
+        errorDetailsHtml += '<h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Import Options</h5>';
+        errorDetailsHtml += '</div>';
+        errorDetailsHtml += '<div class="card-body">';
+        errorDetailsHtml += '<p class="mb-3">You have validation errors. Choose how you want to proceed:</p>';
+        
+        // Import choice buttons
+        errorDetailsHtml += '<div class="row g-3">';
+        errorDetailsHtml += '<div class="col-md-6">';
+        errorDetailsHtml += '<div class="card h-100 border-success">';
+        errorDetailsHtml += '<div class="card-body text-center">';
+        errorDetailsHtml += '<i class="fas fa-check-circle fa-3x text-success mb-3"></i>';
+        errorDetailsHtml += '<h6 class="card-title">Full Import</h6>';
+        errorDetailsHtml += '<p class="card-text small">Fix all errors and import everything. Recommended for data integrity.</p>';
+        errorDetailsHtml += '<button class="btn btn-success" onclick="goBackToStep(3)">';
+        errorDetailsHtml += '<i class="fas fa-arrow-left"></i> Fix File & Re-upload';
+        errorDetailsHtml += '</button>';
+        errorDetailsHtml += '</div>';
+        errorDetailsHtml += '</div>';
+        errorDetailsHtml += '</div>';
+        
+        errorDetailsHtml += '<div class="col-md-6">';
+        errorDetailsHtml += '<div class="card h-100 border-info">';
+        errorDetailsHtml += '<div class="card-body text-center">';
+        errorDetailsHtml += '<i class="fas fa-exclamation-triangle fa-3x text-info mb-3"></i>';
+        errorDetailsHtml += '<h6 class="card-title">Partial Import</h6>';
+        errorDetailsHtml += '<p class="card-text small">Import only valid records and skip invalid ones.</p>';
+        errorDetailsHtml += '<button class="btn btn-info" onclick="proceedWithPartialImport()">';
+        errorDetailsHtml += '<i class="fas fa-play"></i> Import Valid Records Only';
+        errorDetailsHtml += '</button>';
+        errorDetailsHtml += '</div>';
+        errorDetailsHtml += '</div>';
+        errorDetailsHtml += '</div>';
+        errorDetailsHtml += '</div>';
+        
+        // Additional help section
+        errorDetailsHtml += '<div class="mt-3">';
+        errorDetailsHtml += '<div class="alert alert-light">';
+        errorDetailsHtml += '<h6><i class="fas fa-lightbulb"></i> Quick Fix Guide (for Full Import):</h6>';
         errorDetailsHtml += '<ol class="text-start mb-0 small">';
         errorDetailsHtml += '<li><strong>Open your file</strong> in Excel or a text editor</li>';
         errorDetailsHtml += '<li><strong>Find the errors</strong> using the row numbers above</li>';
@@ -1983,22 +1987,19 @@ $(document).ready(function() {
         errorDetailsHtml += '<li><strong>Save your file</strong> and upload it again</li>';
         errorDetailsHtml += '</ol>';
         errorDetailsHtml += '</div>';
-        
-        errorDetailsHtml += '<button class="btn btn-primary me-2" onclick="goBackToStep(3)">';
-        errorDetailsHtml += '<i class="fas fa-arrow-left"></i> Back to Upload Fixed File';
-        errorDetailsHtml += '</button>';
-        errorDetailsHtml += '<button class="btn btn-info" onclick="downloadTemplate()">';
+        errorDetailsHtml += '<button class="btn btn-outline-info btn-sm" onclick="downloadTemplate()">';
         errorDetailsHtml += '<i class="fas fa-download"></i> Download Template (Recommended)';
         errorDetailsHtml += '</button>';
+        errorDetailsHtml += '</div>';
+        
+        errorDetailsHtml += '</div>';
+        errorDetailsHtml += '</div>';
         errorDetailsHtml += '</div>';
         
         // Display the error details in the error-details div
         $('#error-details').html(errorDetailsHtml);
     }
     
-    function goBackToStep(stepNumber) {
-        goToStep(stepNumber);
-    }
     
     function showProgress(message) {
         $('#progress-container').show();
@@ -2071,11 +2072,6 @@ $(document).ready(function() {
         formData.append('validate_only', 'false'); // Actually import, don't just validate
         formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
         
-        // Debug: Log what we're sending
-        console.log('FormData contents:');
-        for (let [key, value] of formData.entries()) {
-            console.log(key + ': ' + value + ' (type: ' + typeof value + ')');
-        }
         
         // Perform the actual import
         $.ajax({
@@ -2088,7 +2084,6 @@ $(document).ready(function() {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             },
             success: function(response) {
-                console.log('Import successful:', response);
                 goToStep(5);
                 showActualCompletion(response);
             },
@@ -2136,23 +2131,16 @@ $(document).ready(function() {
     // Use event delegation in case button is dynamically created
     $(document).on('click', '#view-results', function(e) {
         e.preventDefault(); // Prevent any default form submission
-        console.log('View Results button clicked');
-        console.log('lastImportResponse:', window.lastImportResponse);
         showImportResults();
     });
     
     function showImportResults() {
-        console.log('showImportResults function called');
-        console.log('window.lastImportResponse:', window.lastImportResponse);
-        
         if (!window.lastImportResponse) {
-            console.log('No import response data available');
             alert('No import results available. Please perform an import first.');
             return;
         }
         
         const response = window.lastImportResponse;
-        console.log('Response data:', response);
         
         let resultsHtml = '<div class="import-results-detail">';
         resultsHtml += '<h4 class="text-success mb-3"><i class="fas fa-check-circle"></i> Import Results Details</h4>';
@@ -2237,13 +2225,8 @@ $(document).ready(function() {
         
         resultsHtml += '</div>';
         
-        console.log('Generated HTML:', resultsHtml);
-        console.log('Step 5 element:', $('#step-5-content'));
-        
         // Show results in a modal or replace step content
         $('#step-5-content').html(resultsHtml);
-        
-        console.log('HTML updated, step 5 content length:', $('#step-5-content').html().length);
     }
     
     // Make functions globally accessible for onclick handlers

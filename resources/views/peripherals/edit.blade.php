@@ -21,7 +21,7 @@
                                     @if($assets->count() > 0)
                                         @foreach($assets as $asset)
                                             <option value="{{ $asset->id }}" {{ (old('asset_id') ?? $peripheral->asset_id) == $asset->id ? 'selected' : '' }}>
-                                                {{ $asset->tag }} - {{ $asset->name }}
+                                                {{ $asset->asset_tag }} - {{ $asset->name }}
                                             </option>
                                         @endforeach
                                     @else

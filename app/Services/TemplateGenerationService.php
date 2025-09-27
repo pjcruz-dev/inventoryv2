@@ -53,14 +53,13 @@ class TemplateGenerationService
                 'notes' => ['name' => 'Notes', 'required' => false, 'type' => 'text', 'description' => 'Additional notes or comments']
             ],
             'computers' => [
-                'asset_id' => ['name' => 'Asset ID', 'required' => true, 'type' => 'integer', 'description' => 'Reference to existing asset ID'],
-                'asset_name' => ['name' => 'Asset Name', 'required' => true, 'type' => 'string', 'max_length' => 255, 'description' => 'Asset name for reference'],
-                'processor' => ['name' => 'Processor', 'required' => true, 'type' => 'string', 'max_length' => 255, 'description' => 'CPU model and specifications'],
-                'memory_ram' => ['name' => 'Memory (RAM)', 'required' => true, 'type' => 'string', 'max_length' => 255, 'description' => 'Memory specifications (e.g., 16GB DDR4)'],
-                'storage' => ['name' => 'Storage', 'required' => true, 'type' => 'string', 'max_length' => 255, 'description' => 'Storage specifications (e.g., 512GB SSD)'],
-                'graphics_card' => ['name' => 'Graphics Card', 'required' => false, 'type' => 'string', 'max_length' => 255, 'description' => 'Graphics card specifications'],
+                'asset_id' => ['name' => 'Asset ID', 'required' => true, 'type' => 'integer', 'description' => 'Reference to existing asset ID (must exist in system)'],
+                'processor' => ['name' => 'Processor', 'required' => true, 'type' => 'string', 'max_length' => 255, 'description' => 'CPU model and specifications (e.g., Intel Core i7-11700)'],
+                'memory_ram' => ['name' => 'Memory (RAM)', 'required' => true, 'type' => 'string', 'max_length' => 255, 'description' => 'Memory specifications (e.g., 16GB DDR4-3200)'],
+                'storage' => ['name' => 'Storage', 'required' => true, 'type' => 'string', 'max_length' => 255, 'description' => 'Storage specifications (e.g., 512GB NVMe SSD)'],
+                'graphics_card' => ['name' => 'Graphics Card', 'required' => false, 'type' => 'string', 'max_length' => 255, 'description' => 'Graphics card specifications (e.g., NVIDIA RTX 3060)'],
                 'computer_type' => ['name' => 'Computer Type', 'required' => true, 'type' => 'enum', 'options' => ['Desktop', 'Laptop', 'Server', 'Workstation'], 'description' => 'Type of computer'],
-                'operating_system' => ['name' => 'Operating System', 'required' => false, 'type' => 'enum', 'options' => ['Windows 10', 'Windows 11', 'MacOS', 'Ubuntu', 'CentOS'], 'description' => 'Installed operating system']
+                'operating_system' => ['name' => 'Operating System', 'required' => true, 'type' => 'string', 'max_length' => 255, 'description' => 'Installed operating system (e.g., Windows 11 Pro)']
             ],
             'users' => [
                 'employee_id' => ['name' => 'Employee ID', 'required' => true, 'type' => 'string', 'max_length' => 50, 'description' => 'Internal employee ID (unique)'],
@@ -94,21 +93,19 @@ class TemplateGenerationService
                 'asset_id' => ['name' => 'Asset ID', 'required' => true, 'type' => 'integer', 'description' => 'Reference to existing asset ID'],
                 'asset_name' => ['name' => 'Asset Name', 'required' => true, 'type' => 'string', 'max_length' => 255, 'description' => 'Asset name for reference'],
                 'size' => ['name' => 'Size', 'required' => true, 'type' => 'string', 'max_length' => 50, 'description' => 'Monitor screen size (e.g., 24")'],
-                'resolution' => ['name' => 'Resolution', 'required' => true, 'type' => 'enum', 'options' => ['1920x1080 (FullHD)', '2560x1440 (QHD)', '3840x2160 (4K UHD)', '1366x768 (HD)', '1680x1050 (WSXGA+)', '1920x1200 (WUXGA)', '2560x1600 (WQXGA)', '5120x2880 (5K)'], 'description' => 'Monitor resolution'],
-                'panel_type' => ['name' => 'Panel Type', 'required' => true, 'type' => 'enum', 'options' => ['LCD', 'LED', 'OLED', 'CRT', 'Plasma'], 'description' => 'Panel technology type']
+                'resolution' => ['name' => 'Resolution', 'required' => true, 'type' => 'enum', 'options' => ['1920x1080 (Full HD)', '2560x1440 (QHD)', '3840x2160 (4K UHD)', '1366x768 (HD)', '1680x1050 (WSXGA+)', '2560x1080 (UltraWide)', '3440x1440 (UltraWide QHD)'], 'description' => 'Monitor resolution'],
+                'panel_type' => ['name' => 'Panel Type', 'required' => true, 'type' => 'enum', 'options' => ['LCD', 'LED', 'OLED', 'CRT', 'Plasma', 'IPS'], 'description' => 'Panel technology type']
             ],
             'printers' => [
                 'asset_id' => ['name' => 'Asset ID', 'required' => true, 'type' => 'integer', 'description' => 'Reference to existing asset ID'],
-                'asset_name' => ['name' => 'Asset Name', 'required' => true, 'type' => 'string', 'max_length' => 255, 'description' => 'Asset name for reference'],
-                'printer_type' => ['name' => 'Printer Type', 'required' => true, 'type' => 'enum', 'options' => ['Inkjet', 'Laser', 'Dot Matrix', 'Thermal', '3D'], 'description' => 'Type of printer technology'],
-                'color_support' => ['name' => 'Color Support', 'required' => true, 'type' => 'enum', 'options' => ['Color Printing', 'Monochrome Only'], 'description' => 'Color printing capability'],
-                'duplex_printing' => ['name' => 'Duplex Printing', 'required' => true, 'type' => 'enum', 'options' => ['Duplex Support', 'Single-sided Only'], 'description' => 'Double-sided printing capability']
+                'printer_type' => ['name' => 'Printer Type', 'required' => true, 'type' => 'enum', 'options' => ['Inkjet', 'Laser', 'Dot Matrix', 'Thermal', 'LED', '3D Printer'], 'description' => 'Type of printer technology'],
+                'color_support' => ['name' => 'Color Support', 'required' => false, 'type' => 'enum', 'options' => ['Yes', 'No'], 'description' => 'Color printing capability'],
+                'duplex_printing' => ['name' => 'Duplex Printing', 'required' => false, 'type' => 'enum', 'options' => ['Yes', 'No'], 'description' => 'Double-sided printing capability']
             ],
             'peripherals' => [
                 'asset_id' => ['name' => 'Asset ID', 'required' => true, 'type' => 'integer', 'description' => 'Reference to existing asset ID'],
-                'asset_name' => ['name' => 'Asset Name', 'required' => true, 'type' => 'string', 'max_length' => 255, 'description' => 'Asset name for reference'],
-                'type' => ['name' => 'Type', 'required' => false, 'type' => 'enum', 'options' => ['Mouse', 'Keyboard', 'Webcam', 'Headset', 'Speaker', 'Microphone', 'USB Hub', 'External Drive'], 'description' => 'Type of peripheral device'],
-                'interface' => ['name' => 'Interface', 'required' => false, 'type' => 'enum', 'options' => ['USB', 'Bluetooth', 'Wireless', 'Wired'], 'description' => 'Connection interface type']
+                'type' => ['name' => 'Type', 'required' => true, 'type' => 'enum', 'options' => ['Mouse', 'Keyboard', 'Webcam', 'Headset', 'Speaker', 'Microphone', 'USB Hub', 'External Drive', 'Other'], 'description' => 'Type of peripheral device'],
+                'interface' => ['name' => 'Interface', 'required' => true, 'type' => 'enum', 'options' => ['USB', 'Bluetooth', 'Wireless', 'Wired'], 'description' => 'Connection interface type']
             ],
             'asset_categories' => [
                 'name' => ['name' => 'Category Name', 'required' => true, 'type' => 'string', 'max_length' => 100, 'unique' => true, 'description' => 'Asset category name'],
@@ -213,38 +210,119 @@ class TemplateGenerationService
      */
     private function generateComputerSampleData(): array
     {
-        return [
-            [
-                'asset_id' => '1',
-                'asset_name' => 'Dell OptiPlex 7090 Desktop',
-                'processor' => 'Intel Core i7-11700 @ 2.50GHz',
-                'memory_ram' => '16GB DDR4-3200',
-                'storage' => '512GB NVMe SSD',
-                'graphics_card' => 'Intel UHD Graphics 750',
-                'computer_type' => 'Desktop',
-                'operating_system' => 'Windows 11 Pro'
-            ],
-            [
-                'asset_id' => '2',
-                'asset_name' => 'HP EliteBook 850 Laptop',
-                'processor' => 'Intel Core i5-1235U @ 1.30GHz',
-                'memory_ram' => '8GB DDR4-3200',
-                'storage' => '256GB NVMe SSD',
-                'graphics_card' => 'Intel Iris Xe Graphics',
-                'computer_type' => 'Laptop',
-                'operating_system' => 'Windows 11 Pro'
-            ],
-            [
-                'asset_id' => '3',
-                'asset_name' => 'Dell PowerEdge T340 Server',
-                'processor' => 'Intel Xeon E-2224 @ 3.40GHz',
-                'memory_ram' => '32GB DDR4 ECC',
-                'storage' => '1TB SATA SSD',
-                'graphics_card' => 'Integrated',
-                'computer_type' => 'Server',
-                'operating_system' => 'Windows Server 2022'
-            ]
+        // Get available computer hardware assets for sample data
+        $availableAssets = Asset::whereDoesntHave('computer')
+            ->where('category_id', function($query) {
+                $query->select('id')
+                      ->from('asset_categories')
+                      ->where('name', 'Computer Hardware')
+                      ->limit(1);
+            })
+            ->get(); // No limit - show ALL available assets
+
+        if ($availableAssets->isEmpty()) {
+            // Fallback sample data if no assets available - showing more examples
+            return [
+                [
+                    'asset_id' => '1',
+                    'processor' => 'Intel Core i7-13700K @ 3.40GHz',
+                    'memory_ram' => '32GB DDR5-5600',
+                    'storage' => '1TB NVMe SSD',
+                    'graphics_card' => 'NVIDIA RTX 4070',
+                    'computer_type' => 'Desktop',
+                    'operating_system' => 'Windows 11 Pro'
+                ],
+                [
+                    'asset_id' => '2',
+                    'processor' => 'Intel Core i5-13400 @ 2.50GHz',
+                    'memory_ram' => '16GB DDR5-4800',
+                    'storage' => '512GB NVMe SSD',
+                    'graphics_card' => 'Intel UHD Graphics 730',
+                    'computer_type' => 'Desktop',
+                    'operating_system' => 'Windows 11 Pro'
+                ],
+                [
+                    'asset_id' => '3',
+                    'processor' => 'AMD Ryzen 9 7950X @ 4.50GHz',
+                    'memory_ram' => '64GB DDR5-6000',
+                    'storage' => '2TB NVMe SSD',
+                    'graphics_card' => 'NVIDIA RTX 4090',
+                    'computer_type' => 'Workstation',
+                    'operating_system' => 'Windows 11 Pro'
+                ],
+                [
+                    'asset_id' => '4',
+                    'processor' => 'Intel Core i7-1360P @ 2.20GHz',
+                    'memory_ram' => '16GB LPDDR5-5200',
+                    'storage' => '512GB NVMe SSD',
+                    'graphics_card' => 'Intel Iris Xe Graphics',
+                    'computer_type' => 'Laptop',
+                    'operating_system' => 'Windows 11 Pro'
+                ],
+                [
+                    'asset_id' => '5',
+                    'processor' => 'Intel Xeon W-2245 @ 3.90GHz',
+                    'memory_ram' => '32GB DDR4 ECC',
+                    'storage' => '1TB SATA SSD',
+                    'graphics_card' => 'NVIDIA Quadro RTX 4000',
+                    'computer_type' => 'Server',
+                    'operating_system' => 'Windows Server 2022'
+                ],
+                [
+                    'asset_id' => '6',
+                    'processor' => 'Apple M3 Pro @ 3.70GHz',
+                    'memory_ram' => '18GB Unified Memory',
+                    'storage' => '1TB SSD',
+                    'graphics_card' => 'Apple M3 Pro GPU',
+                    'computer_type' => 'Laptop',
+                    'operating_system' => 'macOS Sonoma'
+                ]
+            ];
+        }
+
+        // Generate sample data using actual available assets
+        $sampleData = [];
+        $processors = [
+            'Intel Core i7-11700 @ 2.50GHz',
+            'Intel Core i5-1235U @ 1.30GHz',
+            'Intel Xeon E-2224 @ 3.40GHz'
         ];
+        $memory = [
+            '16GB DDR5-5600',
+            '32GB DDR5-6000',
+            '8GB DDR4-3200',
+            '64GB DDR5-6400',
+            '16GB LPDDR5-5200',
+            '32GB DDR4 ECC'
+        ];
+        $storage = [
+            '1TB NVMe SSD',
+            '512GB NVMe SSD',
+            '2TB SATA SSD',
+            '256GB M.2 SSD',
+            '1TB SATA HDD',
+            '2TB NVMe SSD'
+        ];
+        $types = ['Desktop', 'Laptop', 'Server'];
+        $os = [
+            'Windows 11 Pro',
+            'Windows 11 Pro',
+            'Windows Server 2022'
+        ];
+
+        foreach ($availableAssets as $index => $asset) {
+            $sampleData[] = [
+                'asset_id' => $asset->id,
+                'processor' => $processors[$index % count($processors)],
+                'memory_ram' => $memory[$index % count($memory)],
+                'storage' => $storage[$index % count($storage)],
+                'graphics_card' => 'Intel UHD Graphics 750',
+                'computer_type' => $types[$index % count($types)],
+                'operating_system' => $os[$index % count($os)]
+            ];
+        }
+
+        return $sampleData;
     }
 
     /**
@@ -363,29 +441,68 @@ class TemplateGenerationService
      */
     private function generateMonitorSampleData(): array
     {
-        return [
-            [
-                'asset_id' => '1',
-                'asset_name' => 'Samsung 27" 4K UHD Monitor',
-                'size' => '27"',
-                'resolution' => '3840x2160 (4K UHD)',
-                'panel_type' => 'LED'
-            ],
-            [
-                'asset_id' => '2',
-                'asset_name' => 'Dell 24" Full HD Monitor',
-                'size' => '24"',
-                'resolution' => '1920x1080 (FullHD)',
-                'panel_type' => 'IPS'
-            ],
-            [
-                'asset_id' => '3',
-                'asset_name' => 'HP 32" QHD Monitor',
-                'size' => '32"',
-                'resolution' => '2560x1440 (QHD)',
-                'panel_type' => 'VA'
-            ]
+        // Get available monitor assets for sample data
+        $availableAssets = Asset::whereDoesntHave('monitor')
+            ->where('category_id', function($query) {
+                $query->select('id')
+                      ->from('asset_categories')
+                      ->where('name', 'Monitors')
+                      ->limit(1);
+            })
+            ->get(); // No limit - show ALL available assets
+
+        if ($availableAssets->isEmpty()) {
+            // Fallback sample data if no assets available
+            return [
+                [
+                    'asset_id' => '1',
+                    'asset_name' => 'Samsung 27" 4K UHD Monitor',
+                    'size' => '27"',
+                    'resolution' => '3840x2160 (4K UHD)',
+                    'panel_type' => 'LED'
+                ],
+                [
+                    'asset_id' => '2',
+                    'asset_name' => 'Dell 24" Full HD Monitor',
+                    'size' => '24"',
+                    'resolution' => '1920x1080 (Full HD)',
+                    'panel_type' => 'IPS'
+                ],
+                [
+                    'asset_id' => '3',
+                    'asset_name' => 'HP 32" QHD Monitor',
+                    'size' => '32"',
+                    'resolution' => '2560x1440 (QHD)',
+                    'panel_type' => 'LCD'
+                ]
+            ];
+        }
+
+        // Generate sample data using actual available assets
+        $sampleData = [];
+        $sizes = ['24"', '27"', '32"', '34"', '49"'];
+        $resolutions = [
+            '1920x1080 (Full HD)',
+            '2560x1440 (QHD)',
+            '3840x2160 (4K UHD)',
+            '1366x768 (HD)',
+            '1680x1050 (WSXGA+)',
+            '2560x1080 (UltraWide)',
+            '3440x1440 (UltraWide QHD)'
         ];
+        $panelTypes = ['LCD', 'LED', 'OLED', 'CRT', 'Plasma', 'IPS'];
+
+        foreach ($availableAssets as $index => $asset) {
+            $sampleData[] = [
+                'asset_id' => $asset->id,
+                'asset_name' => $asset->name,
+                'size' => $sizes[$index % count($sizes)],
+                'resolution' => $resolutions[$index % count($resolutions)],
+                'panel_type' => $panelTypes[$index % count($panelTypes)]
+            ];
+        }
+
+        return $sampleData;
     }
 
     /**
@@ -393,29 +510,56 @@ class TemplateGenerationService
      */
     private function generatePrinterSampleData(): array
     {
-        return [
-            [
-                'asset_id' => '1',
-                'asset_name' => 'HP LaserJet Pro M404n',
-                'printer_type' => 'Laser',
-                'color_support' => 'Monochrome Only',
-                'duplex_printing' => 'Duplex Support'
-            ],
-            [
-                'asset_id' => '2',
-                'asset_name' => 'Canon PIXMA G3110',
-                'printer_type' => 'Inkjet',
-                'color_support' => 'Color Printing',
-                'duplex_printing' => 'Single-sided Only'
-            ],
-            [
-                'asset_id' => '3',
-                'asset_name' => 'Brother MFC-L2750DW',
-                'printer_type' => 'Laser',
-                'color_support' => 'Monochrome Only',
-                'duplex_printing' => 'Duplex Support'
-            ]
-        ];
+        // Get available printer assets for sample data
+        $availableAssets = Asset::whereDoesntHave('printer')
+            ->where('category_id', function($query) {
+                $query->select('id')
+                      ->from('asset_categories')
+                      ->where('name', 'Printers')
+                      ->limit(1);
+            })
+            ->get(); // No limit - show ALL available assets
+
+        if ($availableAssets->isEmpty()) {
+            // Fallback sample data if no assets available
+            return [
+                [
+                    'asset_id' => '110',
+                    'printer_type' => 'Laser',
+                    'color_support' => 'No',
+                    'duplex_printing' => 'Yes'
+                ],
+                [
+                    'asset_id' => '113',
+                    'printer_type' => 'Inkjet',
+                    'color_support' => 'Yes',
+                    'duplex_printing' => 'No'
+                ],
+                [
+                    'asset_id' => '116',
+                    'printer_type' => 'Dot Matrix',
+                    'color_support' => 'No',
+                    'duplex_printing' => 'Yes'
+                ]
+            ];
+        }
+
+        // Generate sample data using actual available assets
+        $sampleData = [];
+        $printerTypes = ['Laser', 'Inkjet', 'Dot Matrix', 'Thermal', 'LED', '3D Printer'];
+        $colorSupport = ['Yes', 'No'];
+        $duplexOptions = ['Yes', 'No'];
+
+        foreach ($availableAssets as $index => $asset) {
+            $sampleData[] = [
+                'asset_id' => $asset->id,
+                'printer_type' => $printerTypes[$index % count($printerTypes)],
+                'color_support' => $colorSupport[$index % count($colorSupport)],
+                'duplex_printing' => $duplexOptions[$index % count($duplexOptions)]
+            ];
+        }
+
+        return $sampleData;
     }
 
     /**
@@ -423,32 +567,86 @@ class TemplateGenerationService
      */
     private function generatePeripheralSampleData(): array
     {
-        return [
-            [
-                'asset_id' => '1',
-                'asset_name' => 'Logitech MX Master 3 Mouse',
-                'type' => 'Mouse',
-                'interface' => 'Wireless'
-            ],
-            [
-                'asset_id' => '2',
-                'asset_name' => 'Logitech K380 Keyboard',
-                'type' => 'Keyboard',
-                'interface' => 'Bluetooth'
-            ],
-            [
-                'asset_id' => '3',
-                'asset_name' => 'Logitech C920 Webcam',
-                'type' => 'Webcam',
-                'interface' => 'USB'
-            ],
-            [
-                'asset_id' => '4',
-                'asset_name' => 'JBL Go 3 Speaker',
-                'type' => 'Speaker',
-                'interface' => 'Bluetooth'
-            ]
-        ];
+        // Get available peripheral assets for sample data
+        $availableAssets = Asset::whereDoesntHave('peripheral')
+            ->where('category_id', function($query) {
+                $query->select('id')
+                      ->from('asset_categories')
+                      ->where('name', 'Peripherals')
+                      ->limit(1);
+            })
+            ->get(); // No limit - show ALL available assets
+
+        if ($availableAssets->isEmpty()) {
+            // Fallback sample data if no assets available - 10 records
+            return [
+                [
+                    'asset_id' => '130',
+                    'type' => 'Mouse',
+                    'interface' => 'Wireless'
+                ],
+                [
+                    'asset_id' => '131',
+                    'type' => 'Keyboard',
+                    'interface' => 'Bluetooth'
+                ],
+                [
+                    'asset_id' => '132',
+                    'type' => 'Webcam',
+                    'interface' => 'USB'
+                ],
+                [
+                    'asset_id' => '133',
+                    'type' => 'Headset',
+                    'interface' => 'Wireless'
+                ],
+                [
+                    'asset_id' => '134',
+                    'type' => 'Speaker',
+                    'interface' => 'Wired'
+                ],
+                [
+                    'asset_id' => '135',
+                    'type' => 'Microphone',
+                    'interface' => 'USB'
+                ],
+                [
+                    'asset_id' => '136',
+                    'type' => 'USB Hub',
+                    'interface' => 'USB'
+                ],
+                [
+                    'asset_id' => '137',
+                    'type' => 'External Drive',
+                    'interface' => 'USB'
+                ],
+                [
+                    'asset_id' => '138',
+                    'type' => 'Mouse',
+                    'interface' => 'Wired'
+                ],
+                [
+                    'asset_id' => '139',
+                    'type' => 'Keyboard',
+                    'interface' => 'Wireless'
+                ]
+            ];
+        }
+
+        // Generate sample data using actual available assets
+        $sampleData = [];
+        $types = ['Mouse', 'Keyboard', 'Webcam', 'Headset', 'Speaker', 'Microphone', 'USB Hub', 'External Drive', 'Other'];
+        $interfaces = ['USB', 'Bluetooth', 'Wireless', 'Wired'];
+
+        foreach ($availableAssets as $index => $asset) {
+            $sampleData[] = [
+                'asset_id' => $asset->id,
+                'type' => $types[$index % count($types)],
+                'interface' => $interfaces[$index % count($interfaces)]
+            ];
+        }
+
+        return $sampleData;
     }
 
     /**
@@ -499,20 +697,13 @@ class TemplateGenerationService
                 'status' => 'nullable|in:Available,Active,Inactive,Under Maintenance,Issue Reported,Pending Confirmation,Disposed'
             ],
             'computers' => [
-                'asset_tag' => 'required|string|max:50|unique:assets,asset_tag',
-                'category_name' => 'required|string|exists:asset_categories,name',
-                'vendor_name' => 'required|string|exists:vendors,name',
-                'name' => 'required|string|max:255',
-                'description' => 'nullable|string',
-                'serial_number' => 'nullable|string|max:100|unique:assets,serial_number',
-                'purchase_date' => 'nullable|date|before_or_equal:today',
-                'warranty_end' => 'nullable|date|after_or_equal:purchase_date',
-                'cost' => 'nullable|numeric|min:0',
-                'status' => 'nullable|in:Available,Active,Inactive,Under Maintenance,Issue Reported,Pending Confirmation,Disposed',
+                'asset_id' => 'required|integer|exists:assets,id|unique:computers,asset_id',
                 'processor' => 'required|string|max:255',
-                'ram' => 'required|string|max:255',
+                'memory_ram' => 'required|string|max:255',
                 'storage' => 'required|string|max:255',
-                'os' => 'required|string|max:255'
+                'graphics_card' => 'nullable|string|max:255',
+                'computer_type' => 'required|in:Desktop,Laptop,Server,Workstation',
+                'operating_system' => 'required|string|max:255'
             ],
             'users' => [
                 'employee_id' => 'required|string|max:50',

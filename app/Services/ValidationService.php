@@ -92,9 +92,9 @@ class ValidationService
                 $baseRules = $this->getValidationRules('assets', $excludeId);
                 return array_merge($baseRules, [
                     'processor' => 'required|string|max:255',
-                    'ram' => ['required', 'string', 'max:255', 'regex:/^\d+\s*(GB|MB|TB)\s*(DDR[3-5]?)?$/i'],
+                    'memory' => ['required', 'string', 'max:255', 'regex:/^\d+\s*(GB|MB|TB)\s*(DDR[3-5]?)?$/i'],
                     'storage' => ['required', 'string', 'max:255', 'regex:/^\d+\s*(GB|TB)\s*(SSD|HDD|NVME)?$/i'],
-                    'os' => 'required|string|max:255'
+                    'operating_system' => 'required|string|max:255'
                 ]);
 
             case 'users':

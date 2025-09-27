@@ -256,11 +256,13 @@ class ImportExportController extends Controller
     {
         $request->validate([
             'file' => 'required|file|mimes:csv,txt,xlsx,xls|max:10240', // Support Excel and CSV
-            'validate_only' => 'nullable|in:true,false,1,0' // Option to validate without importing
+            'validate_only' => 'nullable|in:true,false,1,0', // Option to validate without importing
+            'partial_import' => 'nullable|in:true,false,1,0' // Option for partial import (skip invalid records)
         ]);
 
         $file = $request->file('file');
         $validateOnly = $request->boolean('validate_only', false);
+        $partialImport = $request->boolean('partial_import', false);
         $path = $file->getRealPath();
         
         // Validate file exists and is readable
@@ -559,8 +561,8 @@ class ImportExportController extends Controller
                 return response()->json([
                     'success' => empty($allErrors),
                     'message' => 'Validation completed. ' . (empty($allErrors) ? 'No errors found.' : count($allErrors) . ' errors found.'),
-                    'imported' => 0,
-                    'errors' => count($allErrors),
+                    'successful' => 0,
+                    'failed' => count($allErrors),
                     'warnings' => count($warnings),
                     'error_details' => $allErrors,
                     'warning_details' => $warnings,
@@ -589,8 +591,8 @@ class ImportExportController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Duplicate entries found. Please fix duplicates before importing.',
-                    'imported' => 0,
-                    'errors' => count($duplicates),
+                    'successful' => 0,
+                    'failed' => count($duplicates),
                     'warnings' => 0,
                     'error_details' => $duplicates,
                     'summary' => $summary
@@ -602,128 +604,218 @@ class ImportExportController extends Controller
                 ->with('import_summary', $summary);
         }
 
-        // Log import start
-        Log::info('Import started', [
+        // PHASE 1: VALIDATE ALL RECORDS
+        Log::info('Import validation started', [
             'module' => $module,
             'user_id' => auth()->id(),
             'total_rows' => $totalRows,
-            'filename' => $file->getClientOriginalName()
+            'filename' => $file->getClientOriginalName(),
+            'partial_import' => $partialImport
         ]);
 
-        try {
-            foreach ($data as $index => $row) {
-                $rowNumber = $index + 2; // +2 because we removed headers and arrays are 0-indexed
-                
-                // Skip empty rows - check if all fields are empty or whitespace
-                $hasData = false;
-                foreach ($row as $field) {
-                    if (!empty(trim($field))) {
-                        $hasData = true;
-                        break;
-                    }
-                }
-                
-                if (!$hasData) {
-                    $warnings[] = [
-                        'row' => $rowNumber,
-                        'message' => 'Empty row skipped',
-                        'field' => 'general'
-                    ];
-                    continue;
-                }
-                
-                $rowData = array_combine($fieldKeys, array_pad($row, count($fieldKeys), ''));
-                
-                // Process each row in its own transaction
-                DB::beginTransaction();
-                try {
-                    $this->processImportRow($module, $rowData, $rowNumber);
-                    DB::commit();
-                    $successCount++;
-                } catch (\Illuminate\Validation\ValidationException $e) {
-                    DB::rollback();
-                    foreach ($e->errors() as $field => $messages) {
-                        foreach ($messages as $message) {
-                            $errors[] = [
-                                'row' => $rowNumber,
-                                'field' => $field,
-                                'message' => $message,
-                                'value' => $rowData[$field] ?? ''
-                            ];
-                        }
-                    }
-                } catch (\Exception $e) {
-                    DB::rollback();
-                    $errors[] = [
-                        'row' => $rowNumber,
-                        'field' => 'general',
-                        'message' => $e->getMessage(),
-                        'value' => ''
-                    ];
+        $validationErrors = [];
+        $validRows = [];
+        
+        foreach ($data as $index => $row) {
+            $rowNumber = $index + 2; // +2 because we removed headers and arrays are 0-indexed
+            
+            // Skip empty rows - check if all fields are empty or whitespace
+            $hasData = false;
+            foreach ($row as $field) {
+                if (!empty(trim($field))) {
+                    $hasData = true;
+                    break;
                 }
             }
+            
+            if (!$hasData) {
+                $warnings[] = [
+                    'row' => $rowNumber,
+                    'message' => 'Empty row skipped',
+                    'field' => 'general'
+                ];
+                continue;
+            }
+            
+            $rowData = array_combine($fieldKeys, array_pad($row, count($fieldKeys), ''));
+            
+            // Validate each row WITHOUT importing
+            try {
+                $this->validateImportRow($module, $rowData, $rowNumber);
+                $validRows[] = ['row' => $rowData, 'rowNumber' => $rowNumber];
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                foreach ($e->errors() as $field => $messages) {
+                    foreach ($messages as $message) {
+                        $validationErrors[] = [
+                            'row' => $rowNumber,
+                            'field' => $field,
+                            'message' => $message,
+                            'value' => $rowData[$field] ?? ''
+                        ];
+                    }
+                }
+            } catch (\Exception $e) {
+                $validationErrors[] = [
+                    'row' => $rowNumber,
+                    'field' => 'general',
+                    'message' => $e->getMessage(),
+                    'value' => ''
+                ];
+            }
+        }
 
-            // Log import completion
-            if ($successCount > 0) {
-                Log::info('Import completed with mixed results', [
+        // Handle validation errors based on import type
+        if (!empty($validationErrors)) {
+            if ($partialImport) {
+                // Partial import: Continue with valid rows only
+                Log::info('Partial import mode - proceeding with valid rows only', [
                     'module' => $module,
                     'user_id' => auth()->id(),
-                    'imported_records' => $successCount,
-                    'failed_records' => count($errors),
-                    'warnings' => count($warnings)
+                    'valid_rows' => count($validRows),
+                    'invalid_rows' => count($validationErrors),
+                    'filename' => $file->getClientOriginalName()
                 ]);
             } else {
-                Log::error('Import failed - no records imported', [
+                // Full import (fail-fast): Stop and return errors
+                $summary = [
+                    'total' => $totalRows,
+                    'successful' => 0,
+                    'failed' => count($validationErrors),
+                    'warnings' => count($warnings)
+                ];
+                
+                Log::error('Import validation failed - stopping import (fail-fast mode)', [
                     'module' => $module,
                     'user_id' => auth()->id(),
-                    'failed_records' => count($errors),
-                    'warnings' => count($warnings)
+                    'validation_errors' => count($validationErrors),
+                    'filename' => $file->getClientOriginalName()
                 ]);
-            }
-
-            // Prepare response data
-            $summary = [
-                'total' => $totalRows,
-                'successful' => $successCount,
-                'failed' => count($errors),
-                'warnings' => count($warnings)
-            ];
-
-            // Check if this is an AJAX request
-            if (request()->ajax()) {
-                if (count($errors) > 0) {
+                
+                // Check if this is an AJAX request
+                if (request()->ajax()) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Import completed with errors',
-                        'imported' => $successCount,
-                        'errors' => count($errors),
+                        'message' => 'Validation failed. Please fix all errors before importing. No records were imported.',
+                        'successful' => 0,
+                        'failed' => count($validationErrors),
                         'warnings' => count($warnings),
-                        'error_details' => $errors,
-                        'warning_details' => $warnings,
+                        'error_details' => $validationErrors,
                         'summary' => $summary
                     ]);
                 }
+                
+                return redirect()->route('import-export.results')
+                    ->with('import_errors', $validationErrors)
+                    ->with('import_summary', $summary);
+            }
+        }
 
+        // PHASE 2: PROCEED WITH IMPORT
+        if ($partialImport) {
+            Log::info('Starting partial import', [
+                'module' => $module,
+                'user_id' => auth()->id(),
+                'valid_rows' => count($validRows),
+                'invalid_rows' => count($validationErrors),
+                'filename' => $file->getClientOriginalName()
+            ]);
+        } else {
+            Log::info('All validations passed - starting full import', [
+                'module' => $module,
+                'user_id' => auth()->id(),
+                'valid_rows' => count($validRows),
+                'filename' => $file->getClientOriginalName()
+            ]);
+        }
+
+        try {
+            // Import all valid rows in a single transaction
+            DB::beginTransaction();
+            
+            $actualSuccessCount = 0;
+            $importErrors = [];
+            
+            foreach ($validRows as $validRow) {
+                try {
+                    $this->processImportRow($module, $validRow['row'], $validRow['rowNumber']);
+                    $actualSuccessCount++;
+                } catch (\Exception $e) {
+                    // In partial import mode, log the error but continue with next record
+                    if ($partialImport) {
+                        $importErrors[] = [
+                            'row' => $validRow['rowNumber'],
+                            'field' => 'import',
+                            'message' => 'Import failed: ' . $e->getMessage(),
+                            'value' => ''
+                        ];
+                        Log::warning('Record import failed in partial import mode', [
+                            'module' => $module,
+                            'row' => $validRow['rowNumber'],
+                            'error' => $e->getMessage(),
+                            'data' => $validRow['row']
+                        ]);
+                        continue;
+                    } else {
+                        // In full import mode, re-throw the exception to stop the entire import
+                        throw $e;
+                    }
+                }
+            }
+            
+            DB::commit();
+            
+            // Update success count with actual successful imports
+            $successCount = $actualSuccessCount;
+            
+            // Prepare response data for successful import
+            $totalFailed = count($validationErrors) + count($importErrors);
+            
+            Log::info('Import completed successfully', [
+                'module' => $module,
+                'user_id' => auth()->id(),
+                'imported_records' => $successCount,
+                'validation_errors' => count($validationErrors),
+                'import_errors' => count($importErrors),
+                'total_failed' => $totalFailed,
+                'import_type' => $partialImport ? 'partial' : 'full',
+                'filename' => $file->getClientOriginalName()
+            ]);
+            $summary = [
+                'total' => $totalRows,
+                'successful' => $successCount,
+                'failed' => $totalFailed,
+                'warnings' => count($warnings)
+            ];
+
+            // Prepare success message based on import type
+            if ($partialImport) {
+                $message = "Partial import completed! Successfully imported {$successCount} valid {$module} records.";
+                if (count($validationErrors) > 0) {
+                    $message .= " " . count($validationErrors) . " records failed validation and were skipped.";
+                }
+                if (count($importErrors) > 0) {
+                    $message .= " " . count($importErrors) . " records failed during import and were skipped.";
+                }
+            } else {
+                $message = "Successfully imported {$successCount} {$module} records. All validations passed.";
+            }
+
+            // Check if this is an AJAX request
+            if (request()->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => "Successfully imported {$successCount} {$module} records.",
-                    'imported' => $successCount,
-                    'errors' => count($errors),
+                    'message' => $message,
+                    'successful' => $successCount,
+                    'failed' => $totalFailed,
                     'warnings' => count($warnings),
+                    'error_details' => array_merge($validationErrors, $importErrors),
                     'warning_details' => $warnings,
                     'summary' => $summary
                 ]);
             }
 
-            // Non-AJAX request handling
-            if (count($errors) > 0) {
-                return redirect()->route('import-export.results')
-                    ->with('import_errors', $errors)
-                    ->with('import_warnings', $warnings)
-                    ->with('import_summary', $summary);
-            }
-
-            $successMessage = "Successfully imported {$successCount} {$module}.";
+            // Non-AJAX request handling for successful import
+            $successMessage = $message;
             if (count($warnings) > 0) {
                 $successMessage .= " {$summary['warnings']} warnings generated.";
             }
@@ -736,7 +828,7 @@ class ImportExportController extends Controller
         } catch (\Exception $e) {
             DB::rollback();
             
-            Log::error('Import exception', [
+            Log::error('Import exception during processing', [
                 'module' => $module,
                 'user_id' => auth()->id(),
                 'error' => $e->getMessage(),
@@ -746,7 +838,7 @@ class ImportExportController extends Controller
             $errorData = [[
                 'row' => 0,
                 'field' => 'general',
-                'message' => 'Import failed: ' . $e->getMessage(),
+                'message' => 'Import processing failed: ' . $e->getMessage(),
                 'value' => ''
             ]];
             
@@ -754,7 +846,7 @@ class ImportExportController extends Controller
             if (request()->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Import failed: ' . $e->getMessage(),
+                    'message' => 'Import processing failed: ' . $e->getMessage(),
                     'imported' => 0,
                     'errors' => 1,
                     'warnings' => 0,
@@ -1749,30 +1841,47 @@ class ImportExportController extends Controller
      */
     private function importComputer($data, $rowNumber)
     {
-        // First create the asset
-        $asset = $this->createAssetFromData($data, $rowNumber);
-
         // Validate computer-specific fields
         $validator = Validator::make($data, [
+            'asset_id' => 'required|integer|exists:assets,id|unique:computers,asset_id',
             'processor' => 'required|string|max:255',
             'memory_ram' => 'required|string|max:255',
             'storage' => 'required|string|max:255',
-            'operating_system' => 'required|string|max:255'
+            'operating_system' => 'required|string|max:255',
+            'graphics_card' => 'nullable|string|max:255',
+            'computer_type' => 'required|in:Desktop,Laptop,Server,Workstation'
         ]);
 
         if ($validator->fails()) {
             throw new \Illuminate\Validation\ValidationException($validator);
         }
 
-        // Then create the computer record
+        // Verify asset exists and is available for computer creation
+        $asset = Asset::find($data['asset_id']);
+        if (!$asset) {
+            throw new \Exception("Asset with ID {$data['asset_id']} not found.");
+        }
+
+        // Check if asset is already used for a computer
+        if (Computer::where('asset_id', $data['asset_id'])->exists()) {
+            throw new \Exception("Asset with ID {$data['asset_id']} is already used for a computer.");
+        }
+
+        // Check if asset is in Computer Hardware category
+        $computerCategory = \App\Models\AssetCategory::where('name', 'Computer Hardware')->first();
+        if (!$computerCategory || $asset->category_id !== $computerCategory->id) {
+            throw new \Exception("Asset with ID {$data['asset_id']} is not in Computer Hardware category.");
+        }
+
+        // Create the computer record
         Computer::create([
-            'asset_id' => $asset->id,
+            'asset_id' => $data['asset_id'],
             'processor' => $data['processor'],
-            'ram' => $data['memory_ram'],
+            'memory' => $data['memory_ram'],
             'storage' => $data['storage'],
             'graphics_card' => $data['graphics_card'] ?? null,
-            'computer_type' => $data['computer_type'] ?? null,
-            'os' => $data['operating_system']
+            'computer_type' => $data['computer_type'],
+            'operating_system' => $data['operating_system']
         ]);
     }
 
@@ -1781,22 +1890,9 @@ class ImportExportController extends Controller
      */
     private function importMonitor($data, $rowNumber)
     {
-        // First create the asset
-        $asset = $this->createAssetFromData($data, $rowNumber);
-
-        // Validate monitor-specific fields
-        $validator = Validator::make($data, [
-            'size' => 'required|string|max:255',
-            'resolution' => 'required|string|max:255'
-        ]);
-
-        if ($validator->fails()) {
-            throw new \Illuminate\Validation\ValidationException($validator);
-        }
-
-        // Then create the monitor record
+        // Create the monitor record using the existing asset ID (same as computers)
         Monitor::create([
-            'asset_id' => $asset->id,
+            'asset_id' => $data['asset_id'],
             'size' => $data['size'],
             'resolution' => $data['resolution'],
             'panel_type' => $data['panel_type'] ?? null
@@ -1808,25 +1904,50 @@ class ImportExportController extends Controller
      */
     private function importPrinter($data, $rowNumber)
     {
-        // First create the asset
-        $asset = $this->createAssetFromData($data, $rowNumber);
+        // Convert descriptive text to boolean values
+        $colorSupport = $this->convertToBoolean($data['color_support']);
+        $duplexPrinting = $this->convertToBoolean($data['duplex_printing']);
 
-        // Validate printer-specific fields
-        $validator = Validator::make($data, [
-            'printer_type' => 'required|string|max:255'
+        // Create the printer record using the existing asset ID (same as computers and monitors)
+        Printer::create([
+            'asset_id' => $data['asset_id'],
+            'type' => $data['printer_type'],
+            'color_support' => $colorSupport,
+            'duplex' => $duplexPrinting
         ]);
+    }
 
-        if ($validator->fails()) {
-            throw new \Illuminate\Validation\ValidationException($validator);
+    /**
+     * Convert various text formats to boolean
+     */
+    private function convertToBoolean($value)
+    {
+        if (empty($value)) {
+            return false;
         }
 
-        // Then create the printer record
-        Printer::create([
-            'asset_id' => $asset->id,
-            'type' => $data['printer_type'],
-            'color_support' => filter_var($data['color_support'] ?? false, FILTER_VALIDATE_BOOLEAN),
-            'duplex' => filter_var($data['duplex_printing'] ?? false, FILTER_VALIDATE_BOOLEAN)
-        ]);
+        $value = strtolower(trim($value));
+        
+        // Handle Yes/No values
+        if (in_array($value, ['yes', '1', 'true'])) {
+            return true;
+        }
+        
+        if (in_array($value, ['no', '0', 'false'])) {
+            return false;
+        }
+        
+        // Handle legacy descriptive text (for backward compatibility)
+        if (in_array($value, ['color printing', 'duplex support'])) {
+            return true;
+        }
+        
+        if (in_array($value, ['monochrome only', 'single-sided only'])) {
+            return false;
+        }
+        
+        // Default to false for unknown values
+        return false;
     }
 
     /**
@@ -1834,23 +1955,10 @@ class ImportExportController extends Controller
      */
     private function importPeripheral($data, $rowNumber)
     {
-        // First create the asset
-        $asset = $this->createAssetFromData($data, $rowNumber);
-
-        // Validate peripheral-specific fields
-        $validator = Validator::make($data, [
-            'peripheral_type' => 'required|string|max:255',
-            'interface' => 'required|string|max:255'
-        ]);
-
-        if ($validator->fails()) {
-            throw new \Illuminate\Validation\ValidationException($validator);
-        }
-
-        // Then create the peripheral record
+        // Create the peripheral record using the existing asset ID (same as computers, monitors, and printers)
         Peripheral::create([
-            'asset_id' => $asset->id,
-            'type' => $data['peripheral_type'],
+            'asset_id' => $data['asset_id'],
+            'type' => $data['type'],
             'interface' => $data['interface']
         ]);
     }
@@ -2137,11 +2245,11 @@ class ImportExportController extends Controller
                             'asset_id' => $computer->asset->asset_tag,
                             'asset_name' => $computer->asset->name,
                             'processor' => $computer->processor,
-                            'memory_ram' => $computer->ram,
+                            'memory_ram' => $computer->memory,
                             'storage' => $computer->storage,
                             'graphics_card' => $computer->graphics_card,
                             'computer_type' => $computer->computer_type,
-                            'operating_system' => $computer->os
+                            'operating_system' => $computer->operating_system
                         ];
                     })->toArray();
 
@@ -2452,57 +2560,54 @@ class ImportExportController extends Controller
 
     private function validateComputer($data, $rowNumber)
     {
-        // For computers, we validate the asset reference instead of full asset data
+        // For computers, we validate the asset ID reference
         $validator = Validator::make($data, [
-            'asset_id' => 'required|string|max:255',
-            'asset_name' => 'required|string|max:255',
+            'asset_id' => 'required|integer|exists:assets,id',
             'processor' => 'required|string|max:255',
             'memory_ram' => 'required|string|max:255',
             'storage' => 'required|string|max:255',
             'operating_system' => 'required|string|max:255',
             'graphics_card' => 'nullable|string|max:255',
-            'computer_type' => 'nullable|string|max:255'
+            'computer_type' => 'required|in:Desktop,Laptop,Server,Workstation'
         ]);
 
         if ($validator->fails()) {
             throw new \Illuminate\Validation\ValidationException($validator);
         }
 
-        // Check if asset exists by asset_id or asset_name
-        $asset = null;
-        if (!empty($data['asset_id'])) {
-            $asset = Asset::where('asset_tag', $data['asset_id'])->first();
-        }
-        if (!$asset && !empty($data['asset_name'])) {
-            $asset = Asset::where('name', $data['asset_name'])->first();
-        }
-        
+        // Check if asset exists and is available for computer creation
+        $asset = Asset::find($data['asset_id']);
         if (!$asset) {
-            throw new \Exception("Asset with ID/Tag '{$data['asset_id']}' or name '{$data['asset_name']}' not found.");
+            throw new \Exception("Asset with ID {$data['asset_id']} not found.");
         }
 
-        // Check if computer record already exists for this asset
-        $existingComputer = Computer::where('asset_id', $asset->id)->first();
-        if ($existingComputer) {
-            throw new \Exception("Computer record for asset '{$data['asset_id']}' already exists. Skipping duplicate entry.");
+        // Check if asset is already used for a computer
+        if (Computer::where('asset_id', $data['asset_id'])->exists()) {
+            throw new \Exception("Asset with ID {$data['asset_id']} is already used for a computer.");
         }
 
-        // Validate memory format (e.g., "8GB", "16 GB")
-        if (!empty($data['memory_ram']) && !preg_match('/^\d+\s*(GB|MB|TB)$/i', trim($data['memory_ram']))) {
-            throw new \Exception("Invalid memory format '{$data['memory_ram']}'. Use format like '8GB' or '16 GB'.");
+        // Check if asset is in Computer Hardware category
+        $computerCategory = \App\Models\AssetCategory::where('name', 'Computer Hardware')->first();
+        if (!$computerCategory || $asset->category_id !== $computerCategory->id) {
+            throw new \Exception("Asset with ID {$data['asset_id']} is not in Computer Hardware category.");
         }
 
-        // Validate storage format (e.g., "500GB", "1TB")
-        if (!empty($data['storage']) && !preg_match('/^\d+\s*(GB|TB|MB)$/i', trim($data['storage']))) {
-            throw new \Exception("Invalid storage format '{$data['storage']}'. Use format like '500GB' or '1TB'.");
+        // Validate memory format (e.g., "8GB", "16 GB", "16GB DDR4", "32GB DDR5", "16GB DDR4-3200", "32GB DDR5 ECC")
+        if (!empty($data['memory_ram']) && !preg_match('/^\d+\s*(GB|MB|TB)(\s+(DDR[3-5]|LPDDR[3-5]|SDRAM|RAM|Unified Memory)(\s*[-]\s*\d+)?(\s+(ECC|Non-ECC))?)?$/i', trim($data['memory_ram']))) {
+            throw new \Exception("Invalid memory format '{$data['memory_ram']}'. Use format like '8GB', '16 GB', '16GB DDR4', '32GB DDR5', '16GB DDR4-3200', or '32GB DDR5 ECC'.");
+        }
+
+        // Validate storage format (e.g., "500GB", "1TB", "512GB NVMe SSD", "1TB SATA SSD", "2TB HDD")
+        if (!empty($data['storage']) && !preg_match('/^\d+\s*(GB|TB|MB)(\s+(NVMe\s+SSD|SATA\s+SSD|SSD|HDD|M\.2\s+SSD|PCIe\s+SSD|SAS\s+SSD|SAS\s+HDD|SATA\s+HDD|NVMe|M\.2|PCIe|SAS|SATA))?$/i', trim($data['storage']))) {
+            throw new \Exception("Invalid storage format '{$data['storage']}'. Use format like '500GB', '1TB', '512GB NVMe SSD', '1TB SATA SSD', or '2TB HDD'.");
         }
     }
 
     private function validateMonitor($data, $rowNumber)
     {
+        // For monitors, we validate the asset ID reference (same as computers)
         $validator = Validator::make($data, [
-            'asset_id' => 'required|string|max:255',
-            'asset_name' => 'required|string|max:255',
+            'asset_id' => 'required|integer|exists:assets,id',
             'size' => 'required|string|max:255',
             'resolution' => 'required|string|max:255',
             'panel_type' => 'nullable|string|max:255'
@@ -2512,67 +2617,58 @@ class ImportExportController extends Controller
             throw new \Illuminate\Validation\ValidationException($validator);
         }
 
-        // Check if asset exists by asset_id or asset_name
-        $asset = null;
-        if (!empty($data['asset_id'])) {
-            $asset = Asset::where('asset_tag', $data['asset_id'])->first();
-        }
-        if (!$asset && !empty($data['asset_name'])) {
-            $asset = Asset::where('name', $data['asset_name'])->first();
-        }
-        
-        if (!$asset) {
-            throw new \Exception("Asset with ID/Tag '{$data['asset_id']}' or name '{$data['asset_name']}' not found.");
-        }
-
         // Check if monitor record already exists for this asset
-        $existingMonitor = Monitor::where('asset_id', $asset->id)->first();
+        $existingMonitor = Monitor::where('asset_id', $data['asset_id'])->first();
         if ($existingMonitor) {
-            throw new \Exception("Monitor record for asset '{$data['asset_id']}' already exists. Skipping duplicate entry.");
+            throw new \Exception("Monitor record for asset ID '{$data['asset_id']}' already exists. Skipping duplicate entry.");
         }
 
-        // Validate size format (e.g., "24", "27", "32")
-        if (!empty($data['size']) && !preg_match('/^\d+(\.\d+)?$/', trim($data['size']))) {
-            throw new \Exception("Invalid size format '{$data['size']}'. Use numeric value like '24' or '27.5'.");
+        // Validate size format (e.g., "24"", "27"", "32"")
+        if (!empty($data['size']) && !preg_match('/^\d+(\.\d+)?"?$/', trim($data['size']))) {
+            throw new \Exception("Invalid size format '{$data['size']}'. Use format like '24\"' or '27.5\"'.");
         }
 
-        // Validate resolution format (e.g., "1920x1080", "2560x1440")
-        if (!empty($data['resolution']) && !preg_match('/^\d+x\d+$/i', trim($data['resolution']))) {
-            throw new \Exception("Invalid resolution format '{$data['resolution']}'. Use format like '1920x1080' or '2560x1440'.");
+        // Validate resolution format - must match specific supported resolutions
+        $validResolutions = [
+            '1920x1080 (Full HD)',
+            '2560x1440 (QHD)',
+            '3840x2160 (4K UHD)',
+            '1366x768 (HD)',
+            '1680x1050 (WSXGA+)',
+            '2560x1080 (UltraWide)',
+            '3440x1440 (UltraWide QHD)'
+        ];
+        
+        if (!empty($data['resolution']) && !in_array($data['resolution'], $validResolutions)) {
+            throw new \Exception("Invalid resolution '{$data['resolution']}'. Valid resolutions: " . implode(', ', $validResolutions));
+        }
+
+        // Validate panel type - must match specific supported panel types
+        $validPanelTypes = ['LCD', 'LED', 'OLED', 'CRT', 'Plasma', 'IPS'];
+        
+        if (!empty($data['panel_type']) && !in_array($data['panel_type'], $validPanelTypes)) {
+            throw new \Exception("Invalid panel type '{$data['panel_type']}'. Valid panel types: " . implode(', ', $validPanelTypes));
         }
     }
 
     private function validatePrinter($data, $rowNumber)
     {
+        // For printers, we validate the asset ID reference (same as computers and monitors)
         $validator = Validator::make($data, [
-            'asset_id' => 'required|string|max:255',
-            'asset_name' => 'required|string|max:255',
+            'asset_id' => 'required|integer|exists:assets,id',
             'printer_type' => 'required|string|max:255',
-            'color_support' => 'nullable|boolean',
-            'duplex_printing' => 'nullable|boolean'
+            'color_support' => 'nullable|string|max:255',
+            'duplex_printing' => 'nullable|string|max:255'
         ]);
 
         if ($validator->fails()) {
             throw new \Illuminate\Validation\ValidationException($validator);
         }
 
-        // Check if asset exists by asset_id or asset_name
-        $asset = null;
-        if (!empty($data['asset_id'])) {
-            $asset = Asset::where('asset_tag', $data['asset_id'])->first();
-        }
-        if (!$asset && !empty($data['asset_name'])) {
-            $asset = Asset::where('name', $data['asset_name'])->first();
-        }
-        
-        if (!$asset) {
-            throw new \Exception("Asset with ID/Tag '{$data['asset_id']}' or name '{$data['asset_name']}' not found.");
-        }
-
         // Check if printer record already exists for this asset
-        $existingPrinter = Printer::where('asset_id', $asset->id)->first();
+        $existingPrinter = Printer::where('asset_id', $data['asset_id'])->first();
         if ($existingPrinter) {
-            throw new \Exception("Printer record for asset '{$data['asset_id']}' already exists. Skipping duplicate entry.");
+            throw new \Exception("Printer record for asset ID '{$data['asset_id']}' already exists. Skipping duplicate entry.");
         }
 
         // Validate printer type
@@ -2581,22 +2677,25 @@ class ImportExportController extends Controller
             throw new \Exception("Invalid printer type '{$data['printer_type']}'. Valid types: " . implode(', ', $validPrinterTypes));
         }
 
-        // Validate boolean fields
-        if (!empty($data['color_support']) && !in_array(strtolower($data['color_support']), ['true', 'false', '1', '0', 'yes', 'no'])) {
-            throw new \Exception("Invalid color support value '{$data['color_support']}'. Use: true/false, 1/0, or yes/no.");
+        // Validate color support field
+        $validColorSupport = ['Yes', 'No', 'true', 'false', '1', '0', 'yes', 'no'];
+        if (!empty($data['color_support']) && !in_array($data['color_support'], $validColorSupport) && !in_array(strtolower($data['color_support']), ['true', 'false', '1', '0', 'yes', 'no'])) {
+            throw new \Exception("Invalid color support value '{$data['color_support']}'. Valid values: " . implode(', ', $validColorSupport));
         }
 
-        if (!empty($data['duplex_printing']) && !in_array(strtolower($data['duplex_printing']), ['true', 'false', '1', '0', 'yes', 'no'])) {
-            throw new \Exception("Invalid duplex printing value '{$data['duplex_printing']}'. Use: true/false, 1/0, or yes/no.");
+        // Validate duplex printing field
+        $validDuplexPrinting = ['Yes', 'No', 'true', 'false', '1', '0', 'yes', 'no'];
+        if (!empty($data['duplex_printing']) && !in_array($data['duplex_printing'], $validDuplexPrinting) && !in_array(strtolower($data['duplex_printing']), ['true', 'false', '1', '0', 'yes', 'no'])) {
+            throw new \Exception("Invalid duplex printing value '{$data['duplex_printing']}'. Valid values: " . implode(', ', $validDuplexPrinting));
         }
     }
 
     private function validatePeripheral($data, $rowNumber)
     {
+        // For peripherals, we validate the asset ID reference (same as computers, monitors, and printers)
         $validator = Validator::make($data, [
-            'asset_id' => 'required|string|max:255',
-            'asset_name' => 'required|string|max:255',
-            'peripheral_type' => 'required|string|max:255',
+            'asset_id' => 'required|integer|exists:assets,id',
+            'type' => 'required|string|max:255',
             'interface' => 'required|string|max:255'
         ]);
 
@@ -2604,33 +2703,20 @@ class ImportExportController extends Controller
             throw new \Illuminate\Validation\ValidationException($validator);
         }
 
-        // Check if asset exists by asset_id or asset_name
-        $asset = null;
-        if (!empty($data['asset_id'])) {
-            $asset = Asset::where('asset_tag', $data['asset_id'])->first();
-        }
-        if (!$asset && !empty($data['asset_name'])) {
-            $asset = Asset::where('name', $data['asset_name'])->first();
-        }
-        
-        if (!$asset) {
-            throw new \Exception("Asset with ID/Tag '{$data['asset_id']}' or name '{$data['asset_name']}' not found.");
-        }
-
         // Check if peripheral record already exists for this asset
-        $existingPeripheral = Peripheral::where('asset_id', $asset->id)->first();
+        $existingPeripheral = Peripheral::where('asset_id', $data['asset_id'])->first();
         if ($existingPeripheral) {
-            throw new \Exception("Peripheral record for asset '{$data['asset_id']}' already exists. Skipping duplicate entry.");
+            throw new \Exception("Peripheral record for asset ID '{$data['asset_id']}' already exists. Skipping duplicate entry.");
         }
 
         // Validate peripheral type
-        $validPeripheralTypes = ['Mouse', 'Keyboard', 'Speaker', 'Webcam', 'Microphone', 'Headset', 'USB Hub', 'External Drive', 'Scanner', 'Graphics Tablet'];
-        if (!empty($data['peripheral_type']) && !in_array($data['peripheral_type'], $validPeripheralTypes)) {
-            throw new \Exception("Invalid peripheral type '{$data['peripheral_type']}'. Valid types: " . implode(', ', $validPeripheralTypes));
+        $validPeripheralTypes = ['Mouse', 'Keyboard', 'Webcam', 'Headset', 'Speaker', 'Microphone', 'USB Hub', 'External Drive', 'Other'];
+        if (!empty($data['type']) && !in_array($data['type'], $validPeripheralTypes)) {
+            throw new \Exception("Invalid peripheral type '{$data['type']}'. Valid types: " . implode(', ', $validPeripheralTypes));
         }
 
         // Validate interface type
-        $validInterfaces = ['USB', 'USB-C', 'Bluetooth', 'Wireless', 'PS/2', 'Audio Jack', 'HDMI', 'DisplayPort', 'Thunderbolt', 'Ethernet'];
+        $validInterfaces = ['USB', 'Bluetooth', 'Wireless', 'Wired'];
         if (!empty($data['interface']) && !in_array($data['interface'], $validInterfaces)) {
             throw new \Exception("Invalid interface '{$data['interface']}'. Valid interfaces: " . implode(', ', $validInterfaces));
         }

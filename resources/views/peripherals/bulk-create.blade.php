@@ -12,6 +12,12 @@
                     </a>
                 </div>
                 <div class="card-body">
+                    @if (session('warning'))
+                        <div class="alert alert-warning" role="alert">
+                            {{ session('warning') }}
+                        </div>
+                    @endif
+
                     @if($assets->isEmpty())
                         <div class="alert alert-warning">
                             <i class="fas fa-exclamation-triangle"></i>
@@ -22,10 +28,16 @@
                         <form action="{{ route('peripherals.bulk-store') }}" method="POST" id="bulkCreateForm">
                             @csrf
                             <div class="mb-3">
-                                <p class="text-muted">
-                                    <i class="fas fa-info-circle"></i>
-                                    Found {{ $assets->count() }} available assets for peripheral creation. Select the assets you want to create peripherals for and fill in the required details.
-                                </p>
+                                <div class="alert alert-info">
+                                    <h6><i class="fas fa-info-circle me-2"></i>Bulk Create Instructions</h6>
+                                    <ul class="mb-0">
+                                        <li>Found <strong>{{ $assets->count() }}</strong> available peripheral assets</li>
+                                        <li>Check the assets you want to create peripheral records for</li>
+                                        <li>Fill in the <strong>Type</strong> and <strong>Interface</strong> for each selected asset</li>
+                                        <li>Use the "Select All" checkbox to quickly select all assets</li>
+                                        <li>All fields are required for selected assets</li>
+                                    </ul>
+                                </div>
                             </div>
 
                             <div class="table-responsive">
@@ -33,11 +45,12 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th width="5%">
-                                                <input type="checkbox" id="selectAll" class="form-check-input">
+                                                <input type="checkbox" id="selectAll" class="form-check-input" title="Select All">
+                                                <label for="selectAll" class="form-check-label ms-1">All</label>
                                             </th>
-                                            <th width="25%">Asset</th>
-                                            <th width="20%">Type</th>
-                                            <th width="20%">Interface</th>
+                                            <th width="25%">Asset Details</th>
+                                            <th width="20%">Peripheral Type <span class="text-danger">*</span></th>
+                                            <th width="20%">Interface <span class="text-danger">*</span></th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -48,7 +61,7 @@
                                             </td>
                                             <td>
                                                 <strong>{{ $asset->name }}</strong><br>
-                                                <small class="text-muted">{{ $asset->brand }} {{ $asset->model }}</small><br>
+                                                <small class="text-muted">Tag: {{ $asset->asset_tag }}</small><br>
                                                 <small class="text-muted">Serial: {{ $asset->serial_number }}</small>
                                                 <input type="hidden" name="peripherals[{{ $index }}][asset_id]" value="{{ $asset->id }}" class="peripheral-input" disabled>
                                             </td>
@@ -181,9 +194,9 @@ document.addEventListener('DOMContentLoaded', function() {
         checkedBoxes.forEach(checkbox => {
             const row = checkbox.closest('.peripheral-row');
             const type = row.querySelector('select[name*="[type]"]').value;
-            const connectivity = row.querySelector('select[name*="[connectivity]"]').value;
+            const interface = row.querySelector('select[name*="[interface]"]').value;
 
-            if (!type || !connectivity) {
+            if (!type || !interface) {
                 hasErrors = true;
             }
         });

@@ -20,12 +20,55 @@ class PeripheralController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $peripherals = Peripheral::with(['asset.assignedUser', 'asset.department', 'asset.vendor'])
-                                ->paginate(10);
+        $query = Peripheral::with(['asset.assignedUser', 'asset.department', 'asset.vendor']);
         
-        return view('peripherals.index', compact('peripherals'));
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('asset', function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('asset_tag', 'like', "%{$search}%")
+                  ->orWhere('serial_number', 'like', "%{$search}%");
+            })->orWhere('type', 'like', "%{$search}%")
+              ->orWhere('interface', 'like', "%{$search}%");
+        }
+        
+        // Filter by type
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+        
+        // Filter by interface
+        if ($request->filled('interface')) {
+            $query->where('interface', $request->interface);
+        }
+        
+        // Filter by assignment status
+        if ($request->filled('assignment_status')) {
+            if ($request->assignment_status === 'assigned') {
+                $query->whereHas('asset.assignedUser');
+            } elseif ($request->assignment_status === 'unassigned') {
+                $query->whereDoesntHave('asset.assignedUser');
+            }
+        }
+        
+        // Filter by department
+        if ($request->filled('department')) {
+            $query->whereHas('asset.department', function($q) use ($request) {
+                $q->where('name', $request->department);
+            });
+        }
+        
+        $peripherals = $query->paginate(10)->appends($request->query());
+        
+        // Get filter options
+        $types = Peripheral::distinct()->pluck('type')->filter()->sort()->values();
+        $interfaces = Peripheral::distinct()->pluck('interface')->filter()->sort()->values();
+        $departments = \App\Models\Department::whereHas('assets.peripheral')->pluck('name')->sort()->values();
+        
+        return view('peripherals.index', compact('peripherals', 'types', 'interfaces', 'departments'));
     }
 
     /**
@@ -142,20 +185,62 @@ class PeripheralController extends Controller
      */
     public function bulkStore(Request $request)
     {
-        $request->validate([
-            'peripherals' => 'required|array|min:1',
-            'peripherals.*.asset_id' => 'required|exists:assets,id|unique:peripherals,asset_id',
-            'peripherals.*.type' => 'required|in:Mouse,Keyboard,Webcam,Headset,Speaker,Microphone,USB Hub,External Drive,Other',
-            'peripherals.*.interface' => 'required|in:USB,Bluetooth,Wireless,Wired,USB-C,Lightning',
-        ]);
-
-        $created = 0;
-        foreach ($request->peripherals as $peripheralData) {
-            Peripheral::create($peripheralData);
-            $created++;
+        // Get only the selected assets from the request
+        $selectedAssets = $request->input('selected_assets', []);
+        
+        if (empty($selectedAssets)) {
+            return redirect()->back()
+                           ->withErrors(['selected_assets' => 'Please select at least one asset.'])
+                           ->withInput();
         }
 
-        return redirect()->route('peripherals.index')
-                        ->with('success', "Successfully created {$created} peripherals.");
+        // Validate only the selected peripherals
+        $validationRules = [];
+        foreach ($selectedAssets as $index => $assetId) {
+            $validationRules["peripherals.{$index}.asset_id"] = 'required|exists:assets,id|unique:peripherals,asset_id';
+            $validationRules["peripherals.{$index}.type"] = 'required|in:Mouse,Keyboard,Webcam,Headset,Speaker,Microphone,USB Hub,External Drive,Other';
+            $validationRules["peripherals.{$index}.interface"] = 'required|in:USB,Bluetooth,Wireless,Wired,USB-C,Lightning';
+        }
+
+        $request->validate($validationRules);
+
+        $created = 0;
+        $errors = [];
+
+        \DB::beginTransaction();
+        try {
+            foreach ($selectedAssets as $index => $assetId) {
+                $peripheralData = $request->input("peripherals.{$index}");
+                
+                // Double-check that this asset doesn't already have a peripheral
+                if (Peripheral::where('asset_id', $assetId)->exists()) {
+                    $errors[] = "Asset ID {$assetId} already has a peripheral record.";
+                    continue;
+                }
+
+                Peripheral::create($peripheralData);
+                $created++;
+            }
+
+            \DB::commit();
+
+            $message = "Successfully created {$created} peripherals.";
+            if (!empty($errors)) {
+                $message .= " " . count($errors) . " records were skipped due to errors.";
+                return redirect()->route('peripherals.index')
+                               ->with('warning', $message)
+                               ->with('errors', $errors);
+            }
+
+            return redirect()->route('peripherals.index')
+                           ->with('success', $message);
+
+        } catch (\Exception $e) {
+            \DB::rollback();
+            
+            return redirect()->back()
+                           ->withErrors(['bulk_create' => 'Failed to create peripherals: ' . $e->getMessage()])
+                           ->withInput();
+        }
     }
 }
