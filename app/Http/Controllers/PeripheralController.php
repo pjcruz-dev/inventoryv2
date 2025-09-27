@@ -22,7 +22,7 @@ class PeripheralController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Peripheral::with(['asset.assignedUser', 'asset.department', 'asset.vendor']);
+        $query = Peripheral::with(['asset.assignedUser', 'asset.department', 'asset.vendor', 'asset.category']);
         
         // Search functionality
         if ($request->filled('search')) {

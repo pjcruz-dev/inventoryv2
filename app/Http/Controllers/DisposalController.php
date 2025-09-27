@@ -26,7 +26,7 @@ class DisposalController extends Controller
     {
         // Permission is checked by middleware
 
-        $query = Disposal::with(['asset']);
+        $query = Disposal::with(['asset.assignedUser', 'asset.department', 'asset.vendor', 'asset.category']);
 
         // Search functionality
         if ($request->filled('search')) {

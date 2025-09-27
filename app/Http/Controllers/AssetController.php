@@ -35,7 +35,7 @@ class AssetController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Asset::with(['category', 'vendor', 'assignedUser']);
+        $query = Asset::with(['category', 'vendor', 'assignedUser', 'department']);
         
         // Search functionality
         if ($request->filled('search')) {
@@ -693,13 +693,17 @@ class AssetController extends Controller
             return $user->assignedAssets->count();
         });
         
+        $totalValue = $users->flatMap(function($user) {
+            return $user->assignedAssets;
+        })->sum('cost');
+        
         $assetsByCategory = $users->flatMap(function($user) {
             return $user->assignedAssets;
         })->groupBy('category.name')->map(function($assets) {
             return $assets->count();
         });
 
-        return view('assets.print-employee-assets', compact('users', 'totalUsers', 'totalAssets', 'assetsByCategory'));
+        return view('assets.print-employee-assets', compact('users', 'totalUsers', 'totalAssets', 'totalValue', 'assetsByCategory'));
     }
 
     public function printSingleEmployeeAssets(User $user)
@@ -712,12 +716,13 @@ class AssetController extends Controller
         ]);
 
         $totalAssets = $user->assignedAssets->count();
+        $totalValue = $user->assignedAssets->sum('cost');
         
         $assetsByCategory = $user->assignedAssets->groupBy('category.name')->map(function($assets) {
             return $assets->count();
         });
 
-        return view('assets.print-single-employee-assets', compact('user', 'totalAssets', 'assetsByCategory'));
+        return view('assets.print-single-employee-assets', compact('user', 'totalAssets', 'totalValue', 'assetsByCategory'));
     }
 
     /**

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading State Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .test-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-button {
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 class="mb-4">Loading State Test</h1>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5>Test Different Loading Scenarios</h5>
+            </div>
+            <div class="card-body">
+                <p>Click the buttons below to test the "Processing..." loading state:</p>
+                
+                <div class="mb-3">
+                    <button class="btn btn-primary test-button" onclick="testLoading(this, 1000)">
+                        <i class="fas fa-search me-2"></i>Quick Search (1s)
+                    </button>
+                    
+                    <button class="btn btn-success test-button" onclick="testLoading(this, 3000)">
+                        <i class="fas fa-save me-2"></i>Save Data (3s)
+                    </button>
+                    
+                    <button class="btn btn-warning test-button" onclick="testLoading(this, 5000)">
+                        <i class="fas fa-upload me-2"></i>Upload File (5s)
+                    </button>
+                </div>
+                
+                <div class="mb-3">
+                    <button class="btn btn-info test-button" onclick="testMultipleLoading()">
+                        <i class="fas fa-cogs me-2"></i>Test Multiple Buttons
+                    </button>
+                    
+                    <button class="btn btn-secondary test-button" onclick="resetAllLoading()">
+                        <i class="fas fa-refresh me-2"></i>Reset All Loading
+                    </button>
+                </div>
+                
+                <div class="alert alert-info">
+                    <strong>How it works:</strong>
+                    <ul class="mb-0">
+                        <li>Click any button to see the "Processing..." loading state</li>
+                        <li>The button will show a spinner and "Processing..." text</li>
+                        <li>After the specified time, it will return to normal</li>
+                        <li>Use "Reset All Loading" to fix any stuck states</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function testLoading(button, duration) {
+            // Store original content
+            if (!button.dataset.originalContent) {
+                button.dataset.originalContent = button.innerHTML;
+            }
+            
+            // Show loading state
+            console.log('Showing loading state for:', button.textContent.trim());
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+            button.disabled = true;
+            button.classList.add('loading');
+            
+            // Hide loading state after duration
+            setTimeout(() => {
+                console.log('Hiding loading state for:', button.dataset.originalContent);
+                button.innerHTML = button.dataset.originalContent;
+                button.disabled = false;
+                button.classList.remove('loading');
+            }, duration);
+        }
+        
+        function testMultipleLoading() {
+            const buttons = document.querySelectorAll('.test-button:not(.btn-secondary)');
+            buttons.forEach((button, index) => {
+                setTimeout(() => {
+                    testLoading(button, 2000);
+                }, index * 500);
+            });
+        }
+        
+        function resetAllLoading() {
+            console.log('Resetting all loading states...');
+            const loadingButtons = document.querySelectorAll('.btn.loading');
+            loadingButtons.forEach(button => {
+                if (button.dataset.originalContent) {
+                    button.innerHTML = button.dataset.originalContent;
+                    button.disabled = false;
+                    button.classList.remove('loading');
+                    console.log('Reset button:', button.textContent.trim());
+                }
+            });
+            console.log('All loading states reset!');
+        }
+        
+        // Auto-reset on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            resetAllLoading();
+        });
+    </script>
+</body>
+</html>

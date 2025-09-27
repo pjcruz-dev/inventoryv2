@@ -5,62 +5,41 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="card-title mb-0">
+                <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                    <h3 class="card-title mb-0 text-white">
                         <i class="fas fa-tools me-2"></i>Maintenance Management
                     </h3>
                     <div class="btn-group" role="group">
                         @can('create_maintenance')
-                            <a href="{{ route('maintenance.bulk-create') }}" class="btn btn-success">
-                                <i class="fas fa-plus-circle me-1"></i>Bulk Create
-                            </a>
-                            <a href="{{ route('maintenance.create') }}" class="btn btn-primary">
+                            <a href="{{ route('maintenance.create') }}" class="btn btn-light btn-sm" style="color: #667eea;">
                                 <i class="fas fa-plus me-1"></i>Add New
+                            </a>
+                            <a href="{{ route('maintenance.bulk-create') }}" class="btn btn-light btn-sm" style="color: #667eea;">
+                                <i class="fas fa-layer-group me-1"></i>Bulk Create
                             </a>
                         @endcan
                     </div>
                 </div>
                 
                 <div class="card-body">
-                    <!-- Search and Filter Form -->
-                    <form method="GET" action="{{ route('maintenance.index') }}" class="mb-4">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label for="search" class="form-label">Search</label>
-                                <input type="text" class="form-control" id="search" name="search" 
-                                       value="{{ request('search') }}" placeholder="Search by issue, action, or asset...">
-                            </div>
-                            <div class="col-md-2">
-                                <label for="status" class="form-label">Status</label>
-                                <select class="form-select" id="status" name="status">
-                                    <option value="">All Statuses</option>
-                                    @foreach($statuses as $status)
-                                        <option value="{{ $status }}" {{ request('status') == $status ? 'selected' : '' }}>
-                                            {{ $status }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label for="start_date" class="form-label">Start Date</label>
-                                <input type="date" class="form-control" id="start_date" name="start_date" 
-                                       value="{{ request('start_date') }}">
-                            </div>
-                            <div class="col-md-2">
-                                <label for="end_date" class="form-label">End Date</label>
-                                <input type="date" class="form-control" id="end_date" name="end_date" 
-                                       value="{{ request('end_date') }}">
-                            </div>
-                            <div class="col-md-2 d-flex align-items-end">
-                                <button type="submit" class="btn btn-outline-primary me-2">
-                                    <i class="fas fa-search"></i> Filter
-                                </button>
-                                <a href="{{ route('maintenance.index') }}" class="btn btn-outline-secondary">
-                                    <i class="fas fa-times"></i> Clear
-                                </a>
+                    <!-- Search Section -->
+                    <div class="mb-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <form method="GET" action="{{ route('maintenance.index') }}">
+                                    <div class="input-group">
+                                        <input type="text" name="search" class="form-control" 
+                                               placeholder="Search by issue, action, or asset..." 
+                                               value="{{ request('search') }}" style="border-radius: 6px 0 0 6px; border: 2px solid #e9ecef;">
+                                        <button class="btn btn-primary" type="submit" style="border-radius: 0 6px 6px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 2px solid #667eea;">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
-                    </form>
+                    </div>
+
 
                     <!-- Results Summary -->
                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -122,16 +101,16 @@
                             @endif
                         </td>
                                         <td>
-                                            <div class="btn-group" role="group">
+                                            <div class="d-flex justify-content-center gap-2">
                                                 @can('view_maintenance')
                                                 <a href="{{ route('maintenance.show', $maintenance) }}" 
-                                                   class="btn btn-sm btn-outline-info" title="View">
+                                                   class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-view" title="View Details">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                                 @endcan
                                                 @can('manage_maintenance')
                                                     <a href="{{ route('maintenance.edit', $maintenance) }}" 
-                                                       class="btn btn-sm btn-outline-warning" title="Edit">
+                                                       class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-edit" title="Edit">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
                                                     <form action="{{ route('maintenance.destroy', $maintenance) }}" 
@@ -139,7 +118,7 @@
                                                           onsubmit="return confirm('Are you sure you want to delete this maintenance record?')">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                        <button type="submit" class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-delete" title="Delete">
                                                             <i class="fas fa-trash"></i>
                                                         </button>
                                                     </form>
@@ -154,7 +133,7 @@
                                                 <i class="fas fa-tools fa-3x mb-3"></i>
                                                 <p class="mb-0">No maintenance records found.</p>
                                                 @can('manage_maintenance')
-                                                    <a href="{{ route('maintenance.create') }}" class="btn btn-primary mt-2">
+                                                    <a href="{{ route('maintenance.create') }}" class="btn btn-primary btn-sm mt-2">
                                                         <i class="fas fa-plus me-1"></i>Add First Maintenance Record
                                                     </a>
                                                 @endcan
@@ -178,6 +157,116 @@
     </div>
 </div>
 @endsection
+
+@push('styles')
+<style>
+/* Action Button Styles */
+.action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    position: relative;
+    overflow: hidden;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.action-btn-view {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: white;
+    border-color: #4f46e5;
+}
+
+.action-btn-view:hover {
+    background: linear-gradient(135deg, #3730a3 0%, #6d28d9 100%);
+    color: white;
+}
+
+.action-btn-edit {
+    background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+    color: white;
+    border-color: #f59e0b;
+}
+
+.action-btn-edit:hover {
+    background: linear-gradient(135deg, #d97706 0%, #ea580c 100%);
+    color: white;
+}
+
+.action-btn-delete {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border-color: #ef4444;
+}
+
+.action-btn-delete:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: white;
+}
+
+.action-btn-print {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border-color: #10b981;
+}
+
+.action-btn-print:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    color: white;
+}
+
+.action-btn-reminder {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+    border-color: #8b5cf6;
+}
+
+.action-btn-reminder:hover {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    color: white;
+}
+
+.action-btn-mark {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    color: white;
+    border-color: #06b6d4;
+}
+
+.action-btn-mark:hover {
+    background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+    color: white;
+}
+
+/* Loading state */
+.action-btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.action-btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    margin: auto;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+@endpush
 
 @push('scripts')
 <script>

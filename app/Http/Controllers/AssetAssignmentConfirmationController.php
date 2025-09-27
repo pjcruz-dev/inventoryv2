@@ -29,7 +29,7 @@ class AssetAssignmentConfirmationController extends Controller
      */
     public function index(Request $request)
     {
-        $query = AssetAssignmentConfirmation::with(['asset', 'user']);
+        $query = AssetAssignmentConfirmation::with(['asset.assignedUser', 'asset.department', 'asset.vendor', 'asset.category', 'user.department']);
         
         // Search functionality
         if ($request->has('search') && $request->search) {

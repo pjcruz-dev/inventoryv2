@@ -5,116 +5,43 @@
     <div class="row justify-content-center">
         <div class="col-md-12">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>{{ __('Peripherals') }}</span>
+                <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                    <span class="text-white h4 mb-0">{{ __('Peripherals') }}</span>
                     <div class="btn-group" role="group">
-                        <a href="{{ route('peripherals.bulk-create') }}" class="btn btn-success btn-sm">
-                            <i class="fas fa-plus-circle me-1"></i>{{ __('Bulk Create') }}
-                        </a>
-                        <a href="{{ route('peripherals.create') }}" class="btn btn-primary btn-sm">
+                        <a href="{{ route('peripherals.create') }}" class="btn btn-light btn-sm" style="color: #667eea;">
                             <i class="fas fa-plus me-1"></i>{{ __('Add New') }}
+                        </a>
+                        <a href="{{ route('peripherals.bulk-create') }}" class="btn btn-light btn-sm" style="color: #667eea;">
+                            <i class="fas fa-layer-group me-1"></i>{{ __('Bulk Create') }}
                         </a>
                     </div>
                 </div>
 
                 <div class="card-body">
+                    <!-- Search Section -->
+                    <div class="mb-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <form method="GET" action="{{ route('peripherals.index') }}">
+                                    <div class="input-group">
+                                        <input type="text" name="search" class="form-control" 
+                                               placeholder="Search peripherals..." 
+                                               value="{{ request('search') }}" style="border-radius: 6px 0 0 6px; border: 2px solid #e9ecef;">
+                                        <button class="btn btn-primary" type="submit" style="border-radius: 0 6px 6px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 2px solid #667eea;">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
                     @if (session('success'))
                         <div class="alert alert-success" role="alert">
                             {{ session('success') }}
                         </div>
                     @endif
 
-                    <!-- Search and Filter Section -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h6 class="mb-0">
-                                        <i class="fas fa-filter me-2"></i>Search & Filter
-                                    </h6>
-                                </div>
-                                <div class="card-body">
-                                    <form method="GET" action="{{ route('peripherals.index') }}" class="row g-3">
-                                        <!-- Search Input -->
-                                        <div class="col-md-4">
-                                            <label for="search" class="form-label">Search</label>
-                                            <input type="text" 
-                                                   class="form-control" 
-                                                   id="search" 
-                                                   name="search" 
-                                                   placeholder="Search by asset name, tag, serial, type, or interface..."
-                                                   value="{{ request('search') }}">
-                                        </div>
-                                        
-                                        <!-- Type Filter -->
-                                        <div class="col-md-2">
-                                            <label for="type" class="form-label">Type</label>
-                                            <select class="form-select" id="type" name="type">
-                                                <option value="">All Types</option>
-                                                @foreach($types as $type)
-                                                    <option value="{{ $type }}" {{ request('type') == $type ? 'selected' : '' }}>
-                                                        {{ $type }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        
-                                        <!-- Interface Filter -->
-                                        <div class="col-md-2">
-                                            <label for="interface" class="form-label">Interface</label>
-                                            <select class="form-select" id="interface" name="interface">
-                                                <option value="">All Interfaces</option>
-                                                @foreach($interfaces as $interface)
-                                                    <option value="{{ $interface }}" {{ request('interface') == $interface ? 'selected' : '' }}>
-                                                        {{ $interface }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        
-                                        <!-- Assignment Status Filter -->
-                                        <div class="col-md-2">
-                                            <label for="assignment_status" class="form-label">Assignment</label>
-                                            <select class="form-select" id="assignment_status" name="assignment_status">
-                                                <option value="">All</option>
-                                                <option value="assigned" {{ request('assignment_status') == 'assigned' ? 'selected' : '' }}>
-                                                    Assigned
-                                                </option>
-                                                <option value="unassigned" {{ request('assignment_status') == 'unassigned' ? 'selected' : '' }}>
-                                                    Unassigned
-                                                </option>
-                                            </select>
-                                        </div>
-                                        
-                                        <!-- Department Filter -->
-                                        <div class="col-md-2">
-                                            <label for="department" class="form-label">Department</label>
-                                            <select class="form-select" id="department" name="department">
-                                                <option value="">All Departments</option>
-                                                @foreach($departments as $department)
-                                                    <option value="{{ $department }}" {{ request('department') == $department ? 'selected' : '' }}>
-                                                        {{ $department }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        
-                                        <!-- Filter Buttons -->
-                                        <div class="col-12">
-                                            <div class="d-flex gap-2">
-                                                <button type="submit" class="btn btn-primary">
-                                                    <i class="fas fa-search me-1"></i>Apply Filters
-                                                </button>
-                                                <a href="{{ route('peripherals.index') }}" class="btn btn-outline-secondary">
-                                                    <i class="fas fa-times me-1"></i>Clear Filters
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- Results Summary -->
                     @if(request()->hasAny(['search', 'type', 'interface', 'assignment_status', 'department']))
@@ -152,14 +79,14 @@
                                         <td>{{ $peripheral->asset->assignedUser->name ?? 'Unassigned' }}</td>
                                         <td>{{ $peripheral->asset->department->name ?? 'N/A' }}</td>
                                         <td>
-                                            <div class="d-flex justify-content-center gap-1">
+                                            <div class="d-flex justify-content-center gap-2">
                                                 @can('view_peripherals')
-                                                <a href="{{ route('peripherals.show', $peripheral) }}" class="btn btn-outline-info btn-sm" style="width: 32px; height: 32px;" title="View Details">
+                                                <a href="{{ route('peripherals.show', $peripheral) }}" class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-view" title="View Details">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                                 @endcan
                                                 @can('edit_peripherals')
-                                                <a href="{{ route('peripherals.edit', $peripheral) }}" class="btn btn-outline-warning btn-sm" style="width: 32px; height: 32px;" title="Edit Peripheral">
+                                                <a href="{{ route('peripherals.edit', $peripheral) }}" class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-edit" title="Edit Peripheral">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                                 @endcan
@@ -167,7 +94,7 @@
                                                 <form action="{{ route('peripherals.destroy', $peripheral) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to permanently delete this peripheral? This action cannot be undone.')">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-outline-danger btn-sm" style="width: 32px; height: 32px;" title="Delete Peripheral">
+                                                    <button type="submit" class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-delete" title="Delete Peripheral">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
                                                 </form>
@@ -242,3 +169,113 @@ $(document).ready(function() {
 });
 </script>
 @endsection
+
+@push('styles')
+<style>
+/* Action Button Styles */
+.action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    position: relative;
+    overflow: hidden;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.action-btn-view {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: white;
+    border-color: #4f46e5;
+}
+
+.action-btn-view:hover {
+    background: linear-gradient(135deg, #3730a3 0%, #6d28d9 100%);
+    color: white;
+}
+
+.action-btn-edit {
+    background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+    color: white;
+    border-color: #f59e0b;
+}
+
+.action-btn-edit:hover {
+    background: linear-gradient(135deg, #d97706 0%, #ea580c 100%);
+    color: white;
+}
+
+.action-btn-delete {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border-color: #ef4444;
+}
+
+.action-btn-delete:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: white;
+}
+
+.action-btn-print {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border-color: #10b981;
+}
+
+.action-btn-print:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    color: white;
+}
+
+.action-btn-reminder {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+    border-color: #8b5cf6;
+}
+
+.action-btn-reminder:hover {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    color: white;
+}
+
+.action-btn-mark {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    color: white;
+    border-color: #06b6d4;
+}
+
+.action-btn-mark:hover {
+    background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+    color: white;
+}
+
+/* Loading state */
+.action-btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.action-btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    margin: auto;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+@endpush

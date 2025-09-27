@@ -23,7 +23,7 @@ class PrinterController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Printer::with('asset');
+        $query = Printer::with(['asset.assignedUser', 'asset.department', 'asset.vendor', 'asset.category']);
         
         if ($request->has('search') && $request->search) {
             $search = $request->search;

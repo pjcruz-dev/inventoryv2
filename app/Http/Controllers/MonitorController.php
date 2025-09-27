@@ -23,7 +23,7 @@ class MonitorController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Monitor::with('asset');
+        $query = Monitor::with(['asset.assignedUser', 'asset.department', 'asset.vendor', 'asset.category']);
         
         if ($request->has('search') && $request->search) {
             $search = $request->search;
