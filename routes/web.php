@@ -26,6 +26,8 @@ use App\Http\Controllers\DisposalController;
 use App\Http\Controllers\SecurityAuditController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SystemHealthController;
+use App\Http\Controllers\HealthCheckController;
+use App\Http\Controllers\SecurityMonitoringController;
 use App\Http\Controllers\ChangePasswordController;
 
 Route::get('/', function () {
@@ -246,10 +248,32 @@ Route::prefix('reports')->name('reports.')->middleware(['auth', 'check.permissio
         Route::post('/export', [ReportController::class, 'export'])->name('export');
     });
 
-    // System Health Routes
-    Route::prefix('system')->name('system.')->middleware(['auth', 'check.permission:view_system_health'])->group(function () {
-        Route::get('/health', [SystemHealthController::class, 'index'])->name('health');
-        Route::get('/health/metrics', [SystemHealthController::class, 'metrics'])->name('health.metrics');
-        Route::post('/health/clear-cache', [SystemHealthController::class, 'clearCache'])->name('health.clear-cache');
-        Route::post('/health/warm-cache', [SystemHealthController::class, 'warmUpCache'])->name('health.warm-cache');
-    });
+// System Health Routes
+Route::prefix('system')->name('system.')->middleware(['auth', 'check.permission:view_system_health'])->group(function () {
+    Route::get('/health', [SystemHealthController::class, 'index'])->name('health');
+    Route::get('/health/metrics', [SystemHealthController::class, 'metrics'])->name('health.metrics');
+    Route::post('/health/clear-cache', [SystemHealthController::class, 'clearCache'])->name('health.clear-cache');
+    Route::post('/health/warm-cache', [SystemHealthController::class, 'warmUpCache'])->name('health.warm-cache');
+});
+
+// Health Check Routes (for load balancers)
+Route::prefix('health')->group(function () {
+    Route::get('/', [HealthCheckController::class, 'index'])->name('health.basic');
+    Route::get('/detailed', [HealthCheckController::class, 'detailed'])->name('health.detailed');
+    Route::get('/readiness', [HealthCheckController::class, 'readiness'])->name('health.readiness');
+    Route::get('/liveness', [HealthCheckController::class, 'liveness'])->name('health.liveness');
+    Route::get('/metrics', [HealthCheckController::class, 'metrics'])->name('health.metrics');
+});
+
+// Security Monitoring Routes
+Route::prefix('security/monitoring')->name('security.monitoring.')->middleware(['auth', 'check.permission:view_security_audit'])->group(function () {
+    Route::get('/', [SecurityMonitoringController::class, 'index'])->name('index');
+    Route::get('/threats', [SecurityMonitoringController::class, 'threats'])->name('threats');
+    Route::get('/events', [SecurityMonitoringController::class, 'events'])->name('events');
+    Route::get('/statistics', [SecurityMonitoringController::class, 'statistics'])->name('statistics');
+    Route::get('/report', [SecurityMonitoringController::class, 'report'])->name('report');
+    Route::post('/run', [SecurityMonitoringController::class, 'runMonitoring'])->name('run');
+    Route::post('/clear-blocks', [SecurityMonitoringController::class, 'clearBlocks'])->name('clear-blocks');
+    Route::get('/check-ip', [SecurityMonitoringController::class, 'checkIP'])->name('check-ip');
+    Route::get('/check-user', [SecurityMonitoringController::class, 'checkUser'])->name('check-user');
+});

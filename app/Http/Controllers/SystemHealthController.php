@@ -7,6 +7,7 @@ use App\Services\PerformanceService;
 use App\Services\CacheService;
 use App\Services\ErrorHandlingService;
 use App\Services\DatabaseOptimizationService;
+use App\Services\LoadBalancingService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 
@@ -36,6 +37,7 @@ class SystemHealthController extends Controller
             'recommendations' => PerformanceService::getRecommendations(),
             'database' => $this->getDatabaseHealth(),
             'database_optimization' => DatabaseOptimizationService::getDatabaseMetrics(),
+            'load_balancing' => LoadBalancingService::getLoadBalancerMetrics(),
             'system_status' => $this->getSystemStatus()
         ];
     }

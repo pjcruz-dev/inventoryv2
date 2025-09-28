@@ -6,33 +6,32 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h3 class="card-title mb-0 text-white">
-                            <i class="fas fa-trash-alt me-2"></i>Asset Disposals
-                        </h3>
-                        <div class="btn-group" role="group">
-                            @can('create_disposal')
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="mb-0 text-white">All Asset Disposals</h5>
+                            <small class="text-white-50">{{ $disposals->total() }} total disposals</small>
+                        </div>
+                        <div class="col-auto">
+                            <div class="d-flex gap-2">
+                                @can('create_disposal')
                                 <a href="{{ route('disposal.bulk-create') }}" class="btn btn-light btn-sm" style="color: #667eea;">
                                     <i class="fas fa-plus-circle me-1"></i>Bulk Dispose
                                 </a>
                                 <a href="{{ route('disposal.create') }}" class="btn btn-light btn-sm" style="color: #667eea;">
                                     <i class="fas fa-plus me-1"></i>Add New
                                 </a>
-                            @endcan
+                                @endcan
+                            </div>
                         </div>
                     </div>
-                </div>
-                
-                <div class="card-body">
+                    
                     <!-- Search Section -->
-                    <div class="mb-3">
+                    <div class="mt-3">
                         <div class="row">
                             <div class="col-md-6">
-                                <form method="GET" action="{{ route('disposal.index') }}">
+                                <form method="GET" action="{{ route('disposal.index') }}" id="searchForm">
                                     <div class="input-group">
-                                        <input type="text" name="search" class="form-control" 
-                                               placeholder="Search asset name, tag, or disposal type..." 
-                                               value="{{ request('search') }}" style="border-radius: 6px 0 0 6px; border: 2px solid #e9ecef;">
+                                        <input type="text" name="search" class="form-control" placeholder="Search asset name, tag, or disposal type..." value="{{ request('search') }}" style="border-radius: 6px 0 0 6px; border: 2px solid #e9ecef;">
                                         <button class="btn btn-primary" type="submit" style="border-radius: 0 6px 6px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 2px solid #667eea;">
                                             <i class="fas fa-search"></i>
                                         </button>
@@ -41,15 +40,9 @@
                             </div>
                         </div>
                     </div>
-                        
-                        @if(request()->hasAny(['search', 'disposal_type', 'date_from', 'date_to']))
-                            <div class="mt-2">
-                                <a href="{{ route('disposal.index') }}" class="btn btn-sm btn-outline-secondary">
-                                    <i class="fas fa-times me-1"></i>Clear Filters
-                                </a>
-                            </div>
-                        @endif
-                    </form>
+                </div>
+                
+                <div class="card-body">
                     
                     <!-- Results Summary -->
                     <div class="row mb-3">

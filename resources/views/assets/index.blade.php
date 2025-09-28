@@ -73,12 +73,6 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="col-auto">
                 <div class="d-flex gap-2">
-                    <button class="btn btn-light btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false">
-                        <i class="fas fa-filter me-1"></i>Filters
-                        @if(request()->hasAny(['search', 'category', 'status', 'movement', 'assignment']))
-                            <span class="badge bg-primary ms-1">{{ collect(request()->only(['search', 'category', 'status', 'movement', 'assignment']))->filter()->count() }}</span>
-                        @endif
-                    </button>
                         <a href="{{ route('assets.print-employee-assets') }}" class="btn btn-light btn-sm" target="_blank" style="color: #667eea;">
                             <i class="fas fa-print me-1"></i>Employee Assets Report
                         </a>
@@ -105,103 +99,6 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         </div>
         
-        <!-- Advanced Filters -->
-        <div class="collapse mt-3" id="filterCollapse">
-            <div class="card card-body bg-light">
-                <form method="GET" action="{{ route('assets.index') }}" id="filterForm">
-                    <div class="row g-3">
-                        <!-- Search -->
-                        <div class="col-md-3">
-                            <label class="form-label fw-semibold">Search</label>
-                            <input type="text" name="search" class="form-control" placeholder="Search assets..." value="{{ request('search') }}">
-                        </div>
-                        
-                        <!-- Category Filter -->
-                        <div class="col-md-2">
-                            <label class="form-label fw-semibold">Category</label>
-                            <div class="dropdown">
-                                <input type="text" 
-                                       class="form-control dropdown-toggle" 
-                                       id="categorySearch" 
-                                       placeholder="Search categories..." 
-                                       data-bs-toggle="dropdown" 
-                                       autocomplete="off"
-                                       value="{{ $categories->where('id', request('category'))->first()->name ?? '' }}">
-                                <input type="hidden" name="category" id="categoryValue" value="{{ request('category') }}">
-                                <ul class="dropdown-menu w-100" id="categoryDropdown">
-                                    <li><a class="dropdown-item" href="#" data-value="">All Categories</a></li>
-                                    @foreach($categories as $category)
-                                        <li><a class="dropdown-item {{ request('category') == $category->id ? 'active' : '' }}" 
-                                               href="#" 
-                                               data-value="{{ $category->id }}">{{ $category->name }}</a></li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        </div>
-                        
-                        <!-- Status Filter -->
-                        <div class="col-md-2">
-                            <label class="form-label fw-semibold">Status</label>
-                            <select name="status" class="form-select">
-                                <option value="">All Statuses</option>
-                                @foreach($statuses as $status)
-                                    <option value="{{ $status }}" {{ request('status') == $status ? 'selected' : '' }}>
-                                        {{ str_replace('Deployed Tagged', 'Deployed', $status) }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        
-                        <!-- Movement Filter -->
-                        <div class="col-md-2">
-                            <label class="form-label fw-semibold">Movement</label>
-                            <select name="movement" class="form-select">
-                                <option value="">All Movements</option>
-                                @foreach($movements as $movement)
-                                    <option value="{{ $movement }}" {{ request('movement') == $movement ? 'selected' : '' }}>
-                                        {{ str_replace('Deployed Tagged', 'Deployed', $movement) }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        
-                        <!-- Assignment Filter -->
-                        <div class="col-md-2">
-                            <label class="form-label fw-semibold">Assignment</label>
-                            <select name="assignment" class="form-select">
-                                <option value="">All Assets</option>
-                                <option value="assigned" {{ request('assignment') == 'assigned' ? 'selected' : '' }}>Assigned</option>
-                                <option value="unassigned" {{ request('assignment') == 'unassigned' ? 'selected' : '' }}>Unassigned</option>
-                            </select>
-                        </div>
-                        
-                        <!-- Entity Filter -->
-                        <div class="col-md-2">
-                            <label class="form-label fw-semibold">Entity</label>
-                            <select name="entity" class="form-select">
-                                <option value="">All Entities</option>
-                                @foreach($entities as $entity)
-                                    <option value="{{ $entity }}" {{ request('entity') == $entity ? 'selected' : '' }}>{{ $entity }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        
-                        <!-- Filter Actions -->
-                        <div class="col-md-1">
-                            <label class="form-label">&nbsp;</label>
-                            <div class="d-flex gap-1">
-                                <button type="submit" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                                <a href="{{ route('assets.index') }}" class="btn btn-outline-secondary btn-sm">
-                                    <i class="fas fa-times"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
     </div>
     <div class="card-body">
         @if($assets->count() > 0)
@@ -599,50 +496,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 console.log('All loading states reset!');
             };
-    // Category search functionality
-    const categorySearch = $('#categorySearch');
-    const categoryValue = $('#categoryValue');
-    const categoryDropdown = $('#categoryDropdown');
-    
-    // Filter dropdown items based on search input
-    categorySearch.on('input', function() {
-        const searchTerm = $(this).val().toLowerCase();
-        
-        categoryDropdown.find('li').each(function() {
-            const text = $(this).find('a').text().toLowerCase();
-            if (text.includes(searchTerm)) {
-                $(this).show();
-            } else {
-                $(this).hide();
-            }
-        });
-        
-        // Show dropdown if not already visible
-        if (!categoryDropdown.hasClass('show')) {
-            categoryDropdown.addClass('show');
-        }
-    });
-    
-    // Handle dropdown item selection
-    categoryDropdown.on('click', 'a.dropdown-item', function(e) {
-        e.preventDefault();
-        
-        const value = $(this).data('value');
-        const text = $(this).text();
-        
-        categoryValue.val(value);
-        categorySearch.val(value ? text : '');
-        
-        // Update active state
-        categoryDropdown.find('a.dropdown-item').removeClass('active');
-        $(this).addClass('active');
-        
-        // Hide dropdown
-        categoryDropdown.removeClass('show');
-        
-        // Auto-submit form for immediate filtering
-        $('#filterForm').submit();
-    });
     
     // Bulk selection functionality
     function initializeBulkSelection() {
@@ -709,28 +562,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize bulk selection after DOM is ready
     initializeBulkSelection();
     
-    // Show all items when dropdown is opened
-    categorySearch.on('focus', function() {
-        categoryDropdown.find('li').show();
-    });
-    
-    // Hide dropdown when clicking outside
-    $(document).on('click', function(e) {
-        if (!$(e.target).closest('.dropdown').length) {
-            categoryDropdown.removeClass('show');
-        }
-    });
-    
-    // Clear search when clicking the clear button
-    categorySearch.on('keydown', function(e) {
-        if (e.key === 'Escape') {
-            $(this).val('');
-            categoryValue.val('');
-            categoryDropdown.find('a.dropdown-item').removeClass('active');
-            categoryDropdown.find('a[data-value=""]').addClass('active');
-            categoryDropdown.removeClass('show');
-        }
-    });
 });
 
 // Clear selection function (called from toolbar button)

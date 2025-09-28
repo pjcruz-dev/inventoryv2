@@ -5,30 +5,31 @@
     <div class="row justify-content-center">
         <div class="col-md-12">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
-                    <h4 class="mb-0 text-white">Monitors</h4>
-                    <div class="d-flex gap-2">
-                        <div class="btn-group" role="group">
-                    <a href="{{ route('monitors.create') }}" class="btn btn-light btn-sm" style="color: #667eea;">
-                        <i class="fas fa-plus me-1"></i>Add Monitor
-                    </a>
-                    <a href="{{ route('monitors.bulk-create') }}" class="btn btn-light btn-sm" style="color: #667eea;">
-                        <i class="fas fa-layer-group me-1"></i>Bulk Create
-                    </a>
+                <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="mb-0 text-white">All Monitors</h5>
+                            <small class="text-white-50">{{ $monitors->total() }} total monitors</small>
+                        </div>
+                        <div class="col-auto">
+                            <div class="d-flex gap-2">
+                                <a href="{{ route('monitors.create') }}" class="btn btn-light btn-sm" style="color: #667eea;">
+                                    <i class="fas fa-plus me-1"></i>Add Monitor
+                                </a>
+                                <a href="{{ route('monitors.bulk-create') }}" class="btn btn-light btn-sm" style="color: #667eea;">
+                                    <i class="fas fa-layer-group me-1"></i>Bulk Create
+                                </a>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="card-body">
+                    
                     <!-- Search Section -->
-                    <div class="mb-3">
+                    <div class="mt-3">
                         <div class="row">
                             <div class="col-md-6">
-                                <form method="GET" action="{{ route('monitors.index') }}">
+                                <form method="GET" action="{{ route('monitors.index') }}" id="searchForm">
                                     <div class="input-group">
-                                        <input type="text" name="search" class="form-control" 
-                                               placeholder="Search by asset name, tag, size, or resolution..." 
-                                               value="{{ request('search') }}" style="border-radius: 6px 0 0 6px; border: 2px solid #e9ecef;">
+                                        <input type="text" name="search" class="form-control" placeholder="Search by asset name, tag, size, or resolution..." value="{{ request('search') }}" style="border-radius: 6px 0 0 6px; border: 2px solid #e9ecef;">
                                         <button class="btn btn-primary" type="submit" style="border-radius: 0 6px 6px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 2px solid #667eea;">
                                             <i class="fas fa-search"></i>
                                         </button>
@@ -37,6 +38,9 @@
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <div class="card-body">
 
                     @if(session('success'))
                         <div class="alert alert-success alert-dismissible fade show" role="alert">

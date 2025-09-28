@@ -5,27 +5,28 @@
 
 @section('content')
 <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
-        <h3 class="card-title mb-0 text-white">
-            <i class="fas fa-users me-2"></i>User Management
-        </h3>
-        <div class="btn-group">
-            <a href="{{ route('users.create') }}" class="btn btn-light btn-sm" style="color: #667eea;">
-                <i class="fas fa-plus me-1"></i>Add New User
-            </a>
+    <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+        <div class="row align-items-center">
+            <div class="col">
+                <h5 class="mb-0 text-white">All Users</h5>
+                <small class="text-white-50">{{ $users->total() }} total users</small>
+            </div>
+            <div class="col-auto">
+                <div class="d-flex gap-2">
+                    <a href="{{ route('users.create') }}" class="btn btn-light btn-sm" style="color: #667eea;">
+                        <i class="fas fa-plus me-1"></i>Add New User
+                    </a>
+                </div>
+            </div>
         </div>
-    </div>
-    
-    <div class="card-body">
+        
         <!-- Search Section -->
-        <div class="mb-3">
+        <div class="mt-3">
             <div class="row">
                 <div class="col-md-6">
-                    <form method="GET" action="{{ route('users.index') }}">
+                    <form method="GET" action="{{ route('users.index') }}" id="searchForm">
                         <div class="input-group">
-                            <input type="text" name="search" class="form-control" 
-                                   placeholder="Search users..." 
-                                   value="{{ request('search') }}" style="border-radius: 6px 0 0 6px; border: 2px solid #e9ecef;">
+                            <input type="text" name="search" class="form-control" placeholder="Search users..." value="{{ request('search') }}" style="border-radius: 6px 0 0 6px; border: 2px solid #e9ecef;">
                             <button class="btn btn-primary" type="submit" style="border-radius: 0 6px 6px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 2px solid #667eea;">
                                 <i class="fas fa-search"></i>
                             </button>
@@ -34,6 +35,9 @@
                 </div>
             </div>
         </div>
+    </div>
+    
+    <div class="card-body">
     
     <div class="card-body p-0">
         @if($users->count() > 0)

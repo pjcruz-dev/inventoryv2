@@ -5,28 +5,31 @@
     <div class="row justify-content-center">
         <div class="col-md-12">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
-                    <span class="text-white h4 mb-0">{{ __('Peripherals') }}</span>
-                    <div class="btn-group" role="group">
-                        <a href="{{ route('peripherals.create') }}" class="btn btn-light btn-sm" style="color: #667eea;">
-                            <i class="fas fa-plus me-1"></i>{{ __('Add New') }}
-                        </a>
-                        <a href="{{ route('peripherals.bulk-create') }}" class="btn btn-light btn-sm" style="color: #667eea;">
-                            <i class="fas fa-layer-group me-1"></i>{{ __('Bulk Create') }}
-                        </a>
+                <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="mb-0 text-white">All Peripherals</h5>
+                            <small class="text-white-50">{{ $peripherals->total() }} total peripherals</small>
+                        </div>
+                        <div class="col-auto">
+                            <div class="d-flex gap-2">
+                                <a href="{{ route('peripherals.create') }}" class="btn btn-light btn-sm" style="color: #667eea;">
+                                    <i class="fas fa-plus me-1"></i>{{ __('Add New') }}
+                                </a>
+                                <a href="{{ route('peripherals.bulk-create') }}" class="btn btn-light btn-sm" style="color: #667eea;">
+                                    <i class="fas fa-layer-group me-1"></i>{{ __('Bulk Create') }}
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                </div>
-
-                <div class="card-body">
+                    
                     <!-- Search Section -->
-                    <div class="mb-3">
+                    <div class="mt-3">
                         <div class="row">
                             <div class="col-md-6">
-                                <form method="GET" action="{{ route('peripherals.index') }}">
+                                <form method="GET" action="{{ route('peripherals.index') }}" id="searchForm">
                                     <div class="input-group">
-                                        <input type="text" name="search" class="form-control" 
-                                               placeholder="Search peripherals..." 
-                                               value="{{ request('search') }}" style="border-radius: 6px 0 0 6px; border: 2px solid #e9ecef;">
+                                        <input type="text" name="search" class="form-control" placeholder="Search peripherals..." value="{{ request('search') }}" style="border-radius: 6px 0 0 6px; border: 2px solid #e9ecef;">
                                         <button class="btn btn-primary" type="submit" style="border-radius: 0 6px 6px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 2px solid #667eea;">
                                             <i class="fas fa-search"></i>
                                         </button>
@@ -35,24 +38,12 @@
                             </div>
                         </div>
                     </div>
+                </div>
 
+                <div class="card-body">
                     @if (session('success'))
                         <div class="alert alert-success" role="alert">
                             {{ session('success') }}
-                        </div>
-                    @endif
-
-
-                    <!-- Results Summary -->
-                    @if(request()->hasAny(['search', 'type', 'interface', 'assignment_status', 'department']))
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
-                            Showing filtered results. 
-                            @if($peripherals->total() > 0)
-                                Found {{ $peripherals->total() }} peripheral(s) matching your criteria.
-                            @else
-                                No peripherals found matching your criteria.
-                            @endif
                         </div>
                     @endif
 
@@ -146,10 +137,6 @@ $(document).ready(function() {
         }, 500);
     });
     
-    // Auto-submit form when select filters change
-    $('#type, #interface, #assignment_status, #department').on('change', function() {
-        $(this).closest('form').submit();
-    });
     
     // Clear search on Escape key
     $('#search').on('keydown', function(e) {

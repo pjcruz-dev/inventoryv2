@@ -9,23 +9,38 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h2 class="mb-1 text-white">
-                                <i class="fas fa-file-contract me-2"></i>
-                                Accountability Forms
-                            </h2>
-                            <p class="text-white-50 mb-0">Generate and print asset accountability forms with complete audit trails</p>
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="mb-0 text-white">All Accountability Forms</h5>
+                            <small class="text-white-50">{{ $assets->total() }} total assigned assets</small>
                         </div>
-                        <div>
-                            <button type="button" class="btn btn-light btn-sm me-2" data-bs-toggle="modal" data-bs-target="#bulkFormModal">
-                                <i class="fas fa-layer-group me-1"></i>
-                                Bulk Generate
-                            </button>
-                            <button type="button" class="btn btn-outline-light btn-sm" onclick="window.print()">
-                                <i class="fas fa-print me-1"></i>
-                                Print All
-                            </button>
+                        <div class="col-auto">
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#bulkFormModal" style="color: #667eea;">
+                                    <i class="fas fa-layer-group me-1"></i>
+                                    Bulk Generate
+                                </button>
+                                <button type="button" class="btn btn-light btn-sm" onclick="window.print()" style="color: #667eea;">
+                                    <i class="fas fa-print me-1"></i>
+                                    Print All
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Search Section -->
+                    <div class="mt-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <form method="GET" action="{{ route('accountability.index') }}" id="searchForm">
+                                    <div class="input-group">
+                                        <input type="text" name="search" class="form-control" placeholder="Search assigned assets..." value="{{ request('search') }}" style="border-radius: 6px 0 0 6px; border: 2px solid #e9ecef;">
+                                        <button class="btn btn-primary" type="submit" style="border-radius: 0 6px 6px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 2px solid #667eea;">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>

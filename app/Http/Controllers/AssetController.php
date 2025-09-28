@@ -58,44 +58,10 @@ class AssetController extends Controller
             });
         }
         
-        // Category filter
-        if ($request->filled('category')) {
-            $query->where('category_id', $request->category);
-        }
-        
-        // Status filter
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-        
-        // Movement filter
-        if ($request->filled('movement')) {
-            $query->where('movement', $request->movement);
-        }
-        
-        // Assignment filter
-        if ($request->filled('assignment')) {
-            if ($request->assignment === 'assigned') {
-                $query->whereNotNull('assigned_to');
-            } elseif ($request->assignment === 'unassigned') {
-                $query->whereNull('assigned_to');
-            }
-        }
-        
-        // Entity filter
-        if ($request->filled('entity')) {
-            $query->where('entity', $request->entity);
-        }
         
         $assets = $query->paginate(15)->withQueryString();
         
-        // Get filter options for the view
-        $categories = AssetCategory::orderBy('name')->get();
-        $statuses = Asset::distinct()->pluck('status')->filter()->sort()->values();
-        $movements = Asset::distinct()->pluck('movement')->filter()->sort()->values();
-        $entities = Asset::distinct()->pluck('entity')->filter()->sort()->values();
-        
-        return view('assets.index', compact('assets', 'categories', 'statuses', 'movements', 'entities'));
+        return view('assets.index', compact('assets'));
     }
 
     /**

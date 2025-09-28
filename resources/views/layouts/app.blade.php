@@ -916,6 +916,15 @@
             </a>
         </li>
         @endcan
+        
+        @can('view_security_audit')
+        <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('security.monitoring.*') ? 'active' : '' }}" href="{{ route('security.monitoring.index') }}">
+                <i class="fas fa-shield-alt"></i>
+                Security Monitoring
+            </a>
+        </li>
+        @endcan
                         </ul>
                         
                         <hr class="my-3" style="border-color: rgba(255,255,255,0.2);">
