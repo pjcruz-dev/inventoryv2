@@ -33,11 +33,11 @@
                     <form method="GET" action="{{ route('reports.financial') }}" class="row g-3">
                         <div class="col-md-4">
                             <label for="date_from" class="form-label">Date From</label>
-                            <input type="date" class="form-control" id="date_from" name="date_from" value="{{ $dateFrom }}">
+                            <input type="date" class="form-control" id="date_from" name="date_from" value="{{ $dateFrom->format('Y-m-d') }}">
                         </div>
                         <div class="col-md-4">
                             <label for="date_to" class="form-label">Date To</label>
-                            <input type="date" class="form-control" id="date_to" name="date_to" value="{{ $dateTo }}">
+                            <input type="date" class="form-control" id="date_to" name="date_to" value="{{ $dateTo->format('Y-m-d') }}">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">&nbsp;</label>
@@ -295,17 +295,17 @@
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js" integrity="sha512-9HvCqQx0-4vP9f5Q0KNOB0F7e0ddEhto+loFyXy3F1OwqXhV6D4g6amX/7FhX4JQ9UfF8E6DgO0VlqB4N4qB4C4A==" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js" crossorigin="anonymous"></script>
 <script>
 // Monthly Investment Chart
 const investmentCtx = document.getElementById('investmentChart').getContext('2d');
 const investmentChart = new Chart(investmentCtx, {
     type: 'line',
     data: {
-        labels: {!! json_encode($financial['monthly_investment']->pluck('month')) !!},
+        labels: {!! json_encode($financial['monthly_investment']->pluck('month')->toArray()) !!},
         datasets: [{
             label: 'Monthly Investment',
-            data: {!! json_encode($financial['monthly_investment']->pluck('total_investment')) !!},
+            data: {!! json_encode($financial['monthly_investment']->pluck('total_investment')->toArray()) !!},
             borderColor: '#36A2EB',
             backgroundColor: 'rgba(54, 162, 235, 0.1)',
             tension: 0.4
@@ -332,9 +332,9 @@ const categoryCostsCtx = document.getElementById('categoryCostsChart').getContex
 const categoryCostsChart = new Chart(categoryCostsCtx, {
     type: 'doughnut',
     data: {
-        labels: {!! json_encode($financial['category_costs']->pluck('category')) !!},
+        labels: {!! json_encode($financial['category_costs']->pluck('category')->toArray()) !!},
         datasets: [{
-            data: {!! json_encode($financial['category_costs']->pluck('total_cost')) !!},
+            data: {!! json_encode($financial['category_costs']->pluck('total_cost')->toArray()) !!},
             backgroundColor: [
                 '#FF6384',
                 '#36A2EB',
@@ -356,10 +356,10 @@ const departmentCostsCtx = document.getElementById('departmentCostsChart').getCo
 const departmentCostsChart = new Chart(departmentCostsCtx, {
     type: 'bar',
     data: {
-        labels: {!! json_encode($financial['department_costs']->pluck('department')) !!},
+        labels: {!! json_encode($financial['department_costs']->pluck('department')->toArray()) !!},
         datasets: [{
             label: 'Cost',
-            data: {!! json_encode($financial['department_costs']->pluck('total_cost')) !!},
+            data: {!! json_encode($financial['department_costs']->pluck('total_cost')->toArray()) !!},
             backgroundColor: '#36A2EB'
         }]
     },
@@ -379,10 +379,10 @@ const vendorCostsCtx = document.getElementById('vendorCostsChart').getContext('2
 const vendorCostsChart = new Chart(vendorCostsCtx, {
     type: 'bar',
     data: {
-        labels: {!! json_encode($financial['vendor_costs']->pluck('vendor')) !!},
+        labels: {!! json_encode($financial['vendor_costs']->pluck('vendor')->toArray()) !!},
         datasets: [{
             label: 'Cost',
-            data: {!! json_encode($financial['vendor_costs']->pluck('total_cost')) !!},
+            data: {!! json_encode($financial['vendor_costs']->pluck('total_cost')->toArray()) !!},
             backgroundColor: '#FF6384'
         }]
     },
@@ -419,11 +419,22 @@ function exportReport() {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         }
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.message) {
-            alert(data.message);
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
         }
+        return response.blob();
+    })
+    .then(blob => {
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'financial_' + new Date().toISOString().slice(0, 19).replace(/:/g, '-') + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
     })
     .catch(error => {
         console.error('Error:', error);

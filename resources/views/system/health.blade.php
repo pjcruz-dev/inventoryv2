@@ -8,17 +8,22 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
-                    <h3 class="card-title mb-0 text-white">
-                        <i class="fas fa-heartbeat me-2"></i>System Health Dashboard
-                    </h3>
-                    <div>
-                        <button class="btn btn-light btn-sm" onclick="refreshMetrics()">
-                            <i class="fas fa-sync-alt me-1"></i>Refresh
-                        </button>
-                        <button class="btn btn-outline-light btn-sm" onclick="clearCache()">
-                            <i class="fas fa-trash me-1"></i>Clear Cache
-                        </button>
+                <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="mb-0 text-white">System Health Dashboard</h5>
+                            <small class="text-white-50">Monitor system performance, health metrics, and server status</small>
+                        </div>
+                        <div class="col-auto">
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-light btn-sm" onclick="refreshMetrics()" style="color: #667eea;">
+                                    <i class="fas fa-sync-alt me-1"></i>Refresh
+                                </button>
+                                <button class="btn btn-light btn-sm" onclick="clearCache()" style="color: #667eea;">
+                                    <i class="fas fa-trash me-1"></i>Clear Cache
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -246,7 +251,7 @@
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js" integrity="sha512-9HvCqQx0-4vP9f5Q0KNOB0F7e0ddEhto+loFyXy3F1OwqXhV6D4g6amX/7FhX4JQ9UfF8E6DgO0VlqB4N4qB4C4A==" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js" crossorigin="anonymous"></script>
 <script>
 // Error Chart
 const errorCtx = document.getElementById('errorChart').getContext('2d');

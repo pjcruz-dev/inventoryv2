@@ -33,11 +33,11 @@
                     <form method="GET" action="{{ route('reports.user-activity') }}" class="row g-3">
                         <div class="col-md-4">
                             <label for="date_from" class="form-label">Date From</label>
-                            <input type="date" class="form-control" id="date_from" name="date_from" value="{{ $dateFrom }}">
+                            <input type="date" class="form-control" id="date_from" name="date_from" value="{{ $dateFrom->format('Y-m-d') }}">
                         </div>
                         <div class="col-md-4">
                             <label for="date_to" class="form-label">Date To</label>
-                            <input type="date" class="form-control" id="date_to" name="date_to" value="{{ $dateTo }}">
+                            <input type="date" class="form-control" id="date_to" name="date_to" value="{{ $dateTo->format('Y-m-d') }}">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">&nbsp;</label>
@@ -246,7 +246,7 @@
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js" integrity="sha512-9HvCqQx0-4vP9f5Q0KNOB0F7e0ddEhto+loFyXy3F1OwqXhV6D4g6amX/7FhX4JQ9UfF8E6DgO0VlqB4N4qB4C4A==" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js" crossorigin="anonymous"></script>
 <script>
 // Login Patterns Chart
 const loginCtx = document.getElementById('loginChart').getContext('2d');
@@ -307,8 +307,8 @@ function exportReport() {
     const formData = new FormData();
     formData.append('report_type', 'user_activity');
     formData.append('format', 'csv');
-    formData.append('date_from', '{{ $dateFrom }}');
-    formData.append('date_to', '{{ $dateTo }}');
+    formData.append('date_from', '{{ $dateFrom->format('Y-m-d') }}');
+    formData.append('date_to', '{{ $dateTo->format('Y-m-d') }}');
     
     // Submit form
     fetch('{{ route("reports.export") }}', {
@@ -318,11 +318,22 @@ function exportReport() {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         }
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.message) {
-            alert(data.message);
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
         }
+        return response.blob();
+    })
+    .then(blob => {
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'user_activity_' + new Date().toISOString().slice(0, 19).replace(/:/g, '-') + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
     })
     .catch(error => {
         console.error('Error:', error);

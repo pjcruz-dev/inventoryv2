@@ -15,6 +15,8 @@ class SecurityMonitoringController extends Controller
      */
     public function index()
     {
+        $this->authorize('view_security_monitoring');
+        
         $dashboardData = SecurityMonitoringService::getSecurityDashboardData();
         
         return view('security.monitoring.index', compact('dashboardData'));
@@ -25,12 +27,37 @@ class SecurityMonitoringController extends Controller
      */
     public function threats(Request $request)
     {
-        $threats = SecurityMonitoringService::getRecentThreats();
-        
-        return response()->json([
-            'threats' => $threats,
-            'timestamp' => now()->toISOString()
-        ]);
+        try {
+            $this->authorize('view_security_monitoring');
+            
+            // Simple test first
+            $threats = collect([
+                [
+                    'id' => 1,
+                    'type' => 'test_threat',
+                    'severity' => 'low',
+                    'message' => 'Test threat for debugging',
+                    'count' => 1,
+                    'ip_address' => '127.0.0.1',
+                    'timestamp' => now()->toISOString(),
+                    'user_agent' => 'Test Agent'
+                ]
+            ]);
+            
+            return response()->json([
+                'threats' => $threats,
+                'timestamp' => now()->toISOString()
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Security Monitoring Threats Error: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            return response()->json([
+                'threats' => [],
+                'error' => 'Failed to load threats: ' . $e->getMessage(),
+                'timestamp' => now()->toISOString()
+            ], 500);
+        }
     }
 
     /**

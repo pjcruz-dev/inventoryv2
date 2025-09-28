@@ -8,14 +8,19 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
-                    <h3 class="card-title mb-0 text-white">
-                        <i class="fas fa-chart-bar me-2"></i>Reports & Analytics Dashboard
-                    </h3>
-                    <div>
-                        <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#exportModal">
-                            <i class="fas fa-download me-1"></i>Export All
-                        </button>
+                <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="mb-0 text-white">Reports & Analytics Dashboard</h5>
+                            <small class="text-white-50">Comprehensive reporting and analytics for your inventory system</small>
+                        </div>
+                        <div class="col-auto">
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#exportModal" style="color: #667eea;">
+                                    <i class="fas fa-download me-1"></i>Export All
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -304,11 +309,22 @@ function exportReport() {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         }
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.message) {
-            alert(data.message);
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
         }
+        return response.blob();
+    })
+    .then(blob => {
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'all_reports_' + new Date().toISOString().slice(0, 19).replace(/:/g, '-') + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
     })
     .catch(error => {
         console.error('Error:', error);

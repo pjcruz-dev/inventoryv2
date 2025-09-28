@@ -5,24 +5,31 @@
 @section('content')
 <div class="container-fluid">
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="fas fa-shield-alt text-danger me-2"></i>
-                Security Monitoring Dashboard
-            </h1>
-            <p class="text-muted">Real-time security threat detection and monitoring</p>
-        </div>
-        <div>
-            <button class="btn btn-outline-primary me-2" onclick="refreshDashboard()">
-                <i class="fas fa-sync-alt"></i> Refresh
-            </button>
-            <button class="btn btn-outline-warning me-2" onclick="runMonitoring()">
-                <i class="fas fa-play"></i> Run Monitoring
-            </button>
-            <button class="btn btn-outline-danger" onclick="clearBlocks()">
-                <i class="fas fa-unlock"></i> Clear Blocks
-            </button>
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="mb-0 text-white">Security Monitoring Dashboard</h5>
+                            <small class="text-white-50">Real-time security threat detection and monitoring</small>
+                        </div>
+                        <div class="col-auto">
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-light btn-sm" onclick="refreshDashboard()" style="color: #667eea;">
+                                    <i class="fas fa-sync-alt me-1"></i>Refresh
+                                </button>
+                                <button class="btn btn-light btn-sm" onclick="runMonitoring()" style="color: #667eea;">
+                                    <i class="fas fa-play me-1"></i>Run Monitoring
+                                </button>
+                                <button class="btn btn-light btn-sm" onclick="clearBlocks()" style="color: #667eea;">
+                                    <i class="fas fa-unlock me-1"></i>Clear Blocks
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -134,7 +141,7 @@
                                                 <i class="fas fa-{{ $threat['type'] === 'brute_force' ? 'fist-raised' : ($threat['type'] === 'unauthorized_access' ? 'user-secret' : 'exclamation-triangle') }} me-2"></i>
                                                 {{ ucfirst(str_replace('_', ' ', $threat['type'])) }}
                                             </h6>
-                                            <p class="mb-1">{{ $threat['description'] }}</p>
+                                            <p class="mb-1">{{ $threat['message'] ?? 'No description available' }}</p>
                                             <small class="text-muted">
                                                 Count: {{ $threat['count'] ?? 'N/A' }} | 
                                                 Severity: {{ ucfirst($threat['severity']) }}
@@ -263,7 +270,11 @@ function startAutoRefresh() {
 
 // Refresh dashboard data
 function refreshDashboard() {
-    fetch('/security/monitoring/threats')
+    fetch('/security/monitoring/threats', {
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
         .then(response => response.json())
         .then(data => {
             updateThreatsDisplay(data.threats);
@@ -295,7 +306,7 @@ function updateThreatsDisplay(threats) {
                         <i class="fas fa-${getThreatIcon(threat.type)} me-2"></i>
                         ${threat.type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                     </h6>
-                    <p class="mb-1">${threat.description}</p>
+                    <p class="mb-1">${threat.message || 'No description available'}</p>
                     <small class="text-muted">
                         Count: ${threat.count || 'N/A'} | 
                         Severity: ${threat.severity.charAt(0).toUpperCase() + threat.severity.slice(1)}
@@ -392,7 +403,13 @@ function refreshEvents() {
 
 // Run monitoring
 function runMonitoring() {
-    fetch('/security/monitoring/run', { method: 'POST' })
+    fetch('/security/monitoring/run', { 
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Content-Type': 'application/json'
+        }
+    })
         .then(response => response.json())
         .then(data => {
             showToast('Security monitoring completed', 'success');
@@ -407,7 +424,13 @@ function runMonitoring() {
 // Clear blocks
 function clearBlocks() {
     if (confirm('Are you sure you want to clear all security blocks?')) {
-        fetch('/security/monitoring/clear-blocks', { method: 'POST' })
+        fetch('/security/monitoring/clear-blocks', { 
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json'
+            }
+        })
             .then(response => response.json())
             .then(data => {
                 showToast('Security blocks cleared', 'success');

@@ -33,11 +33,11 @@
                     <form method="GET" action="{{ route('reports.asset-analytics') }}" class="row g-3">
                         <div class="col-md-4">
                             <label for="date_from" class="form-label">Date From</label>
-                            <input type="date" class="form-control" id="date_from" name="date_from" value="{{ $dateFrom }}">
+                            <input type="date" class="form-control" id="date_from" name="date_from" value="{{ $dateFrom->format('Y-m-d') }}">
                         </div>
                         <div class="col-md-4">
                             <label for="date_to" class="form-label">Date To</label>
-                            <input type="date" class="form-control" id="date_to" name="date_to" value="{{ $dateTo }}">
+                            <input type="date" class="form-control" id="date_to" name="date_to" value="{{ $dateTo->format('Y-m-d') }}">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">&nbsp;</label>
@@ -279,96 +279,116 @@
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js" integrity="sha512-9HvCqQx0-4vP9f5Q0KNOB0F7e0ddEhto+loFyXy3F1OwqXhV6D4g6amX/7FhX4JQ9UfF8E6DgO0VlqB4N4qB4C4A==" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js" crossorigin="anonymous"></script>
 <script>
+// Debug data
+console.log('Category Breakdown:', {!! json_encode($analytics['category_breakdown']) !!});
+console.log('Department Breakdown:', {!! json_encode($analytics['department_breakdown']) !!});
+console.log('Monthly Trends:', {!! json_encode($analytics['monthly_trends']) !!});
+
 // Category Chart
-const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-const categoryChart = new Chart(categoryCtx, {
-    type: 'doughnut',
-    data: {
-        labels: {!! json_encode($analytics['category_breakdown']->pluck('category')) !!},
-        datasets: [{
-            data: {!! json_encode($analytics['category_breakdown']->pluck('count')) !!},
-            backgroundColor: [
-                '#FF6384',
-                '#36A2EB',
-                '#FFCE56',
-                '#4BC0C0',
-                '#9966FF',
-                '#FF9F40'
-            ]
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false
-    }
-});
+try {
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    const categoryChart = new Chart(categoryCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {!! json_encode($analytics['category_breakdown']->pluck('category')->toArray()) !!},
+            datasets: [{
+                data: {!! json_encode($analytics['category_breakdown']->pluck('count')->toArray()) !!},
+                backgroundColor: [
+                    '#FF6384',
+                    '#36A2EB',
+                    '#FFCE56',
+                    '#4BC0C0',
+                    '#9966FF',
+                    '#FF9F40'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+    console.log('Category chart created successfully');
+} catch (error) {
+    console.error('Error creating category chart:', error);
+}
 
 // Department Chart
-const departmentCtx = document.getElementById('departmentChart').getContext('2d');
-const departmentChart = new Chart(departmentCtx, {
-    type: 'bar',
-    data: {
-        labels: {!! json_encode($analytics['department_breakdown']->pluck('department')) !!},
-        datasets: [{
-            label: 'Asset Count',
-            data: {!! json_encode($analytics['department_breakdown']->pluck('count')) !!},
-            backgroundColor: '#36A2EB'
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-            y: {
-                beginAtZero: true
+try {
+    const departmentCtx = document.getElementById('departmentChart').getContext('2d');
+    const departmentChart = new Chart(departmentCtx, {
+        type: 'bar',
+        data: {
+            labels: {!! json_encode($analytics['department_breakdown']->pluck('department')->toArray()) !!},
+            datasets: [{
+                label: 'Asset Count',
+                data: {!! json_encode($analytics['department_breakdown']->pluck('count')->toArray()) !!},
+                backgroundColor: '#36A2EB'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
             }
         }
-    }
-});
+    });
+    console.log('Department chart created successfully');
+} catch (error) {
+    console.error('Error creating department chart:', error);
+}
 
 // Trends Chart
-const trendsCtx = document.getElementById('trendsChart').getContext('2d');
-const trendsChart = new Chart(trendsCtx, {
-    type: 'line',
-    data: {
-        labels: {!! json_encode($analytics['monthly_trends']->pluck('month')) !!},
-        datasets: [{
-            label: 'Asset Count',
-            data: {!! json_encode($analytics['monthly_trends']->pluck('count')) !!},
-            borderColor: '#36A2EB',
-            backgroundColor: 'rgba(54, 162, 235, 0.1)',
-            tension: 0.4
-        }, {
-            label: 'Total Value',
-            data: {!! json_encode($analytics['monthly_trends']->pluck('total_value')) !!},
-            borderColor: '#FF6384',
-            backgroundColor: 'rgba(255, 99, 132, 0.1)',
-            tension: 0.4,
-            yAxisID: 'y1'
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-            y: {
-                type: 'linear',
-                display: true,
-                position: 'left',
-            },
-            y1: {
-                type: 'linear',
-                display: true,
-                position: 'right',
-                grid: {
-                    drawOnChartArea: false,
+try {
+    const trendsCtx = document.getElementById('trendsChart').getContext('2d');
+    const trendsChart = new Chart(trendsCtx, {
+        type: 'line',
+        data: {
+            labels: {!! json_encode($analytics['monthly_trends']->pluck('month')->toArray()) !!},
+            datasets: [{
+                label: 'Asset Count',
+                data: {!! json_encode($analytics['monthly_trends']->pluck('count')->toArray()) !!},
+                borderColor: '#36A2EB',
+                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                tension: 0.4
+            }, {
+                label: 'Total Value',
+                data: {!! json_encode($analytics['monthly_trends']->pluck('total_value')->toArray()) !!},
+                borderColor: '#FF6384',
+                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                tension: 0.4,
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
                 },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                }
             }
         }
-    }
-});
+    });
+    console.log('Trends chart created successfully');
+} catch (error) {
+    console.error('Error creating trends chart:', error);
+}
 
 function exportReport() {
     // Show loading state
@@ -381,8 +401,8 @@ function exportReport() {
     const formData = new FormData();
     formData.append('report_type', 'asset_analytics');
     formData.append('format', 'csv');
-    formData.append('date_from', '{{ $dateFrom }}');
-    formData.append('date_to', '{{ $dateTo }}');
+    formData.append('date_from', '{{ $dateFrom->format('Y-m-d') }}');
+    formData.append('date_to', '{{ $dateTo->format('Y-m-d') }}');
     
     // Submit form
     fetch('{{ route("reports.export") }}', {
@@ -392,11 +412,22 @@ function exportReport() {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         }
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.message) {
-            alert(data.message);
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
         }
+        return response.blob();
+    })
+    .then(blob => {
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'asset_analytics_' + new Date().toISOString().slice(0, 19).replace(/:/g, '-') + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
     })
     .catch(error => {
         console.error('Error:', error);

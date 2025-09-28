@@ -4,6 +4,32 @@
 
 @section('content')
 <div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="mb-0 text-white">Security Audit Dashboard</h5>
+                            <small class="text-white-50">Monitor security events, login attempts, and system activities</small>
+                        </div>
+                        <div class="col-auto">
+                            <div class="d-flex gap-2">
+                                <a href="{{ route('security.audit.logs') }}" class="btn btn-light btn-sm" style="color: #667eea;">
+                                    <i class="fas fa-list me-1"></i>View All Logs
+                                </a>
+                                <a href="{{ route('security.audit.export') }}" class="btn btn-light btn-sm" style="color: #667eea;">
+                                    <i class="fas fa-download me-1"></i>Export
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Security Statistics Cards -->
     <div class="row mb-4">
         <div class="col-md-3">

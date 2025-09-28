@@ -14,6 +14,7 @@ use App\Models\Vendor;
 use App\Models\AssetAssignment;
 use App\Models\Maintenance;
 use App\Models\Disposal;
+use App\Models\AssetCategory;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Services\AuditService;
@@ -49,8 +50,8 @@ class ReportController extends Controller
     {
         $this->authorize('view_reports');
         
-        $dateFrom = $request->get('date_from', now()->subYear());
-        $dateTo = $request->get('date_to', now());
+        $dateFrom = $request->get('date_from') ? \Carbon\Carbon::parse($request->get('date_from')) : now()->subYear();
+        $dateTo = $request->get('date_to') ? \Carbon\Carbon::parse($request->get('date_to')) : now();
         
         $analytics = [
             'total_assets' => Asset::count(),
@@ -78,8 +79,8 @@ class ReportController extends Controller
     {
         $this->authorize('view_reports');
         
-        $dateFrom = $request->get('date_from', now()->subMonth());
-        $dateTo = $request->get('date_to', now());
+        $dateFrom = $request->get('date_from') ? \Carbon\Carbon::parse($request->get('date_from')) : now()->subMonth();
+        $dateTo = $request->get('date_to') ? \Carbon\Carbon::parse($request->get('date_to')) : now();
         
         $userActivity = [
             'most_active_users' => $this->getMostActiveUsers($dateFrom, $dateTo),
@@ -99,8 +100,8 @@ class ReportController extends Controller
     {
         $this->authorize('view_reports');
         
-        $dateFrom = $request->get('date_from', now()->subYear());
-        $dateTo = $request->get('date_to', now());
+        $dateFrom = $request->get('date_from') ? \Carbon\Carbon::parse($request->get('date_from')) : now()->subYear();
+        $dateTo = $request->get('date_to') ? \Carbon\Carbon::parse($request->get('date_to')) : now();
         
         $financial = [
             'total_investment' => Asset::sum('cost'),
@@ -123,8 +124,8 @@ class ReportController extends Controller
     {
         $this->authorize('view_reports');
         
-        $dateFrom = $request->get('date_from', now()->subYear());
-        $dateTo = $request->get('date_to', now());
+        $dateFrom = $request->get('date_from') ? \Carbon\Carbon::parse($request->get('date_from')) : now()->subYear();
+        $dateTo = $request->get('date_to') ? \Carbon\Carbon::parse($request->get('date_to')) : now();
         
         $maintenance = [
             'total_maintenance' => Maintenance::count(),
@@ -333,7 +334,10 @@ class ReportController extends Controller
      */
     private function getMostActiveUsers($dateFrom, $dateTo)
     {
-        return User::withCount(['auditLogs' => function ($query) use ($dateFrom, $dateTo) {
+        return User::with(['department', 'auditLogs' => function ($query) use ($dateFrom, $dateTo) {
+                $query->whereBetween('created_at', [$dateFrom, $dateTo]);
+            }])
+            ->withCount(['auditLogs' => function ($query) use ($dateFrom, $dateTo) {
                 $query->whereBetween('created_at', [$dateFrom, $dateTo]);
             }])
             ->orderBy('audit_logs_count', 'desc')
@@ -482,7 +486,8 @@ class ReportController extends Controller
                 'purchase_date',
                 DB::raw('DATEDIFF(NOW(), purchase_date) as days_owned'),
                 DB::raw('cost * 0.1 as annual_depreciation'),
-                DB::raw('cost - (cost * 0.1 * DATEDIFF(NOW(), purchase_date) / 365) as current_value')
+                DB::raw('cost - (cost * 0.1 * DATEDIFF(NOW(), purchase_date) / 365) as current_value'),
+                DB::raw('(cost * 0.1 * DATEDIFF(NOW(), purchase_date) / 365) as depreciation_amount')
             )
             ->whereNotNull('purchase_date')
             ->get();
@@ -612,12 +617,15 @@ class ReportController extends Controller
         $filename = 'asset_analytics_' . now()->format('Y-m-d_H-i-s') . '.csv';
         
         $headers = [
-            'Content-Type' => 'text/csv',
+            'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
         
         $callback = function() use ($dateFrom, $dateTo) {
             $file = fopen('php://output', 'w');
+            
+            // Add UTF-8 BOM for proper currency symbol display
+            fwrite($file, "\xEF\xBB\xBF");
             
             // Write CSV headers
             fputcsv($file, ['Asset Analytics Report', 'Generated: ' . now()->format('Y-m-d H:i:s')]);
@@ -630,8 +638,8 @@ class ReportController extends Controller
             fputcsv($file, ['Active Assets', Asset::where('status', 'active')->count()]);
             fputcsv($file, ['Inactive Assets', Asset::where('status', 'inactive')->count()]);
             fputcsv($file, ['Disposed Assets', Asset::where('status', 'disposed')->count()]);
-            fputcsv($file, ['Total Value', '₱' . number_format(Asset::sum('cost'), 2)]);
-            fputcsv($file, ['Average Value', '₱' . number_format(Asset::avg('cost'), 2)]);
+            fputcsv($file, ['Total Value', CurrencyHelper::formatForExport(Asset::sum('cost'))]);
+            fputcsv($file, ['Average Value', CurrencyHelper::formatForExport(Asset::avg('cost'))]);
             fputcsv($file, ['']);
             
             // Category Breakdown
@@ -642,7 +650,7 @@ class ReportController extends Controller
                 fputcsv($file, [
                     $category['category'],
                     $category['count'],
-                    '₱' . number_format($category['total_value'], 2)
+                    CurrencyHelper::formatForExport($category['total_value'])
                 ]);
             }
             fputcsv($file, ['']);
@@ -655,7 +663,7 @@ class ReportController extends Controller
                 fputcsv($file, [
                     $department['department'],
                     $department['count'],
-                    '₱' . number_format($department['total_value'], 2)
+                    CurrencyHelper::formatForExport($department['total_value'])
                 ]);
             }
             fputcsv($file, ['']);
@@ -669,7 +677,7 @@ class ReportController extends Controller
                     $asset->name,
                     $asset->category ? $asset->category->name : 'N/A',
                     $asset->department ? $asset->department->name : 'N/A',
-                    '₱' . number_format($asset->cost ?? 0, 2)
+                    CurrencyHelper::formatForExport($asset->cost ?? 0)
                 ]);
             }
             
@@ -684,21 +692,25 @@ class ReportController extends Controller
      */
     private function exportUserActivity($format, $request)
     {
-        $dateFrom = $request->get('date_from', now()->subMonth());
-        $dateTo = $request->get('date_to', now());
+        $dateFrom = $request->get('date_from') ? \Carbon\Carbon::parse($request->get('date_from')) : now()->subMonth();
+        $dateTo = $request->get('date_to') ? \Carbon\Carbon::parse($request->get('date_to')) : now();
         
         $filename = 'user_activity_' . now()->format('Y-m-d_H-i-s') . '.csv';
         
         $headers = [
-            'Content-Type' => 'text/csv',
+            'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
         
         $callback = function() use ($dateFrom, $dateTo) {
-            $file = fopen('php://output', 'w');
-            
-            // Write CSV headers
-            fputcsv($file, ['User Activity Report', 'Generated: ' . now()->format('Y-m-d H:i:s')]);
+            try {
+                $file = fopen('php://output', 'w');
+                
+                // Add UTF-8 BOM for proper currency symbol display
+                fwrite($file, "\xEF\xBB\xBF");
+                
+                // Write CSV headers
+                fputcsv($file, ['User Activity Report', 'Generated: ' . now()->format('Y-m-d H:i:s')]);
             fputcsv($file, ['Period: ' . $dateFrom->format('Y-m-d') . ' to ' . $dateTo->format('Y-m-d')]);
             fputcsv($file, ['']);
             
@@ -768,6 +780,11 @@ class ReportController extends Controller
             }
             
             fclose($file);
+            } catch (\Exception $e) {
+                \Log::error('User Activity Export Error: ' . $e->getMessage());
+                fwrite($file, "Error generating report: " . $e->getMessage());
+                fclose($file);
+            }
         };
         
         return response()->stream($callback, 200, $headers);
@@ -778,31 +795,35 @@ class ReportController extends Controller
      */
     private function exportFinancial($format, $request)
     {
-        $dateFrom = $request->get('date_from', now()->subYear());
-        $dateTo = $request->get('date_to', now());
+        $dateFrom = $request->get('date_from') ? \Carbon\Carbon::parse($request->get('date_from')) : now()->subYear();
+        $dateTo = $request->get('date_to') ? \Carbon\Carbon::parse($request->get('date_to')) : now();
         
         $filename = 'financial_report_' . now()->format('Y-m-d_H-i-s') . '.csv';
         
         $headers = [
-            'Content-Type' => 'text/csv',
+            'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
         
         $callback = function() use ($dateFrom, $dateTo) {
-            $file = fopen('php://output', 'w');
-            
-            // Write CSV headers
-            fputcsv($file, ['Financial Report', 'Generated: ' . now()->format('Y-m-d H:i:s')]);
+            try {
+                $file = fopen('php://output', 'w');
+                
+                // Add UTF-8 BOM for proper currency symbol display
+                fwrite($file, "\xEF\xBB\xBF");
+                
+                // Write CSV headers
+                fputcsv($file, ['Financial Report', 'Generated: ' . now()->format('Y-m-d H:i:s')]);
             fputcsv($file, ['Period: ' . $dateFrom->format('Y-m-d') . ' to ' . $dateTo->format('Y-m-d')]);
             fputcsv($file, ['']);
             
             // Financial Summary
             fputcsv($file, ['FINANCIAL SUMMARY']);
             fputcsv($file, ['Metric', 'Value']);
-            fputcsv($file, ['Total Investment', '₱' . number_format(Asset::sum('cost'), 2)]);
-            fputcsv($file, ['Maintenance Costs', '₱' . number_format($this->getMaintenanceCosts($dateFrom, $dateTo)->sum('total_cost'), 2)]);
-            fputcsv($file, ['Disposal Value', '₱' . number_format($this->getDisposalValue($dateFrom, $dateTo)->sum('total_value'), 2)]);
-            fputcsv($file, ['Total Depreciation', '₱' . number_format($this->getDepreciationData()->sum('depreciation_amount'), 2)]);
+            fputcsv($file, ['Total Investment', CurrencyHelper::formatForExport(Asset::sum('cost'))]);
+            fputcsv($file, ['Maintenance Costs', CurrencyHelper::formatForExport($this->getMaintenanceCosts($dateFrom, $dateTo)->sum('total_cost'))]);
+            fputcsv($file, ['Disposal Value', CurrencyHelper::formatForExport($this->getDisposalValue($dateFrom, $dateTo)->sum('total_value'))]);
+            fputcsv($file, ['Total Depreciation', CurrencyHelper::formatForExport($this->getDepreciationData()->sum('depreciation_amount'))]);
             fputcsv($file, ['']);
             
             // Monthly Investment
@@ -812,7 +833,7 @@ class ReportController extends Controller
             foreach ($monthlyInvestment as $investment) {
                 fputcsv($file, [
                     $investment->month,
-                    '₱' . number_format($investment->total_investment, 2)
+                    CurrencyHelper::formatForExport($investment->total_investment)
                 ]);
             }
             fputcsv($file, ['']);
@@ -824,7 +845,7 @@ class ReportController extends Controller
             foreach ($categoryCosts as $category) {
                 fputcsv($file, [
                     $category['category'],
-                    '₱' . number_format($category['total_cost'], 2)
+                    CurrencyHelper::formatForExport($category['total_cost'])
                 ]);
             }
             fputcsv($file, ['']);
@@ -836,7 +857,7 @@ class ReportController extends Controller
             foreach ($departmentCosts as $department) {
                 fputcsv($file, [
                     $department['department'],
-                    '₱' . number_format($department['total_cost'], 2)
+                    CurrencyHelper::formatForExport($department['total_cost'])
                 ]);
             }
             fputcsv($file, ['']);
@@ -848,7 +869,7 @@ class ReportController extends Controller
             foreach ($vendorCosts as $vendor) {
                 fputcsv($file, [
                     $vendor['vendor'],
-                    '₱' . number_format($vendor['total_cost'], 2)
+                    CurrencyHelper::formatForExport($vendor['total_cost'])
                 ]);
             }
             fputcsv($file, ['']);
@@ -860,11 +881,11 @@ class ReportController extends Controller
             foreach ($depreciation as $asset) {
                 fputcsv($file, [
                     $asset->name,
-                    '₱' . number_format($asset->cost, 2),
+                    CurrencyHelper::formatForExport($asset->cost),
                     $asset->days_owned,
-                    '₱' . number_format($asset->annual_depreciation, 2),
-                    '₱' . number_format($asset->current_value, 2),
-                    '₱' . number_format($asset->depreciation_amount, 2)
+                    CurrencyHelper::formatForExport($asset->annual_depreciation),
+                    CurrencyHelper::formatForExport($asset->current_value),
+                    CurrencyHelper::formatForExport($asset->depreciation_amount ?? 0)
                 ]);
             }
             fputcsv($file, ['']);
@@ -876,7 +897,7 @@ class ReportController extends Controller
             foreach ($maintenanceCosts as $cost) {
                 fputcsv($file, [
                     $cost->month,
-                    '₱' . number_format($cost->total_cost, 2)
+                    CurrencyHelper::formatForExport($cost->total_cost)
                 ]);
             }
             fputcsv($file, ['']);
@@ -888,11 +909,16 @@ class ReportController extends Controller
             foreach ($disposalValue as $value) {
                 fputcsv($file, [
                     $value->month,
-                    '₱' . number_format($value->total_value, 2)
+                    CurrencyHelper::formatForExport($value->total_value)
                 ]);
             }
             
             fclose($file);
+            } catch (\Exception $e) {
+                \Log::error('Financial Export Error: ' . $e->getMessage());
+                fwrite($file, "Error generating report: " . $e->getMessage());
+                fclose($file);
+            }
         };
         
         return response()->stream($callback, 200, $headers);
@@ -903,22 +929,41 @@ class ReportController extends Controller
      */
     private function exportMaintenance($format, $request)
     {
-        $dateFrom = $request->get('date_from', now()->subYear());
-        $dateTo = $request->get('date_to', now());
+        $dateFrom = $request->get('date_from') ? \Carbon\Carbon::parse($request->get('date_from')) : now()->subYear();
+        $dateTo = $request->get('date_to') ? \Carbon\Carbon::parse($request->get('date_to')) : now();
         
         $filename = 'maintenance_report_' . now()->format('Y-m-d_H-i-s') . '.csv';
         
         $headers = [
-            'Content-Type' => 'text/csv',
+            'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
         
         $callback = function() use ($dateFrom, $dateTo) {
-            $file = fopen('php://output', 'w');
-            
-            // Write CSV headers
-            fputcsv($file, ['Maintenance Report', 'Generated: ' . now()->format('Y-m-d H:i:s')]);
+            try {
+                $file = fopen('php://output', 'w');
+                
+                // Add UTF-8 BOM for proper currency symbol display
+                fwrite($file, "\xEF\xBB\xBF");
+                
+                // Write CSV headers
+                fputcsv($file, ['Maintenance Report', 'Generated: ' . now()->format('Y-m-d H:i:s')]);
             fputcsv($file, ['Period: ' . $dateFrom->format('Y-m-d') . ' to ' . $dateTo->format('Y-m-d')]);
+            fputcsv($file, ['']);
+            
+            // Maintenance Summary
+            // Asset List
+            fputcsv($file, ['ASSET LIST']);
+            fputcsv($file, ['Asset Name', 'Category', 'Cost', 'Status']);
+            $assets = Asset::with('category')->limit(10)->get();
+            foreach ($assets as $asset) {
+                fputcsv($file, [
+                    $asset->name,
+                    $asset->category ? $asset->category->name : 'N/A',
+                    CurrencyHelper::formatForExport($asset->cost ?? 0),
+                    $asset->status ?? 'N/A'
+                ]);
+            }
             fputcsv($file, ['']);
             
             // Maintenance Summary
@@ -928,7 +973,7 @@ class ReportController extends Controller
             fputcsv($file, ['Pending Maintenance', Maintenance::where('status', 'pending')->count()]);
             fputcsv($file, ['Completed Maintenance', Maintenance::where('status', 'completed')->count()]);
             fputcsv($file, ['Overdue Maintenance', Maintenance::where('status', 'overdue')->count()]);
-            fputcsv($file, ['Total Cost', '₱' . number_format(Maintenance::sum('cost'), 2)]);
+            fputcsv($file, ['Total Cost', CurrencyHelper::formatForExport(Maintenance::sum('cost'))]);
             fputcsv($file, ['']);
             
             // Maintenance Trends
@@ -939,7 +984,7 @@ class ReportController extends Controller
                 fputcsv($file, [
                     $trend->month,
                     $trend->count,
-                    '₱' . number_format($trend->total_cost, 2)
+                    CurrencyHelper::formatForExport($trend->total_cost)
                 ]);
             }
             fputcsv($file, ['']);
@@ -953,7 +998,7 @@ class ReportController extends Controller
                     $asset->name,
                     $asset->category ? $asset->category->name : 'N/A',
                     $asset->maintenances_count,
-                    '₱' . number_format($asset->maintenances->sum('cost'), 2),
+                    CurrencyHelper::formatForExport($asset->maintenances->sum('cost')),
                     $asset->maintenances->count() > 0 ? $asset->maintenances->first()->created_at->format('Y-m-d') : 'N/A'
                 ]);
             }
@@ -967,8 +1012,8 @@ class ReportController extends Controller
                 fputcsv($file, [
                     $analysis->asset ? $analysis->asset->name : 'Unknown Asset',
                     $analysis->maintenance_count,
-                    '₱' . number_format($analysis->total_cost, 2),
-                    '₱' . number_format($analysis->avg_cost, 2)
+                    CurrencyHelper::formatForExport($analysis->total_cost),
+                    CurrencyHelper::formatForExport($analysis->avg_cost)
                 ]);
             }
             fputcsv($file, ['']);
@@ -981,8 +1026,8 @@ class ReportController extends Controller
                 fputcsv($file, [
                     $vendor['technician'],
                     $vendor['maintenance_count'],
-                    '₱' . number_format($vendor['total_cost'], 2),
-                    '₱' . number_format($vendor['avg_cost'], 2)
+                    CurrencyHelper::formatForExport($vendor['total_cost']),
+                    CurrencyHelper::formatForExport($vendor['avg_cost'])
                 ]);
             }
             fputcsv($file, ['']);
@@ -1000,7 +1045,7 @@ class ReportController extends Controller
                     $record->asset ? $record->asset->name : 'Unknown Asset',
                     $record->issue_reported,
                     $record->repair_action,
-                    '₱' . number_format($record->cost ?? 0, 2),
+                    CurrencyHelper::formatForExport($record->cost ?? 0),
                     $record->start_date ? $record->start_date->format('Y-m-d') : 'N/A',
                     $record->end_date ? $record->end_date->format('Y-m-d') : 'N/A',
                     $record->status,
@@ -1009,6 +1054,11 @@ class ReportController extends Controller
             }
             
             fclose($file);
+            } catch (\Exception $e) {
+                \Log::error('Maintenance Export Error: ' . $e->getMessage());
+                fwrite($file, "Error generating report: " . $e->getMessage());
+                fclose($file);
+            }
         };
         
         return response()->stream($callback, 200, $headers);

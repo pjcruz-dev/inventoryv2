@@ -133,7 +133,7 @@ return [
         'x_content_type_options' => env('SECURITY_HEADER_X_CONTENT_TYPE_OPTIONS', 'nosniff'),
         'x_xss_protection' => env('SECURITY_HEADER_X_XSS_PROTECTION', '1; mode=block'),
         'referrer_policy' => env('SECURITY_HEADER_REFERRER_POLICY', 'strict-origin-when-cross-origin'),
-        'content_security_policy' => env('SECURITY_HEADER_CSP', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';"),
+        'content_security_policy' => env('SECURITY_HEADER_CSP', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.bunny.net; font-src 'self' https://fonts.gstatic.com https://fonts.bunny.net; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;"),
     ],
 
     /*

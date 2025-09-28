@@ -245,7 +245,7 @@ Route::prefix('reports')->name('reports.')->middleware(['auth', 'check.permissio
     Route::get('/financial', [ReportController::class, 'financial'])->name('financial');
     Route::get('/maintenance', [ReportController::class, 'maintenance'])->name('maintenance');
     Route::get('/security', [SecurityAuditController::class, 'index'])->name('security');
-        Route::post('/export', [ReportController::class, 'export'])->name('export');
+    Route::post('/export', [ReportController::class, 'export'])->name('export');
     });
 
 // System Health Routes
@@ -266,7 +266,7 @@ Route::prefix('health')->group(function () {
 });
 
 // Security Monitoring Routes
-Route::prefix('security/monitoring')->name('security.monitoring.')->middleware(['auth', 'check.permission:view_security_audit'])->group(function () {
+Route::prefix('security/monitoring')->name('security.monitoring.')->middleware(['auth', 'check.permission:view_security_monitoring'])->group(function () {
     Route::get('/', [SecurityMonitoringController::class, 'index'])->name('index');
     Route::get('/threats', [SecurityMonitoringController::class, 'threats'])->name('threats');
     Route::get('/events', [SecurityMonitoringController::class, 'events'])->name('events');
