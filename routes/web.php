@@ -205,7 +205,7 @@ Route::get('/dashboard/asset-movements', [App\Http\Controllers\DashboardControll
 
     // Change Password
     Route::get('/password/change', [ChangePasswordController::class, 'edit'])->name('password.edit');
-    Route::post('/password/change', [ChangePasswordController::class, 'update'])->name('password.update');
+    Route::post('/password/change', [ChangePasswordController::class, 'update'])->name('password.change');
 });
 
 // Accountability Form routes

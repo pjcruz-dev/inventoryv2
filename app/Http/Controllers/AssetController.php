@@ -184,9 +184,8 @@ class AssetController extends Controller
             $assetTag = $this->generateUniqueAssetTag($categoryName);
             $validated['asset_tag'] = $assetTag;
             
-            // Add sequence number to name for identification
-            $baseName = $validated['name'];
-            $validated['name'] = $baseName . ' #' . $i;
+            // Use the original name without sequence numbering
+            $validated['name'] = $validated['name'];
             
             $asset = Asset::create($validated);
             $createdAssets[] = $asset;
