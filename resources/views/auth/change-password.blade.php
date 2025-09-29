@@ -9,7 +9,7 @@
                     <h4 class="mb-0">Change Password</h4>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ route('password.update') }}">
+                    <form method="POST" action="{{ route('password.change') }}">
                         @csrf
 
                         <div class="form-group mb-3">

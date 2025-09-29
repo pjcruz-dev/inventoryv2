@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Models\AuditLog;
 
 class SecurityAuditService
 {
@@ -19,7 +20,7 @@ class SecurityAuditService
      */
     public function logSuccessfulLogin($user, Request $request, string $redirectUrl = null): void
     {
-        Log::info('Successful login', [
+        $logData = [
             'event_type' => 'LOGIN_SUCCESS',
             'user_id' => $user->id,
             'email' => $user->email,
@@ -31,7 +32,32 @@ class SecurityAuditService
             'session_id' => $request->hasSession() ? $request->session()->getId() : null,
             'timestamp' => now(),
             'login_method' => 'web'
-        ]);
+        ];
+
+        // Log to Laravel log
+        Log::info('Successful login', $logData);
+
+        // Also save to audit_logs table
+        try {
+            AuditLog::create([
+                'user_id' => $user->id,
+                'action' => 'login_success',
+                'model_type' => 'User',
+                'model_id' => $user->id,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'details' => json_encode([
+                    'email' => $user->email,
+                    'role' => $user->role->name ?? 'No Role',
+                    'redirect_url' => $redirectUrl,
+                    'login_method' => 'web'
+                ]),
+                'timestamp' => now(),
+                'created_at' => now()
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to save audit log: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -44,7 +70,7 @@ class SecurityAuditService
      */
     public function logFailedLogin(string $email, Request $request, string $reason = 'Invalid credentials'): void
     {
-        Log::warning('Failed login attempt', [
+        $logData = [
             'event_type' => 'LOGIN_FAILED',
             'email' => $email,
             'reason' => $reason,
@@ -52,7 +78,34 @@ class SecurityAuditService
             'user_agent' => $request->userAgent(),
             'timestamp' => now(),
             'login_method' => 'web'
-        ]);
+        ];
+
+        // Log to Laravel log
+        Log::warning('Failed login attempt', $logData);
+
+        // Also save to audit_logs table
+        try {
+            // Try to find user by email
+            $user = \App\Models\User::where('email', $email)->first();
+            
+            AuditLog::create([
+                'user_id' => $user ? $user->id : null,
+                'action' => 'login_failed',
+                'model_type' => 'User',
+                'model_id' => $user ? $user->id : null,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'details' => json_encode([
+                    'email' => $email,
+                    'reason' => $reason,
+                    'login_method' => 'web'
+                ]),
+                'timestamp' => now(),
+                'created_at' => now()
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to save audit log: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -64,7 +117,7 @@ class SecurityAuditService
      */
     public function logLogout($user, Request $request): void
     {
-        Log::info('User logout', [
+        $logData = [
             'event_type' => 'LOGOUT',
             'user_id' => $user->id,
             'email' => $user->email,
@@ -73,7 +126,31 @@ class SecurityAuditService
             'user_agent' => $request->userAgent(),
             'session_id' => $request->hasSession() ? $request->session()->getId() : null,
             'timestamp' => now()
-        ]);
+        ];
+
+        // Log to Laravel log
+        Log::info('User logout', $logData);
+
+        // Also save to audit_logs table
+        try {
+            AuditLog::create([
+                'user_id' => $user->id,
+                'action' => 'logout',
+                'model_type' => 'User',
+                'model_id' => $user->id,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'details' => json_encode([
+                    'email' => $user->email,
+                    'role' => $user->role->name ?? 'No Role',
+                    'login_method' => 'web'
+                ]),
+                'timestamp' => now(),
+                'created_at' => now()
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to save audit log: ' . $e->getMessage());
+        }
     }
 
     /**

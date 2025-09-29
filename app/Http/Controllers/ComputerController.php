@@ -23,7 +23,7 @@ class ComputerController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Computer::with('asset');
+        $query = Computer::with(['asset.assignedUser', 'asset.department', 'asset.vendor', 'asset.category']);
         
         if ($request->has('search') && $request->search) {
             $search = $request->search;

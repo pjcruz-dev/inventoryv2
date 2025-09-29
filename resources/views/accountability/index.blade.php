@@ -7,95 +7,47 @@
     <!-- Header Section -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h2 class="mb-1">
-                        <i class="fas fa-file-contract text-primary me-2"></i>
-                        Accountability Forms
-                    </h2>
-                    <p class="text-muted mb-0">Generate and print asset accountability forms with complete audit trails</p>
-                </div>
-                <div>
-                    <button type="button" class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#bulkFormModal">
-                        <i class="fas fa-layer-group me-1"></i>
-                        Bulk Generate
-                    </button>
-                    <button type="button" class="btn btn-primary" onclick="window.print()">
-                        <i class="fas fa-print me-1"></i>
-                        Print All
-                    </button>
+            <div class="card">
+                <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="mb-0 text-white">All Accountability Forms</h5>
+                            <small class="text-white-50">{{ $assets->total() }} total assigned assets</small>
+                        </div>
+                        <div class="col-auto">
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#bulkFormModal" style="color: #667eea;">
+                                    <i class="fas fa-layer-group me-1"></i>
+                                    Bulk Generate
+                                </button>
+                                <button type="button" class="btn btn-light btn-sm" onclick="window.print()" style="color: #667eea;">
+                                    <i class="fas fa-print me-1"></i>
+                                    Print All
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Search Section -->
+                    <div class="mt-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <form method="GET" action="{{ route('accountability.index') }}" id="searchForm">
+                                    <div class="input-group">
+                                        <input type="text" name="search" class="form-control" placeholder="Search assigned assets..." value="{{ request('search') }}" style="border-radius: 6px 0 0 6px; border: 2px solid #e9ecef;">
+                                        <button class="btn btn-primary" type="submit" style="border-radius: 0 6px 6px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 2px solid #667eea;">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Filters Section -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0">
-                <i class="fas fa-filter me-2"></i>
-                Filters & Search
-            </h5>
-        </div>
-        <div class="card-body">
-            <form method="GET" action="{{ route('accountability.index') }}" class="row g-3">
-                <div class="col-md-3">
-                    <label for="search" class="form-label">Search</label>
-                    <input type="text" class="form-control" id="search" name="search" 
-                           value="{{ request('search') }}" placeholder="Asset tag, name, serial, or user...">
-                </div>
-                <div class="col-md-2">
-                    <label for="user_id" class="form-label">User</label>
-                    <select class="form-select" id="user_id" name="user_id">
-                        <option value="">All Users</option>
-                        @foreach($users as $user)
-                            <option value="{{ $user->id }}" {{ request('user_id') == $user->id ? 'selected' : '' }}>
-                                {{ $user->first_name }} {{ $user->last_name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label for="department_id" class="form-label">Department</label>
-                    <select class="form-select" id="department_id" name="department_id">
-                        <option value="">All Departments</option>
-                        @foreach($departments as $department)
-                            <option value="{{ $department->id }}" {{ request('department_id') == $department->id ? 'selected' : '' }}>
-                                {{ $department->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label for="status" class="form-label">Status</label>
-                    <select class="form-select" id="status" name="status">
-                        <option value="">All Status</option>
-                        <option value="Active" {{ request('status') == 'Active' ? 'selected' : '' }}>Active</option>
-                        <option value="Assigned" {{ request('status') == 'Assigned' ? 'selected' : '' }}>Assigned</option>
-                        <option value="Pending Confirmation" {{ request('status') == 'Pending Confirmation' ? 'selected' : '' }}>Pending Confirmation</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label for="print_status" class="form-label">Print Status</label>
-                    <select class="form-select" id="print_status" name="print_status">
-                        <option value="">All</option>
-                        <option value="printed" {{ request('print_status') == 'printed' ? 'selected' : '' }}>Printed</option>
-                        <option value="not_printed" {{ request('print_status') == 'not_printed' ? 'selected' : '' }}>Not Printed</option>
-                    </select>
-                </div>
-                <div class="col-md-3 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary me-2">
-                        <i class="fas fa-search me-1"></i>
-                        Search
-                    </button>
-                    <a href="{{ route('accountability.index') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-times me-1"></i>
-                        Clear
-                    </a>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <!-- Assets Table -->
     <div class="card">
@@ -103,8 +55,8 @@
             <div class="d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Assigned Assets ({{ $assets->total() }})</h5>
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="selectAll">
-                    <label class="form-check-label" for="selectAll">
+                    <input class="form-check-input" type="checkbox" id="selectAllHeader">
+                    <label class="form-check-label" for="selectAllHeader">
                         Select All
                     </label>
                 </div>
@@ -218,27 +170,24 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <div class="btn-group" role="group">
+                                        <div class="d-flex justify-content-center gap-2">
                                             <a href="{{ route('accountability.generate', $asset->id) }}" 
-                                               class="btn btn-sm btn-outline-primary" target="_blank">
-                                                <i class="fas fa-eye me-1"></i>
-                                                View
+                                               class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-view" target="_blank" title="View Details">
+                                                <i class="fas fa-eye"></i>
                                             </a>
                                             <a href="{{ route('accountability.print', $asset->id) }}" 
-                                               class="btn btn-sm {{ ($asset->currentAssignment && $asset->currentAssignment->accountability_printed) ? 'btn-success' : 'btn-primary' }}" 
+                                               class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-print" 
                                                target="_blank"
                                                title="{{ ($asset->currentAssignment && $asset->currentAssignment->accountability_printed) ? 'Already printed - click to reprint' : 'Print accountability form' }}">
-                                                <i class="fas fa-print me-1"></i>
-                                                {{ ($asset->currentAssignment && $asset->currentAssignment->accountability_printed) ? 'Reprint' : 'Print' }}
+                                                <i class="fas fa-print"></i>
                                             </a>
                                             @if(!$asset->currentAssignment || !$asset->currentAssignment->accountability_printed)
                                             <button type="button" 
-                                                    class="btn btn-sm btn-outline-success mark-printed-btn" 
+                                                    class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-mark" 
                                                     data-asset-id="{{ $asset->id }}"
                                                     data-asset-tag="{{ $asset->asset_tag }}"
                                                     title="Mark as printed (for manual printing)">
-                                                <i class="fas fa-check me-1"></i>
-                                                Mark Printed
+                                                <i class="fas fa-check"></i>
                                             </button>
                                             @endif
                                         </div>
@@ -298,18 +247,139 @@
 
 @endsection
 
+@push('styles')
+<style>
+/* Action Button Styles */
+.action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    position: relative;
+    overflow: hidden;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.action-btn-view {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: white;
+    border-color: #4f46e5;
+}
+
+.action-btn-view:hover {
+    background: linear-gradient(135deg, #3730a3 0%, #6d28d9 100%);
+    color: white;
+}
+
+.action-btn-edit {
+    background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+    color: white;
+    border-color: #f59e0b;
+}
+
+.action-btn-edit:hover {
+    background: linear-gradient(135deg, #d97706 0%, #ea580c 100%);
+    color: white;
+}
+
+.action-btn-delete {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border-color: #ef4444;
+}
+
+.action-btn-delete:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: white;
+}
+
+.action-btn-print {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border-color: #10b981;
+}
+
+.action-btn-print:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    color: white;
+}
+
+.action-btn-reminder {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+    border-color: #8b5cf6;
+}
+
+.action-btn-reminder:hover {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    color: white;
+}
+
+.action-btn-mark {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    color: white;
+    border-color: #06b6d4;
+}
+
+.action-btn-mark:hover {
+    background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+    color: white;
+}
+
+/* Loading state */
+.action-btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.action-btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    margin: auto;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+@endpush
+
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Select all functionality
     const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const selectAllHeader = document.getElementById('selectAllHeader');
     const assetCheckboxes = document.querySelectorAll('.asset-checkbox');
     
-    // Select all checkbox change
+    // Select all checkbox change (table header)
     selectAllCheckbox.addEventListener('change', function() {
         assetCheckboxes.forEach(checkbox => {
             checkbox.checked = this.checked;
         });
+        selectAllHeader.checked = this.checked;
+        updateBulkForm();
+    });
+    
+    // Select all checkbox change (card header)
+    selectAllHeader.addEventListener('change', function() {
+        assetCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        selectAllCheckbox.checked = this.checked;
         updateBulkForm();
     });
     
@@ -327,6 +397,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         selectAllCheckbox.checked = allChecked;
         selectAllCheckbox.indeterminate = someChecked && !allChecked;
+        selectAllHeader.checked = allChecked;
+        selectAllHeader.indeterminate = someChecked && !allChecked;
     }
     
     function updateBulkForm() {

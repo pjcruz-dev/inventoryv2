@@ -5,21 +5,43 @@
     <div class="row justify-content-center">
         <div class="col-md-12">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0">
-                        <i class="fas fa-print"></i> Printers Management
-                    </h4>
-                    <div class="btn-group" role="group">
-                        <a href="{{ route('printers.create') }}" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Add New Printer
-                        </a>
-                        <a href="{{ route('printers.bulk-create') }}" class="btn btn-success">
-                            <i class="fas fa-layer-group"></i> Bulk Create
-                        </a>
+                <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="mb-0 text-white">All Printers</h5>
+                            <small class="text-white-50">{{ $printers->total() }} total printers</small>
+                        </div>
+                        <div class="col-auto">
+                            <div class="d-flex gap-2">
+                                <a href="{{ route('printers.create') }}" class="btn btn-light btn-sm" style="color: #667eea;">
+                                    <i class="fas fa-plus me-1"></i>Add New Printer
+                                </a>
+                                <a href="{{ route('printers.bulk-create') }}" class="btn btn-light btn-sm" style="color: #667eea;">
+                                    <i class="fas fa-layer-group me-1"></i>Bulk Create
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Search Section -->
+                    <div class="mt-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <form method="GET" action="{{ route('printers.index') }}" id="searchForm">
+                                    <div class="input-group">
+                                        <input type="text" name="search" class="form-control" placeholder="Search printers..." value="{{ request('search') }}" style="border-radius: 6px 0 0 6px; border: 2px solid #e9ecef;">
+                                        <button class="btn btn-primary" type="submit" style="border-radius: 0 6px 6px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 2px solid #667eea;">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="card-body">
+
                     @if(session('success'))
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                             <i class="fas fa-check-circle"></i> {{ session('success') }}
@@ -29,61 +51,23 @@
                         </div>
                     @endif
 
-                    <!-- Search and Filter Form -->
-                    <form method="GET" action="{{ route('printers.index') }}" class="mb-4">
+                    <!-- Search Section -->
+                    <div class="mb-3">
                         <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="search">Search:</label>
-                                    <input type="text" name="search" id="search" class="form-control" 
-                                           placeholder="Search by asset tag, name..." 
-                                           value="{{ request('search') }}">
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label for="type">Type:</label>
-                                    <select name="type" id="type" class="form-control searchable-select">
-                                        <option value="">All Types</option>
-                                        <option value="Inkjet" {{ request('type') == 'Inkjet' ? 'selected' : '' }}>Inkjet</option>
-                                        <option value="Laser" {{ request('type') == 'Laser' ? 'selected' : '' }}>Laser</option>
-                                        <option value="Dot Matrix" {{ request('type') == 'Dot Matrix' ? 'selected' : '' }}>Dot Matrix</option>
-                                        <option value="Thermal" {{ request('type') == 'Thermal' ? 'selected' : '' }}>Thermal</option>
-                                        <option value="3D" {{ request('type') == '3D' ? 'selected' : '' }}>3D</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label for="color_support">Color Support:</label>
-                                    <select name="color_support" id="color_support" class="form-control searchable-select">
-                                        <option value="">All</option>
-                                        <option value="1" {{ request('color_support') == '1' ? 'selected' : '' }}>Color</option>
-                                        <option value="0" {{ request('color_support') == '0' ? 'selected' : '' }}>Monochrome</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label>&nbsp;</label>
-                                    <div>
-                                        <button type="submit" class="btn btn-info btn-block">
-                                            <i class="fas fa-search"></i> Search
+                            <div class="col-md-6">
+                                <form method="GET" action="{{ route('printers.index') }}">
+                                    <div class="input-group">
+                                        <input type="text" name="search" class="form-control" 
+                                               placeholder="Search by asset tag, name..." 
+                                               value="{{ request('search') }}" style="border-radius: 6px 0 0 6px; border: 2px solid #e9ecef;">
+                                        <button class="btn btn-primary" type="submit" style="border-radius: 0 6px 6px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 2px solid #667eea;">
+                                            <i class="fas fa-search"></i>
                                         </button>
                                     </div>
-                                </div>
+                                </form>
                             </div>
                         </div>
-                        @if(request()->hasAny(['search', 'type', 'color_support']))
-                            <div class="row">
-                                <div class="col-12">
-                                    <a href="{{ route('printers.index') }}" class="btn btn-secondary btn-sm">
-                                        <i class="fas fa-times"></i> Clear Filters
-                                    </a>
-                                </div>
-                            </div>
-                        @endif
-                    </form>
+                    </div>
 
                     <!-- Printers Table -->
                     <div class="table-responsive">
@@ -162,16 +146,14 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <div class="d-flex justify-content-center gap-1">
+                                            <div class="d-flex justify-content-center gap-2">
                                                 <a href="{{ route('printers.show', $printer) }}" 
-                                                   class="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center" 
-                                                   style="width: 32px; height: 32px;" 
+                                                   class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-view" 
                                                    title="View Printer Details">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                                 <a href="{{ route('printers.edit', $printer) }}" 
-                                                   class="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center" 
-                                                   style="width: 32px; height: 32px;" 
+                                                   class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-edit" 
                                                    title="Edit Printer">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
@@ -181,8 +163,7 @@
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" 
-                                                            class="btn btn-outline-danger btn-sm d-flex align-items-center justify-content-center" 
-                                                            style="width: 32px; height: 32px;" 
+                                                            class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-delete" 
                                                             title="Delete Printer">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
@@ -198,7 +179,7 @@
                                                 <h5>No printers found</h5>
                                                 <p>{{ request()->hasAny(['search', 'type', 'color_support']) ? 'Try adjusting your search criteria.' : 'Start by adding your first printer.' }}</p>
                                                 @if(!request()->hasAny(['search', 'type', 'color_support']))
-                                                    <a href="{{ route('printers.create') }}" class="btn btn-primary">
+                                                    <a href="{{ route('printers.create') }}" class="btn btn-primary btn-sm">
                                                         <i class="fas fa-plus"></i> Add First Printer
                                                     </a>
                                                 @endif
@@ -223,13 +204,119 @@
 </div>
 @endsection
 
+@push('styles')
+<style>
+/* Action Button Styles */
+.action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    position: relative;
+    overflow: hidden;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.action-btn-view {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: white;
+    border-color: #4f46e5;
+}
+
+.action-btn-view:hover {
+    background: linear-gradient(135deg, #3730a3 0%, #6d28d9 100%);
+    color: white;
+}
+
+.action-btn-edit {
+    background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+    color: white;
+    border-color: #f59e0b;
+}
+
+.action-btn-edit:hover {
+    background: linear-gradient(135deg, #d97706 0%, #ea580c 100%);
+    color: white;
+}
+
+.action-btn-delete {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border-color: #ef4444;
+}
+
+.action-btn-delete:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: white;
+}
+
+.action-btn-print {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border-color: #10b981;
+}
+
+.action-btn-print:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    color: white;
+}
+
+.action-btn-reminder {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+    border-color: #8b5cf6;
+}
+
+.action-btn-reminder:hover {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    color: white;
+}
+
+.action-btn-mark {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    color: white;
+    border-color: #06b6d4;
+}
+
+.action-btn-mark:hover {
+    background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+    color: white;
+}
+
+/* Loading state */
+.action-btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.action-btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    margin: auto;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+@endpush
+
 @push('scripts')
 <script>
 $(document).ready(function() {
-    // Auto-submit form on filter change
-    $('#type, #color_support').change(function() {
-        $(this).closest('form').submit();
-    });
     
     // Focus search input
     $('#search').focus();

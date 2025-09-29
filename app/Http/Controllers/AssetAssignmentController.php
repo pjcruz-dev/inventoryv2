@@ -29,7 +29,7 @@ class AssetAssignmentController extends Controller
      */
     public function index(Request $request)
     {
-        $query = AssetAssignment::with(['asset', 'user', 'assignedBy']);
+        $query = AssetAssignment::with(['asset.assignedUser', 'asset.department', 'asset.vendor', 'asset.category', 'user.department', 'assignedBy']);
         
         // Search functionality
         if ($request->has('search') && $request->search) {

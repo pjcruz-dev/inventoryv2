@@ -191,7 +191,7 @@
             background: linear-gradient(to right, rgba(255,255,255,0.3), transparent);
         }
         
-        /* Mobile Responsive Sidebar */
+        /* Enhanced Mobile Responsive Design */
         @media (max-width: 767.98px) {
             .sidebar {
                 position: fixed;
@@ -202,6 +202,7 @@
                 z-index: 1040;
                 transition: left 0.3s ease-in-out;
                 overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
             }
             
             .sidebar.show {
@@ -210,7 +211,32 @@
             
             .main-content {
                 margin-left: 0 !important;
-                padding-top: 60px;
+                padding-top: 70px;
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+            
+            /* Enhanced mobile navigation toggle */
+            .navbar-toggler {
+                position: fixed;
+                top: 15px;
+                left: 15px;
+                z-index: 1050;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border: none;
+                border-radius: 12px;
+                padding: 12px 16px;
+                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+                transition: all 0.3s ease;
+            }
+            
+            .navbar-toggler:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+            }
+            
+            .navbar-toggler:active {
+                transform: translateY(0);
             }
             
             /* Backdrop for mobile sidebar */
@@ -225,6 +251,7 @@
                 opacity: 0;
                 visibility: hidden;
                 transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+                backdrop-filter: blur(2px);
             }
             
             .sidebar-backdrop.show {
@@ -234,6 +261,182 @@
             
             #sidebarMenu.show {
                 transform: translateX(0);
+            }
+            
+            /* Mobile-optimized cards */
+            .card {
+                margin-bottom: 1rem;
+                border-radius: 12px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            }
+            
+            .card-header {
+                padding: 1rem;
+                border-radius: 12px 12px 0 0;
+            }
+            
+            .card-body {
+                padding: 1rem;
+            }
+            
+            /* Mobile-optimized tables */
+            .table-responsive {
+                border-radius: 8px;
+                overflow: hidden;
+            }
+            
+            .table {
+                font-size: 0.875rem;
+            }
+            
+            .table th,
+            .table td {
+                padding: 0.75rem 0.5rem;
+                vertical-align: middle;
+            }
+            
+            /* Mobile-optimized buttons */
+            .btn {
+                padding: 0.75rem 1rem;
+                font-size: 0.875rem;
+                border-radius: 8px;
+                min-height: 44px; /* Touch-friendly minimum size */
+            }
+            
+            .btn-sm {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.8rem;
+                min-height: 36px;
+            }
+            
+            /* Mobile-optimized forms */
+            .form-control {
+                padding: 0.75rem;
+                font-size: 1rem;
+                border-radius: 8px;
+                min-height: 44px;
+            }
+            
+            .form-select {
+                padding: 0.75rem;
+                font-size: 1rem;
+                border-radius: 8px;
+                min-height: 44px;
+            }
+            
+            /* Mobile-optimized action buttons */
+            .action-btn {
+                min-width: 44px;
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            /* Mobile-optimized search bar */
+            .search-container {
+                margin-bottom: 1rem;
+            }
+            
+            .search-container .form-control {
+                font-size: 1rem;
+                padding: 0.75rem 1rem;
+            }
+            
+            .search-container .btn {
+                padding: 0.75rem 1rem;
+            }
+            
+            /* Mobile-optimized pagination */
+            .pagination {
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 0.25rem;
+            }
+            
+            .page-link {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.875rem;
+                min-width: 44px;
+                text-align: center;
+            }
+            
+            /* Mobile-optimized modals */
+            .modal-dialog {
+                margin: 1rem;
+                max-width: calc(100% - 2rem);
+            }
+            
+            .modal-content {
+                border-radius: 12px;
+            }
+            
+            .modal-header {
+                padding: 1rem;
+                border-radius: 12px 12px 0 0;
+            }
+            
+            .modal-body {
+                padding: 1rem;
+            }
+            
+            .modal-footer {
+                padding: 1rem;
+                border-radius: 0 0 12px 12px;
+            }
+            
+            /* Mobile-optimized dropdowns */
+            .dropdown-menu {
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                border: none;
+            }
+            
+            .dropdown-item {
+                padding: 0.75rem 1rem;
+                font-size: 0.875rem;
+            }
+            
+            /* Mobile-optimized alerts */
+            .alert {
+                border-radius: 8px;
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+            
+            /* Mobile-optimized badges */
+            .badge {
+                font-size: 0.75rem;
+                padding: 0.375rem 0.5rem;
+            }
+            
+            /* Mobile-optimized spacing */
+            .mb-3 { margin-bottom: 1rem !important; }
+            .mb-4 { margin-bottom: 1.5rem !important; }
+            .mb-5 { margin-bottom: 2rem !important; }
+            
+            .mt-3 { margin-top: 1rem !important; }
+            .mt-4 { margin-top: 1.5rem !important; }
+            .mt-5 { margin-top: 2rem !important; }
+            
+            /* Mobile-optimized text */
+            h1 { font-size: 1.75rem; }
+            h2 { font-size: 1.5rem; }
+            h3 { font-size: 1.25rem; }
+            h4 { font-size: 1.125rem; }
+            h5 { font-size: 1rem; }
+            h6 { font-size: 0.875rem; }
+            
+            /* Mobile-optimized grid */
+            .row {
+                margin-left: -0.5rem;
+                margin-right: -0.5rem;
+            }
+            
+            .col-1, .col-2, .col-3, .col-4, .col-5, .col-6,
+            .col-7, .col-8, .col-9, .col-10, .col-11, .col-12 {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
             }
             
             body.sidebar-open {
@@ -634,7 +837,7 @@
                             </li>
                             @endcan
                             
-                            @if(auth()->user()->can('view_logs') || auth()->user()->can('view_assets') || auth()->user()->can('view_roles') || auth()->user()->can('view_permissions'))
+                            @if(auth()->user()->can('view_logs') || auth()->user()->can('view_assets') || auth()->user()->can('view_roles') || auth()->user()->can('view_permissions') || auth()->user()->can('view_security_audit'))
                             <li class="nav-item mt-3">
                                 <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-white-50">
                                     <span>SYSTEM</span>
@@ -686,6 +889,42 @@
                                 </a>
                             </li>
                             @endcan
+                            
+                            @can('view_security_audit')
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('security.*') ? 'active' : '' }}" href="{{ route('security.audit.index') }}">
+                                    <i class="fas fa-shield-alt"></i>
+                                    Security Audit
+                                </a>
+                            </li>
+                            @endcan
+                            
+        @can('view_reports')
+        <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}" href="{{ route('reports.index') }}">
+                <i class="fas fa-chart-bar"></i>
+                Reports & Analytics
+            </a>
+        </li>
+        @endcan
+        
+        @can('view_system_health')
+        <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('system.*') ? 'active' : '' }}" href="{{ route('system.health') }}">
+                <i class="fas fa-heartbeat"></i>
+                System Health
+            </a>
+        </li>
+        @endcan
+        
+        @can('view_security_audit')
+        <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('security.monitoring.*') ? 'active' : '' }}" href="{{ route('security.monitoring.index') }}">
+                <i class="fas fa-shield-alt"></i>
+                Security Monitoring
+            </a>
+        </li>
+        @endcan
                         </ul>
                         
                         <hr class="my-3" style="border-color: rgba(255,255,255,0.2);">
@@ -807,7 +1046,7 @@
     </button>
     
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     <script>
         // Ensure all Bootstrap dropdowns are initialized
         document.addEventListener('DOMContentLoaded', function () {
@@ -1054,9 +1293,443 @@
             }
         }
         
-        // Initialize notification system when DOM is loaded
+        // Global Loading State System
+        class LoadingStateManager {
+            constructor() {
+                this.loadingOverlay = null;
+                this.createLoadingOverlay();
+            }
+            
+            createLoadingOverlay() {
+                this.loadingOverlay = document.createElement('div');
+                this.loadingOverlay.id = 'global-loading-overlay';
+                this.loadingOverlay.innerHTML = `
+                    <div class="loading-content">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <div class="loading-text">Processing...</div>
+                    </div>
+                `;
+                this.loadingOverlay.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.5);
+                    display: none;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 9999;
+                    backdrop-filter: blur(2px);
+                `;
+                document.body.appendChild(this.loadingOverlay);
+            }
+            
+            show(message = 'Processing...') {
+                const textElement = this.loadingOverlay.querySelector('.loading-text');
+                if (textElement) textElement.textContent = message;
+                this.loadingOverlay.style.display = 'flex';
+            }
+            
+            hide() {
+                this.loadingOverlay.style.display = 'none';
+            }
+        }
+        
+        // Global Toast Notification System
+        class ToastNotificationSystem {
+            constructor() {
+                this.container = null;
+                this.createContainer();
+            }
+            
+            createContainer() {
+                this.container = document.createElement('div');
+                this.container.id = 'toast-container';
+                this.container.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    z-index: 10000;
+                    max-width: 400px;
+                `;
+                document.body.appendChild(this.container);
+            }
+            
+            show(message, type = 'info', duration = 5000) {
+                const toast = document.createElement('div');
+                toast.className = `toast-notification toast-${type}`;
+                toast.innerHTML = `
+                    <div class="toast-content">
+                        <div class="toast-icon">
+                            <i class="fas fa-${this.getIcon(type)}"></i>
+                        </div>
+                        <div class="toast-message">${message}</div>
+                        <button class="toast-close" onclick="this.parentElement.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                
+                toast.style.cssText = `
+                    background: white;
+                    border-left: 4px solid ${this.getColor(type)};
+                    border-radius: 8px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    padding: 16px;
+                    margin-bottom: 8px;
+                    opacity: 0;
+                    transform: translateX(100%);
+                    transition: all 0.3s ease;
+                    position: relative;
+                `;
+                
+                this.container.appendChild(toast);
+                
+                // Animate in
+                setTimeout(() => {
+                    toast.style.opacity = '1';
+                    toast.style.transform = 'translateX(0)';
+                }, 100);
+                
+                // Auto remove
+                if (duration > 0) {
+                    setTimeout(() => {
+                        this.remove(toast);
+                    }, duration);
+                }
+            }
+            
+            remove(toast) {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 300);
+            }
+            
+            getIcon(type) {
+                const icons = {
+                    success: 'check-circle',
+                    error: 'exclamation-circle',
+                    warning: 'exclamation-triangle',
+                    info: 'info-circle'
+                };
+                return icons[type] || 'info-circle';
+            }
+            
+            getColor(type) {
+                const colors = {
+                    success: '#10b981',
+                    error: '#ef4444',
+                    warning: '#f59e0b',
+                    info: '#3b82f6'
+                };
+                return colors[type] || '#3b82f6';
+            }
+        }
+        
+        // Initialize global systems
+        window.loadingManager = new LoadingStateManager();
+        window.toastManager = new ToastNotificationSystem();
+        
+        // Add CSS for loading states
+        const loadingStyles = document.createElement('style');
+        loadingStyles.textContent = `
+            .loading-content {
+                background: white;
+                padding: 2rem;
+                border-radius: 12px;
+                text-align: center;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            }
+            
+            .loading-text {
+                margin-top: 1rem;
+                font-weight: 500;
+                color: #374151;
+            }
+            
+            .toast-content {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            
+            .toast-icon {
+                font-size: 1.2rem;
+                color: #6b7280;
+            }
+            
+            .toast-message {
+                flex: 1;
+                font-weight: 500;
+                color: #374151;
+            }
+            
+            .toast-close {
+                background: none;
+                border: none;
+                color: #9ca3af;
+                cursor: pointer;
+                padding: 4px;
+                border-radius: 4px;
+                transition: all 0.2s ease;
+            }
+            
+            .toast-close:hover {
+                background: #f3f4f6;
+                color: #374151;
+            }
+            
+            /* Skeleton loading states */
+            .skeleton {
+                background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+                background-size: 200% 100%;
+                animation: loading 1.5s infinite;
+            }
+            
+            @keyframes loading {
+                0% { background-position: 200% 0; }
+                100% { background-position: -200% 0; }
+            }
+            
+            .skeleton-text {
+                height: 1rem;
+                border-radius: 4px;
+                margin-bottom: 0.5rem;
+            }
+            
+            .skeleton-text.short { width: 60%; }
+            .skeleton-text.medium { width: 80%; }
+            .skeleton-text.long { width: 100%; }
+            
+            .skeleton-button {
+                height: 2.5rem;
+                width: 6rem;
+                border-radius: 6px;
+            }
+            
+            .skeleton-card {
+                height: 200px;
+                border-radius: 8px;
+                margin-bottom: 1rem;
+            }
+        `;
+        document.head.appendChild(loadingStyles);
+        
+        // Enhanced Mobile Navigation System
+        class MobileNavigationManager {
+            constructor() {
+                this.sidebar = document.getElementById('sidebarMenu');
+                this.toggler = document.querySelector('.navbar-toggler');
+                this.backdrop = null;
+                this.init();
+            }
+            
+            init() {
+                if (this.toggler && this.sidebar) {
+                    this.createBackdrop();
+                    this.bindEvents();
+                }
+            }
+            
+            createBackdrop() {
+                this.backdrop = document.createElement('div');
+                this.backdrop.className = 'sidebar-backdrop';
+                this.backdrop.addEventListener('click', () => this.closeSidebar());
+                document.body.appendChild(this.backdrop);
+            }
+            
+            bindEvents() {
+                this.toggler.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.toggleSidebar();
+                });
+                
+                // Close sidebar when clicking on links
+                const sidebarLinks = this.sidebar.querySelectorAll('a');
+                sidebarLinks.forEach(link => {
+                    link.addEventListener('click', () => {
+                        this.closeSidebar();
+                    });
+                });
+                
+                // Close sidebar on escape key
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.isSidebarOpen()) {
+                        this.closeSidebar();
+                    }
+                });
+                
+                // Handle window resize
+                window.addEventListener('resize', () => {
+                    if (window.innerWidth >= 768) {
+                        this.closeSidebar();
+                    }
+                });
+            }
+            
+            toggleSidebar() {
+                if (this.isSidebarOpen()) {
+                    this.closeSidebar();
+                } else {
+                    this.openSidebar();
+                }
+            }
+            
+            openSidebar() {
+                this.sidebar.classList.add('show');
+                this.backdrop.classList.add('show');
+                document.body.classList.add('sidebar-open');
+                this.toggler.setAttribute('aria-expanded', 'true');
+            }
+            
+            closeSidebar() {
+                this.sidebar.classList.remove('show');
+                this.backdrop.classList.remove('show');
+                document.body.classList.remove('sidebar-open');
+                this.toggler.setAttribute('aria-expanded', 'false');
+            }
+            
+            isSidebarOpen() {
+                return this.sidebar.classList.contains('show');
+            }
+        }
+        
+        // Enhanced Touch Interactions
+        class TouchInteractionManager {
+            constructor() {
+                this.init();
+            }
+            
+            init() {
+                // Add touch feedback to buttons
+                this.addTouchFeedback();
+                
+                // Add swipe gestures for mobile
+                this.addSwipeGestures();
+                
+                // Add pull-to-refresh functionality
+                this.addPullToRefresh();
+            }
+            
+            addTouchFeedback() {
+                const buttons = document.querySelectorAll('.btn, .action-btn, .navbar-toggler');
+                buttons.forEach(button => {
+                    button.addEventListener('touchstart', (e) => {
+                        button.style.transform = 'scale(0.95)';
+                        button.style.transition = 'transform 0.1s ease';
+                    });
+                    
+                    button.addEventListener('touchend', (e) => {
+                        button.style.transform = 'scale(1)';
+                    });
+                    
+                    button.addEventListener('touchcancel', (e) => {
+                        button.style.transform = 'scale(1)';
+                    });
+                });
+            }
+            
+            addSwipeGestures() {
+                let startX = 0;
+                let startY = 0;
+                let endX = 0;
+                let endY = 0;
+                
+                document.addEventListener('touchstart', (e) => {
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                });
+                
+                document.addEventListener('touchend', (e) => {
+                    endX = e.changedTouches[0].clientX;
+                    endY = e.changedTouches[0].clientY;
+                    
+                    const diffX = startX - endX;
+                    const diffY = startY - endY;
+                    
+                    // Swipe left to close sidebar
+                    if (diffX > 50 && Math.abs(diffY) < 50 && window.innerWidth < 768) {
+                        const mobileNav = window.mobileNavigationManager;
+                        if (mobileNav && mobileNav.isSidebarOpen()) {
+                            mobileNav.closeSidebar();
+                        }
+                    }
+                });
+            }
+            
+            addPullToRefresh() {
+                let startY = 0;
+                let currentY = 0;
+                let isPulling = false;
+                let pullDistance = 0;
+                
+                document.addEventListener('touchstart', (e) => {
+                    if (window.scrollY === 0) {
+                        startY = e.touches[0].clientY;
+                        isPulling = true;
+                    }
+                });
+                
+                document.addEventListener('touchmove', (e) => {
+                    if (isPulling) {
+                        currentY = e.touches[0].clientY;
+                        pullDistance = currentY - startY;
+                        
+                        if (pullDistance > 0) {
+                            e.preventDefault();
+                            document.body.style.transform = `translateY(${Math.min(pullDistance * 0.5, 100)}px)`;
+                        }
+                    }
+                });
+                
+                document.addEventListener('touchend', (e) => {
+                    if (isPulling && pullDistance > 100) {
+                        // Trigger refresh
+                        window.location.reload();
+                    }
+                    
+                    document.body.style.transform = '';
+                    isPulling = false;
+                    pullDistance = 0;
+                });
+            }
+        }
+        
+        // Initialize all systems when DOM is loaded
         document.addEventListener('DOMContentLoaded', () => {
             new NotificationSystem();
+            window.mobileNavigationManager = new MobileNavigationManager();
+            new TouchInteractionManager();
+            
+            // Add loading states to forms
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                form.addEventListener('submit', (e) => {
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+                    }
+                });
+            });
+            
+            // Add loading states to action buttons
+            const actionButtons = document.querySelectorAll('.action-btn');
+            actionButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    if (button.tagName === 'A' || button.type === 'submit') {
+                        button.classList.add('loading');
+                        button.disabled = true;
+                    }
+                });
+            });
         });
     </script>
     @endif

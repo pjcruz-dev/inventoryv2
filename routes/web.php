@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Middleware\SecurityValidationMiddleware;
+use App\Http\Middleware\SecurityHeadersMiddleware;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\AssetCategoryController;
 use App\Http\Controllers\AssetAssignmentController;
@@ -21,6 +23,11 @@ use App\Http\Controllers\AssetConfirmationController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\DisposalController;
+use App\Http\Controllers\SecurityAuditController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SystemHealthController;
+use App\Http\Controllers\HealthCheckController;
+use App\Http\Controllers\SecurityMonitoringController;
 use App\Http\Controllers\ChangePasswordController;
 
 Route::get('/', function () {
@@ -198,7 +205,7 @@ Route::get('/dashboard/asset-movements', [App\Http\Controllers\DashboardControll
 
     // Change Password
     Route::get('/password/change', [ChangePasswordController::class, 'edit'])->name('password.edit');
-    Route::post('/password/change', [ChangePasswordController::class, 'update'])->name('password.update');
+    Route::post('/password/change', [ChangePasswordController::class, 'update'])->name('password.change');
 });
 
 // Accountability Form routes
@@ -217,4 +224,56 @@ Route::prefix('asset-confirmation')->name('asset-confirmation.')->group(function
     Route::get('/decline/{token}', [AssetConfirmationController::class, 'decline'])->name('decline');
     Route::get('/decline-form/{token}', [AssetConfirmationController::class, 'showDeclineForm'])->name('decline-form');
     Route::post('/decline/{token}', [AssetConfirmationController::class, 'processDecline'])->name('process-decline');
+});
+
+// Security Audit routes
+Route::prefix('security')->name('security.')->middleware(['auth', 'check.permission:view_security_audit'])->group(function () {
+    Route::get('/audit', [SecurityAuditController::class, 'index'])->name('audit.index');
+    Route::get('/audit/logs', [SecurityAuditController::class, 'logs'])->name('audit.logs');
+    Route::get('/audit/user-activity/{userId}', [SecurityAuditController::class, 'userActivity'])->name('audit.user-activity');
+    Route::get('/audit/security-events', [SecurityAuditController::class, 'securityEvents'])->name('audit.security-events');
+    Route::get('/audit/export', [SecurityAuditController::class, 'export'])->name('audit.export');
+    Route::get('/audit/model-trail/{modelType}/{modelId}', [SecurityAuditController::class, 'modelAuditTrail'])->name('audit.model-trail');
+    Route::post('/audit/clear-old-logs', [SecurityAuditController::class, 'clearOldLogs'])->name('audit.clear-old-logs');
+});
+
+// Reports Routes
+Route::prefix('reports')->name('reports.')->middleware(['auth', 'check.permission:view_reports'])->group(function () {
+    Route::get('/', [ReportController::class, 'index'])->name('index');
+    Route::get('/asset-analytics', [ReportController::class, 'assetAnalytics'])->name('asset-analytics');
+    Route::get('/user-activity', [ReportController::class, 'userActivity'])->name('user-activity');
+    Route::get('/financial', [ReportController::class, 'financial'])->name('financial');
+    Route::get('/maintenance', [ReportController::class, 'maintenance'])->name('maintenance');
+    Route::get('/security', [SecurityAuditController::class, 'index'])->name('security');
+    Route::post('/export', [ReportController::class, 'export'])->name('export');
+    });
+
+// System Health Routes
+Route::prefix('system')->name('system.')->middleware(['auth', 'check.permission:view_system_health'])->group(function () {
+    Route::get('/health', [SystemHealthController::class, 'index'])->name('health');
+    Route::get('/health/metrics', [SystemHealthController::class, 'metrics'])->name('health.metrics');
+    Route::post('/health/clear-cache', [SystemHealthController::class, 'clearCache'])->name('health.clear-cache');
+    Route::post('/health/warm-cache', [SystemHealthController::class, 'warmUpCache'])->name('health.warm-cache');
+});
+
+// Health Check Routes (for load balancers)
+Route::prefix('health')->group(function () {
+    Route::get('/', [HealthCheckController::class, 'index'])->name('health.basic');
+    Route::get('/detailed', [HealthCheckController::class, 'detailed'])->name('health.detailed');
+    Route::get('/readiness', [HealthCheckController::class, 'readiness'])->name('health.readiness');
+    Route::get('/liveness', [HealthCheckController::class, 'liveness'])->name('health.liveness');
+    Route::get('/metrics', [HealthCheckController::class, 'metrics'])->name('health.metrics');
+});
+
+// Security Monitoring Routes
+Route::prefix('security/monitoring')->name('security.monitoring.')->middleware(['auth', 'check.permission:view_security_monitoring'])->group(function () {
+    Route::get('/', [SecurityMonitoringController::class, 'index'])->name('index');
+    Route::get('/threats', [SecurityMonitoringController::class, 'threats'])->name('threats');
+    Route::get('/events', [SecurityMonitoringController::class, 'events'])->name('events');
+    Route::get('/statistics', [SecurityMonitoringController::class, 'statistics'])->name('statistics');
+    Route::get('/report', [SecurityMonitoringController::class, 'report'])->name('report');
+    Route::post('/run', [SecurityMonitoringController::class, 'runMonitoring'])->name('run');
+    Route::post('/clear-blocks', [SecurityMonitoringController::class, 'clearBlocks'])->name('clear-blocks');
+    Route::get('/check-ip', [SecurityMonitoringController::class, 'checkIP'])->name('check-ip');
+    Route::get('/check-user', [SecurityMonitoringController::class, 'checkUser'])->name('check-user');
 });

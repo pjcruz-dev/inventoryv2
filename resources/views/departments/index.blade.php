@@ -3,25 +3,6 @@
 @section('title', 'Departments')
 @section('page-title', 'Departments')
 
-@section('page-actions')
-    <div class="d-flex gap-2">
-        <div class="btn-group" role="group">
-            <a href="{{ route('import-export.template', 'departments') }}" class="btn btn-outline-success btn-sm">
-                <i class="fas fa-download me-1"></i>Template
-            </a>
-            <a href="{{ route('import-export.export', 'departments') }}" class="btn btn-outline-info btn-sm">
-                <i class="fas fa-file-export me-1"></i>Export
-            </a>
-            <button type="button" class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">
-                <i class="fas fa-file-import me-1"></i>Import
-            </button>
-        </div>
-        <a href="{{ route('departments.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus me-2"></i>Add New Department
-        </a>
-    </div>
-@endsection
-
 @push('scripts')
 <script>
 $(document).ready(function() {
@@ -77,48 +58,39 @@ $(document).ready(function() {
 
 @section('content')
 <div class="card">
-    <div class="card-header">
+    <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
         <div class="row align-items-center">
             <div class="col">
-                <h6 class="card-title mb-0">All Departments</h6>
+                <h5 class="mb-0 text-white">All Departments</h5>
+                <small class="text-white-50">{{ $departments->total() }} total departments</small>
             </div>
             <div class="col-auto">
-                <form method="GET" action="{{ route('departments.index') }}" class="d-flex gap-2" id="filterForm">
-                    <!-- Search Input -->
-                    <div class="input-group input-group-sm" style="min-width: 250px;">
-                        <input type="text" class="form-control" name="search" 
-                               placeholder="Search departments..." 
-                               value="{{ request('search') }}">
-                        <button class="btn btn-outline-secondary" type="submit">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
-                    
-                    <!-- Clear Filters -->
-                    @if(request('search'))
-                        <a href="{{ route('departments.index') }}" class="btn btn-outline-secondary btn-sm">
-                            <i class="fas fa-times"></i> Clear
-                        </a>
-                    @endif
-                </form>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('departments.create') }}" class="btn btn-light btn-sm" style="color: #667eea;">
+                        <i class="fas fa-plus me-1"></i>Add New Department
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Search Section -->
+        <div class="mt-3">
+            <div class="row">
+                <div class="col-md-6">
+                    <form method="GET" action="{{ route('departments.index') }}" id="searchForm">
+                        <div class="input-group">
+                            <input type="text" name="search" class="form-control" placeholder="Search departments..." value="{{ request('search') }}" style="border-radius: 6px 0 0 6px; border: 2px solid #e9ecef;">
+                            <button class="btn btn-primary" type="submit" style="border-radius: 0 6px 6px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 2px solid #667eea;">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
     
-    <!-- Filter Results Indicator -->
-    @if(request('search'))
-        <div class="card-body border-bottom bg-light py-2">
-            <div class="d-flex align-items-center justify-content-between">
-                <div class="d-flex align-items-center gap-2">
-                    <small class="text-muted">Filtered results:</small>
-                    @if(request('search'))
-                        <span class="badge bg-primary">Search: "{{ request('search') }}"</span>
-                    @endif
-                </div>
-                <small class="text-muted">{{ $departments->total() }} {{ Str::plural('department', $departments->total()) }} found</small>
-            </div>
-        </div>
-    @endif
+    <div class="card-body">
     
     <div class="card-body p-0">
         @if($departments->count() > 0)
@@ -217,16 +189,16 @@ $(document).ready(function() {
                                     </small>
                                 </td>
                                 <td>
-                                    <div class="btn-group btn-group-sm" role="group">
+                                    <div class="d-flex justify-content-center gap-2">
                                         @can('view_departments')
                                         <a href="{{ route('departments.show', $department) }}" 
-                                           class="btn btn-outline-primary" title="View">
+                                           class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-view" title="View Details">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                         @endcan
                                         @can('edit_departments')
                                         <a href="{{ route('departments.edit', $department) }}" 
-                                           class="btn btn-outline-secondary" title="Edit">
+                                           class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-edit" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         @endcan
@@ -236,7 +208,7 @@ $(document).ready(function() {
                                               onsubmit="return confirm('Are you sure you want to delete this department?')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-outline-danger" title="Delete"
+                                            <button type="submit" class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-delete" title="Delete"
                                                     {{ $department->users->count() > 0 || $department->assets->count() > 0 ? 'disabled' : '' }}>
                                                 <i class="fas fa-trash"></i>
                                             </button>
@@ -272,13 +244,13 @@ $(document).ready(function() {
                         <a href="{{ route('departments.index') }}" class="btn btn-outline-primary">
                             <i class="fas fa-times me-2"></i>Clear Search
                         </a>
-                        <a href="{{ route('departments.create') }}" class="btn btn-primary">
+                        <a href="{{ route('departments.create') }}" class="btn btn-primary btn-sm">
                             <i class="fas fa-plus me-2"></i>Add New Department
                         </a>
                     </div>
                 @else
                     <p class="text-muted mb-3">Get started by creating your first department.</p>
-                    <a href="{{ route('departments.create') }}" class="btn btn-primary">
+                    <a href="{{ route('departments.create') }}" class="btn btn-primary btn-sm">
                         <i class="fas fa-plus me-2"></i>Add New Department
                     </a>
                 @endif
@@ -415,3 +387,113 @@ $(document).ready(function() {
     </div>
 </div>
 @endsection
+
+@push('styles')
+<style>
+/* Action Button Styles */
+.action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    position: relative;
+    overflow: hidden;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.action-btn-view {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: white;
+    border-color: #4f46e5;
+}
+
+.action-btn-view:hover {
+    background: linear-gradient(135deg, #3730a3 0%, #6d28d9 100%);
+    color: white;
+}
+
+.action-btn-edit {
+    background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+    color: white;
+    border-color: #f59e0b;
+}
+
+.action-btn-edit:hover {
+    background: linear-gradient(135deg, #d97706 0%, #ea580c 100%);
+    color: white;
+}
+
+.action-btn-delete {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border-color: #ef4444;
+}
+
+.action-btn-delete:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: white;
+}
+
+.action-btn-print {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border-color: #10b981;
+}
+
+.action-btn-print:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    color: white;
+}
+
+.action-btn-reminder {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+    border-color: #8b5cf6;
+}
+
+.action-btn-reminder:hover {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    color: white;
+}
+
+.action-btn-mark {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    color: white;
+    border-color: #06b6d4;
+}
+
+.action-btn-mark:hover {
+    background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+    color: white;
+}
+
+/* Loading state */
+.action-btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.action-btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    margin: auto;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+@endpush

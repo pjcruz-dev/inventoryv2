@@ -35,7 +35,7 @@ class AssetController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Asset::with(['category', 'vendor', 'assignedUser']);
+        $query = Asset::with(['category', 'vendor', 'assignedUser', 'department']);
         
         // Search functionality
         if ($request->filled('search')) {
@@ -58,44 +58,10 @@ class AssetController extends Controller
             });
         }
         
-        // Category filter
-        if ($request->filled('category')) {
-            $query->where('category_id', $request->category);
-        }
-        
-        // Status filter
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-        
-        // Movement filter
-        if ($request->filled('movement')) {
-            $query->where('movement', $request->movement);
-        }
-        
-        // Assignment filter
-        if ($request->filled('assignment')) {
-            if ($request->assignment === 'assigned') {
-                $query->whereNotNull('assigned_to');
-            } elseif ($request->assignment === 'unassigned') {
-                $query->whereNull('assigned_to');
-            }
-        }
-        
-        // Entity filter
-        if ($request->filled('entity')) {
-            $query->where('entity', $request->entity);
-        }
         
         $assets = $query->paginate(15)->withQueryString();
         
-        // Get filter options for the view
-        $categories = AssetCategory::orderBy('name')->get();
-        $statuses = Asset::distinct()->pluck('status')->filter()->sort()->values();
-        $movements = Asset::distinct()->pluck('movement')->filter()->sort()->values();
-        $entities = Asset::distinct()->pluck('entity')->filter()->sort()->values();
-        
-        return view('assets.index', compact('assets', 'categories', 'statuses', 'movements', 'entities'));
+        return view('assets.index', compact('assets'));
     }
 
     /**
@@ -218,9 +184,8 @@ class AssetController extends Controller
             $assetTag = $this->generateUniqueAssetTag($categoryName);
             $validated['asset_tag'] = $assetTag;
             
-            // Add sequence number to name for identification
-            $baseName = $validated['name'];
-            $validated['name'] = $baseName . ' #' . $i;
+            // Use the original name without sequence numbering
+            $validated['name'] = $validated['name'];
             
             $asset = Asset::create($validated);
             $createdAssets[] = $asset;
@@ -693,13 +658,17 @@ class AssetController extends Controller
             return $user->assignedAssets->count();
         });
         
+        $totalValue = $users->flatMap(function($user) {
+            return $user->assignedAssets;
+        })->sum('cost');
+        
         $assetsByCategory = $users->flatMap(function($user) {
             return $user->assignedAssets;
         })->groupBy('category.name')->map(function($assets) {
             return $assets->count();
         });
 
-        return view('assets.print-employee-assets', compact('users', 'totalUsers', 'totalAssets', 'assetsByCategory'));
+        return view('assets.print-employee-assets', compact('users', 'totalUsers', 'totalAssets', 'totalValue', 'assetsByCategory'));
     }
 
     public function printSingleEmployeeAssets(User $user)
@@ -712,12 +681,13 @@ class AssetController extends Controller
         ]);
 
         $totalAssets = $user->assignedAssets->count();
+        $totalValue = $user->assignedAssets->sum('cost');
         
         $assetsByCategory = $user->assignedAssets->groupBy('category.name')->map(function($assets) {
             return $assets->count();
         });
 
-        return view('assets.print-single-employee-assets', compact('user', 'totalAssets', 'assetsByCategory'));
+        return view('assets.print-single-employee-assets', compact('user', 'totalAssets', 'totalValue', 'assetsByCategory'));
     }
 
     /**

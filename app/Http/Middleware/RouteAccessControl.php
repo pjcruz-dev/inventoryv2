@@ -62,6 +62,7 @@ class RouteAccessControl
             'password.email',
             'password.reset',
             'password.update',
+            'password.change',
             'verification.notice',
             'verification.verify',
             'verification.send'

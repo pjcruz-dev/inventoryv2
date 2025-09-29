@@ -7,81 +7,41 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="card-title mb-0">
-                        <i class="fas fa-user-tag me-2"></i>Asset Assignments
-                    </h3>
-                    <div class="btn-group">
-                        @can('create_asset_assignments')
-                        <a href="{{ route('asset-assignments.create') }}" class="btn btn-primary">
-                            <i class="fas fa-plus me-1"></i>New Assignment
-                        </a>
-                        @endcan
-                        @can('manage_asset_assignments')
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                                <i class="fas fa-download me-1"></i>Import/Export
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{{ route('asset-assignments.export') }}">
-                                    <i class="fas fa-file-excel me-2"></i>Export to Excel
-                                </a></li>
-                                <li><a class="dropdown-item" href="{{ route('asset-assignments.import-form') }}">
-                                    <i class="fas fa-file-import me-2"></i>Import from Excel
-                                </a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{{ route('asset-assignments.download-template') }}">
-                                    <i class="fas fa-file-download me-2"></i>Download Template
-                                </a></li>
-                            </ul>
+                <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="mb-0 text-white">All Asset Assignments</h5>
+                            <small class="text-white-50">{{ $assignments->total() }} total assignments</small>
                         </div>
-                        @endcan
+                        <div class="col-auto">
+                            <div class="d-flex gap-2">
+                                @can('create_asset_assignments')
+                                <a href="{{ route('asset-assignments.create') }}" class="btn btn-light btn-sm" style="color: #667eea;">
+                                    <i class="fas fa-plus me-1"></i>New Assignment
+                                </a>
+                                @endcan
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Search Section -->
+                    <div class="mt-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <form method="GET" action="{{ route('asset-assignments.index') }}" id="searchForm">
+                                    <div class="input-group">
+                                        <input type="text" name="search" class="form-control" placeholder="Search assignments..." value="{{ request('search') }}" style="border-radius: 6px 0 0 6px; border: 2px solid #e9ecef;">
+                                        <button class="btn btn-primary" type="submit" style="border-radius: 0 6px 6px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 2px solid #667eea;">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
                 <div class="card-body">
-                    <!-- Search and Filter Form -->
-                    <form method="GET" action="{{ route('asset-assignments.index') }}" class="mb-4">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <div class="input-group">
-                                    <input type="text" name="search" class="form-control" 
-                                           placeholder="Search assignments..." value="{{ request('search') }}">
-                                    <button class="btn btn-outline-secondary" type="submit">
-                                        <i class="fas fa-search"></i>
-                                    </button>
-                                    @if(request('search'))
-                                        <a href="{{ route('asset-assignments.index') }}" class="btn btn-outline-danger">
-                                            <i class="fas fa-times"></i>
-                                        </a>
-                                    @endif
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <select name="status" class="form-select searchable-select">
-                                    <option value="">All Statuses</option>
-                                    <option value="assigned" {{ request('status') == 'assigned' ? 'selected' : '' }}>Assigned</option>
-                                    <option value="returned" {{ request('status') == 'returned' ? 'selected' : '' }}>Returned</option>
-                                    <option value="overdue" {{ request('status') == 'overdue' ? 'selected' : '' }}>Overdue</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <select name="asset_category" class="form-select searchable-select">
-                                    <option value="">All Categories</option>
-                                    @foreach($categories as $category)
-                                        <option value="{{ $category->id }}" {{ request('asset_category') == $category->id ? 'selected' : '' }}>
-                                            {{ $category->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="fas fa-filter me-1"></i>Filter
-                                </button>
-                            </div>
-                        </div>
-                    </form>
 
                     <!-- Assignments Table -->
                     <div class="table-responsive">
@@ -155,21 +115,21 @@
                                             @endswitch
                                         </td>
                                         <td>
-                                            <div class="btn-group btn-group-sm">
+                                            <div class="d-flex justify-content-center gap-2">
                                                 @can('view_asset_assignments')
                                                 <a href="{{ route('asset-assignments.show', $assignment) }}" 
-                                                   class="btn btn-outline-info" title="View">
+                                                   class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-view" title="View Details">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                                 @endcan
                                                 @can('edit_asset_assignments')
                                                 <a href="{{ route('asset-assignments.edit', $assignment) }}" 
-                                                   class="btn btn-outline-warning" title="Edit">
+                                                   class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-edit" title="Edit">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                                 @endcan
                                                 @can('delete_asset_assignments')
-                                                <button type="button" class="btn btn-outline-danger" 
+                                                <button type="button" class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-delete" 
                                                         onclick="confirmDelete({{ $assignment->id }})" title="Delete">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
@@ -233,6 +193,116 @@
 </div>
 
 @endsection
+
+@push('styles')
+<style>
+/* Action Button Styles */
+.action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    position: relative;
+    overflow: hidden;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.action-btn-view {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: white;
+    border-color: #4f46e5;
+}
+
+.action-btn-view:hover {
+    background: linear-gradient(135deg, #3730a3 0%, #6d28d9 100%);
+    color: white;
+}
+
+.action-btn-edit {
+    background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+    color: white;
+    border-color: #f59e0b;
+}
+
+.action-btn-edit:hover {
+    background: linear-gradient(135deg, #d97706 0%, #ea580c 100%);
+    color: white;
+}
+
+.action-btn-delete {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border-color: #ef4444;
+}
+
+.action-btn-delete:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: white;
+}
+
+.action-btn-print {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border-color: #10b981;
+}
+
+.action-btn-print:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    color: white;
+}
+
+.action-btn-reminder {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+    border-color: #8b5cf6;
+}
+
+.action-btn-reminder:hover {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    color: white;
+}
+
+.action-btn-mark {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    color: white;
+    border-color: #06b6d4;
+}
+
+.action-btn-mark:hover {
+    background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+    color: white;
+}
+
+/* Loading state */
+.action-btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.action-btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    margin: auto;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+@endpush
 
 @push('scripts')
 <script>

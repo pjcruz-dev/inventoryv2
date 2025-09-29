@@ -77,14 +77,24 @@ class AccountabilityFormController extends Controller
 
         $assets = $query->orderBy('assigned_date', 'desc')->paginate(20);
         
-        // Load the current assignment with print tracking for each asset
+        // Get all asset IDs for efficient querying
+        $assetIds = $assets->pluck('id');
+        $assignedUserIds = $assets->pluck('assigned_to');
+        
+        // Load all current assignments in a single query
+        $currentAssignments = AssetAssignment::whereIn('asset_id', $assetIds)
+            ->whereIn('user_id', $assignedUserIds)
+            ->where('status', '!=', 'declined')
+            ->with('accountabilityPrintedBy')
+            ->get()
+            ->groupBy('asset_id')
+            ->map(function($assignments) {
+                return $assignments->sortByDesc('created_at')->first();
+            });
+        
+        // Attach current assignments to assets
         foreach ($assets as $asset) {
-            $asset->currentAssignment = AssetAssignment::where('asset_id', $asset->id)
-                ->where('user_id', $asset->assigned_to)
-                ->where('status', '!=', 'declined')
-                ->with('accountabilityPrintedBy')
-                ->latest()
-                ->first();
+            $asset->currentAssignment = $currentAssignments->get($asset->id);
         }
         $users = User::orderBy('first_name')->get();
         $departments = \App\Models\Department::orderBy('name')->get();

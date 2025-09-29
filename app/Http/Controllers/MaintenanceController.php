@@ -25,7 +25,7 @@ class MaintenanceController extends Controller
     public function index(Request $request)
     {
 
-        $query = Maintenance::with(['asset', 'vendor']);
+        $query = Maintenance::with(['asset.assignedUser', 'asset.department', 'asset.vendor', 'asset.category', 'vendor']);
 
         // Search functionality
         if ($request->filled('search')) {

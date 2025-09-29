@@ -5,23 +5,7 @@
 
 @section('page-actions')
     <div class="d-flex gap-2">
-        <div class="btn-group" role="group">
-            <a href="{{ route('import-export.template', 'assets') }}" class="btn btn-outline-success btn-sm">
-                <i class="fas fa-download me-1"></i>Template
-            </a>
-            <a href="{{ route('import-export.export', 'assets') }}" class="btn btn-outline-info btn-sm">
-                <i class="fas fa-file-export me-1"></i>Export
-            </a>
-            <button type="button" class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">
-                <i class="fas fa-file-import me-1"></i>Import
-            </button>
-        </div>
-        <a href="{{ route('assets.print-employee-assets') }}" class="btn btn-outline-secondary btn-sm" target="_blank">
-            <i class="fas fa-print me-1"></i>Employee Assets Report
-        </a>
-        <a href="{{ route('assets.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus me-2"></i>Add New Asset
-        </a>
+        <!-- Buttons moved to header for better alignment -->
     </div>
 <script>
 // Function to set label dimensions for bulk print modal
@@ -81,119 +65,40 @@ document.addEventListener('DOMContentLoaded', function() {
 
 @section('content')
 <div class="card">
-    <div class="card-header">
+    <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
         <div class="row align-items-center">
             <div class="col">
-                <h5 class="mb-0">All Assets</h5>
-                <small class="text-muted">{{ $assets->total() }} total assets</small>
+                <h5 class="mb-0 text-white">All Assets</h5>
+                <small class="text-white-50">{{ $assets->total() }} total assets</small>
             </div>
             <div class="col-auto">
-                <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false">
-                    <i class="fas fa-filter me-1"></i>Filters
-                    @if(request()->hasAny(['search', 'category', 'status', 'movement', 'assignment']))
-                        <span class="badge bg-primary ms-1">{{ collect(request()->only(['search', 'category', 'status', 'movement', 'assignment']))->filter()->count() }}</span>
-                    @endif
-                </button>
+                <div class="d-flex gap-2">
+                        <a href="{{ route('assets.print-employee-assets') }}" class="btn btn-light btn-sm" target="_blank" style="color: #667eea;">
+                            <i class="fas fa-print me-1"></i>Employee Assets Report
+                        </a>
+                        <a href="{{ route('assets.create') }}" class="btn btn-light btn-sm" style="color: #667eea;">
+                            <i class="fas fa-plus me-1"></i>Add New Asset
+                        </a>
+                </div>
             </div>
         </div>
         
-        <!-- Advanced Filters -->
-        <div class="collapse mt-3" id="filterCollapse">
-            <div class="card card-body bg-light">
-                <form method="GET" action="{{ route('assets.index') }}" id="filterForm">
-                    <div class="row g-3">
-                        <!-- Search -->
-                        <div class="col-md-3">
-                            <label class="form-label fw-semibold">Search</label>
-                            <input type="text" name="search" class="form-control" placeholder="Search assets..." value="{{ request('search') }}">
+        <!-- Search Section -->
+        <div class="mt-3">
+            <div class="row">
+                <div class="col-md-6">
+                    <form method="GET" action="{{ route('assets.index') }}" id="searchForm">
+                        <div class="input-group">
+                            <input type="text" name="search" class="form-control" placeholder="Search assets..." value="{{ request('search') }}" style="border-radius: 6px 0 0 6px; border: 2px solid #e9ecef;">
+                            <button class="btn btn-primary" type="submit" style="border-radius: 0 6px 6px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 2px solid #667eea;">
+                                <i class="fas fa-search"></i>
+                            </button>
                         </div>
-                        
-                        <!-- Category Filter -->
-                        <div class="col-md-2">
-                            <label class="form-label fw-semibold">Category</label>
-                            <div class="dropdown">
-                                <input type="text" 
-                                       class="form-control dropdown-toggle" 
-                                       id="categorySearch" 
-                                       placeholder="Search categories..." 
-                                       data-bs-toggle="dropdown" 
-                                       autocomplete="off"
-                                       value="{{ $categories->where('id', request('category'))->first()->name ?? '' }}">
-                                <input type="hidden" name="category" id="categoryValue" value="{{ request('category') }}">
-                                <ul class="dropdown-menu w-100" id="categoryDropdown">
-                                    <li><a class="dropdown-item" href="#" data-value="">All Categories</a></li>
-                                    @foreach($categories as $category)
-                                        <li><a class="dropdown-item {{ request('category') == $category->id ? 'active' : '' }}" 
-                                               href="#" 
-                                               data-value="{{ $category->id }}">{{ $category->name }}</a></li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        </div>
-                        
-                        <!-- Status Filter -->
-                        <div class="col-md-2">
-                            <label class="form-label fw-semibold">Status</label>
-                            <select name="status" class="form-select">
-                                <option value="">All Statuses</option>
-                                @foreach($statuses as $status)
-                                    <option value="{{ $status }}" {{ request('status') == $status ? 'selected' : '' }}>
-                                        {{ str_replace('Deployed Tagged', 'Deployed', $status) }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        
-                        <!-- Movement Filter -->
-                        <div class="col-md-2">
-                            <label class="form-label fw-semibold">Movement</label>
-                            <select name="movement" class="form-select">
-                                <option value="">All Movements</option>
-                                @foreach($movements as $movement)
-                                    <option value="{{ $movement }}" {{ request('movement') == $movement ? 'selected' : '' }}>
-                                        {{ str_replace('Deployed Tagged', 'Deployed', $movement) }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        
-                        <!-- Assignment Filter -->
-                        <div class="col-md-2">
-                            <label class="form-label fw-semibold">Assignment</label>
-                            <select name="assignment" class="form-select">
-                                <option value="">All Assets</option>
-                                <option value="assigned" {{ request('assignment') == 'assigned' ? 'selected' : '' }}>Assigned</option>
-                                <option value="unassigned" {{ request('assignment') == 'unassigned' ? 'selected' : '' }}>Unassigned</option>
-                            </select>
-                        </div>
-                        
-                        <!-- Entity Filter -->
-                        <div class="col-md-2">
-                            <label class="form-label fw-semibold">Entity</label>
-                            <select name="entity" class="form-select">
-                                <option value="">All Entities</option>
-                                @foreach($entities as $entity)
-                                    <option value="{{ $entity }}" {{ request('entity') == $entity ? 'selected' : '' }}>{{ $entity }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        
-                        <!-- Filter Actions -->
-                        <div class="col-md-1">
-                            <label class="form-label">&nbsp;</label>
-                            <div class="d-flex gap-1">
-                                <button type="submit" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                                <a href="{{ route('assets.index') }}" class="btn btn-outline-secondary btn-sm">
-                                    <i class="fas fa-times"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
+        
     </div>
     <div class="card-body">
         @if($assets->count() > 0)
@@ -227,7 +132,63 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
             </div>
-            <div class="table-responsive">
+            <!-- Skeleton Loading State -->
+            <div id="skeleton-loading" class="d-none">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="fw-semibold" style="width: 50px;">
+                                    <div class="skeleton skeleton-text short" style="width: 20px; height: 20px; border-radius: 4px;"></div>
+                                </th>
+                                <th class="fw-semibold">Asset Tag</th>
+                                <th class="fw-semibold">Name</th>
+                                <th class="fw-semibold">Category</th>
+                                <th class="fw-semibold">Status</th>
+                                <th class="fw-semibold">Assigned To</th>
+                                <th class="fw-semibold">Location</th>
+                                <th class="fw-semibold text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for($i = 0; $i < 5; $i++)
+                            <tr class="border-bottom">
+                                <td>
+                                    <div class="skeleton skeleton-text short" style="width: 20px; height: 20px; border-radius: 4px;"></div>
+                                </td>
+                                <td>
+                                    <div class="skeleton skeleton-text short"></div>
+                                </td>
+                                <td>
+                                    <div class="skeleton skeleton-text medium"></div>
+                                </td>
+                                <td>
+                                    <div class="skeleton skeleton-text short"></div>
+                                </td>
+                                <td>
+                                    <div class="skeleton skeleton-text short"></div>
+                                </td>
+                                <td>
+                                    <div class="skeleton skeleton-text medium"></div>
+                                </td>
+                                <td>
+                                    <div class="skeleton skeleton-text short"></div>
+                                </td>
+                                <td>
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <div class="skeleton skeleton-button" style="width: 36px; height: 36px; border-radius: 8px;"></div>
+                                        <div class="skeleton skeleton-button" style="width: 36px; height: 36px; border-radius: 8px;"></div>
+                                        <div class="skeleton skeleton-button" style="width: 36px; height: 36px; border-radius: 8px;"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endfor
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="table-responsive" id="main-table">
                 <table class="table table-hover align-middle">
                     <thead class="table-dark">
                         <tr>
@@ -243,7 +204,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <th class="fw-semibold text-center">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="assets-table-body">
                         @foreach($assets as $asset)
                         <tr class="border-bottom">
                             <td>
@@ -306,14 +267,14 @@ document.addEventListener('DOMContentLoaded', function() {
                                 @endif
                             </td>
                             <td>
-                                <div class="d-flex justify-content-center gap-1">
+                                <div class="d-flex justify-content-center gap-2">
                                     @can('view_assets')
-                                    <a href="{{ route('assets.show', $asset->id) }}" class="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center" title="View Asset" style="width: 32px; height: 32px;">
+                                    <a href="{{ route('assets.show', $asset->id) }}" class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-view" title="View Asset Details">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                     @endcan
                                     @can('edit_assets')
-                                    <a href="{{ route('assets.edit', $asset->id) }}" class="btn btn-sm btn-outline-warning d-flex align-items-center justify-content-center" title="Edit Asset" style="width: 32px; height: 32px;">
+                                    <a href="{{ route('assets.edit', $asset->id) }}" class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-edit" title="Edit Asset">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     @endcan
@@ -321,7 +282,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <form action="{{ route('assets.destroy', $asset->id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this asset? This action cannot be undone.')">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-outline-danger btn-sm d-flex align-items-center justify-content-center" title="Delete Asset" style="width: 32px; height: 32px;">
+                                        <button type="submit" class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-delete" title="Delete Asset">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </form>
@@ -345,7 +306,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <i class="fas fa-boxes fa-4x text-gray-300 mb-3"></i>
                 <h5 class="text-muted">No Assets Found</h5>
                 <p class="text-muted">Get started by creating your first asset.</p>
-                <a href="{{ route('assets.create') }}" class="btn btn-primary">
+                <a href="{{ route('assets.create') }}" class="btn btn-primary btn-sm">
                     <i class="fas fa-plus me-2"></i>Add New Asset
                 </a>
             </div>
@@ -353,98 +314,188 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
-<!-- Import Modal -->
-<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="importModalLabel">
-                    <i class="fas fa-file-import me-2"></i>Import Assets
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="{{ route('import-export.import', 'assets') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="csv_file" class="form-label">Select CSV File</label>
-                        <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
-                        <div class="form-text">
-                            Please upload a CSV file with the correct format. 
-                            <a href="{{ route('import-export.template', 'assets') }}" class="text-decoration-none">
-                                Download template
-                            </a> if you need the correct format.
-                        </div>
-                    </div>
-                    <div class="alert alert-info">
-                        <h6><i class="fas fa-info-circle me-2"></i>Import Guidelines:</h6>
-                        <ul class="mb-0">
-                            <li>CSV must include: asset_tag, category_name, vendor_name, name, description, serial_number, purchase_date, warranty_end, cost, status</li>
-                            <li>Category and vendor must exist in the system</li>
-                            <li>Asset tags must be unique</li>
-                            <li>Dates should be in YYYY-MM-DD format</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-warning">
-                        <i class="fas fa-file-import me-2"></i>Import Assets
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 @endsection
 
 @section('scripts')
-<script>
-$(document).ready(function() {
-    // Category search functionality
-    const categorySearch = $('#categorySearch');
-    const categoryValue = $('#categoryValue');
-    const categoryDropdown = $('#categoryDropdown');
-    
-    // Filter dropdown items based on search input
-    categorySearch.on('input', function() {
-        const searchTerm = $(this).val().toLowerCase();
-        
-        categoryDropdown.find('li').each(function() {
-            const text = $(this).find('a').text().toLowerCase();
-            if (text.includes(searchTerm)) {
-                $(this).show();
-            } else {
-                $(this).hide();
+    <script>
+        // Enhanced Loading States and Progress Indicators
+        class AssetLoadingManager {
+            constructor() {
+                this.init();
             }
-        });
-        
-        // Show dropdown if not already visible
-        if (!categoryDropdown.hasClass('show')) {
-            categoryDropdown.addClass('show');
+            
+            init() {
+                this.setupSearchLoading();
+                this.setupBulkOperations();
+                this.setupFormLoading();
+            }
+            
+            setupSearchLoading() {
+                const searchForm = document.querySelector('form[method="GET"]');
+                const searchInput = document.querySelector('input[name="search"]');
+                const searchBtn = document.querySelector('button[type="submit"]');
+                
+                if (searchForm && searchInput && searchBtn) {
+                    searchForm.addEventListener('submit', (e) => {
+                        this.showSkeletonLoading();
+                        searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Searching...';
+                        searchBtn.disabled = true;
+                    });
+                }
+            }
+            
+            setupBulkOperations() {
+                const bulkPrintBtn = document.querySelector('[data-bs-target="#printAllModal"]');
+                if (bulkPrintBtn) {
+                    bulkPrintBtn.addEventListener('click', () => {
+                        this.showProgressIndicator('Preparing print data...', 0);
+                        setTimeout(() => {
+                            this.hideProgressIndicator();
+                        }, 1000);
+                    });
+                }
+            }
+            
+        setupFormLoading() {
+            // Only target main search form, not action button forms
+            const searchForm = document.querySelector('form[method="GET"]');
+            if (searchForm) {
+                searchForm.addEventListener('submit', (e) => {
+                    const submitBtn = searchForm.querySelector('button[type="submit"]');
+                    if (submitBtn && !submitBtn.disabled) {
+                        this.showButtonLoading(submitBtn);
+                        
+                        // Reset button state after search completes
+                        setTimeout(() => {
+                            this.hideButtonLoading(submitBtn);
+                        }, 1000);
+                    }
+                });
+            }
         }
-    });
-    
-    // Handle dropdown item selection
-    categoryDropdown.on('click', 'a.dropdown-item', function(e) {
-        e.preventDefault();
+            
+            showSkeletonLoading() {
+                const skeleton = document.getElementById('skeleton-loading');
+                const mainTable = document.getElementById('main-table');
+                if (skeleton && mainTable) {
+                    skeleton.classList.remove('d-none');
+                    mainTable.style.display = 'none';
+                }
+            }
+            
+            hideSkeletonLoading() {
+                const skeleton = document.getElementById('skeleton-loading');
+                const mainTable = document.getElementById('main-table');
+                if (skeleton && mainTable) {
+                    skeleton.classList.add('d-none');
+                    mainTable.style.display = 'block';
+                }
+            }
+            
+            showProgressIndicator(message, progress = 0) {
+                if (window.loadingManager) {
+                    window.loadingManager.show(message);
+                }
+                
+                // Create progress bar if it doesn't exist
+                let progressBar = document.getElementById('bulk-progress-bar');
+                if (!progressBar) {
+                    progressBar = document.createElement('div');
+                    progressBar.id = 'bulk-progress-bar';
+                    progressBar.className = 'progress mb-3';
+                    progressBar.innerHTML = `
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             role="progressbar" style="width: ${progress}%">
+                            ${progress}%
+                        </div>
+                    `;
+                    document.querySelector('.card-body').insertBefore(progressBar, document.querySelector('.table-responsive'));
+                }
+                
+                const progressBarInner = progressBar.querySelector('.progress-bar');
+                progressBarInner.style.width = `${progress}%`;
+                progressBarInner.textContent = `${progress}%`;
+            }
+            
+            hideProgressIndicator() {
+                if (window.loadingManager) {
+                    window.loadingManager.hide();
+                }
+                
+                const progressBar = document.getElementById('bulk-progress-bar');
+                if (progressBar) {
+                    progressBar.remove();
+                }
+            }
+            
+        showButtonLoading(button) {
+            // Store original content if not already stored
+            if (!button.dataset.originalContent) {
+                button.dataset.originalContent = button.innerHTML;
+            }
+            
+            console.log('Showing loading state for button:', button);
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+            button.disabled = true;
+            button.classList.add('loading');
+        }
         
-        const value = $(this).data('value');
-        const text = $(this).text();
+        hideButtonLoading(button) {
+            if (button.dataset.originalContent) {
+                console.log('Hiding loading state for button:', button);
+                button.innerHTML = button.dataset.originalContent;
+                button.disabled = false;
+                button.classList.remove('loading');
+            }
+        }
+            
+            simulateBulkOperation(operation, totalItems) {
+                this.showProgressIndicator(`Starting ${operation}...`, 0);
+                
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += Math.random() * 15;
+                    if (progress >= 100) {
+                        progress = 100;
+                        clearInterval(interval);
+                        this.hideProgressIndicator();
+                        if (window.toastManager) {
+                            window.toastManager.show(`${operation} completed successfully!`, 'success');
+                        }
+                    }
+                    this.showProgressIndicator(`${operation} in progress...`, Math.round(progress));
+                }, 200);
+            }
+        }
         
-        categoryValue.val(value);
-        categorySearch.val(value ? text : '');
-        
-        // Update active state
-        categoryDropdown.find('a.dropdown-item').removeClass('active');
-        $(this).addClass('active');
-        
-        // Hide dropdown
-        categoryDropdown.removeClass('show');
-        
-        // Auto-submit form for immediate filtering
-        $('#filterForm').submit();
-    });
+        $(document).ready(function() {
+            // Initialize loading manager
+            window.assetLoadingManager = new AssetLoadingManager();
+            
+            // Reset any stuck loading states
+            const loadingButtons = document.querySelectorAll('.btn.loading');
+            loadingButtons.forEach(button => {
+                if (button.dataset.originalContent) {
+                    button.innerHTML = button.dataset.originalContent;
+                    button.disabled = false;
+                    button.classList.remove('loading');
+                }
+            });
+            
+            // Add global reset function for debugging
+            window.resetAllLoadingStates = function() {
+                console.log('Resetting all loading states...');
+                const allLoadingButtons = document.querySelectorAll('.btn.loading');
+                allLoadingButtons.forEach(button => {
+                    if (button.dataset.originalContent) {
+                        button.innerHTML = button.dataset.originalContent;
+                        button.disabled = false;
+                        button.classList.remove('loading');
+                        console.log('Reset button:', button);
+                    }
+                });
+                console.log('All loading states reset!');
+            };
     
     // Bulk selection functionality
     function initializeBulkSelection() {
@@ -511,28 +562,6 @@ $(document).ready(function() {
     // Initialize bulk selection after DOM is ready
     initializeBulkSelection();
     
-    // Show all items when dropdown is opened
-    categorySearch.on('focus', function() {
-        categoryDropdown.find('li').show();
-    });
-    
-    // Hide dropdown when clicking outside
-    $(document).on('click', function(e) {
-        if (!$(e.target).closest('.dropdown').length) {
-            categoryDropdown.removeClass('show');
-        }
-    });
-    
-    // Clear search when clicking the clear button
-    categorySearch.on('keydown', function(e) {
-        if (e.key === 'Escape') {
-            $(this).val('');
-            categoryValue.val('');
-            categoryDropdown.find('a.dropdown-item').removeClass('active');
-            categoryDropdown.find('a[data-value=""]').addClass('active');
-            categoryDropdown.removeClass('show');
-        }
-    });
 });
 
 // Clear selection function (called from toolbar button)
@@ -693,3 +722,113 @@ function openBulkPrintModal() {
 </div>
 
 @endsection
+
+@push('styles')
+<style>
+/* Action Button Styles */
+.action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    position: relative;
+    overflow: hidden;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.action-btn-view {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: white;
+    border-color: #4f46e5;
+}
+
+.action-btn-view:hover {
+    background: linear-gradient(135deg, #3730a3 0%, #6d28d9 100%);
+    color: white;
+}
+
+.action-btn-edit {
+    background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+    color: white;
+    border-color: #f59e0b;
+}
+
+.action-btn-edit:hover {
+    background: linear-gradient(135deg, #d97706 0%, #ea580c 100%);
+    color: white;
+}
+
+.action-btn-delete {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border-color: #ef4444;
+}
+
+.action-btn-delete:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: white;
+}
+
+.action-btn-print {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border-color: #10b981;
+}
+
+.action-btn-print:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    color: white;
+}
+
+.action-btn-reminder {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+    border-color: #8b5cf6;
+}
+
+.action-btn-reminder:hover {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    color: white;
+}
+
+.action-btn-mark {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    color: white;
+    border-color: #06b6d4;
+}
+
+.action-btn-mark:hover {
+    background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+    color: white;
+}
+
+/* Loading state */
+.action-btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.action-btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    margin: auto;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+@endpush
