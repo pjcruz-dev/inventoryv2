@@ -65,7 +65,10 @@ class RouteAccessControl
             'password.change',
             'verification.notice',
             'verification.verify',
-            'verification.send'
+            'verification.send',
+            // Only allow assets view for basic users
+            'assets.index',
+            'assets.show'
         ];
 
         if (in_array($routeName, $exemptRoutes)) {

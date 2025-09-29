@@ -284,8 +284,13 @@ class ImportExportController extends Controller
                 // Handle Excel files
                 $csvData = $this->readExcelFile($path);
             } else {
-                // Handle CSV files
+                // Handle CSV files with proper UTF-8 encoding
                 $csvData = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+                
+                // Convert each line to proper UTF-8 encoding
+                $csvData = array_map(function($line) {
+                    return mb_convert_encoding($line, 'UTF-8', 'auto');
+                }, $csvData);
             }
             
             if ($csvData === false || empty($csvData)) {
@@ -346,6 +351,9 @@ class ImportExportController extends Controller
         try {
             $data = [];
             foreach ($csvData as $lineNumber => $line) {
+                // Ensure proper UTF-8 encoding before parsing
+                $line = mb_convert_encoding($line, 'UTF-8', 'auto');
+                
                 // Use a more robust CSV parsing approach
                 $parsedLine = str_getcsv($line, ',', '"', '\\');
                 if ($parsedLine === false || empty($parsedLine)) {
@@ -372,6 +380,8 @@ class ImportExportController extends Controller
                 // Additional check: Skip rows that are completely empty (all fields are empty strings)
                 $hasAnyData = false;
                 foreach ($parsedLine as $field) {
+                    // Ensure proper UTF-8 encoding for each field
+                    $field = mb_convert_encoding($field, 'UTF-8', 'auto');
                     if (!empty(trim($field))) {
                         $hasAnyData = true;
                         break;
@@ -382,7 +392,12 @@ class ImportExportController extends Controller
                     continue; // Skip completely empty rows
                 }
                 
-                $data[] = $parsedLine;
+                // Ensure all fields in the parsed line are properly UTF-8 encoded
+                $utf8ParsedLine = array_map(function($field) {
+                    return mb_convert_encoding($field, 'UTF-8', 'auto');
+                }, $parsedLine);
+                
+                $data[] = $utf8ParsedLine;
             }
             
             if (empty($data)) {
@@ -1034,6 +1049,11 @@ class ImportExportController extends Controller
                 $csvData = $this->readExcelFile($path);
             } else {
                 $csvData = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+                
+                // Convert each line to proper UTF-8 encoding
+                $csvData = array_map(function($line) {
+                    return mb_convert_encoding($line, 'UTF-8', 'auto');
+                }, $csvData);
             }
             
             // Filter out comment lines and instruction lines
@@ -1378,7 +1398,9 @@ class ImportExportController extends Controller
                 $cellIterator->setIterateOnlyExistingCells(false);
                 
                 foreach ($cellIterator as $cell) {
-                    $rowData[] = $cell->getCalculatedValue();
+                    $value = $cell->getCalculatedValue();
+                    // Ensure proper UTF-8 encoding for each cell value
+                    $rowData[] = mb_convert_encoding($value, 'UTF-8', 'auto');
                 }
                 
                 // Skip empty rows
@@ -1677,7 +1699,7 @@ class ImportExportController extends Controller
             $roleId = $role->id;
         }
 
-        User::create([
+        $user = User::create([
             'employee_id' => $data['employee_id'],
             'first_name' => $data['first_name'],
             'last_name' => $data['last_name'],
@@ -1690,6 +1712,11 @@ class ImportExportController extends Controller
             'status' => $data['status'] ?? 1,
             'password' => bcrypt($data['password'] ?? 'password123')
         ]);
+
+        // Assign Spatie role to the user
+        if ($role) {
+            $user->assignRole($role->name);
+        }
     }
 
     /**

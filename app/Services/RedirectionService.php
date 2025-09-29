@@ -46,6 +46,9 @@ class RedirectionService
             case 'Employee':
                 return $this->getEmployeeRedirect($user);
             
+            case 'User':
+                return $this->getUserRedirect($user);
+            
             default:
                 return $this->getDefaultRedirect($user);
         }
@@ -129,6 +132,19 @@ class RedirectionService
         // If no specific permissions, redirect to a basic dashboard or profile
         Log::info('Employee redirected to basic dashboard', ['user_id' => $user->id]);
         return route('dashboard');
+    }
+
+    /**
+     * Get redirect URL for User role
+     *
+     * @param User $user
+     * @return string
+     */
+    private function getUserRedirect(User $user): string
+    {
+        // User role can only view assets - redirect directly to assets page
+        Log::info('User role redirected to assets view (limited access)', ['user_id' => $user->id]);
+        return route('assets.index');
     }
 
     /**

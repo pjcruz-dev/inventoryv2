@@ -70,19 +70,14 @@ class RolePermissionSeeder extends Seeder
             $this->command->info('✓ Manager permissions assigned to Manager role');
         }
         
-        // Assign specific permissions to User role
+        // Assign specific permissions to User role - VERY LIMITED ACCESS
         $userRole = Role::where('name', 'User')->first();
         if ($userRole) {
             $userPermissions = [
-                'view_assets',
-                'view_asset_assignments',
-                'view_asset_categories',
-                'view_computers', 'view_monitors', 'view_printers', 'view_peripherals',
-                'view_departments', 'view_vendors',
-                'view_timeline', 'view_dashboard', 'view_notifications'
+                'view_assets'  // Only view assets - NO DASHBOARD ACCESS
             ];
             $userRole->syncPermissions($userPermissions);
-            $this->command->info('✓ User permissions assigned to User role');
+            $this->command->info('✓ User permissions assigned to User role (ASSETS ONLY - NO DASHBOARD)');
         }
         
         // Assign specific permissions to IT Support role

@@ -636,6 +636,30 @@
             background-color: #fff;
             border-color: #dee2e6;
         }
+        
+        /* User Dropdown Fixes */
+        .dropdown-menu {
+            z-index: 1060 !important;
+            min-width: 200px;
+        }
+        
+        .dropdown-toggle::after {
+            margin-left: 0.5em;
+        }
+        
+        .dropdown-item {
+            padding: 0.5rem 1rem;
+            transition: background-color 0.15s ease-in-out;
+        }
+        
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .dropdown-item:focus {
+            background-color: #e9ecef;
+            outline: none;
+        }
     </style>
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
 </head>
@@ -680,12 +704,14 @@
                         </div>
                         
                         <ul class="nav flex-column">
+                            @can('view_dashboard')
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
                                     <i class="fas fa-tachometer-alt"></i>
                                     Dashboard
                                 </a>
                             </li>
+                            @endcan
                             
                             @if(auth()->user()->can('view_assets'))
                             <li class="nav-item mt-3">
@@ -698,7 +724,7 @@
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('assets.*') ? 'active' : '' }}" href="{{ route('assets.index') }}">
                                     <i class="fas fa-boxes"></i>
-                                    All Assets
+                                    {{ auth()->user()->hasRole('User') && !auth()->user()->hasAnyRole(['Admin', 'Super Admin', 'Manager', 'IT Support']) ? 'My Assets' : 'All Assets' }}
                                 </a>
                             </li>
                             @endcan
@@ -854,7 +880,7 @@
                             </li>
                             @endcan
                             
-                            @can('view_assets')
+                            @can('import_export_access')
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('import-export.*') ? 'active' : '' }}" href="{{ route('import-export.interface') }}">
                                     <i class="fas fa-file-import"></i>
@@ -863,7 +889,7 @@
                             </li>
                             @endcan
                             
-                            @can('view_assets')
+                            @can('view_timeline')
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('timeline.*') ? 'active' : '' }}" href="{{ route('timeline.index') }}">
                                     <i class="fas fa-history"></i>
@@ -1048,19 +1074,52 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     <script>
-        // Ensure all Bootstrap dropdowns are initialized
-        document.addEventListener('DOMContentLoaded', function () {
-            if (window.bootstrap) {
-                document.querySelectorAll('.dropdown-toggle').forEach(function (el) {
-                    try { new bootstrap.Dropdown(el, { popperConfig: { strategy: 'fixed' } }); } catch (e) { /* noop */ }
-                });
-                // Prevent clicks from being swallowed by other handlers
-                document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach(function (btn) {
-                    btn.addEventListener('click', function (e) {
-                        e.stopPropagation();
+        // Ensure Bootstrap is loaded before initializing dropdowns
+        function initializeDropdowns() {
+            if (typeof bootstrap !== 'undefined') {
+                // Initialize all dropdowns
+                var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
+                var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+                    return new bootstrap.Dropdown(dropdownToggleEl, {
+                        popperConfig: { strategy: 'fixed' }
                     });
                 });
+                
+                // Ensure dropdowns work properly
+                document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach(function (btn) {
+                    btn.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // Manually toggle dropdown
+                        var dropdown = bootstrap.Dropdown.getInstance(this);
+                        if (dropdown) {
+                            dropdown.toggle();
+                        } else {
+                            dropdown = new bootstrap.Dropdown(this);
+                            dropdown.toggle();
+                        }
+                    });
+                });
+                
+                // Close dropdowns when clicking outside
+                document.addEventListener('click', function (e) {
+                    if (!e.target.closest('.dropdown')) {
+                        dropdownList.forEach(function (dropdown) {
+                            dropdown.hide();
+                        });
+                    }
+                });
+            } else {
+                // Retry after a short delay if Bootstrap isn't loaded yet
+                setTimeout(initializeDropdowns, 100);
             }
+        }
+    </script>
+    <script>
+        // Initialize dropdowns when DOM is ready
+        document.addEventListener('DOMContentLoaded', function () {
+            initializeDropdowns();
         });
     </script>
     
@@ -1784,3 +1843,4 @@
     @stack('scripts')
 </body>
 </html>
+

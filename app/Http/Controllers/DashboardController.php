@@ -28,6 +28,10 @@ class DashboardController extends Controller
      */
     public function index(Request $request)
     {
+        // Redirect User role to assets page since they don't have dashboard access
+        if (auth()->user()->hasRole('User') && !auth()->user()->hasAnyRole(['Admin', 'Super Admin', 'Manager', 'IT Support'])) {
+            return redirect()->route('assets.index');
+        }
         // Get filter parameters
         $filterMonth = $request->get('month');
         $filterYear = $request->get('year');

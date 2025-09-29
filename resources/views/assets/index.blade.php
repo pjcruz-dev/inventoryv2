@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Assets')
-@section('page-title', 'Assets Management')
+@section('page-title', auth()->user()->hasRole('User') && !auth()->user()->hasAnyRole(['Admin', 'Super Admin', 'Manager', 'IT Support']) ? 'My Assets' : 'Assets Management')
 
 @section('page-actions')
     <div class="d-flex gap-2">
@@ -102,7 +102,8 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
     <div class="card-body">
         @if($assets->count() > 0)
-            <!-- Print All Assets Section -->
+            <!-- Print All Assets Section - Only for non-User roles -->
+            @if(!auth()->user()->hasRole('User') || auth()->user()->hasAnyRole(['Admin', 'Super Admin', 'Manager', 'IT Support']))
             <div class="mb-3">
                 <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#printAllModal">
                     <i class="fas fa-print me-1"></i>Print All Assets ({{ $assets->total() }})
@@ -114,8 +115,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     </small>
                 @endif
             </div>
+            @endif
 
-            <!-- Bulk Actions Toolbar -->
+            <!-- Bulk Actions Toolbar - Only for non-User roles -->
+            @if(!auth()->user()->hasRole('User') || auth()->user()->hasAnyRole(['Admin', 'Super Admin', 'Manager', 'IT Support']))
             <div id="bulkActionsToolbar" class="alert alert-info d-none mb-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -132,6 +135,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
             </div>
+            @endif
             <!-- Skeleton Loading State -->
             <div id="skeleton-loading" class="d-none">
                 <div class="table-responsive">
@@ -192,9 +196,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 <table class="table table-hover align-middle">
                     <thead class="table-dark">
                         <tr>
+                            @if(!auth()->user()->hasRole('User') || auth()->user()->hasAnyRole(['Admin', 'Super Admin', 'Manager', 'IT Support']))
                             <th class="fw-semibold" style="width: 50px;">
                                 <input type="checkbox" id="selectAll" class="form-check-input">
                             </th>
+                            @endif
                             <th class="fw-semibold">Asset Tag</th>
                             <th class="fw-semibold">Name</th>
                             <th class="fw-semibold">Category</th>
@@ -207,9 +213,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     <tbody id="assets-table-body">
                         @foreach($assets as $asset)
                         <tr class="border-bottom">
+                            @if(!auth()->user()->hasRole('User') || auth()->user()->hasAnyRole(['Admin', 'Super Admin', 'Manager', 'IT Support']))
                             <td>
                                 <input type="checkbox" name="asset_ids[]" value="{{ $asset->id }}" class="form-check-input asset-checkbox">
                             </td>
+                            @endif
                             <td class="fw-bold text-primary">{{ $asset->asset_tag }}</td>
                             <td>
                                 <div>

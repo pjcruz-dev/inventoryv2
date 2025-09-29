@@ -37,6 +37,14 @@ class AssetController extends Controller
     {
         $query = Asset::with(['category', 'vendor', 'assignedUser', 'department']);
         
+        // Filter assets based on user role
+        $user = auth()->user();
+        
+        // If user has only 'User' role, show only their assigned assets
+        if ($user->hasRole('User') && !$user->hasAnyRole(['Admin', 'Super Admin', 'Manager', 'IT Support'])) {
+            $query->where('assigned_to', $user->id);
+        }
+        
         // Search functionality
         if ($request->filled('search')) {
             $search = $request->search;
