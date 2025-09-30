@@ -14,8 +14,23 @@
         </xml>
     </noscript>
     <![endif]-->
+    
+    <!--[if mso]>
+    <style type="text/css">
+        .btn-confirm {
+            background-color: #10b981 !important;
+            color: white !important;
+            border: 2px solid #059669 !important;
+        }
+        .btn-decline {
+            background-color: #ef4444 !important;
+            color: white !important;
+            border: 2px solid #dc2626 !important;
+        }
+    </style>
+    <![endif]-->
     <style>
-        /* Reset and base styles */
+        /* Reset and base styles - Outlook compatible */
         * {
             margin: 0;
             padding: 0;
@@ -23,7 +38,7 @@
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: Arial, sans-serif;
             line-height: 1.6;
             color: #374151;
             background-color: #f9fafb;
@@ -31,6 +46,19 @@
             padding: 0;
             -webkit-text-size-adjust: 100%;
             -ms-text-size-adjust: 100%;
+        }
+        
+        /* Outlook-specific styles */
+        .outlook-table {
+            width: 100%;
+            border-collapse: collapse;
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+        
+        .outlook-table td {
+            border-collapse: collapse;
+            mso-line-height-rule: exactly;
         }
         
         /* Container */
@@ -43,7 +71,7 @@
         
         /* Header */
         .header {
-            background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+            background-color: #4f46e5;
             padding: 40px 30px;
             text-align: center;
             color: white;
@@ -239,50 +267,86 @@
             margin-bottom: 24px;
         }
         
-        /* Buttons */
+        /* Buttons - Outlook compatible */
         .button-container {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            align-items: center;
+            text-align: center;
+            padding: 20px 0;
         }
         
         .btn {
             display: inline-block;
             padding: 16px 32px;
             text-decoration: none;
-            border-radius: 12px;
-            font-weight: 700;
+            border-radius: 8px;
+            font-weight: bold;
             font-size: 16px;
             text-align: center;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
+            border: 2px solid;
             min-width: 280px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin: 8px 0;
+            mso-padding-alt: 0;
+            mso-border-insideh: 0;
+            mso-border-insidev: 0;
         }
         
         .btn-confirm {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background-color: #10b981;
             color: white;
             border-color: #059669;
         }
         
         .btn-confirm:hover {
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.2);
+            background-color: #059669;
+            color: white;
         }
         
         .btn-decline {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            background-color: #ef4444;
             color: white;
             border-color: #dc2626;
         }
         
         .btn-decline:hover {
-            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.2);
+            background-color: #dc2626;
+            color: white;
+        }
+        
+        /* Outlook button table */
+        .btn-table {
+            width: 100%;
+            border-collapse: collapse;
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+        
+        .btn-table td {
+            text-align: center;
+            padding: 8px 0;
+        }
+        
+        /* Outlook-specific fixes */
+        @media screen and (-webkit-min-device-pixel-ratio: 0) {
+            .btn {
+                display: inline-block !important;
+            }
+        }
+        
+        /* MSO (Microsoft Outlook) specific styles */
+        @media screen and (max-width: 600px) {
+            .email-container {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+        }
+        
+        /* Fix for Outlook 2016+ */
+        [owa] .btn {
+            display: inline-block !important;
+        }
+        
+        /* Fallback for older Outlook versions */
+        .btn[class="btn"] {
+            display: inline-block !important;
         }
         
         /* Important notice */
@@ -608,21 +672,29 @@
                 <h3>Please Confirm Receipt</h3>
                 <p>Click one of the buttons below to confirm whether you have received this asset:</p>
                 
-                <div class="button-container">
-                    <a href="{{ url('/asset-confirmation/confirm/' . $confirmationToken) }}" 
-                       class="btn btn-confirm" 
-                       role="button" 
-                       aria-label="Confirm that I have received this asset">
-                        ✓ Yes, I have received this asset
-                    </a>
-                    
-                    <a href="{{ url('/asset-confirmation/decline/' . $confirmationToken) }}" 
-                       class="btn btn-decline" 
-                       role="button" 
-                       aria-label="Report that I have not received this asset">
-                        ✗ No, I have not received this asset
-                    </a>
-                </div>
+                <!-- Outlook-compatible button layout -->
+                <table class="btn-table">
+                    <tr>
+                        <td>
+                            <a href="{{ url('/asset-confirmation/confirm/' . $confirmationToken) }}" 
+                               class="btn btn-confirm" 
+                               role="button" 
+                               aria-label="Confirm that I have received this asset">
+                                ✓ Yes, I have received this asset
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <a href="{{ url('/asset-confirmation/decline/' . $confirmationToken) }}" 
+                               class="btn btn-decline" 
+                               role="button" 
+                               aria-label="Report that I have not received this asset">
+                                ✗ No, I have not received this asset
+                            </a>
+                        </td>
+                    </tr>
+                </table>
             </div>
 
             <!-- Important Notice -->

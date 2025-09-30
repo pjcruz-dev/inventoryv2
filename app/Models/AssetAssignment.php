@@ -68,13 +68,13 @@ class AssetAssignment extends Model
         parent::boot();
 
         static::created(function ($assignment) {
-            // Check if confirmation already exists
-            $existingConfirmation = AssetAssignmentConfirmation::where('asset_id', $assignment->asset_id)
+            // Check if PENDING confirmation already exists for this asset-user combination
+            $existingPendingConfirmation = AssetAssignmentConfirmation::where('asset_id', $assignment->asset_id)
                 ->where('user_id', $assignment->user_id)
-                ->where('assigned_at', $assignment->assigned_date)
+                ->where('status', 'pending')
                 ->first();
             
-            if (!$existingConfirmation) {
+            if (!$existingPendingConfirmation) {
                 // Create confirmation record
                 $confirmation = AssetAssignmentConfirmation::create([
                     'asset_id' => $assignment->asset_id,
@@ -92,9 +92,27 @@ class AssetAssignment extends Model
                             $assignment->user,
                             $confirmation->confirmation_token
                         ));
+                    
+                    \Log::info('Asset assignment confirmation email sent', [
+                        'asset_id' => $assignment->asset_id,
+                        'user_id' => $assignment->user_id,
+                        'user_email' => $assignment->user->email,
+                        'confirmation_id' => $confirmation->id
+                    ]);
                 } catch (\Exception $e) {
-                    \Log::error('Failed to send asset assignment confirmation email: ' . $e->getMessage());
+                    \Log::error('Failed to send asset assignment confirmation email: ' . $e->getMessage(), [
+                        'asset_id' => $assignment->asset_id,
+                        'user_id' => $assignment->user_id,
+                        'user_email' => $assignment->user->email,
+                        'error' => $e->getMessage()
+                    ]);
                 }
+            } else {
+                \Log::info('Skipping confirmation creation - pending confirmation already exists', [
+                    'asset_id' => $assignment->asset_id,
+                    'user_id' => $assignment->user_id,
+                    'existing_confirmation_id' => $existingPendingConfirmation->id
+                ]);
             }
         });
     }
