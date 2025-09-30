@@ -25,13 +25,23 @@ class AssetAssignment extends Model
         'notes',
         'accountability_printed',
         'accountability_printed_at',
-        'accountability_printed_by'
+        'accountability_printed_by',
+        'signed_form_path',
+        'signed_form_uploaded_at',
+        'signed_form_uploaded_by',
+        'signed_form_description',
+        'signed_form_email_subject',
+        'signed_form_email_sent',
+        'signed_form_email_sent_at'
     ];
 
     protected $casts = [
         'assigned_date' => 'datetime',
         'return_date' => 'datetime',
-        'accountability_printed_at' => 'datetime'
+        'accountability_printed_at' => 'datetime',
+        'signed_form_uploaded_at' => 'datetime',
+        'signed_form_email_sent_at' => 'datetime',
+        'signed_form_email_sent' => 'boolean'
     ];
 
     // Relationships
@@ -53,6 +63,11 @@ class AssetAssignment extends Model
     public function accountabilityPrintedBy()
     {
         return $this->belongsTo(User::class, 'accountability_printed_by');
+    }
+
+    public function signedFormUploadedBy()
+    {
+        return $this->belongsTo(User::class, 'signed_form_uploaded_by');
     }
 
     public function confirmation()

@@ -175,6 +175,11 @@ class Asset extends Model
         return $this->hasMany(AssetAssignment::class);
     }
 
+    public function currentAssignment()
+    {
+        return $this->hasOne(AssetAssignment::class)->latest();
+    }
+
     protected static function booted()
     {
         static::created(function ($asset) {

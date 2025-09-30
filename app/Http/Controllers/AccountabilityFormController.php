@@ -27,7 +27,7 @@ class AccountabilityFormController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Asset::with(['assignedUser', 'category', 'vendor', 'department']);
+        $query = Asset::with(['assignedUser', 'category', 'vendor', 'department', 'currentAssignment']);
 
         // Filter by assigned assets only
         $query->whereNotNull('assigned_to');
@@ -299,5 +299,229 @@ class AccountabilityFormController extends Controller
             'success' => false,
             'message' => 'Form already marked as printed or no assignment found.'
         ]);
+    }
+
+    /**
+     * Upload signed accountability form
+     */
+    public function uploadSignedForm(Request $request, $assetId)
+    {
+        $request->validate([
+            'signed_form' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240', // 10MB max
+            'email_subject' => 'nullable|string|max:255'
+        ]);
+
+        $asset = Asset::findOrFail($assetId);
+        
+        // Get the current assignment
+        $assignment = AssetAssignment::with('user')
+            ->where('asset_id', $assetId)
+            ->where('user_id', $asset->assigned_to)
+            ->where('status', '!=', 'declined')
+            ->latest()
+            ->first();
+
+        if (!$assignment) {
+            return redirect()->back()->with('error', 'No active assignment found for this asset.');
+        }
+
+        // Handle file upload
+        if ($request->hasFile('signed_form')) {
+            $file = $request->file('signed_form');
+            
+            // Validate file
+            if (!$file->isValid()) {
+                return redirect()->back()->with('error', 'Invalid file upload.');
+            }
+            
+            $filename = 'signed_forms/' . $asset->asset_tag . '_' . time() . '.' . $file->getClientOriginalExtension();
+            
+            // Ensure the directory exists
+            $directory = storage_path('app/public/signed_forms');
+            if (!is_dir($directory)) {
+                mkdir($directory, 0755, true);
+            }
+            
+            // Store the file using the public disk
+            $storedPath = $file->storeAs('', $filename, 'public');
+            
+            if (!$storedPath) {
+                return redirect()->back()->with('error', 'Failed to store file.');
+            }
+            
+            // Verify file was actually stored
+            $fullPath = storage_path('app/public/' . $storedPath);
+            if (!file_exists($fullPath)) {
+                return redirect()->back()->with('error', 'File was not stored properly.');
+            }
+            
+            // Generate professional email subject and content
+            $professionalSubject = "Asset Accountability Form - {$asset->asset_tag} - Confirmed & Signed";
+            $professionalDescription = "Dear {$assignment->user->first_name},\n\n" .
+                "This is to confirm that the signed accountability form for asset {$asset->asset_tag} ({$asset->name}) has been successfully processed and is now available for your records.\n\n" .
+                "Asset Details:\n" .
+                "• Asset Tag: {$asset->asset_tag}\n" .
+                "• Asset Name: {$asset->name}\n" .
+                "• Category: " . ($asset->category->name ?? 'Not specified') . "\n" .
+                "• Department: " . ($asset->department->name ?? 'Not specified') . "\n" .
+                "• Assigned Date: " . ($assignment->assigned_at ? $assignment->assigned_at->format('F d, Y') : 'Not specified') . "\n\n" .
+                "The signed form is attached to this email. Please keep this document in a secure location for your records.\n\n" .
+                "If you have any questions about this asset assignment, please contact your IT department.\n\n" .
+                "Best regards,\n" .
+                config('app.name') . " - IT Asset Management";
+
+            // Update assignment with signed form details
+            $assignment->update([
+                'signed_form_path' => $storedPath, // Store the actual path returned by storeAs
+                'signed_form_uploaded_at' => now(),
+                'signed_form_uploaded_by' => auth()->id(),
+                'signed_form_description' => $professionalDescription,
+                'signed_form_email_subject' => $request->email_subject ?: $professionalSubject
+            ]);
+
+            // Log the upload action
+            Log::create([
+                'asset_id' => $assetId,
+                'user_id' => auth()->id(),
+                'category' => 'Accountability',
+                'event_type' => 'signed_form_uploaded',
+                'description' => 'Signed accountability form uploaded',
+                'remarks' => "Signed accountability form for asset {$asset->asset_tag} uploaded by " . auth()->user()->first_name . ' ' . auth()->user()->last_name . " to path: {$storedPath}",
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+
+            return redirect()->back()->with('success', 'Signed form uploaded successfully.');
+        }
+
+        return redirect()->back()->with('error', 'No file provided for upload.');
+    }
+
+    /**
+     * Send email with signed form attachment
+     */
+    public function sendSignedFormEmail(Request $request, $assetId)
+    {
+        $request->validate([
+            'recipients' => 'required|array|min:1',
+            'recipients.*' => 'email',
+            'description' => 'nullable|string|max:1000',
+            'subject' => 'nullable|string|max:255'
+        ]);
+
+        $asset = Asset::findOrFail($assetId);
+        
+        // Get the current assignment
+        $assignment = AssetAssignment::where('asset_id', $assetId)
+            ->where('user_id', $asset->assigned_to)
+            ->where('status', '!=', 'declined')
+            ->latest()
+            ->first();
+
+        if (!$assignment) {
+            return redirect()->back()->with('error', 'No active assignment found for this asset.');
+        }
+
+        if (!$assignment->signed_form_path) {
+            return redirect()->back()->with('error', 'No signed form uploaded for this asset.');
+        }
+
+        try {
+            // Use professional content if no custom content provided
+            $emailSubject = $request->subject ?: $assignment->signed_form_email_subject;
+            $emailDescription = $request->description ?: $assignment->signed_form_description;
+            
+            // Send email to all recipients
+            foreach ($request->recipients as $recipient) {
+                \Illuminate\Support\Facades\Mail::to($recipient)
+                    ->send(new \App\Mail\SignedAccountabilityFormMail(
+                        $assignment,
+                        $emailDescription,
+                        $emailSubject
+                    ));
+            }
+
+            // Update assignment to mark email as sent
+            $assignment->update([
+                'signed_form_email_sent' => true,
+                'signed_form_email_sent_at' => now()
+            ]);
+
+            // Log the email action
+            Log::create([
+                'asset_id' => $assetId,
+                'user_id' => auth()->id(),
+                'category' => 'Accountability',
+                'event_type' => 'signed_form_email_sent',
+                'description' => 'Signed accountability form email sent',
+                'remarks' => "Signed accountability form email for asset {$asset->asset_tag} sent to: " . implode(', ', $request->recipients),
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+
+            return redirect()->back()->with('success', 'Signed form email sent successfully to ' . count($request->recipients) . ' recipient(s).');
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to send signed form email: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to send email: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Preview signed form
+     */
+    public function previewSignedForm($assetId)
+    {
+        $asset = Asset::findOrFail($assetId);
+        
+        $assignment = AssetAssignment::where('asset_id', $assetId)
+            ->where('user_id', $asset->assigned_to)
+            ->where('status', '!=', 'declined')
+            ->latest()
+            ->first();
+            
+        if (!$assignment || !$assignment->signed_form_path) {
+            abort(404, 'Signed form not found');
+        }
+
+        // The file is stored in the public disk
+        $filePath = storage_path('app/public/' . $assignment->signed_form_path);
+        
+        if (!file_exists($filePath)) {
+            abort(404, 'Signed form file not found');
+        }
+
+        // Return the file for preview (PDF viewer)
+        return response()->file($filePath, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="signed_accountability_form_' . $asset->asset_tag . '.pdf"'
+        ]);
+    }
+
+    /**
+     * Download signed form
+     */
+    public function downloadSignedForm($assetId)
+    {
+        $asset = Asset::findOrFail($assetId);
+        
+        $assignment = AssetAssignment::where('asset_id', $assetId)
+            ->where('user_id', $asset->assigned_to)
+            ->where('status', '!=', 'declined')
+            ->latest()
+            ->first();
+
+        if (!$assignment || !$assignment->signed_form_path) {
+            return redirect()->back()->with('error', 'No signed form found for this asset.');
+        }
+
+        // The file is stored in the public disk
+        $filePath = storage_path('app/public/' . $assignment->signed_form_path);
+        
+        if (!file_exists($filePath)) {
+            return redirect()->back()->with('error', 'Signed form file not found at: ' . $filePath);
+        }
+
+        return response()->download($filePath, "signed_accountability_form_{$asset->asset_tag}.pdf");
     }
 }

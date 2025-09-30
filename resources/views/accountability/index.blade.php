@@ -28,10 +28,46 @@
                         </div>
                     </div>
                     
-                    <!-- Search Section -->
+                    <!-- Email Status Counts -->
                     <div class="mt-3">
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-8">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="card bg-success text-white" style="border: none;">
+                                            <div class="card-body p-2 text-center">
+                                                <h6 class="mb-1">{{ $assets->where('currentAssignment.signed_form_email_sent', true)->count() }}</h6>
+                                                <small>Emails Sent</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card bg-warning text-white" style="border: none;">
+                                            <div class="card-body p-2 text-center">
+                                                <h6 class="mb-1">{{ $assets->where('currentAssignment.signed_form_path', '!=', null)->where('currentAssignment.signed_form_email_sent', false)->count() }}</h6>
+                                                <small>Pending Email</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card bg-info text-white" style="border: none;">
+                                            <div class="card-body p-2 text-center">
+                                                <h6 class="mb-1">{{ $assets->where('currentAssignment.signed_form_path', '!=', null)->count() }}</h6>
+                                                <small>Signed Forms</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card bg-secondary text-white" style="border: none;">
+                                            <div class="card-body p-2 text-center">
+                                                <h6 class="mb-1">{{ $assets->where('currentAssignment.signed_form_path', null)->count() }}</h6>
+                                                <small>No Signed Form</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
                                 <form method="GET" action="{{ route('accountability.index') }}" id="searchForm">
                                     <div class="input-group">
                                         <input type="text" name="search" class="form-control" placeholder="Search assigned assets..." value="{{ request('search') }}" style="border-radius: 6px 0 0 6px; border: 2px solid #e9ecef;">
@@ -76,6 +112,7 @@
                                 <th>Assignment Date</th>
                                 <th>Status</th>
                                 <th>Print Status</th>
+                                <th>Email Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -170,6 +207,29 @@
                                         @endif
                                     </td>
                                     <td>
+                                        @if($asset->currentAssignment && $asset->currentAssignment->signed_form_path)
+                                            @if($asset->currentAssignment->signed_form_email_sent)
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check-circle me-1"></i>
+                                                    Email Sent
+                                                </span>
+                                                @if($asset->currentAssignment->signed_form_email_sent_at)
+                                                    <br><small class="text-muted">{{ $asset->currentAssignment->signed_form_email_sent_at->format('M d, Y H:i') }}</small>
+                                                @endif
+                                            @else
+                                                <span class="badge bg-warning">
+                                                    <i class="fas fa-envelope me-1"></i>
+                                                    Pending Email
+                                                </span>
+                                            @endif
+                                        @else
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-minus me-1"></i>
+                                                No Signed Form
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td>
                                         <div class="d-flex justify-content-center gap-2">
                                             <a href="{{ route('accountability.generate', $asset->id) }}" 
                                                class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-view" target="_blank" title="View Details">
@@ -189,6 +249,53 @@
                                                     title="Mark as printed (for manual printing)">
                                                 <i class="fas fa-check"></i>
                                             </button>
+                                            @endif
+                                            
+                                            @if($asset->currentAssignment && $asset->currentAssignment->accountability_printed)
+                                                @if($asset->currentAssignment->signed_form_path)
+                                                    {{-- Show all buttons when signed form is uploaded --}}
+                                                    <button type="button" 
+                                                            class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-upload" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#uploadSignedFormModal"
+                                                            data-asset-id="{{ $asset->id }}"
+                                                            data-asset-tag="{{ $asset->asset_tag }}"
+                                                            title="Upload New Signed Form">
+                                                        <i class="fas fa-upload"></i>
+                                                    </button>
+                                                    <button type="button" 
+                                                            class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-preview" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#previewSignedFormModal"
+                                                            data-asset-id="{{ $asset->id }}"
+                                                            data-asset-tag="{{ $asset->asset_tag }}"
+                                                            data-file-path="{{ $asset->currentAssignment->signed_form_path }}"
+                                                            title="Preview & Download Signed Form">
+                                                        <i class="fas fa-file-pdf"></i>
+                                                    </button>
+                                                    <button type="button" 
+                                                            class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-email" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#sendEmailModal"
+                                                            data-asset-id="{{ $asset->id }}"
+                                                            data-asset-tag="{{ $asset->asset_tag }}"
+                                                            data-signed-form="{{ $asset->currentAssignment->signed_form_path ? 'true' : 'false' }}"
+                                                            data-assigned-user-email="{{ $asset->currentAssignment->user->email }}"
+                                                            title="Send Email with Signed Form">
+                                                        <i class="fas fa-envelope"></i>
+                                                    </button>
+                                                @else
+                                                    {{-- Show only upload button when no signed form --}}
+                                                    <button type="button" 
+                                                            class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-upload" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#uploadSignedFormModal"
+                                                            data-asset-id="{{ $asset->id }}"
+                                                            data-asset-tag="{{ $asset->asset_tag }}"
+                                                            title="Upload Signed Form">
+                                                        <i class="fas fa-upload"></i>
+                                                    </button>
+                                                @endif
                                             @endif
                                         </div>
                                     </td>
@@ -329,6 +436,48 @@
 
 .action-btn-mark:hover {
     background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+    color: white;
+}
+
+.action-btn-upload {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+    border-color: #8b5cf6;
+}
+
+.action-btn-upload:hover {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    color: white;
+}
+
+.action-btn-download {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    color: white;
+    border-color: #059669;
+}
+
+.action-btn-download:hover {
+    background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+    color: white;
+}
+
+.action-btn-email {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: white;
+    border-color: #dc2626;
+}
+
+        .action-btn-email:hover {
+            background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+            color: white;
+        }
+        .action-btn-preview {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            border-color: #dc2626;
+        }
+        .action-btn-preview:hover {
+            background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
     color: white;
 }
 
@@ -486,7 +635,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    function showAlert(type, message) {
+    // Make showAlert function globally available
+    window.showAlert = function(type, message) {
         const alertDiv = document.createElement('div');
         alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
         alertDiv.innerHTML = `
@@ -502,7 +652,344 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
             alertDiv.remove();
         }, 5000);
-    }
+    };
+});
+</script>
+
+<!-- Upload Signed Form Modal -->
+<div class="modal fade" id="uploadSignedFormModal" tabindex="-1" aria-labelledby="uploadSignedFormModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadSignedFormModalLabel">Upload Signed Accountability Form</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="uploadSignedFormForm" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="signed_form" class="form-label">Signed Form File <span class="text-danger">*</span></label>
+                        <input type="file" class="form-control" id="signed_form" name="signed_form" accept=".pdf,.jpg,.jpeg,.png" required>
+                        <div class="form-text">Accepted formats: PDF, JPG, JPEG, PNG (Max: 10MB)</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email_subject" class="form-label">Email Subject (for future emails)</label>
+                        <input type="text" class="form-control" id="email_subject" name="email_subject" placeholder="Enter custom email subject...">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Upload Signed Form</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Send Email Modal -->
+<div class="modal fade" id="sendEmailModal" tabindex="-1" aria-labelledby="sendEmailModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="sendEmailModalLabel">Send Email with Signed Form</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="sendEmailForm">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="recipients" class="form-label">Recipients <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="recipients" name="recipients" placeholder="Enter email addresses separated by commas" required>
+                        <div class="form-text">Example: user1@example.com, user2@example.com</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email_description" class="form-label">Email Description</label>
+                        <textarea class="form-control" id="email_description" name="description" rows="3" placeholder="Enter additional information for the email..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email_subject_send" class="form-label">Email Subject</label>
+                        <input type="text" class="form-control" id="email_subject_send" name="subject" placeholder="Enter email subject...">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send Email</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Signed Form Modal -->
+<div class="modal fade" id="previewSignedFormModal" tabindex="-1" aria-labelledby="previewSignedFormModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="previewSignedFormModalLabel">Preview Signed Form</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <div class="spinner-border text-primary" role="status" id="previewSpinner">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p id="previewLoadingText">Loading preview...</p>
+                </div>
+                <div id="previewContent" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 id="previewAssetTag" class="mb-0"></h6>
+                        <div>
+                            <button type="button" class="btn btn-primary btn-sm" id="openPreview">
+                                <i class="fas fa-external-link-alt me-1"></i>
+                                Open Preview
+                            </button>
+                            <button type="button" class="btn btn-success btn-sm" id="downloadFromPreview">
+                                <i class="fas fa-download me-1"></i>
+                                Download
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                    <div class="text-center p-4">
+                        <div class="mb-3">
+                            <i class="fas fa-file-pdf fa-4x text-danger mb-3"></i>
+                        </div>
+                        <h5>PDF Document Ready</h5>
+                        <p class="text-muted">Click "Open Preview" to view the signed form in a new tab, or "Download" to save it to your device.</p>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Note:</strong> The PDF will open in a new browser tab for better viewing experience.
+                        </div>
+                    </div>
+                </div>
+                <div id="previewError" style="display: none;" class="text-center text-danger">
+                    <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                    <h5>Unable to preview file</h5>
+                    <p>This file format cannot be previewed in the browser. Please download the file to view it.</p>
+                    <button type="button" class="btn btn-primary" id="downloadFromError">
+                        <i class="fas fa-download me-1"></i>
+                        Download File
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Upload Signed Form Modal
+    const uploadModal = document.getElementById('uploadSignedFormModal');
+    const uploadForm = document.getElementById('uploadSignedFormForm');
+    
+    uploadModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const assetId = button.getAttribute('data-asset-id');
+        const assetTag = button.getAttribute('data-asset-tag');
+        
+        uploadForm.action = `/accountability/upload-signed-form/${assetId}`;
+        document.getElementById('uploadSignedFormModalLabel').textContent = `Upload Signed Form - ${assetTag}`;
+    });
+    
+    uploadForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const submitButton = this.querySelector('button[type="submit"]');
+        const originalText = submitButton.innerHTML;
+        
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+        submitButton.disabled = true;
+        
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                // Success - show success message and reload
+                showAlert('success', 'Signed form uploaded successfully!');
+                // Use Bootstrap 5 modal hiding syntax
+                const modalInstance = bootstrap.Modal.getInstance(uploadModal);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                showAlert('error', 'Failed to upload signed form. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('error', 'An error occurred. Please try again.');
+        })
+        .finally(() => {
+            submitButton.innerHTML = originalText;
+            submitButton.disabled = false;
+        });
+    });
+    
+    // Send Email Modal
+    const emailModal = document.getElementById('sendEmailModal');
+    const emailForm = document.getElementById('sendEmailForm');
+    
+    // Preview Modal
+    const previewModal = document.getElementById('previewSignedFormModal');
+    const previewSpinner = document.getElementById('previewSpinner');
+    const previewLoadingText = document.getElementById('previewLoadingText');
+    const previewContent = document.getElementById('previewContent');
+    const previewError = document.getElementById('previewError');
+    const previewAssetTag = document.getElementById('previewAssetTag');
+    const openPreview = document.getElementById('openPreview');
+    const downloadFromPreview = document.getElementById('downloadFromPreview');
+    const downloadFromError = document.getElementById('downloadFromError');
+    
+    let currentAssetId = null;
+    let currentPreviewUrl = null;
+    
+    // Preview Modal Event Handlers
+    previewModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const assetId = button.getAttribute('data-asset-id');
+        const assetTag = button.getAttribute('data-asset-tag');
+        const filePath = button.getAttribute('data-file-path');
+        
+        currentAssetId = assetId;
+        currentPreviewUrl = `/accountability/preview-signed-form/${assetId}`;
+        previewAssetTag.textContent = assetTag;
+        
+        // Reset modal state
+        previewSpinner.style.display = 'block';
+        previewLoadingText.style.display = 'block';
+        previewContent.style.display = 'none';
+        previewError.style.display = 'none';
+        
+        // Check if file is PDF
+        if (filePath && filePath.toLowerCase().endsWith('.pdf')) {
+            // Simulate loading delay for better UX
+            setTimeout(() => {
+                previewSpinner.style.display = 'none';
+                previewLoadingText.style.display = 'none';
+                previewContent.style.display = 'block';
+            }, 500);
+        } else {
+            // Show error for non-PDF files
+            previewSpinner.style.display = 'none';
+            previewLoadingText.style.display = 'none';
+            previewError.style.display = 'block';
+        }
+    });
+    
+    // Open preview in new tab
+    openPreview.addEventListener('click', function() {
+        if (currentPreviewUrl) {
+            window.open(currentPreviewUrl, '_blank');
+        }
+    });
+    
+    // Download from preview
+    downloadFromPreview.addEventListener('click', function() {
+        if (currentAssetId) {
+            window.open(`/accountability/download-signed-form/${currentAssetId}`, '_blank');
+        }
+    });
+    
+    // Download from error
+    downloadFromError.addEventListener('click', function() {
+        if (currentAssetId) {
+            window.open(`/accountability/download-signed-form/${currentAssetId}`, '_blank');
+        }
+    });
+    
+    emailModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const assetId = button.getAttribute('data-asset-id');
+        const assetTag = button.getAttribute('data-asset-tag');
+        const hasSignedForm = button.getAttribute('data-signed-form') === 'true';
+        
+        emailForm.action = `/accountability/send-signed-form-email/${assetId}`;
+        document.getElementById('sendEmailModalLabel').textContent = `Send Email - ${assetTag}`;
+        
+        // Pre-populate with professional content if signed form exists
+        if (hasSignedForm) {
+            const professionalSubject = `Asset Accountability Form - ${assetTag} - Confirmed & Signed`;
+            const professionalDescription = `Dear Employee,\n\n` +
+                `This is to confirm that the signed accountability form for asset ${assetTag} has been successfully processed and is now available for your records.\n\n` +
+                `Asset Details:\n` +
+                `• Asset Tag: ${assetTag}\n` +
+                `• Assigned Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n\n` +
+                `The signed form is attached to this email. Please keep this document in a secure location for your records.\n\n` +
+                `If you have any questions about this asset assignment, please contact your IT department.\n\n` +
+                `Best regards,\n` +
+                `IT Asset Management Team`;
+            
+            // Get the assigned user's email from the button data
+            const assignedUserEmail = button.getAttribute('data-assigned-user-email');
+            
+            document.getElementById('email_subject_send').value = professionalSubject;
+            document.getElementById('email_description').value = professionalDescription;
+            
+            // Pre-populate recipient if available
+            if (assignedUserEmail) {
+                document.getElementById('recipients').value = assignedUserEmail;
+            }
+        } else {
+            // Clear fields if no signed form
+            document.getElementById('email_subject_send').value = '';
+            document.getElementById('email_description').value = '';
+            document.getElementById('recipients').value = '';
+        }
+    });
+    
+    emailForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const submitButton = this.querySelector('button[type="submit"]');
+        const originalText = submitButton.innerHTML;
+        
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        submitButton.disabled = true;
+        
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            if (html.includes('Signed form email sent successfully')) {
+                showAlert('success', 'Email sent successfully!');
+                // Use Bootstrap 5 modal hiding syntax
+                const modalInstance = bootstrap.Modal.getInstance(emailModal);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                showAlert('error', 'Failed to send email. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('error', 'An error occurred. Please try again.');
+        })
+        .finally(() => {
+            submitButton.innerHTML = originalText;
+            submitButton.disabled = false;
+        });
+    });
 });
 </script>
 @endpush

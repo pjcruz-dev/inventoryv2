@@ -215,6 +215,12 @@ Route::prefix('accountability')->name('accountability.')->middleware(['auth'])->
     Route::get('/print/{asset}', [App\Http\Controllers\AccountabilityFormController::class, 'print'])->name('print')->middleware('check.permission:print_accountability_forms');
     Route::post('/mark-printed/{asset}', [App\Http\Controllers\AccountabilityFormController::class, 'markAsPrinted'])->name('mark-printed')->middleware('check.permission:print_accountability_forms');
     Route::post('/generate-bulk', [App\Http\Controllers\AccountabilityFormController::class, 'generateBulk'])->name('generate-bulk')->middleware('check.permission:bulk_accountability_forms');
+    
+        // Signed form functionality
+        Route::post('/upload-signed-form/{asset}', [App\Http\Controllers\AccountabilityFormController::class, 'uploadSignedForm'])->name('upload-signed-form')->middleware('check.permission:print_accountability_forms');
+        Route::post('/send-signed-form-email/{asset}', [App\Http\Controllers\AccountabilityFormController::class, 'sendSignedFormEmail'])->name('send-signed-form-email')->middleware('check.permission:print_accountability_forms');
+        Route::get('/preview-signed-form/{asset}', [App\Http\Controllers\AccountabilityFormController::class, 'previewSignedForm'])->name('preview-signed-form')->middleware('check.permission:print_accountability_forms');
+        Route::get('/download-signed-form/{asset}', [App\Http\Controllers\AccountabilityFormController::class, 'downloadSignedForm'])->name('download-signed-form')->middleware('check.permission:print_accountability_forms');
 });
 
 // Asset Confirmation routes (public - no auth required)
