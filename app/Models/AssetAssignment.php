@@ -58,7 +58,8 @@ class AssetAssignment extends Model
     public function confirmation()
     {
         return $this->hasOne(AssetAssignmentConfirmation::class, 'asset_id', 'asset_id')
-                    ->where('user_id', $this->user_id);
+                    ->where('user_id', $this->user_id)
+                    ->where('assigned_at', $this->assigned_date);
     }
 
     // Boot method to handle model events
@@ -67,25 +68,33 @@ class AssetAssignment extends Model
         parent::boot();
 
         static::created(function ($assignment) {
-            // Create confirmation record
-            $confirmation = AssetAssignmentConfirmation::create([
-                'asset_id' => $assignment->asset_id,
-                'user_id' => $assignment->user_id,
-                'confirmation_token' => Str::random(64),
-                'status' => 'pending',
-                'assigned_at' => $assignment->assigned_date
-            ]);
+            // Check if confirmation already exists
+            $existingConfirmation = AssetAssignmentConfirmation::where('asset_id', $assignment->asset_id)
+                ->where('user_id', $assignment->user_id)
+                ->where('assigned_at', $assignment->assigned_date)
+                ->first();
+            
+            if (!$existingConfirmation) {
+                // Create confirmation record
+                $confirmation = AssetAssignmentConfirmation::create([
+                    'asset_id' => $assignment->asset_id,
+                    'user_id' => $assignment->user_id,
+                    'confirmation_token' => Str::random(64),
+                    'status' => 'pending',
+                    'assigned_at' => $assignment->assigned_date
+                ]);
 
-            // Send confirmation email
-            try {
-                Mail::to($assignment->user->email)
-                    ->send(new AssetAssignmentConfirmationMail(
-                        $assignment->asset,
-                        $assignment->user,
-                        $confirmation->confirmation_token
-                    ));
-            } catch (\Exception $e) {
-                \Log::error('Failed to send asset assignment confirmation email: ' . $e->getMessage());
+                // Send confirmation email
+                try {
+                    Mail::to($assignment->user->email)
+                        ->send(new AssetAssignmentConfirmationMail(
+                            $assignment->asset,
+                            $assignment->user,
+                            $confirmation->confirmation_token
+                        ));
+                } catch (\Exception $e) {
+                    \Log::error('Failed to send asset assignment confirmation email: ' . $e->getMessage());
+                }
             }
         });
     }

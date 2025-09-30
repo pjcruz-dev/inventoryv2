@@ -104,6 +104,15 @@
                                                 @case('assigned')
                                                     <span class="badge bg-primary">Assigned</span>
                                                     @break
+                                                @case('confirmed')
+                                                    <span class="badge bg-success">Confirmed</span>
+                                                    @break
+                                                @case('pending')
+                                                    <span class="badge bg-warning">Pending</span>
+                                                    @break
+                                                @case('declined')
+                                                    <span class="badge bg-danger">Declined</span>
+                                                    @break
                                                 @case('returned')
                                                     <span class="badge bg-success">Returned</span>
                                                     @break

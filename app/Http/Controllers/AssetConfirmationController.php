@@ -147,6 +147,15 @@ class AssetConfirmationController extends Controller
             'movement' => 'Deployed'
         ]);
 
+        // Update related AssetAssignment status from 'pending' to 'confirmed'
+        \App\Models\AssetAssignment::where('asset_id', $confirmation->asset_id)
+            ->where('user_id', $confirmation->user_id)
+            ->where('status', 'pending')
+            ->update([
+                'status' => 'confirmed',
+                'return_date' => null // Clear return date as asset is now assigned
+            ]);
+
         // Create enhanced audit log using ActivityLogService
         $activityLogService = app(\App\Services\ActivityLogService::class);
         $activityLogService->logActivity(

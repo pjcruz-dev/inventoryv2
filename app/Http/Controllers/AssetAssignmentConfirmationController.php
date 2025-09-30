@@ -221,12 +221,12 @@ class AssetAssignmentConfirmationController extends Controller
             'confirmed_at' => now()
         ]);
         
-        // Update related AssetAssignment status from 'pending' to 'assigned'
+        // Update related AssetAssignment status from 'pending' to 'confirmed'
         \App\Models\AssetAssignment::where('asset_id', $confirmation->asset_id)
             ->where('user_id', $confirmation->user_id)
             ->where('status', 'pending')
             ->update([
-                'status' => 'assigned',
+                'status' => 'confirmed',
                 'return_date' => null // Clear return date as asset is now assigned
             ]);
         
@@ -267,12 +267,12 @@ class AssetAssignmentConfirmationController extends Controller
             'confirmed_at' => now()
         ]);
         
-        // Update related AssetAssignment status from 'pending' to 'rejected'
+        // Update related AssetAssignment status from 'pending' to 'declined'
         \App\Models\AssetAssignment::where('asset_id', $confirmation->asset_id)
             ->where('user_id', $confirmation->user_id)
             ->where('status', 'pending')
             ->update([
-                'status' => 'rejected',
+                'status' => 'declined',
                 'return_date' => now() // Set return date as assignment is rejected
             ]);
         
