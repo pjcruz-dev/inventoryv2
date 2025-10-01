@@ -28,24 +28,77 @@ class RolePermissionSeeder extends Seeder
         $adminRole = Role::where('name', 'Admin')->first();
         if ($adminRole) {
             $adminPermissions = [
+                // Asset Management
                 'view_assets', 'create_assets', 'edit_assets', 'delete_assets', 'assign_assets',
-                'view_asset_assignments', 'create_asset_assignments', 'edit_asset_assignments', 'delete_asset_assignments',
+                
+                // Asset Assignment Management
+                'view_asset_assignments', 'create_asset_assignments', 'edit_asset_assignments', 'delete_asset_assignments', 'manage_asset_assignments',
+                
+                // Asset Assignment Confirmation Management
                 'view_assignment_confirmations', 'create_assignment_confirmations', 'edit_assignment_confirmations', 'delete_assignment_confirmations', 'manage_assignment_confirmations',
-                'view_asset_categories', 'create_asset_categories', 'edit_asset_categories', 'delete_asset_categories',
+                
+                // Asset Category Management
+                'view_asset_categories', 'create_asset_categories', 'edit_asset_categories', 'delete_asset_categories', 'manage_asset_categories',
+                
+                // Computer Management
                 'view_computers', 'create_computers', 'edit_computers', 'delete_computers',
+                
+                // Monitor Management
                 'view_monitors', 'create_monitors', 'edit_monitors', 'delete_monitors',
+                
+                // Printer Management
                 'view_printers', 'create_printers', 'edit_printers', 'delete_printers',
+                
+                // Peripheral Management
                 'view_peripherals', 'create_peripherals', 'edit_peripherals', 'delete_peripherals',
+                
+                // Department Management
                 'view_departments', 'create_departments', 'edit_departments', 'delete_departments',
+                
+                // Vendor Management
                 'view_vendors', 'create_vendors', 'edit_vendors', 'delete_vendors',
-                'view_users', 'create_users', 'edit_users',
+                
+                // User Management
+                'view_users', 'create_users', 'edit_users', 'delete_users', 'manage_user_roles', 'assign_roles', 'remove_roles', 'bulk_assign_roles', 'view_user_roles',
+                
+                // System Management
+                'view_reports', 'manage_transfers', 'manage_maintenance', 'manage_disposals', 'view_logs',
+                
+                // Role & Permission Management
+                'view_roles', 'create_roles', 'edit_roles', 'delete_roles', 'manage_roles', 
+                'view_permissions', 'create_permissions', 'edit_permissions', 'delete_permissions', 'manage_permissions',
+                
+                // Maintenance Management
                 'view_maintenance', 'create_maintenance', 'edit_maintenance', 'delete_maintenance',
+                
+                // Disposal Management
                 'view_disposal', 'create_disposal', 'edit_disposal', 'delete_disposal',
+                
+                // Timeline Management
                 'view_timeline', 'create_timeline',
-                'view_dashboard', 'view_notifications',
-                'import_export_access', 'template_download', 'data_export', 'data_import',
+                
+                // Dashboard & Notifications
+                'view_dashboard', 'view_notifications', 'manage_notifications',
+                
+                // Import/Export
+                'import_export_access', 'template_download', 'template_preview', 'data_export', 'data_import', 'bulk_export',
+                'import_validation', 'import_status', 'import_history', 'import_details', 'error_reports', 'error_download',
+                
+                // Serial Number Management
+                'serial_generation', 'serial_validation', 'serial_stats',
+                
+                // Field & Data Management
+                'field_validation', 'data_lookup', 'field_mapping', 'import_progress',
+                
+                // Accountability Forms
                 'view_accountability_forms', 'generate_accountability_forms', 'print_accountability_forms', 'bulk_accountability_forms',
-                'admin_access'
+                
+                // System Health & Security
+                'view_system_health', 'manage_system_health', 'clear_system_cache', 'view_performance_metrics',
+                'view_security_audit', 'manage_security_audit', 'view_security_monitoring', 'manage_security_monitoring',
+                
+                // Admin Access
+                'admin_access', 'system_admin'
             ];
             $adminRole->syncPermissions($adminPermissions);
             $this->command->info('✓ Admin permissions assigned to Admin role');

@@ -70,9 +70,11 @@
             </div>
             <div class="col-auto">
                 <div class="d-flex gap-2">
+                    @can('create_vendors')
                     <a href="{{ route('vendors.create') }}" class="btn btn-light btn-sm" style="color: #667eea;">
                         <i class="fas fa-plus me-1"></i>Add New Vendor
                     </a>
+                    @endcan
                 </div>
             </div>
         </div>
@@ -245,9 +247,11 @@
                 @else
                     <p class="text-muted mb-3">Get started by adding your first vendor to the system.</p>
                 @endif
+                @can('create_vendors')
                 <a href="{{ route('vendors.create') }}" class="btn btn-primary btn-sm">
                     <i class="fas fa-plus me-2"></i>Add First Vendor
                 </a>
+                @endcan
             </div>
         @endif
     </div>

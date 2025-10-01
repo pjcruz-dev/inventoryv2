@@ -13,9 +13,11 @@
             </div>
             <div class="col-auto">
                 <div class="d-flex gap-2">
+                    @can('create_users')
                     <a href="{{ route('users.create') }}" class="btn btn-light btn-sm" style="color: #667eea;">
                         <i class="fas fa-plus me-1"></i>Add New User
                     </a>
+                    @endcan
                 </div>
             </div>
         </div>

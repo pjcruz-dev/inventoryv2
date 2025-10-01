@@ -16,9 +16,11 @@
                     </div>
                     <div class="col-auto">
                         <div class="d-flex gap-2">
+                            @can('create_roles')
                             <a href="{{ route('roles.create') }}" class="btn btn-light btn-sm" style="color: #667eea;">
                                 <i class="fas fa-plus me-1"></i>Add Role
                             </a>
+                            @endcan
                         </div>
                     </div>
                 </div>

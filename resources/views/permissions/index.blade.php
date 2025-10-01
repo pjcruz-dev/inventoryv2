@@ -16,9 +16,11 @@
                     </div>
                     <div class="col-auto">
                         <div class="d-flex gap-2">
+                            @can('create_permissions')
                             <a href="{{ route('permissions.create') }}" class="btn btn-light btn-sm" style="color: #667eea;">
                                 <i class="fas fa-plus me-1"></i>Add Permission
                             </a>
+                            @endcan
                         </div>
                     </div>
                 </div>

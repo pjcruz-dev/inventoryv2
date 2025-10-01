@@ -92,8 +92,14 @@ class PermissionSeeder extends Seeder
             
             // Role & Permission Management
             ['name' => 'view_roles', 'description' => 'View user roles'],
+            ['name' => 'create_roles', 'description' => 'Create new roles'],
+            ['name' => 'edit_roles', 'description' => 'Edit existing roles'],
+            ['name' => 'delete_roles', 'description' => 'Delete roles'],
             ['name' => 'manage_roles', 'description' => 'Manage user roles'],
             ['name' => 'view_permissions', 'description' => 'View permissions'],
+            ['name' => 'create_permissions', 'description' => 'Create new permissions'],
+            ['name' => 'edit_permissions', 'description' => 'Edit permissions'],
+            ['name' => 'delete_permissions', 'description' => 'Delete permissions'],
             ['name' => 'manage_permissions', 'description' => 'Manage permissions'],
             ['name' => 'system_admin', 'description' => 'Full system administration'],
             
@@ -168,7 +174,13 @@ class PermissionSeeder extends Seeder
             ['name' => 'view_accountability_forms', 'description' => 'View accountability forms'],
             ['name' => 'generate_accountability_forms', 'description' => 'Generate accountability forms'],
             ['name' => 'print_accountability_forms', 'description' => 'Print accountability forms'],
-            ['name' => 'bulk_accountability_forms', 'description' => 'Generate bulk accountability forms']
+            ['name' => 'bulk_accountability_forms', 'description' => 'Generate bulk accountability forms'],
+            
+            // Security & Audit Management
+            ['name' => 'view_security_audit', 'description' => 'View security audit logs'],
+            ['name' => 'manage_security_audit', 'description' => 'Manage security audit settings'],
+            ['name' => 'view_security_monitoring', 'description' => 'View security monitoring dashboard'],
+            ['name' => 'manage_security_monitoring', 'description' => 'Manage security monitoring settings']
         ];
 
         foreach ($permissions as $permission) {
