@@ -36,7 +36,7 @@ class VendorController extends Controller
             });
         }
         
-        $vendors = $query->paginate(10)->withQueryString();
+        $vendors = $query->paginate(10)->appends(request()->query());
         
         return view('vendors.index', compact('vendors'));
     }

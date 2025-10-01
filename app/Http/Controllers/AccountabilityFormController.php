@@ -75,7 +75,7 @@ class AccountabilityFormController extends Controller
             }
         }
 
-        $assets = $query->orderBy('assigned_date', 'desc')->paginate(20);
+        $assets = $query->orderBy('assigned_date', 'desc')->paginate(20)->appends(request()->query());
         
         // Get all asset IDs for efficient querying
         $assetIds = $assets->pluck('id');
@@ -402,9 +402,24 @@ class AccountabilityFormController extends Controller
      */
     public function sendSignedFormEmail(Request $request, $assetId)
     {
+        // Convert comma-separated recipients string to array
+        $recipientsString = $request->input('recipients');
+        $recipients = array_map('trim', explode(',', $recipientsString));
+        $recipients = array_filter($recipients); // Remove empty values
+        
+        // Validate recipients
+        if (empty($recipients)) {
+            return redirect()->back()->with('error', 'At least one recipient email is required.');
+        }
+        
+        // Validate each email
+        foreach ($recipients as $email) {
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return redirect()->back()->with('error', "Invalid email address: {$email}");
+            }
+        }
+        
         $request->validate([
-            'recipients' => 'required|array|min:1',
-            'recipients.*' => 'email',
             'description' => 'nullable|string|max:1000',
             'subject' => 'nullable|string|max:255'
         ]);
@@ -432,7 +447,7 @@ class AccountabilityFormController extends Controller
             $emailDescription = $request->description ?: $assignment->signed_form_description;
             
             // Send email to all recipients
-            foreach ($request->recipients as $recipient) {
+            foreach ($recipients as $recipient) {
                 \Illuminate\Support\Facades\Mail::to($recipient)
                     ->send(new \App\Mail\SignedAccountabilityFormMail(
                         $assignment,
@@ -450,16 +465,16 @@ class AccountabilityFormController extends Controller
             // Log the email action
             Log::create([
                 'asset_id' => $assetId,
-                'user_id' => auth()->id(),
+                'user_id' => auth()->id() ?: 1, // Fallback to admin user if auth fails
                 'category' => 'Accountability',
                 'event_type' => 'signed_form_email_sent',
                 'description' => 'Signed accountability form email sent',
-                'remarks' => "Signed accountability form email for asset {$asset->asset_tag} sent to: " . implode(', ', $request->recipients),
+                'remarks' => "Signed accountability form email for asset {$asset->asset_tag} sent to: " . implode(', ', $recipients),
                 'ip_address' => request()->ip(),
                 'user_agent' => request()->userAgent(),
             ]);
 
-            return redirect()->back()->with('success', 'Signed form email sent successfully to ' . count($request->recipients) . ' recipient(s).');
+            return redirect()->back()->with('success', 'Signed form email sent successfully to ' . count($recipients) . ' recipient(s).');
 
         } catch (\Exception $e) {
             \Log::error('Failed to send signed form email: ' . $e->getMessage());

@@ -54,7 +54,7 @@ class MaintenanceController extends Controller
             $query->whereDate('end_date', '<=', $request->end_date);
         }
 
-        $maintenances = $query->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
+        $maintenances = $query->orderBy('created_at', 'desc')->paginate(15)->appends(request()->query());
         
         // Get filter options
         $statuses = ['Scheduled', 'In Progress', 'Completed', 'On Hold', 'Cancelled'];

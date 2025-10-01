@@ -53,6 +53,11 @@ class DisposalController extends Controller
         if ($request->filled('end_date')) {
             $query->whereDate('disposal_date', '<=', $request->end_date);
         }
+        
+        // Single disposal date filter
+        if ($request->filled('disposal_date')) {
+            $query->whereDate('disposal_date', $request->disposal_date);
+        }
 
         // Value range filter
         if ($request->filled('min_value')) {
@@ -62,7 +67,7 @@ class DisposalController extends Controller
             $query->where('disposal_value', '<=', $request->max_value);
         }
 
-        $disposals = $query->orderBy('disposal_date', 'desc')->paginate(15)->withQueryString();
+        $disposals = $query->orderBy('disposal_date', 'desc')->paginate(15)->appends(request()->query());
         
         // Get filter options
         $disposalTypes = ['Sale', 'Donation', 'Recycling', 'Destruction', 'Trade-in', 'Return to Vendor'];

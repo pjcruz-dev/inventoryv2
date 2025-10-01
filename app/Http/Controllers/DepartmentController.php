@@ -42,7 +42,7 @@ class DepartmentController extends Controller
             });
         }
         
-        $departments = $query->paginate(10)->withQueryString();
+        $departments = $query->paginate(10)->appends(request()->query());
         
         return view('departments.index', compact('departments'));
     }

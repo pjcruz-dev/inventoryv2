@@ -57,7 +57,7 @@ class UserController extends Controller
             $query->where('entity', $request->entity);
         }
         
-        $users = $query->orderBy('first_name')->paginate(15);
+        $users = $query->orderBy('first_name')->paginate(15)->appends(request()->query());
         $departments = Department::orderBy('name')->get();
         $entities = User::distinct()->pluck('entity')->filter()->sort()->values();
         

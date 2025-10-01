@@ -38,7 +38,7 @@ class AssetCategoryController extends Controller
             });
         }
         
-        $categories = $query->orderBy('name')->paginate(15);
+        $categories = $query->orderBy('name')->paginate(10)->appends(request()->query());
         
         // Log activity
         Log::info('Asset categories viewed', [

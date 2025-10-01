@@ -139,8 +139,19 @@
 
                     <!-- Pagination -->
                     @if($monitors->hasPages())
-                        <div class="pagination-wrapper mt-3">
-                            {{ $monitors->appends(request()->query())->links('pagination.custom') }}
+                        <div class="card-footer">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <div class="text-muted">
+                                        Showing {{ $monitors->firstItem() }} to {{ $monitors->lastItem() }} of {{ $monitors->total() }} results
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex justify-content-end">
+                                        {{ $monitors->links('pagination::bootstrap-5') }}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     @endif
                 </div>
@@ -257,6 +268,70 @@
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* Pagination styling */
+.pagination {
+    margin: 0;
+}
+
+.pagination .page-link {
+    color: #667eea;
+    border: 1px solid #e9ecef;
+    padding: 0.5rem 0.75rem;
+    margin: 0 2px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.pagination .page-link:hover {
+    color: #764ba2;
+    background-color: #f8f9fa;
+    border-color: #667eea;
+    transform: translateY(-1px);
+}
+
+.pagination .page-item.active .page-link {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-color: #667eea;
+    color: white;
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #6c757d;
+    background-color: #fff;
+    border-color: #e9ecef;
+}
+
+.pagination .page-item:first-child .page-link {
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+}
+
+.pagination .page-item:last-child .page-link {
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+
+/* Responsive pagination */
+@media (max-width: 768px) {
+    .pagination {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .pagination .page-link {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .card-footer .row {
+        text-align: center;
+    }
+    
+    .card-footer .col-md-6:first-child {
+        margin-bottom: 1rem;
+    }
 }
 </style>
 @endpush

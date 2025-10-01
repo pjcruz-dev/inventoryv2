@@ -39,7 +39,7 @@ class MonitorController extends Controller
             $query->where('panel_type', $request->panel_type);
         }
         
-        $monitors = $query->paginate(10);
+        $monitors = $query->paginate(10)->appends(request()->query());
         
         return view('monitors.index', compact('monitors'));
     }

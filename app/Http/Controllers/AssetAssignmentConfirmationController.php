@@ -49,7 +49,7 @@ class AssetAssignmentConfirmationController extends Controller
             $query->where('status', $request->status);
         }
         
-        $confirmations = $query->orderBy('created_at', 'desc')->paginate(15);
+        $confirmations = $query->orderBy('created_at', 'desc')->paginate(15)->appends(request()->query());
         
         // Log activity
         Log::info('Asset assignment confirmations index accessed', [

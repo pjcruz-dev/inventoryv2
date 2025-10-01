@@ -39,7 +39,7 @@ class ComputerController extends Controller
             $query->where('computer_type', $request->type);
         }
         
-        $computers = $query->paginate(10);
+        $computers = $query->paginate(10)->appends(request()->query());
         
         return view('computers.index', compact('computers'));
     }

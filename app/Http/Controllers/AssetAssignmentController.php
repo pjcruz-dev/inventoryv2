@@ -56,7 +56,7 @@ class AssetAssignmentController extends Controller
             });
         }
         
-        $assignments = $query->orderBy('created_at', 'desc')->paginate(15);
+        $assignments = $query->orderBy('created_at', 'desc')->paginate(15)->appends(request()->query());
         
         // Get categories for filter dropdown
         $categories = AssetCategory::orderBy('name')->get();

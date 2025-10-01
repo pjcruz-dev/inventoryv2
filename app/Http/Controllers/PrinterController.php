@@ -41,7 +41,7 @@ class PrinterController extends Controller
             $query->where('color_support', $request->color_support);
         }
         
-        $printers = $query->paginate(10);
+        $printers = $query->paginate(10)->appends(request()->query());
         
         return view('printers.index', compact('printers'));
     }

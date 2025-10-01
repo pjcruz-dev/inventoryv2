@@ -307,7 +307,18 @@
                 
                 <!-- Pagination -->
                 <div class="card-footer">
-                    {{ $assets->links() }}
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <div class="text-muted">
+                                Showing {{ $assets->firstItem() }} to {{ $assets->lastItem() }} of {{ $assets->total() }} results
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-end">
+                                {{ $assets->links('pagination::bootstrap-5') }}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             @else
                 <div class="text-center py-5">
@@ -503,6 +514,70 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/* Pagination styling */
+.pagination {
+    margin: 0;
+}
+
+.pagination .page-link {
+    color: #667eea;
+    border: 1px solid #e9ecef;
+    padding: 0.5rem 0.75rem;
+    margin: 0 2px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.pagination .page-link:hover {
+    color: #764ba2;
+    background-color: #f8f9fa;
+    border-color: #667eea;
+    transform: translateY(-1px);
+}
+
+.pagination .page-item.active .page-link {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-color: #667eea;
+    color: white;
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #6c757d;
+    background-color: #fff;
+    border-color: #e9ecef;
+}
+
+.pagination .page-item:first-child .page-link {
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+}
+
+.pagination .page-item:last-child .page-link {
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+
+/* Responsive pagination */
+@media (max-width: 768px) {
+    .pagination {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .pagination .page-link {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .card-footer .row {
+        text-align: center;
+    }
+    
+    .card-footer .col-md-6:first-child {
+        margin-bottom: 1rem;
+    }
+}
 </style>
 @endpush
 
@@ -694,7 +769,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <h5 class="modal-title" id="sendEmailModalLabel">Send Email with Signed Form</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="sendEmailForm">
+            <form id="sendEmailForm" method="POST">
                 @csrf
                 <div class="modal-body">
                     <div class="mb-3">
@@ -840,6 +915,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const emailModal = document.getElementById('sendEmailModal');
     const emailForm = document.getElementById('sendEmailForm');
     
+    
     // Preview Modal
     const previewModal = document.getElementById('previewSignedFormModal');
     const previewSpinner = document.getElementById('previewSpinner');
@@ -948,9 +1024,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    emailForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
+    if (emailForm) {
+        emailForm.addEventListener('submit', function(e) {
+            e.preventDefault();
         const formData = new FormData(this);
         const submitButton = this.querySelector('button[type="submit"]');
         const originalText = submitButton.innerHTML;
@@ -962,10 +1038,17 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'POST',
             body: formData,
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
         })
-        .then(response => response.text())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.text();
+        })
         .then(html => {
             if (html.includes('Signed form email sent successfully')) {
                 showAlert('success', 'Email sent successfully!');
@@ -982,14 +1065,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            showAlert('error', 'An error occurred. Please try again.');
+            showAlert('error', 'An error occurred: ' + error.message);
         })
         .finally(() => {
             submitButton.innerHTML = originalText;
             submitButton.disabled = false;
         });
     });
+    }
 });
 </script>
 @endpush

@@ -25,20 +25,53 @@
                         </div>
                     </div>
                     
-                    <!-- Search Section -->
+                    <!-- Search and Filter Section -->
                     <div class="mt-3">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <form method="GET" action="{{ route('disposal.index') }}" id="searchForm">
+                        <form method="GET" action="{{ route('disposal.index') }}" id="filterForm">
+                            <div class="row">
+                                <div class="col-md-4">
                                     <div class="input-group">
                                         <input type="text" name="search" class="form-control" placeholder="Search asset name, tag, or disposal type..." value="{{ request('search') }}" style="border-radius: 6px 0 0 6px; border: 2px solid #e9ecef;">
                                         <button class="btn btn-primary" type="submit" style="border-radius: 0 6px 6px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 2px solid #667eea;">
                                             <i class="fas fa-search"></i>
                                         </button>
                                     </div>
-                                </form>
+                                </div>
+                                <div class="col-md-3">
+                                    <select name="disposal_type" id="disposal_type" class="form-select" style="border: 2px solid #e9ecef; border-radius: 6px;">
+                                        <option value="">All Disposal Types</option>
+                                        <option value="Sold" {{ request('disposal_type') == 'Sold' ? 'selected' : '' }}>Sold</option>
+                                        <option value="Donated" {{ request('disposal_type') == 'Donated' ? 'selected' : '' }}>Donated</option>
+                                        <option value="Recycled" {{ request('disposal_type') == 'Recycled' ? 'selected' : '' }}>Recycled</option>
+                                        <option value="Destroyed" {{ request('disposal_type') == 'Destroyed' ? 'selected' : '' }}>Destroyed</option>
+                                        <option value="Lost" {{ request('disposal_type') == 'Lost' ? 'selected' : '' }}>Lost</option>
+                                        <option value="Stolen" {{ request('disposal_type') == 'Stolen' ? 'selected' : '' }}>Stolen</option>
+                                        <option value="Trade-in" {{ request('disposal_type') == 'Trade-in' ? 'selected' : '' }}>Trade-in</option>
+                                        <option value="Return to Vendor" {{ request('disposal_type') == 'Return to Vendor' ? 'selected' : '' }}>Return to Vendor</option>
+                                        <option value="Upgrade Replacement" {{ request('disposal_type') == 'Upgrade Replacement' ? 'selected' : '' }}>Upgrade Replacement</option>
+                                        <option value="Damaged Beyond Repair" {{ request('disposal_type') == 'Damaged Beyond Repair' ? 'selected' : '' }}>Damaged Beyond Repair</option>
+                                        <option value="End of Life" {{ request('disposal_type') == 'End of Life' ? 'selected' : '' }}>End of Life</option>
+                                        <option value="Security Risk" {{ request('disposal_type') == 'Security Risk' ? 'selected' : '' }}>Security Risk</option>
+                                        <option value="Theft/Loss" {{ request('disposal_type') == 'Theft/Loss' ? 'selected' : '' }}>Theft/Loss</option>
+                                        <option value="Obsolete Technology" {{ request('disposal_type') == 'Obsolete Technology' ? 'selected' : '' }}>Obsolete Technology</option>
+                                        <option value="Cost of Repair Exceeds Value" {{ request('disposal_type') == 'Cost of Repair Exceeds Value' ? 'selected' : '' }}>Cost of Repair Exceeds Value</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="date" name="disposal_date" class="form-control" placeholder="Disposal Date" value="{{ request('disposal_date') }}" style="border: 2px solid #e9ecef; border-radius: 6px;">
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary btn-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 6px;">
+                                            <i class="fas fa-filter"></i> Filter
+                                        </button>
+                                        <a href="{{ route('disposal.index') }}" class="btn btn-secondary btn-sm" style="border-radius: 6px;">
+                                            <i class="fas fa-times"></i> Clear
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        </form>
                     </div>
                 </div>
                 
@@ -95,7 +128,7 @@
                                             <span class="badge bg-info">{{ $disposal->asset->asset_tag }}</span>
                                         </td>
                                         <td>
-                                            <span class="badge badge-{{ $disposal->disposal_type == 'Sold' ? 'success' : ($disposal->disposal_type == 'Donated' ? 'info' : ($disposal->disposal_type == 'Recycled' ? 'warning' : 'danger')) }}">
+                                            <span class="badge {{ $disposal->disposal_type == 'Sold' ? 'bg-success' : ($disposal->disposal_type == 'Donated' ? 'bg-info' : ($disposal->disposal_type == 'Recycled' ? 'bg-warning' : ($disposal->disposal_type == 'Destroyed' ? 'bg-danger' : ($disposal->disposal_type == 'Lost' ? 'bg-secondary' : ($disposal->disposal_type == 'Stolen' ? 'bg-dark' : 'bg-primary'))))) }} text-white" style="font-size: 0.75rem; padding: 0.25rem 0.5rem; font-weight: 500;">
                                                 {{ $disposal->disposal_type }}
                                             </span>
                                         </td>
@@ -158,8 +191,19 @@
                     
                     <!-- Pagination -->
                     @if($disposals->hasPages())
-                        <div class="pagination-wrapper mt-3">
-                            {{ $disposals->appends(request()->query())->links('pagination.custom') }}
+                        <div class="card-footer">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <div class="text-muted">
+                                        Showing {{ $disposals->firstItem() }} to {{ $disposals->lastItem() }} of {{ $disposals->total() }} results
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex justify-content-end">
+                                        {{ $disposals->links('pagination::bootstrap-5') }}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     @endif
                 </div>
@@ -276,6 +320,70 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/* Pagination styling */
+.pagination {
+    margin: 0;
+}
+
+.pagination .page-link {
+    color: #667eea;
+    border: 1px solid #e9ecef;
+    padding: 0.5rem 0.75rem;
+    margin: 0 2px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.pagination .page-link:hover {
+    color: #764ba2;
+    background-color: #f8f9fa;
+    border-color: #667eea;
+    transform: translateY(-1px);
+}
+
+.pagination .page-item.active .page-link {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-color: #667eea;
+    color: white;
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #6c757d;
+    background-color: #fff;
+    border-color: #e9ecef;
+}
+
+.pagination .page-item:first-child .page-link {
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+}
+
+.pagination .page-item:last-child .page-link {
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+
+/* Responsive pagination */
+@media (max-width: 768px) {
+    .pagination {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .pagination .page-link {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .card-footer .row {
+        text-align: center;
+    }
+    
+    .card-footer .col-md-6:first-child {
+        margin-bottom: 1rem;
+    }
+}
 </style>
 @endpush
 
@@ -289,11 +397,43 @@
         });
     }
     
-    // Auto-submit form when approved_by changes (if element exists)
-    const approvedByElement = document.getElementById('approved_by');
-    if (approvedByElement) {
-        approvedByElement.addEventListener('change', function() {
+    // Auto-submit form when disposal date changes
+    const disposalDateElement = document.querySelector('input[name="disposal_date"]');
+    if (disposalDateElement) {
+        disposalDateElement.addEventListener('change', function() {
             this.form.submit();
+        });
+    }
+    
+    // Auto-submit form when search input changes (with debounce)
+    const searchInput = document.querySelector('input[name="search"]');
+    if (searchInput) {
+        let searchTimeout;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                this.form.submit();
+            }, 500); // 500ms delay
+        });
+    }
+    
+    // Handle form submission
+    const filterForm = document.getElementById('filterForm');
+    if (filterForm) {
+        filterForm.addEventListener('submit', function(e) {
+            // Remove empty values to clean up URL
+            const formData = new FormData(this);
+            const params = new URLSearchParams();
+            
+            for (let [key, value] of formData.entries()) {
+                if (value.trim() !== '') {
+                    params.append(key, value);
+                }
+            }
+            
+            // Update URL without page reload
+            const newUrl = `${window.location.pathname}?${params.toString()}`;
+            window.history.pushState({}, '', newUrl);
         });
     }
 </script>
@@ -301,6 +441,45 @@
 
 @push('styles')
 <style>
+/* Custom badge styling for disposal types */
+.badge {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.5rem !important;
+    font-weight: 500 !important;
+    border-radius: 4px !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge.bg-info {
+    background-color: #17a2b8 !important;
+}
+
+.badge.bg-success {
+    background-color: #28a745 !important;
+}
+
+.badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: #212529 !important;
+}
+
+.badge.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+.badge.bg-secondary {
+    background-color: #6c757d !important;
+}
+
+.badge.bg-dark {
+    background-color: #343a40 !important;
+}
+
+.badge.bg-primary {
+    background-color: #007bff !important;
+}
+
 .badge-success {
     background-color: #28a745;
 }
