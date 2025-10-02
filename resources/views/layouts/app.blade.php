@@ -74,6 +74,259 @@
         .text-xl { font-size: var(--text-xl); }
         .text-2xl { font-size: var(--text-2xl); }
         
+        /* Enhanced Global Search Styles */
+        .global-search-container {
+            position: relative;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        #globalSearchInput {
+            border-radius: 25px;
+            border: 2px solid #e9ecef;
+            padding: 12px 20px 12px 45px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        #globalSearchInput:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            outline: none;
+            background: #fff;
+        }
+        
+        #globalSearchInput::placeholder {
+            color: #6c757d;
+            font-weight: 400;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            font-size: 16px;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        #clearGlobalSearch {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            background: none;
+            color: #6c757d;
+            font-size: 14px;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+        
+        #clearGlobalSearch:hover {
+            background: #f8f9fa;
+            color: #495057;
+        }
+        
+        /* Enhanced Search Results Dropdown */
+        #globalSearchResults {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            background: #fff;
+            overflow: hidden;
+            animation: slideDown 0.2s ease-out;
+            max-height: 450px;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f3f4;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .search-result-item:hover {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            transform: translateX(4px);
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .search-result-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        
+        .search-result-icon.asset {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .search-result-icon.user {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .search-result-icon.category {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        
+        .search-result-icon.department {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+        }
+        
+        .search-result-icon.vendor {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+        
+        .search-result-icon.assignment {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #333;
+        }
+        
+        .search-result-icon.maintenance {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            color: #333;
+        }
+        
+        .search-result-icon.disposal {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: #333;
+        }
+        
+        .search-result-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .search-result-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: #2d3748;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .search-result-description {
+            font-size: 12px;
+            color: #718096;
+            line-height: 1.4;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .search-result-arrow {
+            color: #cbd5e0;
+            font-size: 12px;
+            margin-left: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .search-result-item:hover .search-result-arrow {
+            color: #667eea;
+            transform: translateX(2px);
+        }
+        
+        /* Search Loading State */
+        .search-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+        
+        .search-loading i {
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* No Results State */
+        .search-no-results {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+        
+        .search-no-results i {
+            font-size: 24px;
+            margin-bottom: 8px;
+            opacity: 0.5;
+        }
+        
+        /* View All Results Link */
+        .search-view-all {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 12px;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+        
+        .search-view-all:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+            color: white;
+            text-decoration: none;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .global-search-container {
+                max-width: 100%;
+                margin: 0;
+            }
+            
+            #globalSearchInput {
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+        }
+        
         .mb-xs { margin-bottom: var(--spacing-xs); }
         .mb-sm { margin-bottom: var(--spacing-sm); }
         .mb-md { margin-bottom: var(--spacing-md); }
@@ -975,6 +1228,34 @@
                     <!-- Top navbar -->
                     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                         <h1 class="h2">@yield('page-title', 'Dashboard')</h1>
+                        
+                        <!-- Enhanced Global Search -->
+                        <div class="flex-grow-1 mx-3">
+                            <div class="global-search-container">
+                                <form action="{{ route('search.results') }}" method="GET" id="globalSearchForm">
+                                    <div class="position-relative">
+                                        <i class="fas fa-search search-icon"></i>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="globalSearchInput"
+                                               name="q"
+                                               placeholder="Search across all modules..."
+                                               autocomplete="off">
+                                        <button class="btn btn-link" type="button" id="clearGlobalSearch" style="display: none;">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </form>
+                                
+                                <!-- Enhanced Search Results Dropdown -->
+                                <div id="globalSearchResults" class="position-absolute w-100" style="top: 100%; z-index: 1050; display: none; margin-top: 8px;">
+                                    <div id="searchResultsContent">
+                                        <!-- Dynamic content will be loaded here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="btn-toolbar mb-2 mb-md-0">
                             <div class="btn-group me-2">
                                 @yield('page-actions')
@@ -1837,6 +2118,197 @@
         });
     </script>
     
+    <!-- Global Search JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('globalSearchInput');
+            const searchResults = document.getElementById('globalSearchResults');
+            const searchResultsContent = document.getElementById('searchResultsContent');
+            const clearButton = document.getElementById('clearGlobalSearch');
+            let searchTimeout;
+
+            // Search input event listener
+            searchInput.addEventListener('input', function() {
+                const query = this.value.trim();
+                
+                // Show/hide clear button
+                if (query.length > 0) {
+                    clearButton.style.display = 'block';
+                } else {
+                    clearButton.style.display = 'none';
+                }
+                
+                // Clear previous timeout
+                clearTimeout(searchTimeout);
+                
+                if (query.length < 2) {
+                    hideSearchResults();
+                    return;
+                }
+
+                // Show loading state
+                showLoadingState();
+
+                // Debounce search requests
+                searchTimeout = setTimeout(() => {
+                    performSearch(query);
+                }, 300);
+            });
+
+            // Clear search button
+            clearButton.addEventListener('click', function() {
+                searchInput.value = '';
+                clearButton.style.display = 'none';
+                hideSearchResults();
+                searchInput.focus();
+            });
+
+            // Hide search results when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.position-relative')) {
+                    hideSearchResults();
+                }
+            });
+
+            // Handle Enter key in search
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (this.value.trim()) {
+                        document.getElementById('globalSearchForm').submit();
+                    }
+                }
+            });
+
+            // Show search results dropdown
+            function showSearchResults() {
+                searchResults.style.display = 'block';
+            }
+
+            // Hide search results dropdown
+            function hideSearchResults() {
+                searchResults.style.display = 'none';
+            }
+
+            // Perform AJAX search
+            function performSearch(query) {
+                fetch(`/search?q=${encodeURIComponent(query)}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displaySearchResults(data.results);
+                        showSearchResults();
+                    } else {
+                        displayNoResults();
+                        showSearchResults();
+                    }
+                })
+                .catch(error => {
+                    console.error('Search error:', error);
+                    displayError();
+                    showSearchResults();
+                });
+            }
+
+            // Show loading state
+            function showLoadingState() {
+                searchResultsContent.innerHTML = `
+                    <div class="search-loading">
+                        <i class="fas fa-spinner"></i>
+                        Searching...
+                    </div>
+                `;
+                showSearchResults();
+            }
+
+            // Display search results
+            function displaySearchResults(results) {
+                if (results.length === 0) {
+                    displayNoResults();
+                    return;
+                }
+
+                let html = '';
+                
+                // Show top 8 results for better UI
+                const topResults = results.slice(0, 8);
+                
+                topResults.forEach(result => {
+                    const iconClass = getIconClass(result.type);
+                    html += `
+                        <a href="${result.url}" class="search-result-item">
+                            <div class="search-result-icon ${iconClass}">
+                                <i class="${result.icon}"></i>
+                            </div>
+                            <div class="search-result-content">
+                                <div class="search-result-title">${result.title}</div>
+                                <div class="search-result-description">${result.description}</div>
+                            </div>
+                            <div class="search-result-arrow">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </a>
+                    `;
+                });
+
+                // Add "View all results" link if there are more results
+                if (results.length > 8) {
+                    html += `
+                        <a href="/search/results?q=${encodeURIComponent(searchInput.value)}" class="search-view-all">
+                            <i class="fas fa-search me-1"></i>
+                            View all ${results.length} results
+                        </a>
+                    `;
+                }
+
+                searchResultsContent.innerHTML = html;
+            }
+
+            // Display no results message
+            function displayNoResults() {
+                searchResultsContent.innerHTML = `
+                    <div class="search-no-results">
+                        <i class="fas fa-search"></i>
+                        <div>No results found for "${searchInput.value}"</div>
+                        <small>Try a different search term</small>
+                    </div>
+                `;
+            }
+
+            // Display error message
+            function displayError() {
+                searchResultsContent.innerHTML = `
+                    <div class="search-no-results">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div>Search failed</div>
+                        <small>Please try again</small>
+                    </div>
+                `;
+            }
+
+            // Get icon class based on result type
+            function getIconClass(type) {
+                const iconMap = {
+                    'asset': 'asset',
+                    'user': 'user',
+                    'category': 'category',
+                    'department': 'department',
+                    'vendor': 'vendor',
+                    'assignment': 'assignment',
+                    'maintenance': 'maintenance',
+                    'disposal': 'disposal'
+                };
+                return iconMap[type] || 'asset';
+            }
+        });
+    </script>
+
     <script src="{{ asset('js/searchable-dropdown.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     @yield('scripts')
