@@ -1737,7 +1737,7 @@
 
         .deployment-stats-grid {
             display: grid !important;
-            grid-template-columns: 1fr 1fr !important;
+            grid-template-columns: 1fr 1fr 1fr !important;
             gap: 1rem !important;
             margin: 1.5rem 0 !important;
         }
@@ -1778,21 +1778,56 @@
             color: #f59e0b !important;
         }
 
+        .stat-item.new-arrival {
+            background: rgba(6, 182, 212, 0.1) !important;
+            border: 1px solid rgba(6, 182, 212, 0.2) !important;
+        }
+
+        .stat-item.new-arrival .stat-icon {
+            background: #06b6d4 !important;
+            color: white !important;
+        }
+
         .stat-content {
             flex: 1 !important;
         }
 
         .stat-number {
-            font-size: 1.25rem !important;
-            font-weight: 700 !important;
-            color: var(--text-primary) !important;
+            font-size: 1.5rem !important;
+            font-weight: 800 !important;
             line-height: 1 !important;
+        }
+
+        .stat-item.deployed .stat-number {
+            color: #10b981 !important;
+        }
+
+        .stat-item.new-arrival .stat-number {
+            color: #06b6d4 !important;
+        }
+
+        .stat-item.pending .stat-number {
+            color: #f59e0b !important;
         }
 
         .stat-label {
             font-size: 0.75rem !important;
-            color: var(--text-secondary) !important;
+            font-weight: 600 !important;
             margin-bottom: 0.25rem !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+        }
+
+        .stat-item.deployed .stat-label {
+            color: #10b981 !important;
+        }
+
+        .stat-item.new-arrival .stat-label {
+            color: #06b6d4 !important;
+        }
+
+        .stat-item.pending .stat-label {
+            color: #f59e0b !important;
         }
 
         .stat-change {
@@ -1809,6 +1844,10 @@
 
         .stat-change.neutral {
             color: #6b7280 !important;
+        }
+
+        .stat-change.info {
+            color: #06b6d4 !important;
         }
 
         .deployment-action {
@@ -2040,6 +2079,586 @@
         /* Enhanced Monthly Overview Styles */
         .monthly-overview-card {
             position: relative !important;
+        }
+
+        .monthly-overview-icon {
+            width: 48px !important;
+            height: 48px !important;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            border-radius: 12px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            color: white !important;
+            font-size: 1.25rem !important;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
+        }
+
+        .monthly-filter-btn {
+            border-radius: 8px !important;
+            padding: 0.5rem 1rem !important;
+            font-weight: 500 !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .monthly-filter-btn:hover {
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3) !important;
+        }
+
+        .monthly-period-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%) !important;
+            border-radius: 20px !important;
+            padding: 2rem !important;
+            margin-bottom: 1.5rem !important;
+            border: 1px solid rgba(0, 0, 0, 0.05) !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+            transition: all 0.3s ease !important;
+            position: relative !important;
+            overflow: hidden !important;
+        }
+
+        .monthly-period-card::before {
+            content: '' !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            height: 4px !important;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb) !important;
+            border-radius: 20px 20px 0 0 !important;
+        }
+
+        .monthly-period-card:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        .month-header {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            margin-bottom: 1rem !important;
+        }
+
+        .month-name {
+            font-size: 1.5rem !important;
+            font-weight: 700 !important;
+            color: #1f2937 !important;
+            margin: 0 !important;
+        }
+
+        .month-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            color: white !important;
+            padding: 0.5rem 1rem !important;
+            border-radius: 12px !important;
+            text-align: center !important;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
+        }
+
+        .month-badge .total-activities {
+            display: block !important;
+            font-size: 1.25rem !important;
+            font-weight: 700 !important;
+            line-height: 1 !important;
+        }
+
+        .month-badge small {
+            font-size: 0.75rem !important;
+            opacity: 0.9 !important;
+        }
+
+        .monthly-summary {
+            margin-bottom: 1.5rem !important;
+        }
+
+        .monthly-chart-section {
+            margin-bottom: 2rem !important;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.9) 100%) !important;
+            border-radius: 16px !important;
+            padding: 1.5rem !important;
+            border: 1px solid rgba(0, 0, 0, 0.05) !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        .chart-container {
+            position: relative !important;
+            height: 300px !important;
+            margin-bottom: 1.5rem !important;
+            background: white !important;
+            border-radius: 12px !important;
+            padding: 1rem !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        .monthly-chart-canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .chart-legend {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 1rem !important;
+            justify-content: center !important;
+        }
+
+        .legend-item {
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.5rem !important;
+            padding: 0.5rem 1rem !important;
+            background: white !important;
+            border-radius: 8px !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+            transition: all 0.3s ease !important;
+            font-size: 0.875rem !important;
+            font-weight: 500 !important;
+        }
+
+        .legend-item:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        .legend-color {
+            width: 12px !important;
+            height: 12px !important;
+            border-radius: 50% !important;
+            flex-shrink: 0 !important;
+        }
+
+        .legend-item i {
+            color: #6b7280 !important;
+            font-size: 0.875rem !important;
+        }
+
+        .legend-item span:first-of-type {
+            color: #374151 !important;
+            min-width: 80px !important;
+        }
+
+        .legend-count {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            color: white !important;
+            padding: 0.25rem 0.5rem !important;
+            border-radius: 12px !important;
+            font-size: 0.75rem !important;
+            font-weight: 600 !important;
+            min-width: 24px !important;
+            text-align: center !important;
+        }
+
+        .health-indicator {
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.75rem !important;
+            margin-bottom: 1rem !important;
+        }
+
+        .health-icon {
+            width: 40px !important;
+            height: 40px !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            color: white !important;
+            font-size: 1rem !important;
+            animation: heartbeat 2s ease-in-out infinite !important;
+        }
+
+        .health-icon.excellent {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
+        }
+
+        .health-icon.good {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3) !important;
+        }
+
+        .health-icon.moderate {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3) !important;
+        }
+
+        .health-icon.poor {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3) !important;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .health-info {
+            display: flex !important;
+            flex-direction: column !important;
+        }
+
+        .health-score {
+            font-size: 1.25rem !important;
+            font-weight: 700 !important;
+            color: #1f2937 !important;
+            line-height: 1 !important;
+        }
+
+        .health-label {
+            font-size: 0.75rem !important;
+            color: #6b7280 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+        }
+
+        .activity-bar {
+            width: 100% !important;
+            height: 6px !important;
+            background: rgba(0, 0, 0, 0.1) !important;
+            border-radius: 3px !important;
+            overflow: hidden !important;
+            position: relative !important;
+        }
+
+        .activity-fill {
+            height: 100% !important;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb) !important;
+            border-radius: 3px !important;
+            transition: width 0.8s ease !important;
+            position: relative !important;
+        }
+
+        .activity-pulse {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent) !important;
+            animation: shimmer 2s infinite !important;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .monthly-status-grid {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+            gap: 1rem !important;
+        }
+
+        .status-item {
+            background: white !important;
+            border-radius: 16px !important;
+            padding: 1.5rem !important;
+            border: 1px solid rgba(0, 0, 0, 0.05) !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+            transition: all 0.3s ease !important;
+            position: relative !important;
+            overflow: hidden !important;
+        }
+
+        .status-item:hover {
+            transform: translateY(-4px) !important;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        .status-item.success {
+            border-left: 4px solid #10b981 !important;
+        }
+
+        .status-item.primary {
+            border-left: 4px solid #3b82f6 !important;
+        }
+
+        .status-item.info {
+            border-left: 4px solid #06b6d4 !important;
+        }
+
+        .status-item.warning {
+            border-left: 4px solid #f59e0b !important;
+        }
+
+        .status-item.danger {
+            border-left: 4px solid #ef4444 !important;
+        }
+
+        .status-icon-wrapper {
+            position: relative !important;
+            display: inline-block !important;
+            margin-bottom: 1rem !important;
+        }
+
+        .status-icon {
+            width: 48px !important;
+            height: 48px !important;
+            border-radius: 12px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            color: white !important;
+            font-size: 1.25rem !important;
+            position: relative !important;
+            z-index: 2 !important;
+        }
+
+        .status-item.success .status-icon {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+        }
+
+        .status-item.primary .status-icon {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+        }
+
+        .status-item.info .status-icon {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%) !important;
+        }
+
+        .status-item.warning .status-icon {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+        }
+
+        .status-item.danger .status-icon {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+        }
+
+        .status-glow {
+            position: absolute !important;
+            top: -2px !important;
+            left: -2px !important;
+            right: -2px !important;
+            bottom: -2px !important;
+            border-radius: 14px !important;
+            opacity: 0.3 !important;
+            filter: blur(4px) !important;
+            z-index: 1 !important;
+        }
+
+        .status-item.success .status-glow {
+            background: #10b981 !important;
+        }
+
+        .status-item.primary .status-glow {
+            background: #3b82f6 !important;
+        }
+
+        .status-item.info .status-glow {
+            background: #06b6d4 !important;
+        }
+
+        .status-item.warning .status-glow {
+            background: #f59e0b !important;
+        }
+
+        .status-item.danger .status-glow {
+            background: #ef4444 !important;
+        }
+
+        .status-content {
+            margin-bottom: 1rem !important;
+        }
+
+        .status-count {
+            font-size: 2rem !important;
+            font-weight: 800 !important;
+            color: #1f2937 !important;
+            line-height: 1 !important;
+            margin-bottom: 0.25rem !important;
+        }
+
+        .status-label {
+            font-size: 0.875rem !important;
+            font-weight: 600 !important;
+            color: #6b7280 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            margin-bottom: 0.25rem !important;
+        }
+
+        .status-percentage {
+            font-size: 0.75rem !important;
+            color: #9ca3af !important;
+        }
+
+        .status-progress {
+            margin-bottom: 0.75rem !important;
+        }
+
+        .progress-track {
+            width: 100% !important;
+            height: 4px !important;
+            background: rgba(0, 0, 0, 0.1) !important;
+            border-radius: 2px !important;
+            overflow: hidden !important;
+        }
+
+        .progress-fill {
+            height: 100% !important;
+            border-radius: 2px !important;
+            transition: width 0.8s ease !important;
+        }
+
+        .status-item.success .progress-fill {
+            background: linear-gradient(90deg, #10b981, #059669) !important;
+        }
+
+        .status-item.primary .progress-fill {
+            background: linear-gradient(90deg, #3b82f6, #1d4ed8) !important;
+        }
+
+        .status-item.info .progress-fill {
+            background: linear-gradient(90deg, #06b6d4, #0891b2) !important;
+        }
+
+        .status-item.warning .progress-fill {
+            background: linear-gradient(90deg, #f59e0b, #d97706) !important;
+        }
+
+        .status-item.danger .progress-fill {
+            background: linear-gradient(90deg, #ef4444, #dc2626) !important;
+        }
+
+        .status-trend {
+            display: flex !important;
+            justify-content: flex-end !important;
+            font-size: 0.875rem !important;
+        }
+
+        .monthly-empty-state {
+            text-align: center !important;
+            padding: 3rem 2rem !important;
+        }
+
+        .monthly-empty-state.global {
+            padding: 4rem 2rem !important;
+        }
+
+        .empty-icon {
+            width: 80px !important;
+            height: 80px !important;
+            margin: 0 auto 1.5rem !important;
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%) !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            color: #9ca3af !important;
+            font-size: 2rem !important;
+            position: relative !important;
+        }
+
+        .empty-pulse {
+            position: absolute !important;
+            top: -4px !important;
+            left: -4px !important;
+            right: -4px !important;
+            bottom: -4px !important;
+            border: 2px solid #e5e7eb !important;
+            border-radius: 50% !important;
+            animation: pulse 2s infinite !important;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.1);
+                opacity: 0;
+            }
+        }
+
+        .empty-title {
+            font-size: 1.25rem !important;
+            font-weight: 600 !important;
+            color: #374151 !important;
+            margin-bottom: 0.5rem !important;
+        }
+
+        .empty-description {
+            color: #6b7280 !important;
+            margin-bottom: 2rem !important;
+            font-size: 0.875rem !important;
+        }
+
+        .empty-actions {
+            display: flex !important;
+            gap: 1rem !important;
+            justify-content: center !important;
+            flex-wrap: wrap !important;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .monthly-status-grid {
+                grid-template-columns: 1fr !important;
+                gap: 0.75rem !important;
+            }
+
+            .monthly-period-card {
+                padding: 1.5rem !important;
+            }
+
+            .month-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 1rem !important;
+            }
+
+            .health-indicator {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 0.5rem !important;
+            }
+
+            .empty-actions {
+                flex-direction: column !important;
+                align-items: center !important;
+            }
+
+            .chart-container {
+                height: 250px !important;
+                padding: 0.75rem !important;
+            }
+
+            .chart-legend {
+                gap: 0.5rem !important;
+            }
+
+            .legend-item {
+                padding: 0.375rem 0.75rem !important;
+                font-size: 0.8rem !important;
+            }
+
+            .legend-item span:first-of-type {
+                min-width: 60px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .chart-container {
+                height: 200px !important;
+            }
+
+            .monthly-chart-section {
+                padding: 1rem !important;
+            }
+
+            .legend-item {
+                flex-direction: column !important;
+                text-align: center !important;
+                gap: 0.25rem !important;
+                padding: 0.5rem !important;
+            }
+
+            .legend-item span:first-of-type {
+                min-width: auto !important;
+            }
         }
 
         .monthly-overview-icon {
@@ -3705,7 +4324,8 @@
             }
 
             .deployment-stats-grid {
-                grid-template-columns: 1fr !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 0.75rem !important;
             }
 
             .recent-asset-item {
@@ -4353,7 +4973,7 @@
                                     <div class="user-dropdown-btn" id="userDropdownBtn">
                                         <div class="user-avatar">
                                             <i class="fas fa-user"></i>
-                                        </div>
+                                </div>
                                         <div class="user-info">
                                             <div class="user-name">{{ Auth::user()->first_name ?? Auth::user()->name ?? 'User' }}</div>
                                         </div>
@@ -5580,7 +6200,7 @@
             }
         });
     </script>
-
+    
     <script src="{{ asset('js/searchable-dropdown.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     @yield('scripts')

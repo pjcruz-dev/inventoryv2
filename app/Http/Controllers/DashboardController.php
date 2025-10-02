@@ -29,7 +29,8 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         // Redirect User role to assets page since they don't have dashboard access
-        if (auth()->user()->hasRole('User') && !auth()->user()->hasAnyRole(['Admin', 'Super Admin', 'Manager', 'IT Support'])) {
+        $user = auth()->user();
+        if ($user && $user->hasRole('User') && !$user->hasAnyRole(['Admin', 'Super Admin', 'Manager', 'IT Support'])) {
             return redirect()->route('assets.index');
         }
         // Get filter parameters
@@ -209,8 +210,8 @@ class DashboardController extends Controller
             
             $months[$monthName] = $monthData;
         } else {
-            // Get last 3 months (default behavior)
-            for ($i = 2; $i >= 0; $i--) {
+            // Get last 3 months (default behavior) - newest first
+            for ($i = 0; $i <= 2; $i++) {
                 $date = now()->subMonths($i);
                 $monthName = $date->format('F Y');
                 $monthData = [];
@@ -268,8 +269,8 @@ class DashboardController extends Controller
             $date = now()->setYear((int)$filterYear)->setMonth((int)$filterMonth);
             $monthName = $date->format('F');
             
-            $startOfMonth = $date->startOfMonth();
-            $endOfMonth = $date->endOfMonth();
+            $startOfMonth = $date->copy()->startOfMonth();
+            $endOfMonth = $date->copy()->endOfMonth();
             
             
             $monthData = [];
@@ -287,7 +288,6 @@ class DashboardController extends Controller
                 $createdAssetIds = Asset::where('movement', $status)
                     ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
                     ->pluck('id');
-                
                 
                 // Combine and get unique count (same logic as weekly breakdown)
                 $uniqueAssetIds = $timelineAssetIds->merge($createdAssetIds)->unique();
@@ -309,13 +309,13 @@ class DashboardController extends Controller
             
             $months[$monthName] = $monthDataWithPercentages;
         } else {
-            // Get last 3 months (default behavior)
-            for ($i = 2; $i >= 0; $i--) {
+            // Get last 3 months (default behavior) - newest first
+            for ($i = 0; $i <= 2; $i++) {
                 $date = now()->subMonths($i);
                 $monthName = $date->format('F');
                 
-                $startOfMonth = $date->startOfMonth();
-                $endOfMonth = $date->endOfMonth();
+                $startOfMonth = $date->copy()->startOfMonth();
+                $endOfMonth = $date->copy()->endOfMonth();
                 
                 $monthData = [];
                 $totalForMonth = 0;

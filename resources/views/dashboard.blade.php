@@ -683,26 +683,39 @@
                     <div class="stat-item deployed">
                         <div class="stat-icon">
                             <i class="fas fa-check-circle"></i>
-                </div>
+                        </div>
                         <div class="stat-content">
                             <div class="stat-number">{{ \App\Models\Asset::whereIn('status', ['deployed', 'active', 'assigned', 'in_use'])->count() }}</div>
                             <div class="stat-label">Deployed Assets</div>
                             <div class="stat-change positive">
                                 <i class="fas fa-arrow-up"></i>
                                 <span>Active</span>
+                            </div>
+                        </div>
                     </div>
-                    </div>
+                    <div class="stat-item new-arrival">
+                        <div class="stat-icon">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">{{ \App\Models\Asset::where('movement', 'New Arrival')->count() }}</div>
+                            <div class="stat-label">New Arrivals</div>
+                            <div class="stat-change info">
+                                <i class="fas fa-info-circle"></i>
+                                <span>Available</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="stat-item pending">
                         <div class="stat-icon">
                             <i class="fas fa-clock"></i>
                         </div>
                         <div class="stat-content">
-                            <div class="stat-number">{{ $totalAssets - \App\Models\Asset::whereIn('status', ['deployed', 'active', 'assigned', 'in_use'])->count() }}</div>
-                            <div class="stat-label">Pending Assets</div>
-                            <div class="stat-change neutral">
-                                <i class="fas fa-minus"></i>
-                                <span>Waiting</span>
+                            <div class="stat-number">{{ \App\Models\Asset::where('status', 'Pending Confirmation')->count() }}</div>
+                            <div class="stat-label">Pending Confirmation</div>
+                            <div class="stat-change warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span>Awaiting</span>
                             </div>
                         </div>
                     </div>
@@ -846,8 +859,8 @@
                 <div class="d-flex align-items-center justify-content-between mb-4">
                     <div class="d-flex align-items-center">
                         <div class="monthly-overview-icon">
-                            <i class="fas fa-chart-bar"></i>
-                </div>
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
                         <div>
                             <h6 class="mb-0 fw-semibold">Monthly Status Overview</h6>
                             <small class="text-muted">Asset activity breakdown</small>
@@ -873,99 +886,170 @@
                                     </li>
                                 @endfor
                             </ul>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
         
                 <div class="monthly-analysis">
                     @if(!empty($monthlyRollup['months']))
                         @foreach($monthlyRollup['months'] as $monthName => $data)
                             @php
                                 $totalForMonth = array_sum(array_column($data, 'count'));
+                                $deployedCount = $data['Deployed']['count'] ?? 0;
+                                $disposedCount = $data['Disposed']['count'] ?? 0;
+                                $newArrivalCount = $data['New Arrival']['count'] ?? 0;
+                                $returnedCount = $data['Returned']['count'] ?? 0;
+                                $transferredCount = $data['Transferred']['count'] ?? 0;
+                                
+                                // Calculate health score based on positive vs negative activities
+                                $positiveActivities = $deployedCount + $newArrivalCount;
+                                $negativeActivities = $disposedCount;
+                                $neutralActivities = $returnedCount + $transferredCount;
+                                $healthScore = $totalForMonth > 0 ? round((($positiveActivities - $negativeActivities) / $totalForMonth) * 100) : 0;
                             @endphp
+                            
                             <div class="monthly-period-card" data-aos="fade-up" data-aos-delay="{{ $loop->index * 100 }}">
+                                <!-- Enhanced Header -->
                                 <div class="monthly-period-header">
                                     <div class="monthly-period-title">
-                                        <h6 class="month-name">{{ $monthName }}</h6>
+                                        <div class="month-header">
+                                            <h6 class="month-name">{{ $monthName }}</h6>
+                                            <div class="month-badge">
+                                                <span class="total-activities">{{ $totalForMonth }}</span>
+                                                <small>activities</small>
+                                            </div>
+                                        </div>
                                         <div class="monthly-summary">
-                                            <span class="total-activities">{{ $totalForMonth }} activities</span>
                                             @if($totalForMonth > 0)
-                                                <span class="activity-trend">
-                                                    @php
-                                                        $deployedCount = $data['deployed']['count'] ?? 0;
-                                                        $problematicCount = $data['problematic']['count'] ?? 0;
-                                                        $healthScore = $totalForMonth > 0 ? round((($deployedCount - $problematicCount) / $totalForMonth) * 100) : 0;
-                                                    @endphp
-                                                    <i class="fas fa-heartbeat me-1"></i>
-                                                    <span class="health-score {{ $healthScore >= 70 ? 'good' : ($healthScore >= 40 ? 'moderate' : 'poor') }}">
-                                                        {{ $healthScore }}% health
-                                                    </span>
-                                                </span>
+                                                <div class="health-indicator">
+                                                    <div class="health-icon {{ $healthScore >= 70 ? 'excellent' : ($healthScore >= 40 ? 'good' : ($healthScore >= 0 ? 'moderate' : 'poor')) }}">
+                                                        <i class="fas fa-heartbeat"></i>
+                                                    </div>
+                                                    <div class="health-info">
+                                                        <span class="health-score">{{ $healthScore }}%</span>
+                                                        <small class="health-label">Health Score</small>
+                                                    </div>
+                                                </div>
+                                                <div class="activity-bar">
+                                                    <div class="activity-fill" style="width: {{ min(100, ($totalForMonth / 100) * 100) }}%"></div>
+                                                    <div class="activity-pulse"></div>
+                                                </div>
                                             @endif
-                </div>
-                </div>
-                                    @if($totalForMonth > 0)
-                                        <div class="monthly-visual-indicator">
-                                            <div class="activity-bar">
-                                                <div class="activity-fill" style="width: {{ min(100, ($totalForMonth / 50) * 100) }}%"></div>
-            </div>
-        </div>
-                                    @endif
-    </div>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 @if($totalForMonth > 0)
-                                    <div class="monthly-status-grid">
-                                @foreach($monthlyRollup['statuses'] as $status)
-                                    @php
-                                        $statusData = $data[$status] ?? ['count' => 0, 'percentage' => 0];
-                                                $statusConfig = match($status) {
-                                                    'deployed' => ['color' => 'success', 'icon' => 'fas fa-check-circle', 'label' => 'Deployed'],
-                                                    'problematic' => ['color' => 'danger', 'icon' => 'fas fa-exclamation-triangle', 'label' => 'Problematic'],
-                                                    'pending_confirm' => ['color' => 'warning', 'icon' => 'fas fa-clock', 'label' => 'Pending'],
-                                                    'returned' => ['color' => 'info', 'icon' => 'fas fa-undo', 'label' => 'Returned'],
-                                                    'disposed' => ['color' => 'secondary', 'icon' => 'fas fa-trash', 'label' => 'Disposed'],
-                                                    'new_arrived' => ['color' => 'primary', 'icon' => 'fas fa-plus-circle', 'label' => 'New'],
-                                                    default => ['color' => 'light', 'icon' => 'fas fa-question', 'label' => ucfirst(str_replace('_', ' ', $status))]
-                                        };
-                                    @endphp
-                                            @if($statusData['count'] > 0)
-                                                <div class="status-item {{ $statusConfig['color'] }}" data-aos="fade-up" data-aos-delay="{{ $loop->index * 50 }}">
-                                                    <div class="status-icon">
-                                                        <i class="{{ $statusConfig['icon'] }}"></i>
+                                    <!-- Monthly Chart Section -->
+                                    <div class="monthly-chart-section">
+                                        <div class="chart-container">
+                                            <canvas id="monthlyChart_{{ $loop->index }}" class="monthly-chart-canvas"></canvas>
+                                        </div>
+                                        <div class="chart-legend">
+                                            @php
+                                                $statusConfigs = [
+                                                    'Deployed' => ['color' => '#10b981', 'icon' => 'fas fa-check-circle'],
+                                                    'New Arrival' => ['color' => '#3b82f6', 'icon' => 'fas fa-plus-circle'],
+                                                    'Returned' => ['color' => '#06b6d4', 'icon' => 'fas fa-undo'],
+                                                    'Transferred' => ['color' => '#f59e0b', 'icon' => 'fas fa-exchange-alt'],
+                                                    'Disposed' => ['color' => '#ef4444', 'icon' => 'fas fa-trash']
+                                                ];
+                                            @endphp
+                                            @foreach($statusConfigs as $status => $config)
+                                                @if(($data[$status]['count'] ?? 0) > 0)
+                                                    <div class="legend-item">
+                                                        <div class="legend-color" style="background-color: {{ $config['color'] }}"></div>
+                                                        <i class="{{ $config['icon'] }}"></i>
+                                                        <span>{{ $status }}</span>
+                                                        <span class="legend-count">{{ $data[$status]['count'] ?? 0 }}</span>
+                                                    </div>
+                                                @endif
+                                            @endforeach
+                                        </div>
                                     </div>
+
+                                    <!-- Enhanced Status Grid -->
+                                    <div class="monthly-status-grid">
+                                        @php
+                                            $statusConfigs = [
+                                                'Deployed' => ['color' => 'success', 'icon' => 'fas fa-check-circle', 'label' => 'Deployed', 'count' => $deployedCount],
+                                                'New Arrival' => ['color' => 'primary', 'icon' => 'fas fa-plus-circle', 'label' => 'New Arrival', 'count' => $newArrivalCount],
+                                                'Returned' => ['color' => 'info', 'icon' => 'fas fa-undo', 'label' => 'Returned', 'count' => $returnedCount],
+                                                'Transferred' => ['color' => 'warning', 'icon' => 'fas fa-exchange-alt', 'label' => 'Transferred', 'count' => $transferredCount],
+                                                'Disposed' => ['color' => 'danger', 'icon' => 'fas fa-trash', 'label' => 'Disposed', 'count' => $disposedCount]
+                                            ];
+                                        @endphp
+                                        
+                                        @foreach($statusConfigs as $status => $config)
+                                            @if($config['count'] > 0)
+                                                @php
+                                                    $statusData = $data[$status] ?? ['count' => 0, 'percentage' => 0];
+                                                @endphp
+                                                <div class="status-item {{ $config['color'] }}" data-aos="fade-up" data-aos-delay="{{ $loop->index * 100 }}">
+                                                    <div class="status-icon-wrapper">
+                                                        <div class="status-icon">
+                                                            <i class="{{ $config['icon'] }}"></i>
+                                                        </div>
+                                                        <div class="status-glow"></div>
+                                                    </div>
                                                     <div class="status-content">
                                                         <div class="status-count">{{ $statusData['count'] }}</div>
-                                                        <div class="status-label">{{ $statusConfig['label'] }}</div>
+                                                        <div class="status-label">{{ $config['label'] }}</div>
                                                         <div class="status-percentage">{{ $statusData['percentage'] }}%</div>
-                                    </div>
+                                                    </div>
                                                     <div class="status-progress">
-                                                        <div class="progress-bar" style="width: {{ $statusData['percentage'] }}%"></div>
+                                                        <div class="progress-track">
+                                                            <div class="progress-fill" style="width: {{ $statusData['percentage'] }}%"></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="status-trend">
+                                                        @if($status === 'Deployed' || $status === 'New Arrival')
+                                                            <i class="fas fa-arrow-up text-success"></i>
+                                                        @elseif($status === 'Disposed')
+                                                            <i class="fas fa-arrow-down text-danger"></i>
+                                                        @else
+                                                            <i class="fas fa-minus text-warning"></i>
+                                                        @endif
                                                     </div>
                                                 </div>
                                             @endif
-                                @endforeach
+                                        @endforeach
                                     </div>
                                 @else
+                                    <!-- Enhanced Empty State -->
                                     <div class="monthly-empty-state">
                                         <div class="empty-icon">
-                                            <i class="fas fa-chart-bar"></i>
+                                            <i class="fas fa-chart-pie"></i>
+                                            <div class="empty-pulse"></div>
                                         </div>
                                         <h6 class="empty-title">No Activity</h6>
                                         <p class="empty-description">No asset activities recorded for this month</p>
+                                        <div class="empty-actions">
+                                            <a href="{{ route('assets.create') }}" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-plus me-2"></i>Add Asset
+                                            </a>
+                                        </div>
                                     </div>
                                 @endif
                             </div>
                         @endforeach
                     @else
-                        <div class="monthly-empty-state">
+                        <!-- Global Empty State -->
+                        <div class="monthly-empty-state global">
                             <div class="empty-icon">
-                                <i class="fas fa-chart-bar"></i>
+                                <i class="fas fa-chart-pie"></i>
+                                <div class="empty-pulse"></div>
                             </div>
                             <h6 class="empty-title">No Monthly Data</h6>
                             <p class="empty-description">No monthly activity data available</p>
-                            <a href="{{ route('assets.create') }}" class="btn btn-primary btn-sm">
-                                <i class="fas fa-plus me-2"></i>Add First Asset
-                            </a>
+                            <div class="empty-actions">
+                                <a href="{{ route('assets.create') }}" class="btn btn-primary">
+                                    <i class="fas fa-plus me-2"></i>Add First Asset
+                                </a>
+                                <a href="{{ route('assets.index') }}" class="btn btn-outline-primary">
+                                    <i class="fas fa-list me-2"></i>View Assets
+                                </a>
+                            </div>
                         </div>
                     @endif
                 </div>
@@ -986,14 +1070,15 @@
                         </div>
                     </div>
                     <div class="weekly-controls">
-                        <button class="btn btn-outline-primary btn-sm weekly-chart-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#weeklyChart" aria-expanded="false">
-                            <i class="fas fa-chart-bar me-2"></i>Chart View
+                        <button class="btn btn-outline-primary btn-sm weekly-chart-toggle" type="button" id="weeklyChartToggleBtn">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            <span class="chart-toggle-text">Chart View</span>
                         </button>
                     </div>
                 </div>
                 
                 <!-- Enhanced Chart View -->
-                <div class="collapse mb-4" id="weeklyChart">
+                <div class="collapse mb-4" id="weeklyChart" style="display: none;">
                     <div class="weekly-chart-container">
                         <div class="chart-header">
                             <h6 class="chart-title">Weekly Movement Trends</h6>
@@ -1505,6 +1590,93 @@
     100% { transform: scale(1); }
 }
 
+/* Weekly Chart Collapsible Styles */
+.weekly-chart-container {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.weekly-chart-toggle {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.weekly-chart-toggle:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.weekly-chart-toggle:active {
+    transform: translateY(0);
+}
+
+.weekly-chart-toggle i {
+    transition: all 0.3s ease;
+}
+
+.chart-toggle-text {
+    transition: all 0.3s ease;
+}
+
+.collapse.show .weekly-chart-container {
+    animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.chart-wrapper {
+    position: relative;
+    height: 300px;
+    margin-top: 1rem;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.chart-title {
+    font-weight: 600;
+    color: #374151;
+    margin: 0;
+}
+
+.chart-legend {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.legend-item i {
+    font-size: 0.75rem;
+}
+
 .clickable-number.loading {
     animation: pulse 1s infinite;
 }
@@ -1587,10 +1759,16 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 
-// Weekly Movement Chart (Bar Chart)
+// Weekly Movement Chart (Bar Chart) - Collapsible
+let weeklyMovementChart = null;
 const weeklyChartCtx = document.getElementById('weeklyMovementChart');
-if (weeklyChartCtx) {
-    const weeklyData = @json($weeklyBreakdown ?? []);
+const weeklyData = @json($weeklyBreakdown ?? []);
+
+// Function to create the chart
+function createWeeklyMovementChart() {
+    if (!weeklyChartCtx || weeklyMovementChart) {
+        return;
+    }
     
     if (weeklyData && weeklyData.months) {
         const months = Object.keys(weeklyData.months);
@@ -1609,7 +1787,7 @@ if (weeklyChartCtx) {
                     }),
                     backgroundColor: colors[index % colors.length] + '20',
                     borderColor: colors[index % colors.length],
-                borderWidth: 2,
+                    borderWidth: 2,
                     borderRadius: 4,
                     borderSkipped: false,
                 };
@@ -1617,18 +1795,18 @@ if (weeklyChartCtx) {
         };
         
         try {
-            new Chart(weeklyChartCtx, {
+            weeklyMovementChart = new Chart(weeklyChartCtx, {
                 type: 'bar',
                 data: chartData,
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
                             position: 'top',
-                labels: {
+                            labels: {
                                 usePointStyle: true,
-                    padding: 20,
+                                padding: 20,
                                 font: {
                                     size: 11
                                 }
@@ -1656,7 +1834,7 @@ if (weeklyChartCtx) {
                         x: {
                             stacked: false,
                             grid: {
-                display: false
+                                display: false
                             },
                             ticks: {
                                 color: '#6b7280',
@@ -1667,8 +1845,8 @@ if (weeklyChartCtx) {
                         },
                         y: {
                             stacked: false,
-                beginAtZero: true,
-                grid: {
+                            beginAtZero: true,
+                            grid: {
                                 color: 'rgba(0,0,0,0.1)',
                                 drawBorder: false
                             },
@@ -1687,15 +1865,77 @@ if (weeklyChartCtx) {
                     interaction: {
                         intersect: false,
                         mode: 'index'
-        }
-    }
-});
-} catch (error) {
+                    }
+                }
+            });
+        } catch (error) {
             console.error('Error creating weekly movement chart:', error);
             weeklyChartCtx.innerHTML = '<div class="text-center text-muted py-3"><i class="fas fa-exclamation-triangle fa-lg mb-2"></i><br>Chart failed to load</div>';
         }
     }
 }
+
+// Function to destroy the chart
+function destroyWeeklyMovementChart() {
+    if (weeklyMovementChart) {
+        weeklyMovementChart.destroy();
+        weeklyMovementChart = null;
+    }
+}
+
+// Handle chart toggle manually
+document.addEventListener('DOMContentLoaded', function() {
+    const weeklyChartCollapse = document.getElementById('weeklyChart');
+    const weeklyChartToggle = document.getElementById('weeklyChartToggleBtn');
+    const chartToggleText = document.querySelector('.chart-toggle-text');
+    
+    if (weeklyChartCollapse && weeklyChartToggle) {
+        let isChartVisible = false;
+        
+        weeklyChartToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            if (isChartVisible) {
+                // Hide the chart
+                weeklyChartCollapse.style.display = 'none';
+                weeklyChartCollapse.classList.remove('show');
+                destroyWeeklyMovementChart();
+                
+                // Update button
+                if (chartToggleText) {
+                    chartToggleText.textContent = 'Chart View';
+                }
+                weeklyChartToggle.querySelector('i').className = 'fas fa-chart-bar me-2';
+                isChartVisible = false;
+            } else {
+                // Show the chart
+                weeklyChartCollapse.style.display = 'block';
+                weeklyChartCollapse.classList.add('show');
+                
+                // Create chart after a short delay
+                setTimeout(() => {
+                    try {
+                        createWeeklyMovementChart();
+                    } catch (error) {
+                        console.error('Error creating chart:', error);
+                        // Show error message
+                        const chartContainer = document.querySelector('.weekly-chart-container');
+                        if (chartContainer) {
+                            chartContainer.innerHTML = '<div class="text-center text-muted py-3"><i class="fas fa-exclamation-triangle fa-lg mb-2"></i><br>Chart failed to load</div>';
+                        }
+                    }
+                }, 100);
+                
+                // Update button
+                if (chartToggleText) {
+                    chartToggleText.textContent = 'Hide Chart';
+                }
+                weeklyChartToggle.querySelector('i').className = 'fas fa-eye-slash me-2';
+                isChartVisible = true;
+            }
+        });
+    }
+});
 
 // Add loading state to clickable numbers
 const clickableNumbers = document.querySelectorAll('.clickable-number');
@@ -1714,6 +1954,115 @@ clickableNumbers.forEach(function(link) {
                 this.style.pointerEvents = 'auto';
             }
         }, 3000);
+    });
+});
+
+// Monthly Status Charts
+document.addEventListener('DOMContentLoaded', function() {
+    const monthlyCharts = document.querySelectorAll('.monthly-chart-canvas');
+    
+    monthlyCharts.forEach(function(canvas, index) {
+        const ctx = canvas.getContext('2d');
+        const monthlyData = @json($monthlyRollup ?? []);
+        
+        if (monthlyData && monthlyData.months) {
+            const months = Object.keys(monthlyData.months);
+            const currentMonthData = monthlyData.months[months[index]];
+            
+            if (currentMonthData) {
+                const statusConfigs = {
+                    'Deployed': { color: '#10b981', icon: 'fas fa-check-circle' },
+                    'New Arrival': { color: '#3b82f6', icon: 'fas fa-plus-circle' },
+                    'Returned': { color: '#06b6d4', icon: 'fas fa-undo' },
+                    'Transferred': { color: '#f59e0b', icon: 'fas fa-exchange-alt' },
+                    'Disposed': { color: '#ef4444', icon: 'fas fa-trash' }
+                };
+                
+                const labels = [];
+                const data = [];
+                const colors = [];
+                const hoverColors = [];
+                
+                Object.keys(statusConfigs).forEach(status => {
+                    const statusData = currentMonthData[status];
+                    if (statusData && statusData.count > 0) {
+                        labels.push(status);
+                        data.push(statusData.count);
+                        colors.push(statusConfigs[status].color);
+                        hoverColors.push(statusConfigs[status].color + '80');
+                    }
+                });
+                
+                if (data.length > 0) {
+                    try {
+                        new Chart(ctx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: labels,
+                                datasets: [{
+                                    data: data,
+                                    backgroundColor: colors,
+                                    borderColor: colors,
+                                    borderWidth: 2,
+                                    hoverBackgroundColor: hoverColors,
+                                    hoverBorderWidth: 3,
+                                    hoverOffset: 10
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                cutout: '60%',
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    },
+                                    tooltip: {
+                                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                        titleColor: '#fff',
+                                        bodyColor: '#fff',
+                                        borderColor: '#667eea',
+                                        borderWidth: 1,
+                                        cornerRadius: 8,
+                                        displayColors: true,
+                                        callbacks: {
+                                            title: function(context) {
+                                                return context[0].label;
+                                            },
+                                            label: function(context) {
+                                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                                const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                                return `${context.parsed} assets (${percentage}%)`;
+                                            }
+                                        }
+                                    }
+                                },
+                                animation: {
+                                    animateRotate: true,
+                                    animateScale: true,
+                                    duration: 1500,
+                                    easing: 'easeInOutQuart'
+                                },
+                                interaction: {
+                                    intersect: false,
+                                    mode: 'index'
+                                },
+                                elements: {
+                                    arc: {
+                                        borderWidth: 2
+                                    }
+                                }
+                            }
+                        });
+                    } catch (error) {
+                        console.error('Error creating monthly chart:', error);
+                        canvas.parentElement.innerHTML = '<div class="text-center text-muted py-3"><i class="fas fa-exclamation-triangle fa-lg mb-2"></i><br>Chart failed to load</div>';
+                    }
+                } else {
+                    canvas.parentElement.innerHTML = '<div class="text-center text-muted py-3"><i class="fas fa-chart-pie fa-lg mb-2"></i><br>No data to display</div>';
+                }
+            }
+        }
     });
 });
 </script>
