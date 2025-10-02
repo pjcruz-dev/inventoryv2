@@ -51,6 +51,40 @@ class DashboardController extends Controller
         $totalDepartments = Department::count();
         $totalVendors = Vendor::count();
         
+        // Calculate growth indicators (current vs last month)
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
+        $lastMonth = $currentMonth == 1 ? 12 : $currentMonth - 1;
+        $lastMonthYear = $currentMonth == 1 ? $currentYear - 1 : $currentYear;
+        
+        // Assets growth
+        $currentMonthAssets = $assetQuery->whereYear('created_at', $currentYear)
+            ->whereMonth('created_at', $currentMonth)->count();
+        $lastMonthAssets = $assetQuery->whereYear('created_at', $lastMonthYear)
+            ->whereMonth('created_at', $lastMonth)->count();
+        $assetsGrowth = $this->calculateGrowthPercentage($currentMonthAssets, $lastMonthAssets);
+        
+        // Users growth
+        $currentMonthUsers = $userQuery->whereYear('created_at', $currentYear)
+            ->whereMonth('created_at', $currentMonth)->count();
+        $lastMonthUsers = $userQuery->whereYear('created_at', $lastMonthYear)
+            ->whereMonth('created_at', $lastMonth)->count();
+        $usersGrowth = $this->calculateGrowthPercentage($currentMonthUsers, $lastMonthUsers);
+        
+        // Departments growth
+        $currentMonthDepartments = Department::whereYear('created_at', $currentYear)
+            ->whereMonth('created_at', $currentMonth)->count();
+        $lastMonthDepartments = Department::whereYear('created_at', $lastMonthYear)
+            ->whereMonth('created_at', $lastMonth)->count();
+        $departmentsGrowth = $this->calculateGrowthPercentage($currentMonthDepartments, $lastMonthDepartments);
+        
+        // Vendors growth
+        $currentMonthVendors = Vendor::whereYear('created_at', $currentYear)
+            ->whereMonth('created_at', $currentMonth)->count();
+        $lastMonthVendors = Vendor::whereYear('created_at', $lastMonthYear)
+            ->whereMonth('created_at', $lastMonth)->count();
+        $vendorsGrowth = $this->calculateGrowthPercentage($currentMonthVendors, $lastMonthVendors);
+        
         // Get recent assets (last 5) with entity filter
         $recentAssetsQuery = Asset::with('category')->latest();
         if ($filterEntity) {
@@ -58,8 +92,9 @@ class DashboardController extends Controller
         }
         $recentAssets = $recentAssetsQuery->take(5)->get();
         
-        // Calculate deployed assets percentage with entity filter
-        $deployedAssetsQuery = Asset::where('status', 'deployed');
+        // Calculate deployed/active assets percentage with entity filter
+        // Consider assets as "deployed" if they are active, assigned, or deployed
+        $deployedAssetsQuery = Asset::whereIn('status', ['deployed', 'active', 'assigned', 'in_use']);
         if ($filterEntity) {
             $deployedAssetsQuery->where('entity', $filterEntity);
         }
@@ -84,8 +119,45 @@ class DashboardController extends Controller
             'weeklyBreakdown',
             'monthlyRollup',
             'chartData',
-            'entities'
+            'entities',
+            'assetsGrowth',
+            'usersGrowth',
+            'departmentsGrowth',
+            'vendorsGrowth'
         ));
+    }
+    
+    /**
+     * Calculate growth percentage between two values
+     */
+    private function calculateGrowthPercentage($current, $previous)
+    {
+        if ($previous == 0) {
+            return $current > 0 ? ['percentage' => 100, 'trend' => 'positive', 'text' => '+100% from last month'] : 
+                   ['percentage' => 0, 'trend' => 'neutral', 'text' => 'No change'];
+        }
+        
+        $percentage = round((($current - $previous) / $previous) * 100, 1);
+        
+        if ($percentage > 0) {
+            return [
+                'percentage' => abs($percentage),
+                'trend' => 'positive',
+                'text' => '+' . abs($percentage) . '% from last month'
+            ];
+        } elseif ($percentage < 0) {
+            return [
+                'percentage' => abs($percentage),
+                'trend' => 'negative',
+                'text' => '-' . abs($percentage) . '% from last month'
+            ];
+        } else {
+            return [
+                'percentage' => 0,
+                'trend' => 'neutral',
+                'text' => 'No change'
+            ];
+        }
     }
     
     /**
@@ -101,6 +173,7 @@ class DashboardController extends Controller
             $date = now()->setYear((int)$filterYear)->setMonth((int)$filterMonth);
             $monthName = $date->format('F Y');
             $monthData = [];
+            
             
             $startOfMonth = $date->startOfMonth()->copy();
             $endOfMonth = $date->endOfMonth()->copy();
@@ -187,7 +260,7 @@ class DashboardController extends Controller
      */
     private function getMonthlyRollup($filterMonth = null, $filterYear = null)
     {
-        $statuses = ['deployed', 'problematic', 'pending_confirm', 'returned', 'disposed', 'new_arrived'];
+        $statuses = ['Deployed', 'Disposed', 'New Arrival', 'Returned', 'Transferred'];
         $months = [];
         
         if ($filterMonth && $filterYear) {
@@ -198,21 +271,23 @@ class DashboardController extends Controller
             $startOfMonth = $date->startOfMonth();
             $endOfMonth = $date->endOfMonth();
             
+            
             $monthData = [];
             $totalForMonth = 0;
             
             foreach ($statuses as $status) {
-                // Get unique asset IDs that changed to this status during this month
+                // Get unique asset IDs that changed to this movement during this month
                 $timelineAssetIds = \App\Models\AssetTimeline::where('action', 'updated')
-                    ->whereJsonContains('new_values->status', $status)
+                    ->whereJsonContains('new_values->movement', $status)
                     ->whereBetween('performed_at', [$startOfMonth, $endOfMonth])
                     ->distinct('asset_id')
                     ->pluck('asset_id');
                 
-                // Get asset IDs created with this status during this month
-                $createdAssetIds = Asset::where('status', $status)
+                // Get asset IDs created with this movement during this month
+                $createdAssetIds = Asset::where('movement', $status)
                     ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
                     ->pluck('id');
+                
                 
                 // Combine and get unique count (same logic as weekly breakdown)
                 $uniqueAssetIds = $timelineAssetIds->merge($createdAssetIds)->unique();
@@ -246,15 +321,15 @@ class DashboardController extends Controller
                 $totalForMonth = 0;
                 
                 foreach ($statuses as $status) {
-                    // Get unique asset IDs that changed to this status during this month
+                    // Get unique asset IDs that changed to this movement during this month
                     $timelineAssetIds = \App\Models\AssetTimeline::where('action', 'updated')
-                        ->whereJsonContains('new_values->status', $status)
+                        ->whereJsonContains('new_values->movement', $status)
                         ->whereBetween('performed_at', [$startOfMonth, $endOfMonth])
                         ->distinct('asset_id')
                         ->pluck('asset_id');
                     
-                    // Get asset IDs created with this status during this month
-                    $createdAssetIds = Asset::where('status', $status)
+                    // Get asset IDs created with this movement during this month
+                    $createdAssetIds = Asset::where('movement', $status)
                         ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
                         ->pluck('id');
                     
