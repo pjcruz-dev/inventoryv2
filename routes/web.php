@@ -29,6 +29,7 @@ use App\Http\Controllers\SystemHealthController;
 use App\Http\Controllers\HealthCheckController;
 use App\Http\Controllers\SecurityMonitoringController;
 use App\Http\Controllers\ChangePasswordController;
+use App\Http\Controllers\GlobalSearchController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -55,6 +56,12 @@ Route::get('/import-export/template/{module}', [App\Http\Controllers\TemplateCon
 // Public token-based confirmation routes (no auth required)
 Route::get('asset-assignment-confirmations/confirm/{token}', [AssetAssignmentConfirmationController::class, 'confirmByToken'])->name('asset-assignment-confirmations.confirm');
 Route::get('asset-assignment-confirmations/decline/{token}', [AssetAssignmentConfirmationController::class, 'declineByToken'])->name('asset-assignment-confirmations.decline');
+
+// Global Search routes
+Route::prefix('search')->name('search.')->middleware('auth')->group(function () {
+    Route::get('/', [GlobalSearchController::class, 'search'])->name('index');
+    Route::get('/results', [GlobalSearchController::class, 'results'])->name('results');
+});
 
 // Protected routes
 Route::middleware('auth')->group(function () {

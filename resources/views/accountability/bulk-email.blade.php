@@ -82,6 +82,23 @@
                                         </button>
                                     </div>
                                 </div>
+                                
+                                <!-- Global Search -->
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-search"></i>
+                                        </span>
+                                        <input type="text" class="form-control" id="globalSearch" 
+                                               placeholder="Search by asset tag, name, assigned user, or category...">
+                                        <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        <span id="searchResults">Showing all {{ $assets->count() }} assets</span>
+                                    </small>
+                                </div>
                                 <div class="table-responsive">
                                     <table class="table table-sm table-striped">
                                         <thead class="table-dark">
@@ -282,6 +299,59 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize button state
     updateSendButton();
+
+    // Global Search Functionality
+    const globalSearch = document.getElementById('globalSearch');
+    const clearSearch = document.getElementById('clearSearch');
+    const searchResults = document.getElementById('searchResults');
+    const tableRows = document.querySelectorAll('tbody tr');
+
+    globalSearch.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        let visibleCount = 0;
+
+        tableRows.forEach(row => {
+            const assetTag = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+            const assetName = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+            const assignedTo = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+            const category = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
+
+            const matches = assetTag.includes(searchTerm) || 
+                          assetName.includes(searchTerm) || 
+                          assignedTo.includes(searchTerm) || 
+                          category.includes(searchTerm);
+
+            if (matches || searchTerm === '') {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        // Update search results text
+        if (searchTerm === '') {
+            searchResults.textContent = `Showing all ${tableRows.length} assets`;
+        } else {
+            searchResults.textContent = `Showing ${visibleCount} of ${tableRows.length} assets`;
+        }
+
+        // Update recipients based on visible selected assets
+        updateRecipients();
+    });
+
+    // Clear search functionality
+    clearSearch.addEventListener('click', function() {
+        globalSearch.value = '';
+        globalSearch.dispatchEvent(new Event('input'));
+    });
+
+    // Handle Enter key in search
+    globalSearch.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+        }
+    });
 });
 </script>
 @endpush
