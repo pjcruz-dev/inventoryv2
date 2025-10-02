@@ -79,6 +79,7 @@
             position: relative;
             max-width: 400px;
             margin: 0 auto;
+            z-index: 1000;
         }
         
         #globalSearchInput {
@@ -315,15 +316,449 @@
             text-decoration: none;
         }
         
+        /* Enhanced Header Styles */
+        .enhanced-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 8px 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Breadcrumb Navigation */
+        .breadcrumb-section {
+            background: transparent;
+            border-radius: 8px;
+            padding: 4px 10px;
+            flex-shrink: 0;
+        }
+
+        .breadcrumb {
+            margin: 0;
+            background: none;
+            padding: 0;
+        }
+
+        .breadcrumb-item a {
+            color: #667eea;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .breadcrumb-item a:hover {
+            color: #5a6fd8;
+        }
+
+        .breadcrumb-item.active {
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+
+        /* Enhanced Search with Keyboard Shortcut */
+        .search-shortcut-hint {
+            position: absolute;
+            right: 60px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            color:rgb(124, 126, 129);
+            opacity: 1;
+            z-index: 10;
+            font-weight: 500;
+            background: transparent;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .search-shortcut-hint kbd {
+            background: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 3px;
+            padding: 2px 5px;
+            font-size: 11px;
+            font-family: monospace;
+            color: #495057;
+            font-weight: 600;
+        }
+
+        /* Header Actions */
+        .header-actions {
+            gap: 12px;
+        }
+
+        /* Enhanced Notification Bell */
+        .notification-bell {
+            position: relative;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            color: #6c757d;
+        }
+
+        .notification-bell:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .notification-badge {
+            font-size: 10px;
+            min-width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notification-dropdown {
+            width: 350px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Enhanced User Dropdown */
+        .user-dropdown-btn {
+            border: none;
+            border-radius: 8px;
+            padding: 6px 8px;
+            background: none;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            height: auto;
+            min-width: auto;
+            cursor: pointer;
+        }
+
+        .user-dropdown-btn:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .user-avatar {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            border-radius: 50%;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            color: white !important;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .user-info {
+            text-align: left;
+            min-width: 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #2d3748;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: visible;
+            text-overflow: visible;
+            display: block;
+        }
+
+        .user-role {
+            font-size: 11px;
+            color: #718096;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: visible;
+            text-overflow: visible;
+            display: block;
+        }
+
+        .user-dropdown-menu {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            padding: 8px 0;
+            min-width: 280px;
+        }
+
+        .user-profile-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: -8px -8px 8px -8px;
+            border-radius: 12px 12px 0 0;
+            color: white;
+        }
+
+        .user-avatar-large {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 20px;
+        }
+
+        .user-details {
+            flex: 1;
+        }
+
+        .user-name-large {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 2px;
+        }
+
+        .user-email {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-bottom: 4px;
+        }
+
+        .user-role-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .user-dropdown-menu .dropdown-item {
+            padding: 10px 16px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .user-dropdown-menu .dropdown-item:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .user-dropdown-menu .dropdown-item i {
+            width: 16px;
+            text-align: center;
+        }
+
+        /* Glassmorphism Effects */
+        .enhanced-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border-radius: 12px;
+            pointer-events: none;
+        }
+
+        /* Micro-interactions */
+        .quick-action-btn,
+        .notification-bell,
+        .user-dropdown-btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quick-action-btn::before,
+        .notification-bell::before,
+        .user-dropdown-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s ease, height 0.3s ease;
+        }
+
+        .quick-action-btn:hover::before,
+        .notification-bell:hover::before,
+        .user-dropdown-btn:hover::before {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Search Container */
+        .search-container {
+            max-width: 700px;
+            min-width: 400px;
+            flex: 0 0 auto;
+        }
+
+        /* Ensure main content has lower z-index */
+        .main-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Ensure dashboard cards have lower z-index */
+        .card {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Global Search Results Portal */
+        #globalSearchResultsPortal {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            z-index: 9999999 !important;
+            pointer-events: none !important;
+        }
+
+        #globalSearchResults {
+            position: absolute !important;
+            z-index: 9999999 !important;
+            pointer-events: auto !important;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+            border-radius: 12px !important;
+            overflow: hidden !important;
+            background: white !important;
+            max-width: 500px !important;
+            min-width: 300px !important;
+        }
+
+        #searchResultsContent {
+            background: white !important;
+            border-radius: 12px !important;
+            overflow: hidden !important;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
+            .enhanced-header {
+                padding: 8px 10px;
+                margin-bottom: 10px;
+            }
+
+            .breadcrumb-section {
+                padding: 4px 8px;
+                margin-bottom: 0;
+            }
+
+            .breadcrumb {
+                font-size: 14px;
+            }
+
+            .breadcrumb-item {
+                padding: 0.25rem 0.5rem;
+            }
+
+            /* Stack elements vertically on mobile */
+            .d-flex.justify-content-between {
+                flex-direction: column !important;
+                gap: 12px;
+            }
+
+            .search-container {
+                width: 100%;
+                max-width: 100%;
+                min-width: auto;
+                margin: 0;
+                order: 2;
+            }
+
             .global-search-container {
+                width: 100%;
                 max-width: 100%;
                 margin: 0;
             }
             
             #globalSearchInput {
                 font-size: 16px; /* Prevents zoom on iOS */
+                padding: 12px 16px 12px 45px;
+                width: 100%;
+            }
+
+            .search-icon {
+                left: 16px;
+                font-size: 16px;
+            }
+
+            .search-shortcut-hint {
+                display: block;
+                right: 10px;
+                font-size: 11px;
+                opacity: 1;
+                background: transparent;
+            }
+
+            .header-actions {
+                order: 1;
+                width: 100%;
+                justify-content: flex-end;
+                margin-bottom: 8px;
+            }
+
+            .user-info {
+                display: block !important;
+            }
+
+            .user-name {
+                font-size: 13px;
+            }
+
+            .user-role {
+                font-size: 11px;
+            }
+
+            .user-dropdown-btn {
+                padding: 4px 6px;
+                font-size: 13px;
+                height: auto;
+            }
+
+            .user-dropdown-btn .user-avatar {
+                width: 24px;
+                height: 24px;
+                font-size: 11px;
+            }
+
+            /* Notification bell adjustments */
+            .notification-bell {
+                padding: 8px 12px;
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .enhanced-header {
+                padding: 8px 10px;
+            }
+
+            .search-container {
+                min-width: 200px;
+                margin: 8px 0;
+            }
+
+
+            .header-actions {
+                gap: 8px;
             }
         }
         
@@ -917,6 +1352,21 @@
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
 </head>
 <body>
+    <!-- Global Search Results Portal -->
+    <div id="globalSearchResultsPortal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999999; pointer-events: none;">
+        <div id="globalSearchResults" style="position: absolute; z-index: 9999999; pointer-events: auto;">
+            <div id="searchResultsContent">
+                <!-- Dynamic content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- User Dropdown Portal -->
+    <div id="userDropdownPortal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999999; pointer-events: none;">
+        <div id="userDropdownContent" style="position: absolute; z-index: 999999; pointer-events: auto;">
+            <!-- User dropdown content will be dynamically inserted here -->
+        </div>
+    </div>
     @guest
         <!-- Guest layout (login/register pages) -->
         <div id="app">
@@ -1225,50 +1675,143 @@
                 
                 <!-- Main content -->
                 <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
-                    <!-- Top navbar -->
-                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                        <h1 class="h2">@yield('page-title', 'Dashboard')</h1>
-                        
-                        <!-- Enhanced Global Search -->
-                        <div class="flex-grow-1 mx-3">
-                            <div class="global-search-container">
-                                <form action="{{ route('search.results') }}" method="GET" id="globalSearchForm">
-                                    <div class="position-relative">
-                                        <i class="fas fa-search search-icon"></i>
-                                        <input type="text" 
-                                               class="form-control" 
-                                               id="globalSearchInput"
-                                               name="q"
-                                               placeholder="Search across all modules..."
-                                               autocomplete="off">
-                                        <button class="btn btn-link" type="button" id="clearGlobalSearch" style="display: none;">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    </div>
-                                </form>
-                                
-                                <!-- Enhanced Search Results Dropdown -->
-                                <div id="globalSearchResults" class="position-absolute w-100" style="top: 100%; z-index: 1050; display: none; margin-top: 8px;">
-                                    <div id="searchResultsContent">
-                                        <!-- Dynamic content will be loaded here -->
-                                    </div>
+                    <!-- Enhanced Top Header -->
+                    <div class="enhanced-header">
+                        <!-- Top Header Row with Breadcrumbs, Search, and User -->
+                        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-1 pb-1 mb-1" style="position: relative;">
+                            <!-- Breadcrumb Navigation -->
+                            <div class="breadcrumb-section">
+                                <nav aria-label="breadcrumb">
+                                    <ol class="breadcrumb">
+                                        <li class="breadcrumb-item">
+                                            <a href="{{ route('dashboard') }}">
+                                                <i class="fas fa-home"></i>
+                                            </a>
+                                        </li>
+                                        @php
+                                            $currentRoute = request()->route()->getName();
+                                            $routeSegments = explode('.', $currentRoute);
+                                            $breadcrumbs = [];
+                                            
+                                            // Build breadcrumbs based on route
+                                            if ($currentRoute === 'dashboard') {
+                                                // Dashboard - no additional breadcrumbs
+                                            } elseif (isset($routeSegments[0]) && in_array($routeSegments[0], ['assets', 'users', 'asset-categories', 'departments', 'vendors', 'monitors', 'computers', 'printers', 'peripherals', 'asset-assignments', 'asset-assignment-confirmations', 'maintenance', 'disposal', 'transfers', 'accountability'])) {
+                                                $moduleName = ucfirst(str_replace('-', ' ', $routeSegments[0]));
+                                                
+                                                // Add module index breadcrumb
+                                                try {
+                                                    $moduleUrl = route($routeSegments[0] . '.index');
+                                                    $breadcrumbs[] = [
+                                                        'title' => $moduleName,
+                                                        'url' => $moduleUrl,
+                                                        'active' => false
+                                                    ];
+                                                } catch (Exception $e) {
+                                                    $breadcrumbs[] = [
+                                                        'title' => $moduleName,
+                                                        'url' => null,
+                                                        'active' => false
+                                                    ];
+                                                }
+                                                
+                                                // Add specific page breadcrumb
+                                                if (count($routeSegments) > 1) {
+                                                    $action = $routeSegments[1];
+                                                    $actionTitle = ucfirst($action);
+                                                    
+                                                    if ($action === 'create') {
+                                                        $breadcrumbs[] = [
+                                                            'title' => 'Add ' . substr($moduleName, 0, -1),
+                                                            'url' => null,
+                                                            'active' => true
+                                                        ];
+                                                    } elseif ($action === 'edit') {
+                                                        $breadcrumbs[] = [
+                                                            'title' => 'Edit ' . substr($moduleName, 0, -1),
+                                                            'url' => null,
+                                                            'active' => true
+                                                        ];
+                                                    } elseif ($action === 'show') {
+                                                        $breadcrumbs[] = [
+                                                            'title' => 'View ' . substr($moduleName, 0, -1),
+                                                            'url' => null,
+                                                            'active' => true
+                                                        ];
+                                                    } else {
+                                                        $breadcrumbs[] = [
+                                                            'title' => $actionTitle,
+                                                            'url' => null,
+                                                            'active' => true
+                                                        ];
+                                                    }
+                                                } else {
+                                                    if (!empty($breadcrumbs)) {
+                                                        $breadcrumbs[0]['active'] = true;
+                                                    }
+                                                }
+                                            } else {
+                                                // Fallback for other routes
+                                                $pageTitle = 'Page';
+                                                if (isset($routeSegments[0])) {
+                                                    $pageTitle = ucfirst(str_replace('-', ' ', $routeSegments[0]));
+                                                }
+                                                $breadcrumbs[] = [
+                                                    'title' => $pageTitle,
+                                                    'url' => null,
+                                                    'active' => true
+                                                ];
+                                            }
+                                        @endphp
+                                        
+                                        @foreach($breadcrumbs as $breadcrumb)
+                                            <li class="breadcrumb-item {{ $breadcrumb['active'] ? 'active' : '' }}" {{ $breadcrumb['active'] ? 'aria-current="page"' : '' }}>
+                                                @if($breadcrumb['url'])
+                                                    <a href="{{ $breadcrumb['url'] }}">{{ $breadcrumb['title'] }}</a>
+                                                @else
+                                                    {{ $breadcrumb['title'] }}
+                                                @endif
+                                            </li>
+                                        @endforeach
+                                    </ol>
+                                </nav>
+                            </div>
+                            
+                            <!-- Enhanced Global Search (Centered) -->
+                            <div class="search-container d-flex justify-content-center">
+                                <div class="global-search-container">
+                                    <form action="{{ route('search.results') }}" method="GET" id="globalSearchForm">
+                                        <div class="position-relative">
+                                            <i class="fas fa-search search-icon"></i>
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   id="globalSearchInput"
+                                                   name="q"
+                                                   placeholder="Search"
+                                                   autocomplete="off">
+                                            <button class="btn btn-link" type="button" id="clearGlobalSearch" style="display: none;">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                            <div class="search-shortcut-hint">
+                                                <kbd>Ctrl</kbd> + <kbd>K</kbd>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    
+                                    <!-- Search Results will be dynamically inserted here -->
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="btn-toolbar mb-2 mb-md-0">
-                            <div class="btn-group me-2">
-                                @yield('page-actions')
-                            </div>
-                            <div class="d-flex align-items-center">
-                                <!-- Notification Bell - Only visible to IT Department -->
+                            
+                            <!-- Header Actions -->
+                            <div class="header-actions d-flex align-items-center">
+                                <!-- Enhanced Notification Bell -->
                                 @if(auth()->user()->department && auth()->user()->department->name === 'Information Technology')
                                 <div class="dropdown me-3">
-                                    <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="notificationBell">
-                                        <i class="fas fa-bell" style="font-size: 1.2rem; color: #6c757d;"></i>
-                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationCount" style="display: none; font-size: 0.7rem;">0</span>
+                                    <a class="nav-link position-relative notification-bell" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="notificationBell">
+                                        <i class="fas fa-bell"></i>
+                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge" id="notificationCount" style="display: none;">0</span>
                                     </a>
-                                    <div class="dropdown-menu dropdown-menu-end" style="width: 350px; max-height: 400px; overflow-y: auto;" id="notificationDropdown">
+                                    <div class="dropdown-menu dropdown-menu-end notification-dropdown" id="notificationDropdown">
                                         <div class="dropdown-header d-flex justify-content-between align-items-center">
                                             <span>Notifications</span>
                                             <button class="btn btn-sm btn-link text-primary p-0" id="markAllRead" style="display: none;">Mark all read</button>
@@ -1282,24 +1825,17 @@
                                 </div>
                                 @endif
                                 
-                                <!-- User Dropdown -->
-                                <div class="dropdown">
-                                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
-                                        <i class="fas fa-user"></i> {{ Auth::user()->first_name ?? Auth::user()->name ?? 'User' }}
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-end" style="z-index:1060;">
-                                        <li><a class="dropdown-item" href="{{ route('password.edit') }}">Change Password</a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li>
-                                            <a class="dropdown-item" href="{{ route('logout') }}"
-                                               onclick="event.preventDefault(); document.getElementById('logout-form-2').submit();">
-                                                Logout
-                                            </a>
-                                            <form id="logout-form-2" action="{{ route('logout') }}" method="POST" class="d-none">
-                                                @csrf
-                                            </form>
-                                        </li>
-                                    </ul>
+                                <!-- Enhanced User Dropdown -->
+                                <div class="user-dropdown-container">
+                                    <div class="user-dropdown-btn" id="userDropdownBtn">
+                                        <div class="user-avatar">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                        <div class="user-info">
+                                            <div class="user-name">{{ Auth::user()->first_name ?? Auth::user()->name ?? 'User' }}</div>
+                                        </div>
+                                        <i class="fas fa-chevron-down ms-1"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -2118,24 +2654,198 @@
         });
     </script>
     
-    <!-- Global Search JavaScript -->
+    <!-- Enhanced Header JavaScript -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Global Search functionality
             const searchInput = document.getElementById('globalSearchInput');
+            const searchResultsPortal = document.getElementById('globalSearchResultsPortal');
             const searchResults = document.getElementById('globalSearchResults');
             const searchResultsContent = document.getElementById('searchResultsContent');
             const clearButton = document.getElementById('clearGlobalSearch');
             let searchTimeout;
 
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Ctrl+K or Cmd+K for search focus
+                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                    e.preventDefault();
+                    searchInput.focus();
+                    searchInput.select();
+                }
+                
+                // Escape to close search results
+                if (e.key === 'Escape') {
+                    hideSearchResults();
+                    searchInput.blur();
+                }
+            });
+
+            // Show user profile function
+            window.showUserProfile = function() {
+                // Placeholder for user profile modal
+                alert('User profile editing feature coming soon!');
+            };
+
+            // User dropdown functionality
+            const userDropdownBtn = document.getElementById('userDropdownBtn');
+            const userDropdownPortal = document.getElementById('userDropdownPortal');
+            const userDropdownContent = document.getElementById('userDropdownContent');
+            let userDropdownOpen = false;
+
+            if (userDropdownBtn) {
+                // User dropdown click handler
+                userDropdownBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    console.log('User dropdown clicked, current state:', userDropdownOpen);
+                    
+                    if (userDropdownOpen) {
+                        hideUserDropdown();
+                    } else {
+                        showUserDropdown();
+                    }
+                });
+
+                // Hide user dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (userDropdownOpen) {
+                        const isInsideDropdown = e.target.closest('.user-dropdown-menu-container');
+                        const isInsideButton = e.target.closest('#userDropdownBtn');
+                        
+                        if (!isInsideDropdown && !isInsideButton) {
+                            console.log('Clicking outside, hiding dropdown');
+                            hideUserDropdown();
+                        }
+                    }
+                });
+
+                // Prevent dropdown from closing when clicking inside it
+                document.addEventListener('click', function(e) {
+                    if (e.target.closest('.user-dropdown-menu-container')) {
+                        console.log('Clicking inside dropdown, preventing close');
+                        e.stopPropagation();
+                    }
+                });
+
+                // Show user dropdown
+                function showUserDropdown() {
+                    console.log('Showing user dropdown...');
+                    const userDropdownBtnRect = userDropdownBtn.getBoundingClientRect();
+                    console.log('Button rect:', userDropdownBtnRect);
+                    
+                    // Create dropdown content
+                    const dropdownHTML = `
+                        <div class="dropdown-menu dropdown-menu-end user-dropdown-menu" style="display: block; position: absolute; top: 0; right: 0; z-index: 9999; min-width: 280px;">
+                            <div class="dropdown-header">
+                                <div class="user-profile-header">
+                                    <div class="user-avatar-large">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="user-details">
+                                        <div class="user-name-large">{{ Auth::user()->first_name ?? Auth::user()->name ?? 'User' }}</div>
+                                        <div class="user-email">{{ Auth::user()->email }}</div>
+                                        <div class="user-role-badge">{{ Auth::user()->roles->first()->name ?? 'User' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="{{ route('password.edit') }}">
+                                <i class="fas fa-key me-2"></i>Change Password
+                            </a>
+                            <a class="dropdown-item" href="#" onclick="showUserProfile()">
+                                <i class="fas fa-user-edit me-2"></i>Edit Profile
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item text-danger" href="{{ route('logout') }}"
+                               onclick="event.preventDefault(); document.getElementById('logout-form-2').submit();">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a>
+                            <form id="logout-form-2" action="{{ route('logout') }}" method="POST" class="d-none">
+                                @csrf
+                            </form>
+                        </div>
+                    `;
+                    
+                    // Create and position the dropdown
+                    const existingDropdown = document.querySelector('.user-dropdown-menu');
+                    if (existingDropdown) {
+                        existingDropdown.remove();
+                    }
+                    
+                    // Create a container div
+                    const dropdownContainer = document.createElement('div');
+                    dropdownContainer.style.position = 'fixed';
+                    // Position below the button (top edge of dropdown = bottom edge of button)
+                    dropdownContainer.style.top = (userDropdownBtnRect.bottom + window.scrollY + 8) + 'px';
+                    // Align right edge with button's right edge (right-aligned)
+                    dropdownContainer.style.right = (window.innerWidth - userDropdownBtnRect.right - window.scrollX) + 'px';
+                    dropdownContainer.style.zIndex = '99999';
+                    dropdownContainer.innerHTML = dropdownHTML;
+                    dropdownContainer.className = 'user-dropdown-menu-container';
+                    
+                    document.body.appendChild(dropdownContainer);
+                    userDropdownOpen = true;
+                    
+                    console.log('Dropdown created and appended to body');
+                }
+
+                // Hide user dropdown
+                function hideUserDropdown() {
+                    console.log('Hiding user dropdown...');
+                    const existingDropdown = document.querySelector('.user-dropdown-menu-container');
+                    if (existingDropdown) {
+                        existingDropdown.remove();
+                    }
+                    userDropdownOpen = false;
+                    
+                    // Debug: Check if button is still visible
+                    const button = document.getElementById('userDropdownBtn');
+                    if (button) {
+                        console.log('Button still exists:', button.offsetWidth > 0 && button.offsetHeight > 0);
+                        console.log('Button display:', window.getComputedStyle(button).display);
+                        console.log('Button visibility:', window.getComputedStyle(button).visibility);
+                    } else {
+                        console.log('Button element not found!');
+                    }
+                }
+
+                // Update position on scroll and resize
+                window.addEventListener('scroll', function() {
+                    if (userDropdownOpen) {
+                        showUserDropdown(); // Recalculate position
+                    }
+                });
+
+                window.addEventListener('resize', function() {
+                    if (userDropdownOpen) {
+                        showUserDropdown(); // Recalculate position
+                    }
+                });
+            }
+
             // Search input event listener
             searchInput.addEventListener('input', function() {
                 const query = this.value.trim();
+                const shortcutHint = document.querySelector('.search-shortcut-hint');
                 
-                // Show/hide clear button
+                // Show/hide clear button and shortcut hint
                 if (query.length > 0) {
                     clearButton.style.display = 'block';
+                    if (shortcutHint) {
+                        shortcutHint.style.display = 'none';
+                    }
                 } else {
                     clearButton.style.display = 'none';
+                    if (shortcutHint) {
+                        shortcutHint.style.display = 'block';
+                    }
+                }
+                
+                // Update position if dropdown is visible
+                if (searchResultsPortal && searchResultsPortal.style.display === 'block') {
+                    updateSearchResultsPosition();
                 }
                 
                 // Clear previous timeout
@@ -2159,14 +2869,31 @@
             clearButton.addEventListener('click', function() {
                 searchInput.value = '';
                 clearButton.style.display = 'none';
+                const shortcutHint = document.querySelector('.search-shortcut-hint');
+                if (shortcutHint) {
+                    shortcutHint.style.display = 'block';
+                }
                 hideSearchResults();
                 searchInput.focus();
             });
 
             // Hide search results when clicking outside
             document.addEventListener('click', function(e) {
-                if (!e.target.closest('.position-relative')) {
+                if (!e.target.closest('.global-search-container') && !e.target.closest('#globalSearchResultsPortal')) {
                     hideSearchResults();
+                }
+            });
+
+            // Update search results position on scroll and resize
+            window.addEventListener('scroll', function() {
+                if (searchResultsPortal && searchResultsPortal.style.display === 'block') {
+                    updateSearchResultsPosition();
+                }
+            });
+
+            window.addEventListener('resize', function() {
+                if (searchResultsPortal && searchResultsPortal.style.display === 'block') {
+                    updateSearchResultsPosition();
                 }
             });
 
@@ -2182,25 +2909,47 @@
 
             // Show search results dropdown
             function showSearchResults() {
-                searchResults.style.display = 'block';
+                if (searchResultsPortal && searchResults) {
+                    updateSearchResultsPosition();
+                    searchResultsPortal.style.display = 'block';
+                }
+            }
+
+            // Update search results position
+            function updateSearchResultsPosition() {
+                if (searchResultsPortal && searchResults && searchInput) {
+                    const searchInputRect = searchInput.getBoundingClientRect();
+                    searchResults.style.top = (searchInputRect.bottom + window.scrollY + 8) + 'px';
+                    searchResults.style.left = (searchInputRect.left + window.scrollX) + 'px';
+                    searchResults.style.width = searchInputRect.width + 'px';
+                }
             }
 
             // Hide search results dropdown
             function hideSearchResults() {
-                searchResults.style.display = 'none';
+                if (searchResultsPortal) {
+                    searchResultsPortal.style.display = 'none';
+                }
             }
 
             // Perform AJAX search
             function performSearch(query) {
+                console.log('Performing search for:', query);
+                
                 fetch(`/search?q=${encodeURIComponent(query)}`, {
                     method: 'GET',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
                         'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                     }
                 })
-                .then(response => response.json())
+                .then(response => {
+                    console.log('Search response status:', response.status);
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('Search response data:', data);
                     if (data.success) {
                         displaySearchResults(data.results);
                         showSearchResults();
