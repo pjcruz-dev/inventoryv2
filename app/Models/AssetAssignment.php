@@ -32,7 +32,8 @@ class AssetAssignment extends Model
         'signed_form_description',
         'signed_form_email_subject',
         'signed_form_email_sent',
-        'signed_form_email_sent_at'
+        'signed_form_email_sent_at',
+        'signed_form_email_count'
     ];
 
     protected $casts = [

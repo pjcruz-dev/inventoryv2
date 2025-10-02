@@ -9,6 +9,7 @@ use App\Models\AssetAssignment;
 use App\Models\AssetAssignmentConfirmation;
 use App\Models\AssetTimeline;
 use App\Models\Log;
+use App\Models\BulkUploadSession;
 use Carbon\Carbon;
 
 class AccountabilityFormController extends Controller
@@ -538,5 +539,623 @@ class AccountabilityFormController extends Controller
         }
 
         return response()->download($filePath, "signed_accountability_form_{$asset->asset_tag}.pdf");
+    }
+
+    /**
+     * Show bulk upload form
+     */
+    public function showBulkUpload()
+    {
+        // Get all assets with assigned users that don't have signed forms yet
+        $assets = Asset::whereNotNull('assigned_to')
+            ->where('status', 'Active')
+            ->whereDoesntHave('currentAssignment', function($query) {
+                $query->whereNotNull('signed_form_path');
+            })
+            ->with(['assignedUser', 'category', 'vendor'])
+            ->orderBy('asset_tag')
+            ->get();
+
+        return view('accountability.bulk-upload', compact('assets'));
+    }
+
+    /**
+     * Handle bulk upload of signed forms
+     */
+    public function bulkUpload(Request $request)
+    {
+        // Debug: Log the request data
+        \Log::info('Bulk upload request data:', [
+            'signed_forms_count' => $request->hasFile('signed_forms') ? count($request->file('signed_forms')) : 0,
+            'asset_ids' => $request->input('asset_ids', []),
+            'all_input' => $request->all()
+        ]);
+
+        try {
+            $request->validate([
+                'signed_forms' => 'required|array|min:1',
+                'signed_forms.*' => 'required|file|mimes:pdf|max:10240', // 10MB max per file
+                'asset_ids' => 'required|array|min:1',
+                'asset_ids.*' => 'required|exists:assets,id',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Bulk upload validation failed:', [
+                'errors' => $e->errors(),
+                'input' => $request->all()
+            ]);
+            throw $e;
+        }
+
+        $uploadedCount = 0;
+        $errors = [];
+
+        foreach ($request->file('signed_forms') as $index => $file) {
+            $assetId = $request->asset_ids[$index] ?? null;
+            
+            \Log::info("Processing file {$index}:", [
+                'filename' => $file->getClientOriginalName(),
+                'asset_id' => $assetId,
+                'file_size' => $file->getSize(),
+                'file_mime' => $file->getMimeType()
+            ]);
+            
+            if (!$assetId) {
+                $errors[] = "No asset ID provided for file: {$file->getClientOriginalName()}";
+                continue;
+            }
+
+            try {
+                $asset = Asset::findOrFail($assetId);
+                $assignment = $asset->currentAssignment;
+
+                if (!$assignment) {
+                    $errors[] = "No active assignment found for asset: {$asset->asset_tag}";
+                    continue;
+                }
+
+                // Generate unique filename
+                $timestamp = time() + $index; // Add index to ensure uniqueness
+                $filename = $asset->asset_tag . '_' . $timestamp . '.pdf';
+                $filePath = 'signed_forms/' . $filename;
+
+                \Log::info("Storing file:", [
+                    'filename' => $filename,
+                    'filepath' => $filePath,
+                    'storage_path' => 'public/signed_forms'
+                ]);
+
+                // Store file
+                $storedPath = $file->storeAs('public/signed_forms', $filename);
+                
+                \Log::info("File stored successfully:", [
+                    'stored_path' => $storedPath,
+                    'file_exists' => file_exists(storage_path('app/' . $storedPath))
+                ]);
+
+                // Update assignment with signed form path
+                $assignment->update([
+                    'signed_form_path' => $filePath,
+                    'signed_form_uploaded_at' => now(),
+                ]);
+
+                $uploadedCount++;
+
+                // Log the upload action
+                Log::create([
+                    'asset_id' => $assetId,
+                    'user_id' => auth()->id() ?: 1,
+                    'category' => 'Accountability',
+                    'event_type' => 'bulk_signed_form_uploaded',
+                    'description' => 'Bulk signed form uploaded',
+                    'remarks' => "Bulk signed form for asset {$asset->asset_tag} uploaded successfully",
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent(),
+                ]);
+
+            } catch (\Exception $e) {
+                $errors[] = "Error uploading {$file->getClientOriginalName()}: " . $e->getMessage();
+            }
+        }
+
+        \Log::info("Bulk upload completed:", [
+            'uploaded_count' => $uploadedCount,
+            'errors' => $errors,
+            'total_files' => count($request->file('signed_forms'))
+        ]);
+
+        if ($uploadedCount > 0) {
+            $message = "Successfully uploaded {$uploadedCount} signed form(s).";
+            if (!empty($errors)) {
+                $message .= " Errors: " . implode('; ', $errors);
+            }
+            return redirect()->back()->with('success', $message);
+        } else {
+            return redirect()->back()->with('error', 'No files were uploaded. Errors: ' . implode('; ', $errors));
+        }
+    }
+
+    /**
+     * Show bulk email form
+     */
+    public function showBulkEmail()
+    {
+        // Get all assets with signed forms (using 'Active' status instead of 'Assigned')
+        $assets = Asset::whereNotNull('assigned_to')
+            ->where('status', 'Active')
+            ->whereHas('currentAssignment', function($query) {
+                $query->whereNotNull('signed_form_path');
+            })
+            ->with(['assignedUser', 'category', 'vendor', 'currentAssignment'])
+            ->orderBy('asset_tag')
+            ->get();
+
+        // Generate default values
+        $defaultRecipients = $assets->pluck('assignedUser.email')->unique()->filter()->implode(', ');
+        $defaultSubject = 'Asset Accountability Forms - Confirmed & Signed';
+
+        return view('accountability.bulk-email', compact('assets', 'defaultRecipients', 'defaultSubject'));
+    }
+
+    /**
+     * Generate bulk email description
+     */
+    private function generateBulkEmailDescription($assets)
+    {
+        $assetCount = $assets->count();
+        $assetTags = $assets->pluck('asset_tag')->implode(', ');
+        
+        $description = "Dear Employee,\n\n";
+        $description .= "This is to confirm that {$assetCount} signed accountability form(s) have been successfully processed and are now available for your records.\n\n";
+        $description .= "Asset Details:\n";
+        $description .= "• Asset Tags: {$assetTags}\n";
+        $description .= "• Total Assets: {$assetCount}\n\n";
+        $description .= "The signed forms are attached to this email. Please keep these documents in a secure location for your records.\n\n";
+        $description .= "If you have any questions about these asset assignments, please contact your IT department.\n\n";
+        $description .= "Best regards,\n";
+        $description .= "IT Asset Management Team";
+
+        return $description;
+    }
+
+    private function generatePersonalizedBulkEmailDescription($userAssets, $user)
+    {
+        $assetCount = $userAssets->count();
+        $assetTags = $userAssets->pluck('asset_tag')->implode(', ');
+        $userName = $user->first_name . ' ' . $user->last_name;
+        
+        $description = "Dear {$userName},\n\n";
+        $description .= "This is to confirm that {$assetCount} signed accountability form(s) have been successfully processed and are now available for your records.\n\n";
+        $description .= "Your Asset Details:\n";
+        $description .= "• Asset Tags: {$assetTags}\n";
+        $description .= "• Total Assets: {$assetCount}\n\n";
+        $description .= "The signed forms are attached to this email. Please keep these documents in a secure location for your records.\n\n";
+        $description .= "If you have any questions about these asset assignments, please contact your IT department.\n\n";
+        $description .= "Best regards,\n";
+        $description .= "IT Asset Management Team";
+
+        return $description;
+    }
+
+    /**
+     * Handle bulk email sending
+     */
+    public function bulkSendEmail(Request $request)
+    {
+        // Debug: Log the incoming request
+        \Log::info('Bulk email request received', [
+            'selected_assets' => $request->selected_assets,
+            'recipients' => $request->recipients,
+            'subject' => $request->subject
+        ]);
+
+        $request->validate([
+            'selected_assets' => 'required|array|min:1',
+            'selected_assets.*' => 'exists:assets,id',
+            'recipients' => 'required|string',
+            'subject' => 'nullable|string|max:255',
+        ]);
+
+        // Convert comma-separated recipients string to array
+        $recipientsString = $request->input('recipients');
+        $recipients = array_map('trim', explode(',', $recipientsString));
+        $recipients = array_filter($recipients); // Remove empty values
+        
+        // Validate recipients
+        if (empty($recipients)) {
+            return redirect()->back()->with('error', 'At least one recipient email is required.');
+        }
+        
+        // Validate each email
+        foreach ($recipients as $email) {
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return redirect()->back()->with('error', "Invalid email address: {$email}");
+            }
+        }
+
+        $sentCount = 0;
+        $errors = [];
+
+        // Get all selected assets with their assignments
+        $selectedAssets = Asset::whereIn('id', $request->selected_assets)
+            ->with(['assignedUser', 'currentAssignment'])
+            ->get();
+
+        // Debug logging for selected assets
+        \Log::info('Selected assets for bulk email', [
+            'selected_asset_ids' => $request->selected_assets,
+            'selected_assets_count' => $selectedAssets->count(),
+            'selected_assets' => $selectedAssets->map(function($asset) {
+                return [
+                    'id' => $asset->id,
+                    'asset_tag' => $asset->asset_tag,
+                    'assigned_to' => $asset->assigned_to,
+                    'has_current_assignment' => $asset->currentAssignment ? true : false,
+                    'signed_form_path' => $asset->currentAssignment ? $asset->currentAssignment->signed_form_path : null
+                ];
+            })->toArray()
+        ]);
+
+        // Filter assets that have signed forms
+        $assetsWithForms = $selectedAssets->filter(function($asset) {
+            return $asset->currentAssignment && $asset->currentAssignment->signed_form_path;
+        });
+
+        if ($assetsWithForms->isEmpty()) {
+            return redirect()->back()->with('error', 'No assets with signed forms found in the selected assets.');
+        }
+
+        // Send personalized email per recipient with only their assigned assets
+        foreach ($recipients as $recipient) {
+            try {
+                // Find user by email to get their assigned assets
+                $user = \App\Models\User::where('email', $recipient)->first();
+                
+                if (!$user) {
+                    $errors[] = "User not found for email: {$recipient}";
+                    continue;
+                }
+
+                // Get only assets that were selected AND assigned to this specific user
+                $userAssets = $assetsWithForms->filter(function($asset) use ($user) {
+                    return $asset->assigned_to == $user->id;
+                });
+
+                if ($userAssets->isEmpty()) {
+                    $errors[] = "No assets assigned to user: {$recipient}";
+                    continue;
+                }
+
+                // Generate personalized email content for this user
+                $emailSubject = $request->subject ?: 'Asset Accountability Forms - Confirmed & Signed';
+                
+                // Generate personalized description based on this user's selected assets only
+                $emailDescription = $this->generatePersonalizedBulkEmailDescription($userAssets, $user);
+
+                // Debug logging
+                \Log::info('Sending bulk email', [
+                    'recipient' => $recipient,
+                    'user_assets_count' => $userAssets->count(),
+                    'user_assets' => $userAssets->pluck('asset_tag')->toArray(),
+                    'has_signed_forms' => $userAssets->map(function($asset) {
+                        return [
+                            'asset_tag' => $asset->asset_tag,
+                            'has_assignment' => $asset->currentAssignment ? true : false,
+                            'signed_form_path' => $asset->currentAssignment ? $asset->currentAssignment->signed_form_path : null
+                        ];
+                    })->toArray()
+                ]);
+
+                try {
+                    \Illuminate\Support\Facades\Mail::to($recipient)
+                        ->send(new \App\Mail\BulkSignedAccountabilityFormMail(
+                            $userAssets,
+                            $emailDescription,
+                            $emailSubject
+                        ));
+
+                    $sentCount++;
+                    
+                    // Increment email count for each asset
+                    foreach ($userAssets as $asset) {
+                        if ($asset->currentAssignment) {
+                            $asset->currentAssignment->increment('signed_form_email_count');
+                        }
+                    }
+                    
+                    // Log successful email sending
+                    \Log::info('Email sent successfully', [
+                        'recipient' => $recipient,
+                        'asset_count' => $userAssets->count(),
+                        'assets' => $userAssets->pluck('asset_tag')->toArray()
+                    ]);
+                    
+                } catch (\Exception $mailException) {
+                    \Log::error('Email sending failed', [
+                        'recipient' => $recipient,
+                        'error' => $mailException->getMessage(),
+                        'trace' => $mailException->getTraceAsString()
+                    ]);
+                    $errors[] = "Failed to send email to {$recipient}: " . $mailException->getMessage();
+                }
+
+                // Log the email action
+                Log::create([
+                    'asset_id' => null, // Bulk email, no specific asset
+                    'user_id' => auth()->id() ?: 1,
+                    'category' => 'Accountability',
+                    'event_type' => 'bulk_signed_form_email_sent',
+                    'description' => 'Bulk signed form email sent',
+                    'remarks' => "Bulk signed form email for " . $userAssets->count() . " assets sent to: {$recipient}",
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent(),
+                ]);
+
+            } catch (\Exception $e) {
+                $errors[] = "Error sending email to {$recipient}: " . $e->getMessage();
+            }
+        }
+
+        if ($sentCount > 0) {
+            $message = "Successfully sent personalized bulk emails to {$sentCount} recipient(s). Each recipient received only their assigned assets.";
+            if (!empty($errors)) {
+                $message .= " Errors: " . implode('; ', $errors);
+            }
+            return redirect()->back()->with('success', $message);
+        } else {
+            return redirect()->back()->with('error', 'No emails were sent. Errors: ' . implode('; ', $errors));
+        }
+    }
+
+    /**
+     * Generate email description for assignment
+     */
+    private function generateEmailDescription($assignment)
+    {
+        $asset = $assignment->asset;
+        $user = $assignment->assignedUser;
+
+        return "Dear Employee,\n\n" .
+               "This is to confirm that the signed accountability form for asset {$asset->asset_tag} has been successfully processed and is now available for your records.\n\n" .
+               "Asset Details:\n" .
+               "• Asset Tag: {$asset->asset_tag}\n" .
+               "• Asset Name: {$asset->name}\n" .
+               "• Assigned To: {$user->first_name} {$user->last_name}\n" .
+               "• Assigned Date: " . ($assignment->assigned_at ? $assignment->assigned_at->format('F d, Y') : 'Not specified') . "\n\n" .
+               "The signed form is attached to this email. Please keep this document in a secure location for your records.\n\n" .
+               "If you have any questions about this asset assignment, please contact your IT department.\n\n" .
+               "Best regards,\n" .
+               "IT Asset Management Team";
+    }
+
+    /**
+     * Start a new bulk upload session
+     */
+    public function startBulkUploadSession(Request $request)
+    {
+        $request->validate([
+            'asset_ids' => 'required|array|min:1',
+            'asset_ids.*' => 'exists:assets,id',
+        ]);
+
+        $session = BulkUploadSession::createSession(
+            $request->asset_ids,
+            auth()->id()
+        );
+
+        return response()->json([
+            'success' => true,
+            'session_id' => $session->session_id,
+            'total_files' => $session->total_files,
+            'uploaded_count' => $session->uploaded_count,
+            'progress_percentage' => $session->getProgressPercentage(),
+        ]);
+    }
+
+    /**
+     * Upload files to an existing session
+     */
+    public function uploadToSession(Request $request, $sessionId)
+    {
+        try {
+            // Debug file properties
+            $fileDebug = [];
+            if ($request->hasFile('files')) {
+                foreach ($request->file('files') as $index => $file) {
+                    $fileDebug[] = [
+                        'index' => $index,
+                        'original_name' => $file->getClientOriginalName(),
+                        'mime_type' => $file->getMimeType(),
+                        'extension' => $file->getClientOriginalExtension(),
+                        'size' => $file->getSize(),
+                        'is_valid' => $file->isValid(),
+                        'error' => $file->getError()
+                    ];
+                }
+            }
+
+            \Log::info('Upload to session called', [
+                'session_id' => $sessionId,
+                'user_id' => auth()->id(),
+                'files_count' => $request->hasFile('files') ? count($request->file('files')) : 0,
+                'file_debug' => $fileDebug
+            ]);
+
+            $session = BulkUploadSession::where('session_id', $sessionId)
+                ->where('user_id', auth()->id())
+                ->firstOrFail();
+
+        if ($session->isCompleted()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This upload session is already completed.',
+            ], 400);
+        }
+
+        $request->validate([
+            'files' => 'required|array|min:1',
+            'files.*' => 'required|file|max:10240', // Temporarily removed mimes:pdf to debug
+            'asset_indices' => 'required|array|min:1',
+            'asset_indices.*' => 'integer|min:0|max:' . (count($session->asset_ids) - 1),
+        ]);
+
+        $uploadedCount = 0;
+        $errors = [];
+
+        foreach ($request->file('files') as $index => $file) {
+            $assetIndex = $request->asset_indices[$index] ?? null;
+            
+            if ($assetIndex === null || !isset($session->asset_ids[$assetIndex])) {
+                $errors[] = "Invalid asset index for file: {$file->getClientOriginalName()}";
+                continue;
+            }
+
+            $assetId = $session->asset_ids[$assetIndex];
+            
+            // Check if this asset already has a file uploaded
+            $alreadyUploaded = collect($session->uploaded_files)
+                ->pluck('asset_id')
+                ->contains($assetId);
+
+            if ($alreadyUploaded) {
+                $errors[] = "File already uploaded for asset index {$assetIndex}";
+                continue;
+            }
+
+            try {
+                $asset = Asset::findOrFail($assetId);
+                $assignment = $asset->currentAssignment;
+
+                if (!$assignment) {
+                    $errors[] = "No active assignment found for asset: {$asset->asset_tag}";
+                    continue;
+                }
+
+                // Generate unique filename
+                $timestamp = time() + $index;
+                $filename = $asset->asset_tag . '_' . $timestamp . '.pdf';
+                $filePath = 'signed_forms/' . $filename;
+
+                // Store file
+                $file->storeAs('public/signed_forms', $filename);
+
+                // Update assignment with signed form path
+                $assignment->update([
+                    'signed_form_path' => $filePath,
+                    'signed_form_uploaded_at' => now(),
+                ]);
+
+                // Add to session
+                $session->addUploadedFile($assetId, [
+                    'filename' => $filename,
+                    'filepath' => $filePath,
+                    'original_name' => $file->getClientOriginalName(),
+                    'size' => $file->getSize(),
+                ]);
+
+                $uploadedCount++;
+
+                // Log the upload action
+                Log::create([
+                    'asset_id' => $assetId,
+                    'user_id' => auth()->id() ?: 1,
+                    'category' => 'Accountability Form',
+                    'event_type' => 'bulk_upload',
+                    'description' => 'Bulk upload of signed form',
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                    'remarks' => "Bulk upload session: {$sessionId}, File: {$file->getClientOriginalName()}",
+                    'action_details' => [
+                        'session_id' => $sessionId,
+                        'filename' => $filename,
+                        'filepath' => $filePath,
+                        'original_name' => $file->getClientOriginalName(),
+                        'file_size' => $file->getSize(),
+                    ],
+                    'action_timestamp' => now(),
+                ]);
+
+            } catch (\Exception $e) {
+                $errors[] = "Error uploading {$file->getClientOriginalName()}: " . $e->getMessage();
+            }
+        }
+
+        // Refresh session data
+        $session->refresh();
+
+        \Log::info('Upload to session completed', [
+            'session_id' => $sessionId,
+            'uploaded_count' => $uploadedCount,
+            'total_uploaded' => $session->uploaded_count,
+            'errors' => $errors
+        ]);
+
+            return response()->json([
+                'success' => true,
+                'uploaded_count' => $uploadedCount,
+                'total_uploaded' => $session->uploaded_count,
+                'total_files' => $session->total_files,
+                'progress_percentage' => $session->getProgressPercentage(),
+                'is_completed' => $session->isCompleted(),
+                'errors' => $errors,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Upload to session failed', [
+                'session_id' => $sessionId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Upload failed: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get session status
+     */
+    public function getSessionStatus($sessionId)
+    {
+        $session = BulkUploadSession::where('session_id', $sessionId)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
+
+        return response()->json([
+            'success' => true,
+            'session_id' => $session->session_id,
+            'total_files' => $session->total_files,
+            'uploaded_count' => $session->uploaded_count,
+            'progress_percentage' => $session->getProgressPercentage(),
+            'status' => $session->status,
+            'is_completed' => $session->isCompleted(),
+            'uploaded_files' => $session->uploaded_files,
+            'pending_files' => $session->pending_files,
+            'last_activity' => $session->last_activity_at,
+        ]);
+    }
+
+    /**
+     * Resume a bulk upload session
+     */
+    public function resumeBulkUpload($sessionId)
+    {
+        $session = BulkUploadSession::where('session_id', $sessionId)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
+
+        if ($session->isCompleted()) {
+            return redirect()->route('accountability.index')
+                ->with('success', 'This upload session is already completed.');
+        }
+
+        // Get assets for this session
+        $assets = Asset::whereIn('id', $session->asset_ids)
+            ->with(['assignedUser', 'category', 'vendor'])
+            ->orderBy('asset_tag')
+            ->get();
+
+        return view('accountability.bulk-upload-resume', compact('session', 'assets'));
     }
 }

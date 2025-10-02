@@ -20,6 +20,14 @@
                                     <i class="fas fa-layer-group me-1"></i>
                                     Bulk Generate
                                 </button>
+                                <a href="{{ route('accountability.bulk-upload') }}" class="btn btn-light btn-sm" style="color: #667eea;">
+                                    <i class="fas fa-upload me-1"></i>
+                                    Bulk Upload
+                                </a>
+                                <a href="{{ route('accountability.bulk-email') }}" class="btn btn-light btn-sm" style="color: #667eea;">
+                                    <i class="fas fa-paper-plane me-1"></i>
+                                    Bulk Email
+                                </a>
                                 <button type="button" class="btn btn-light btn-sm" onclick="window.print()" style="color: #667eea;">
                                     <i class="fas fa-print me-1"></i>
                                     Print All
@@ -37,7 +45,11 @@
                                         <div class="card bg-success text-white" style="border: none;">
                                             <div class="card-body p-2 text-center">
                                                 <h6 class="mb-1">{{ $assets->where('currentAssignment.signed_form_email_sent', true)->count() }}</h6>
-                                                <small>Emails Sent</small>
+                                                <small>Assets with Emails</small>
+                                                <br>
+                                                <small class="opacity-75">
+                                                    {{ $assets->sum('currentAssignment.signed_form_email_count') }} total emails
+                                                </small>
                                             </div>
                                         </div>
                                     </div>
@@ -213,6 +225,12 @@
                                                     <i class="fas fa-check-circle me-1"></i>
                                                     Email Sent
                                                 </span>
+                                                @if($asset->currentAssignment->signed_form_email_count > 0)
+                                                    <br><small class="text-muted">
+                                                        <i class="fas fa-paper-plane me-1"></i>
+                                                        {{ $asset->currentAssignment->signed_form_email_count }} time(s)
+                                                    </small>
+                                                @endif
                                                 @if($asset->currentAssignment->signed_form_email_sent_at)
                                                     <br><small class="text-muted">{{ $asset->currentAssignment->signed_form_email_sent_at->format('M d, Y H:i') }}</small>
                                                 @endif

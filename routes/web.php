@@ -221,6 +221,18 @@ Route::prefix('accountability')->name('accountability.')->middleware(['auth'])->
         Route::post('/send-signed-form-email/{asset}', [App\Http\Controllers\AccountabilityFormController::class, 'sendSignedFormEmail'])->name('send-signed-form-email')->middleware('check.permission:print_accountability_forms');
         Route::get('/preview-signed-form/{asset}', [App\Http\Controllers\AccountabilityFormController::class, 'previewSignedForm'])->name('preview-signed-form')->middleware('check.permission:print_accountability_forms');
         Route::get('/download-signed-form/{asset}', [App\Http\Controllers\AccountabilityFormController::class, 'downloadSignedForm'])->name('download-signed-form')->middleware('check.permission:print_accountability_forms');
+        
+        // Bulk operations
+        Route::get('/bulk-upload', [App\Http\Controllers\AccountabilityFormController::class, 'showBulkUpload'])->name('bulk-upload')->middleware('check.permission:print_accountability_forms');
+        Route::post('/bulk-upload', [App\Http\Controllers\AccountabilityFormController::class, 'bulkUpload'])->name('bulk-upload.store')->middleware('check.permission:print_accountability_forms');
+        Route::get('/bulk-email', [App\Http\Controllers\AccountabilityFormController::class, 'showBulkEmail'])->name('bulk-email')->middleware('check.permission:print_accountability_forms');
+        Route::post('/bulk-email', [App\Http\Controllers\AccountabilityFormController::class, 'bulkSendEmail'])->name('bulk-email.send')->middleware('check.permission:print_accountability_forms');
+        
+        // Partial upload functionality
+        Route::post('/start-session', [App\Http\Controllers\AccountabilityFormController::class, 'startBulkUploadSession'])->name('start-session')->middleware('check.permission:print_accountability_forms');
+        Route::post('/upload-to-session/{sessionId}', [App\Http\Controllers\AccountabilityFormController::class, 'uploadToSession'])->name('upload-to-session')->middleware('check.permission:print_accountability_forms');
+        Route::get('/session-status/{sessionId}', [App\Http\Controllers\AccountabilityFormController::class, 'getSessionStatus'])->name('session-status')->middleware('check.permission:print_accountability_forms');
+        Route::get('/resume-upload/{sessionId}', [App\Http\Controllers\AccountabilityFormController::class, 'resumeBulkUpload'])->name('resume-upload')->middleware('check.permission:print_accountability_forms');
 });
 
 // Asset Confirmation routes (public - no auth required)
