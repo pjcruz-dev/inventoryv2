@@ -35,7 +35,7 @@
                             <i class="fas fa-search text-primary"></i>
                         </span>
                         <input type="text" name="q" class="form-control" 
-                               placeholder="Search across all modules..." 
+                               placeholder="Search..." 
                                value="{{ $query }}" required>
                         <button class="btn btn-primary" type="submit">
                             <i class="fas fa-search me-1"></i>Search
