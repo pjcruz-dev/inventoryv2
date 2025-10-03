@@ -413,7 +413,7 @@
                                     </div>
                                     <div class="stat-content">
                                         <span class="stat-label">Last updated</span>
-                                        <span class="stat-value">{{ now()->format('M d, Y \a\t g:i A') }}</span>
+                                        <span class="stat-value" id="lastUpdated1">{{ now()->format('M d, Y \a\t g:i A') }}</span>
                                     </div>
                                 </div>
                                 <div class="stat-item" data-aos="fade-up" data-aos-delay="200">
@@ -447,15 +447,15 @@
                                 </div>
                                 <div class="progress-label">
                                     <span class="current">{{ $deployedAssetsPercentage }}%</span>
-                                    <span class="target">Target: 80%</span>
+                                    <span class="target">Target: {{ $deploymentTarget }}%</span>
                                 </div>
                             </div>
                             <div class="deployment-status">
-                                @if($deployedAssetsPercentage >= 80)
+                                @if($deployedAssetsPercentage >= $deploymentTarget)
                                     <span class="status-badge success">
                                         <i class="fas fa-check-circle"></i> Excellent
                                     </span>
-                                @elseif($deployedAssetsPercentage >= 60)
+                                @elseif($deployedAssetsPercentage >= ($deploymentTarget * 0.75))
                                     <span class="status-badge warning">
                                         <i class="fas fa-exclamation-triangle"></i> Good
                                     </span>
@@ -502,7 +502,7 @@
                     </div>
                 </div>
                 <div class="metric-card-body">
-                    <div class="metric-value">{{ number_format($totalAssets) }}</div>
+                    <div class="metric-value" data-stat="total-assets">{{ number_format($totalAssets) }}</div>
                     <div class="metric-label">Total Assets</div>
                     <div class="metric-description">Inventory items tracked</div>
                 </div>
@@ -537,7 +537,7 @@
                     </div>
                 </div>
                 <div class="metric-card-body">
-                    <div class="metric-value">{{ number_format($totalUsers) }}</div>
+                    <div class="metric-value" data-stat="total-users">{{ number_format($totalUsers) }}</div>
                     <div class="metric-label">Active Users</div>
                     <div class="metric-description">System users</div>
                 </div>
@@ -572,7 +572,7 @@
                     </div>
                 </div>
                 <div class="metric-card-body">
-                    <div class="metric-value">{{ number_format($totalDepartments) }}</div>
+                    <div class="metric-value" data-stat="total-departments">{{ number_format($totalDepartments) }}</div>
                     <div class="metric-label">Departments</div>
                     <div class="metric-description">Organizational units</div>
                 </div>
@@ -607,7 +607,7 @@
                     </div>
                 </div>
                 <div class="metric-card-body">
-                    <div class="metric-value">{{ number_format($totalVendors) }}</div>
+                    <div class="metric-value" data-stat="total-vendors">{{ number_format($totalVendors) }}</div>
                     <div class="metric-label">Vendors</div>
                     <div class="metric-description">Supplier partners</div>
                 </div>
@@ -626,348 +626,143 @@
         </div>
     </div>
         
-    <!-- Deployment Status & Recent Assets Row -->
-    <div class="row mb-4">
-        <!-- Deployment Status -->
-        <div class="col-xl-4 col-lg-6 mb-3">
-            <div class="dashboard-card h-100 deployment-status-card">
-                <div class="d-flex align-items-center justify-content-between mb-4">
-                    <div class="d-flex align-items-center">
-                        <div class="deployment-status-icon">
-                            <i class="fas fa-rocket"></i>
-                            </div>
-                        <div>
-                            <h6 class="mb-0 fw-semibold">Deployment Status</h6>
-                            <small class="text-muted">Asset deployment overview</small>
-                        </div>
-                        </div>
-                    <div class="deployment-status-badge {{ $deployedAssetsPercentage >= 80 ? 'high' : ($deployedAssetsPercentage >= 50 ? 'medium' : 'low') }}">
-                        {{ $deployedAssetsPercentage >= 80 ? 'Excellent' : ($deployedAssetsPercentage >= 50 ? 'Good' : 'Needs Attention') }}
-                    </div>
-                </div>
-                
-                <!-- Enhanced Progress Ring -->
-                <div class="deployment-progress-container">
-                    <div class="progress-ring-wrapper">
-                        <svg class="progress-ring" width="140" height="140">
-                            <circle class="progress-ring-bg" stroke="#f1f5f9" stroke-width="12" fill="transparent" r="58" cx="70" cy="70"/>
-                            <circle class="progress-ring-fill" 
-                                    stroke="{{ $deployedAssetsPercentage >= 80 ? '#10b981' : ($deployedAssetsPercentage >= 50 ? '#f59e0b' : '#ef4444') }}" 
-                                    stroke-width="12" fill="transparent" r="58" cx="70" cy="70" 
-                                    stroke-dasharray="{{ (2 * 3.14159 * 58) }}" 
-                                    stroke-dashoffset="{{ (2 * 3.14159 * 58) - (($deployedAssetsPercentage / 100) * (2 * 3.14159 * 58)) }}"
-                                    stroke-linecap="round"
-                                    style="transition: stroke-dashoffset 1s ease-in-out;"/>
-                        </svg>
-                        <div class="progress-ring-content">
-                            <div class="deployment-percentage">{{ $deployedAssetsPercentage }}%</div>
-                            <div class="deployment-label">Deployed</div>
-                            <div class="deployment-trend">
-                                @if($deployedAssetsPercentage >= 80)
-                                    <i class="fas fa-arrow-up text-success"></i>
-                                    <span class="text-success">Optimal</span>
-                                @elseif($deployedAssetsPercentage >= 50)
-                                    <i class="fas fa-minus text-warning"></i>
-                                    <span class="text-warning">Moderate</span>
-                                @else
-                                    <i class="fas fa-arrow-down text-danger"></i>
-                                    <span class="text-danger">Low</span>
-                                @endif
-                </div>
-            </div>
-        </div>
-    </div>
-
-                <!-- Enhanced Stats Grid -->
-                <div class="deployment-stats-grid">
-                    <div class="stat-item deployed">
-                        <div class="stat-icon">
-                            <i class="fas fa-check-circle"></i>
-                </div>
-                        <div class="stat-content">
-                            <div class="stat-number">{{ \App\Models\Asset::whereIn('status', ['deployed', 'active', 'assigned', 'in_use'])->count() }}</div>
-                            <div class="stat-label">Deployed Assets</div>
-                            <div class="stat-change positive">
-                                <i class="fas fa-arrow-up"></i>
-                                <span>Active</span>
-                    </div>
-                    </div>
-                    </div>
-                    <div class="stat-item pending">
-                        <div class="stat-icon">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-number">{{ $totalAssets - \App\Models\Asset::whereIn('status', ['deployed', 'active', 'assigned', 'in_use'])->count() }}</div>
-                            <div class="stat-label">Pending Assets</div>
-                            <div class="stat-change neutral">
-                                <i class="fas fa-minus"></i>
-                                <span>Waiting</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Action Button -->
-                <div class="deployment-action">
-                    <a href="{{ route('assets.index', ['status' => 'pending']) }}" class="btn btn-outline-primary btn-sm w-100">
-                        <i class="fas fa-tasks me-2"></i>Manage Deployment
-                    </a>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Recent Assets -->
-        <div class="col-xl-8 col-lg-6 mb-3">
-            <div class="dashboard-card h-100 recent-assets-card">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div class="d-flex align-items-center">
-                        <div class="recent-assets-icon">
-                            <i class="fas fa-history"></i>
-                        </div>
-                        <div>
-                            <h6 class="mb-0 fw-semibold">Recent Assets</h6>
-                            <small class="text-muted">Latest asset additions</small>
-                        </div>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <div class="recent-assets-count">
-                            <span class="badge bg-primary">{{ $recentAssets->count() }}</span>
-                            <small class="text-muted ms-1">items</small>
-                        </div>
-                        <a href="{{ route('assets.index') }}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-eye me-1"></i>View All
-                        </a>
-                    </div>
-                </div>
-                
-                <div class="recent-assets-list">
-                    @if($recentAssets->count() > 0)
-                        @foreach($recentAssets as $index => $asset)
-                            <div class="recent-asset-item" data-aos="fade-up" data-aos-delay="{{ $index * 100 }}">
-                                <div class="asset-main-info">
-                                    <div class="asset-icon-wrapper">
-                                        <div class="asset-type-icon {{ strtolower($asset->category->name ?? 'default') }}">
-                                            @php
-                                                $iconMap = [
-                                                    'computer' => 'fas fa-desktop',
-                                                    'monitor' => 'fas fa-tv',
-                                                    'printer' => 'fas fa-print',
-                                                    'phone' => 'fas fa-phone',
-                                                    'tablet' => 'fas fa-tablet-alt',
-                                                    'default' => 'fas fa-box'
-                                                ];
-                                                $categoryName = strtolower($asset->category->name ?? 'default');
-                                                $icon = $iconMap[$categoryName] ?? $iconMap['default'];
-                                            @endphp
-                                            <i class="{{ $icon }}"></i>
-                                                </div>
-                                        <div class="asset-priority-indicator {{ $asset->status === 'problematic' ? 'high' : ($asset->status === 'deployed' ? 'low' : 'medium') }}"></div>
-                                            </div>
-                                    
-                                    <div class="asset-details">
-                                        <div class="asset-header">
-                                            <h6 class="asset-name">{{ $asset->name }}</h6>
-                                            <div class="asset-meta">
-                                                <span class="asset-category">{{ $asset->category->name ?? 'Uncategorized' }}</span>
-                                                <span class="asset-divider">•</span>
-                                                <span class="asset-time">{{ $asset->created_at->diffForHumans() }}</span>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="asset-status-row">
-                                            <div class="asset-status-badge {{ $asset->status === 'deployed' ? 'deployed' : ($asset->status === 'problematic' ? 'problematic' : 'pending') }}">
-                                                <i class="fas fa-circle"></i>
-                                                        {{ ucfirst(str_replace('_', ' ', $asset->status)) }}
-                                                </div>
-                                            
-                                            @if($asset->assignedUser)
-                                                <div class="asset-assignment">
-                                                    <i class="fas fa-user"></i>
-                                                    <span>{{ $asset->assignedUser->first_name ?? 'Unknown User' }}</span>
-                                            </div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="asset-actions">
-                                    <div class="asset-actions-group">
-                                        <a href="{{ route('assets.show', $asset) }}" class="btn btn-outline-primary btn-sm" title="View Details">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                        @if($asset->status !== 'deployed')
-                                            <a href="{{ route('assets.edit', $asset) }}" class="btn btn-outline-secondary btn-sm" title="Edit Asset">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                        @endif
-                                    </div>
-                                    
-                                    <div class="asset-quick-info">
-                                        <small class="text-muted">
-                                            ID: {{ $asset->id }}
-                                        </small>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        
-                        <!-- View More Button -->
-                        @if($recentAssets->count() >= 5)
-                            <div class="recent-assets-footer">
-                                <a href="{{ route('assets.index') }}" class="btn btn-outline-primary btn-sm w-100">
-                                    <i class="fas fa-arrow-right me-2"></i>View All Assets
-                                </a>
-                        </div>
-                        @endif
-                    @else
-                        <div class="recent-assets-empty">
-                            <div class="empty-state-icon">
-                                <i class="fas fa-inbox"></i>
-                            </div>
-                            <h6 class="empty-state-title">No Recent Assets</h6>
-                            <p class="empty-state-description">No assets have been added recently.</p>
-                            <a href="{{ route('assets.create') }}" class="btn btn-primary btn-sm">
-                                <i class="fas fa-plus me-2"></i>Add First Asset
-                            </a>
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
 
 
     <!-- Monthly Analysis Row -->
     <div class="row mb-4">
-        <!-- Monthly Status Overview -->
+        <!-- Asset Performance Dashboard -->
         <div class="col-xl-6 col-lg-12 mb-3">
-            <div class="dashboard-card h-100 monthly-overview-card">
+            <div class="dashboard-card h-100 asset-performance-card">
                 <div class="d-flex align-items-center justify-content-between mb-4">
                     <div class="d-flex align-items-center">
-                        <div class="monthly-overview-icon">
-                            <i class="fas fa-chart-bar"></i>
-                </div>
+                        <div class="asset-performance-icon">
+                            <i class="fas fa-tachometer-alt"></i>
+                        </div>
                         <div>
-                            <h6 class="mb-0 fw-semibold">Monthly Status Overview</h6>
-                            <small class="text-muted">Asset activity breakdown</small>
+                            <h6 class="mb-0 fw-semibold">Asset Performance Dashboard</h6>
+                            <small class="text-muted">Real-time asset insights & alerts</small>
                         </div>
                     </div>
-                    <div class="monthly-filter-group">
-                        <div class="dropdown">
-                            <button class="btn btn-outline-primary btn-sm dropdown-toggle monthly-filter-btn" type="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-calendar-alt me-2"></i>Filter Month
-                            </button>
-                            <ul class="dropdown-menu monthly-filter-menu">
-                                @for($i = 0; $i < 6; $i++)
-                                    @php
-                                        $date = now()->subMonths($i);
-                                        $monthName = $date->format('F Y');
-                                        $isCurrent = $i === 0;
-                                    @endphp
-                                    <li>
-                                        <a class="dropdown-item {{ $isCurrent ? 'active' : '' }}" href="{{ route('dashboard', ['month' => $date->month, 'year' => $date->year]) }}">
-                                            <i class="fas fa-circle me-2 {{ $isCurrent ? 'text-primary' : 'text-muted' }}"></i>
-                                            {{ $monthName }}
-                                        </a>
-                                    </li>
-                                @endfor
-                            </ul>
+                    <div class="performance-controls d-flex gap-2 align-items-center">
+                        <div class="refresh-status" id="refreshStatus">
+                            <i class="fas fa-circle text-success"></i>
+                            <span>Live</span>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
         
-                <div class="monthly-analysis">
-                    @if(!empty($monthlyRollup['months']))
-                        @foreach($monthlyRollup['months'] as $monthName => $data)
-                            @php
-                                $totalForMonth = array_sum(array_column($data, 'count'));
-                            @endphp
-                            <div class="monthly-period-card" data-aos="fade-up" data-aos-delay="{{ $loop->index * 100 }}">
-                                <div class="monthly-period-header">
-                                    <div class="monthly-period-title">
-                                        <h6 class="month-name">{{ $monthName }}</h6>
-                                        <div class="monthly-summary">
-                                            <span class="total-activities">{{ $totalForMonth }} activities</span>
-                                            @if($totalForMonth > 0)
-                                                <span class="activity-trend">
-                                                    @php
-                                                        $deployedCount = $data['deployed']['count'] ?? 0;
-                                                        $problematicCount = $data['problematic']['count'] ?? 0;
-                                                        $healthScore = $totalForMonth > 0 ? round((($deployedCount - $problematicCount) / $totalForMonth) * 100) : 0;
-                                                    @endphp
-                                                    <i class="fas fa-heartbeat me-1"></i>
-                                                    <span class="health-score {{ $healthScore >= 70 ? 'good' : ($healthScore >= 40 ? 'moderate' : 'poor') }}">
-                                                        {{ $healthScore }}% health
-                                                    </span>
-                                                </span>
-                                            @endif
-                </div>
-                </div>
-                                    @if($totalForMonth > 0)
-                                        <div class="monthly-visual-indicator">
-                                            <div class="activity-bar">
-                                                <div class="activity-fill" style="width: {{ min(100, ($totalForMonth / 50) * 100) }}%"></div>
-            </div>
-        </div>
-                                    @endif
-    </div>
-
-                                @if($totalForMonth > 0)
-                                    <div class="monthly-status-grid">
-                                @foreach($monthlyRollup['statuses'] as $status)
-                                    @php
-                                        $statusData = $data[$status] ?? ['count' => 0, 'percentage' => 0];
-                                                $statusConfig = match($status) {
-                                                    'deployed' => ['color' => 'success', 'icon' => 'fas fa-check-circle', 'label' => 'Deployed'],
-                                                    'problematic' => ['color' => 'danger', 'icon' => 'fas fa-exclamation-triangle', 'label' => 'Problematic'],
-                                                    'pending_confirm' => ['color' => 'warning', 'icon' => 'fas fa-clock', 'label' => 'Pending'],
-                                                    'returned' => ['color' => 'info', 'icon' => 'fas fa-undo', 'label' => 'Returned'],
-                                                    'disposed' => ['color' => 'secondary', 'icon' => 'fas fa-trash', 'label' => 'Disposed'],
-                                                    'new_arrived' => ['color' => 'primary', 'icon' => 'fas fa-plus-circle', 'label' => 'New'],
-                                                    default => ['color' => 'light', 'icon' => 'fas fa-question', 'label' => ucfirst(str_replace('_', ' ', $status))]
-                                        };
-                                    @endphp
-                                            @if($statusData['count'] > 0)
-                                                <div class="status-item {{ $statusConfig['color'] }}" data-aos="fade-up" data-aos-delay="{{ $loop->index * 50 }}">
-                                                    <div class="status-icon">
-                                                        <i class="{{ $statusConfig['icon'] }}"></i>
-                                    </div>
-                                                    <div class="status-content">
-                                                        <div class="status-count">{{ $statusData['count'] }}</div>
-                                                        <div class="status-label">{{ $statusConfig['label'] }}</div>
-                                                        <div class="status-percentage">{{ $statusData['percentage'] }}%</div>
-                                    </div>
-                                                    <div class="status-progress">
-                                                        <div class="progress-bar" style="width: {{ $statusData['percentage'] }}%"></div>
-                                                    </div>
-                                                </div>
-                                            @endif
-                                @endforeach
-                                    </div>
-                                @else
-                                    <div class="monthly-empty-state">
-                                        <div class="empty-icon">
-                                            <i class="fas fa-chart-bar"></i>
-                                        </div>
-                                        <h6 class="empty-title">No Activity</h6>
-                                        <p class="empty-description">No asset activities recorded for this month</p>
-                                    </div>
-                                @endif
+                <!-- Performance Metrics Grid -->
+                <div class="performance-metrics-grid">
+                    <!-- Critical Alerts -->
+                    <div class="performance-metric-card critical" data-aos="fade-up" data-aos-delay="100">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i class="fas fa-exclamation-triangle"></i>
                             </div>
-                        @endforeach
-                    @else
-                        <div class="monthly-empty-state">
-                            <div class="empty-icon">
-                                <i class="fas fa-chart-bar"></i>
-                            </div>
-                            <h6 class="empty-title">No Monthly Data</h6>
-                            <p class="empty-description">No monthly activity data available</p>
-                            <a href="{{ route('assets.create') }}" class="btn btn-primary btn-sm">
-                                <i class="fas fa-plus me-2"></i>Add First Asset
+                            <div class="metric-badge urgent">{{ \App\Models\Asset::where('status', 'problematic')->count() }}</div>
+                        </div>
+                        <div class="metric-content">
+                            <h6 class="metric-title">Critical Issues</h6>
+                            <p class="metric-description">Assets requiring immediate attention</p>
+                            <a href="{{ route('assets.index', ['status' => 'problematic']) }}" class="metric-action">
+                                <i class="fas fa-arrow-right"></i>View Issues
                             </a>
                         </div>
-                    @endif
+                    </div>
+
+                    <!-- Maintenance Due -->
+                    <div class="performance-metric-card warning" data-aos="fade-up" data-aos-delay="200">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i class="fas fa-tools"></i>
+                            </div>
+                            <div class="metric-badge warning">{{ \App\Models\Maintenance::where('status', 'Scheduled')->count() }}</div>
+                        </div>
+                        <div class="metric-content">
+                            <h6 class="metric-title">Maintenance Due</h6>
+                            <p class="metric-description">Scheduled maintenance tasks</p>
+                            <a href="{{ route('maintenance.index') }}" class="metric-action">
+                                <i class="fas fa-arrow-right"></i>View Schedule
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Pending Assignments -->
+                    <div class="performance-metric-card info" data-aos="fade-up" data-aos-delay="300">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i class="fas fa-hand-holding"></i>
+                            </div>
+                            <div class="metric-badge info">{{ \App\Models\AssetAssignment::where('status', 'pending')->count() }}</div>
+                        </div>
+                        <div class="metric-content">
+                            <h6 class="metric-title">Pending Assignments</h6>
+                            <p class="metric-description">Assets awaiting assignment</p>
+                            <a href="{{ route('asset-assignments.index') }}" class="metric-action">
+                                <i class="fas fa-arrow-right"></i>View Assignments
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Warranty Expiring -->
+                    <div class="performance-metric-card danger" data-aos="fade-up" data-aos-delay="400">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div class="metric-badge danger">
+                                @php
+                                    $expiringWarranties = \App\Models\Asset::where('warranty_end', '<=', now()->addDays(30))
+                                        ->where('warranty_end', '>=', now())
+                                        ->count();
+                                @endphp
+                                {{ $expiringWarranties }}
+                            </div>
+                        </div>
+                        <div class="metric-content">
+                            <h6 class="metric-title">Warranty Expiring</h6>
+                            <p class="metric-description">Assets with expiring warranty (30 days)</p>
+                            <a href="{{ route('assets.index', ['warranty_expiring' => 'true']) }}" class="metric-action">
+                                <i class="fas fa-arrow-right"></i>View Assets
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Insights -->
+                <div class="performance-insights">
+                    <h6 class="insights-title">
+                        <i class="fas fa-lightbulb me-2"></i>Performance Insights
+                    </h6>
+                    <div class="insights-list">
+                        <div class="insight-item positive">
+                            <div class="insight-icon">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div>
+                                <h6 class="insight-title">Asset Utilization</h6>
+                                <p class="insight-description" id="assetUtilizationText">{{ $deployedAssetsPercentage }}% of assets are currently deployed and active</p>
+                            </div>
+                        </div>
+                        <div class="insight-item neutral">
+                            <div class="insight-icon">
+                                <i class="fas fa-heartbeat"></i>
+                            </div>
+                            <div>
+                                <h6 class="insight-title">Asset Health</h6>
+                                <p class="insight-description" id="assetHealthText">{{ \App\Models\Asset::where('status', 'problematic')->count() }}% of assets are currently problematic</p>
+                            </div>
+                        </div>
+                        <div class="insight-item positive">
+                            <div class="insight-icon">
+                                <i class="fas fa-tachometer-alt"></i>
+                            </div>
+                            <div>
+                                <h6 class="insight-title">System Performance</h6>
+                                <p class="insight-description">All systems operating within normal parameters</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -985,9 +780,12 @@
                             <small class="text-muted">Asset movement patterns</small>
                         </div>
                     </div>
-                    <div class="weekly-controls">
+                    <div class="weekly-controls d-flex gap-2">
                         <button class="btn btn-outline-primary btn-sm weekly-chart-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#weeklyChart" aria-expanded="false">
                             <i class="fas fa-chart-bar me-2"></i>Chart View
+                        </button>
+                        <button class="btn btn-outline-success btn-sm" id="exportWeeklyData" type="button">
+                            <i class="fas fa-download me-2"></i>Export Data
                         </button>
                     </div>
                 </div>
@@ -1024,7 +822,7 @@
                                     $totalForMonth += array_sum($weekData);
                                 }
                             @endphp
-                            <div class="weekly-period-card" data-aos="fade-up" data-aos-delay="{{ $loop->index * 100 }}">
+                            <div class="weekly-period-card" data-aos="fade-up" data-aos-delay="{{ $loop->index * 100 }}" data-month="{{ $month }}">
                                 <div class="weekly-period-header">
                                     <div class="weekly-period-title">
                                         <h6 class="week-month-name">{{ $month }}</h6>
@@ -1077,11 +875,11 @@
                                                                     default => ['color' => 'light', 'icon' => 'fas fa-question']
                                                                 };
                                                             @endphp
-                                                            <th class="status-header {{ $statusConfig['color'] }}">
+                                                            <th class="status-header {{ $statusConfig['color'] }}" data-header-status="{{ $status }}">
                                                                 <div class="status-header-content">
                                                                     <i class="{{ $statusConfig['icon'] }}"></i>
                                                                     <span>{{ $status }}</span>
-                                                                    <small>{{ array_sum(array_column($weeks, $status)) }}</small>
+                                                                    <small class="header-total">{{ array_sum(array_column($weeks, $status)) }}</small>
                                                                 </div>
                                                             </th>
                                                 @endforeach
@@ -1094,7 +892,7 @@
                                                                 $monthNumber = date('n', strtotime($month));
                                                                 $year = date('Y', strtotime($month));
                                                             @endphp
-                                                        <tr class="weekly-row {{ $weekTotal > 0 ? 'has-activity' : 'no-activity' }}">
+                                                        <tr class="weekly-row {{ $weekTotal > 0 ? 'has-activity' : 'no-activity' }}" data-week="{{ $week }}">
                                                             <td class="week-cell">
                                                                 <div class="week-info">
                                                                     <span class="week-name">{{ $week }}</span>
@@ -1117,7 +915,7 @@
                                                                         default => 'light'
                                                                     };
                                                                 @endphp
-                                                                <td class="status-cell {{ $statusConfig }}">
+                                                                <td class="status-cell {{ $statusConfig }}" data-status="{{ $status }}">
                                                             @if($count > 0)
                                                                 <a href="{{ route('dashboard.asset-movements', [
                                                                     'week' => $week,
@@ -1127,10 +925,10 @@
                                                                 ]) }}" 
                                                                            class="movement-link" 
                                                                    title="Click to view {{ $count }} {{ strtolower($status) }} assets">
-                                                                            <span class="movement-count">{{ $count }}</span>
+                                                                            <span class="movement-count week-count">{{ $count }}</span>
                                                                 </a>
                                                             @else
-                                                                        <span class="no-movement">—</span>
+                                                                        <span class="no-movement week-count">—</span>
                                                             @endif
                                                         </td>
                                                     @endforeach
@@ -1470,7 +1268,7 @@
                     
                     <div class="last-updated">
                         <i class="fas fa-clock me-2"></i>
-                        <small class="text-muted">Last updated: {{ now()->format('M d, Y \a\t g:i A') }}</small>
+                        <small class="text-muted">Last updated: <span id="lastUpdated2">{{ now()->format('M d, Y \a\t g:i A') }}</span></small>
                     </div>
                 </div>
             </div>
@@ -1582,6 +1380,257 @@
         width: 10px;
         height: 10px;
     }
+}
+
+/* Asset Performance Dashboard Styles */
+.asset-performance-card {
+    background: var(--bg-white);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--border-light);
+}
+
+.asset-performance-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    margin-right: 1rem;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.performance-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.performance-metric-card {
+    background: var(--bg-light);
+    border-radius: 12px;
+    padding: 1.25rem;
+    border: 1px solid var(--border-light);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.performance-metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+}
+
+.performance-metric-card.critical::before { background: #ef4444; }
+.performance-metric-card.warning::before { background: #f59e0b; }
+.performance-metric-card.info::before { background: #3b82f6; }
+.performance-metric-card.danger::before { background: #dc2626; }
+
+.performance-metric-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.metric-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.metric-icon {
+    width: 35px;
+    height: 35px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: white;
+}
+
+.performance-metric-card.critical .metric-icon { background: #ef4444; }
+.performance-metric-card.warning .metric-icon { background: #f59e0b; }
+.performance-metric-card.info .metric-icon { background: #3b82f6; }
+.performance-metric-card.danger .metric-icon { background: #dc2626; }
+
+.metric-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: white;
+}
+
+.metric-badge.urgent { background: #ef4444; }
+.metric-badge.warning { background: #f59e0b; }
+.metric-badge.info { background: #3b82f6; }
+.metric-badge.danger { background: #dc2626; }
+
+.metric-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.metric-description {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+}
+
+.metric-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.metric-action:hover {
+    color: var(--primary-color);
+    text-decoration: none;
+    transform: translateX(3px);
+}
+
+/* Performance Insights */
+.performance-insights {
+    background: var(--bg-light);
+    border-radius: 12px;
+    padding: 1.25rem;
+    border: 1px solid var(--border-light);
+}
+
+.insights-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.insights-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.insight-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.insight-item.positive {
+    background: rgba(16, 185, 129, 0.05);
+    border-left: 3px solid #10b981;
+}
+
+.insight-item.neutral {
+    background: rgba(245, 158, 11, 0.05);
+    border-left: 3px solid #f59e0b;
+}
+
+.insight-item.negative {
+    background: rgba(239, 68, 68, 0.05);
+    border-left: 3px solid #ef4444;
+}
+
+.insight-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+}
+
+.insight-item.positive .insight-icon {
+    background: #10b981;
+    color: white;
+}
+
+.insight-item.neutral .insight-icon {
+    background: #f59e0b;
+    color: white;
+}
+
+.insight-item.negative .insight-icon {
+    background: #ef4444;
+    color: white;
+}
+
+.insight-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+}
+
+.insight-description {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    line-height: 1.4;
+    margin: 0;
+}
+
+/* Refresh Status Indicator */
+.refresh-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 12px;
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+    transition: all 0.3s ease;
+}
+
+.refresh-status.updating {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.refresh-status.error {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.refresh-status i {
+    font-size: 8px;
+    animation: pulse 2s infinite;
+}
+
+.refresh-status.updating i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1716,5 +1765,598 @@ clickableNumbers.forEach(function(link) {
         }, 3000);
     });
 });
+
+
+
+// Weekly Movement Analysis Export Function
+function exportWeeklyData() {
+    const weeklyData = @json($weeklyBreakdown ?? []);
+    const monthlyRollup = @json($monthlyRollup ?? []);
+    
+    if (!weeklyData || !weeklyData.months) {
+        alert('No data available to export');
+        return;
+    }
+    
+    // Prepare CSV data
+    let csvContent = 'Weekly Movement Analysis Export\n\n';
+    
+    // Add export metadata
+    csvContent += 'Export Date,' + new Date().toLocaleDateString() + '\n';
+    csvContent += 'Generated By,' + '{{ auth()->user()->first_name ?? "System" }} {{ auth()->user()->last_name ?? "" }}' + '\n\n';
+    
+    // Add monthly summary
+    csvContent += 'Monthly Summary\n';
+    csvContent += 'Month,Total Movements\n';
+    Object.keys(weeklyData.months).forEach(month => {
+        const monthData = weeklyData.months[month];
+        const totalMovements = Object.values(monthData).reduce((sum, week) => 
+            sum + Object.values(week).reduce((weekSum, count) => weekSum + count, 0), 0
+        );
+        csvContent += `"${month}",${totalMovements}\n`;
+    });
+    
+    csvContent += '\n';
+    
+    // Add detailed weekly breakdown
+    csvContent += 'Detailed Weekly Breakdown\n';
+    const statuses = weeklyData.statuses || ['Deployed', 'Disposed', 'New Arrival', 'Returned', 'Transferred'];
+    
+    // Create header row
+    csvContent += 'Month,Week,' + statuses.join(',') + ',Total\n';
+    
+    // Add data rows
+    Object.keys(weeklyData.months).forEach(month => {
+        const monthData = weeklyData.months[month];
+        Object.keys(monthData).forEach(week => {
+            const weekData = monthData[week];
+            const weekTotal = Object.values(weekData).reduce((sum, count) => sum + count, 0);
+            
+            let row = `"${month}","${week}"`;
+            statuses.forEach(status => {
+                row += `,${weekData[status] || 0}`;
+            });
+            row += `,${weekTotal}\n`;
+            csvContent += row;
+        });
+    });
+    
+    // Add monthly rollup data if available
+    if (monthlyRollup && monthlyRollup.months) {
+        csvContent += '\nMonthly Rollup Summary\n';
+        csvContent += 'Month,' + statuses.join(',') + ',Total\n';
+        
+        Object.keys(monthlyRollup.months).forEach(month => {
+            const monthData = monthlyRollup.months[month];
+            const monthTotal = Object.values(monthData).reduce((sum, count) => sum + count, 0);
+            
+            let row = `"${month}"`;
+            statuses.forEach(status => {
+                row += `,${monthData[status] || 0}`;
+            });
+            row += `,${monthTotal}\n`;
+            csvContent += row;
+        });
+    }
+    
+    // Create and download the file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `weekly_movement_analysis_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Add event listener for export button
+document.addEventListener('DOMContentLoaded', function() {
+    const exportBtn = document.getElementById('exportWeeklyData');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', exportWeeklyData);
+    }
+    
+    // Initialize live timestamp updates
+    initializeLiveTimestamps();
+});
+
+// Live Data Update Function
+function initializeLiveTimestamps() {
+    // Function to update timestamps
+    function updateTimestamps() {
+        const now = new Date();
+        const formattedTime = now.toLocaleDateString('en-US', {
+            month: 'short',
+            day: '2-digit',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+        
+        // Update both timestamp elements
+        const lastUpdated1 = document.getElementById('lastUpdated1');
+        const lastUpdated2 = document.getElementById('lastUpdated2');
+        
+        if (lastUpdated1) {
+            lastUpdated1.textContent = formattedTime;
+        }
+        if (lastUpdated2) {
+            lastUpdated2.textContent = formattedTime;
+        }
+    }
+    
+    // Function to fetch live data - COMPREHENSIVE DATA UPDATE
+    async function fetchLiveData() {
+        console.log('Fetching live data...');
+        updateRefreshStatus('updating', 'Updating...');
+        
+        try {
+            const response = await fetch('{{ route("dashboard") }}?live=1', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Live data received:', data);
+                
+                // Update all dashboard data comprehensively
+                updateDashboardData(data);
+                updateTimestamps();
+                
+                // Show success status
+                updateRefreshStatus('success', 'Live');
+                showLiveUpdateIndicator();
+                
+                // Show success notification
+                showRefreshNotification('Dashboard updated successfully', 'success');
+            } else {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+        } catch (error) {
+            console.error('Live data update failed:', error);
+            updateRefreshStatus('error', 'Failed');
+            showRefreshNotification('Failed to refresh data: ' + error.message, 'error');
+            
+            // Retry after 10 seconds
+            setTimeout(() => {
+                console.log('Retrying data fetch...');
+                fetchLiveData();
+            }, 10000);
+        }
+    }
+    
+    // Function to update refresh status indicator
+    function updateRefreshStatus(status, text) {
+        const refreshStatus = document.getElementById('refreshStatus');
+        if (refreshStatus) {
+            refreshStatus.className = `refresh-status ${status}`;
+            
+            let icon = 'fas fa-circle';
+            if (status === 'updating') {
+                icon = 'fas fa-sync-alt';
+            } else if (status === 'success') {
+                icon = 'fas fa-check-circle';
+            } else if (status === 'error') {
+                icon = 'fas fa-exclamation-circle';
+            }
+            
+            refreshStatus.innerHTML = `<i class="${icon}"></i><span>${text}</span>`;
+            
+            // Reset to live status after 3 seconds if successful
+            if (status === 'success') {
+                setTimeout(() => {
+                    updateRefreshStatus('live', 'Live');
+                }, 3000);
+            }
+        }
+    }
+    
+    // Function to update dashboard data - COMPREHENSIVE UPDATE
+    function updateDashboardData(data) {
+        console.log('Updating dashboard with fresh data:', data);
+        
+        // Update asset counts
+        if (data.totalAssets !== undefined) {
+            const totalAssetsEl = document.querySelector('[data-stat="total-assets"]');
+            if (totalAssetsEl) {
+                totalAssetsEl.textContent = data.totalAssets.toLocaleString();
+            }
+            
+            // Update any other references to total assets
+            const assetRefs = document.querySelectorAll('[data-ref="total-assets"]');
+            assetRefs.forEach(el => {
+                el.textContent = data.totalAssets.toLocaleString();
+            });
+        }
+        
+        if (data.totalUsers !== undefined) {
+            const totalUsersEl = document.querySelector('[data-stat="total-users"]');
+            if (totalUsersEl) {
+                totalUsersEl.textContent = data.totalUsers.toLocaleString();
+            }
+        }
+        
+        if (data.totalDepartments !== undefined) {
+            const totalDeptsEl = document.querySelector('[data-stat="total-departments"]');
+            if (totalDeptsEl) {
+                totalDeptsEl.textContent = data.totalDepartments.toLocaleString();
+            }
+        }
+        
+        if (data.totalVendors !== undefined) {
+            const totalVendorsEl = document.querySelector('[data-stat="total-vendors"]');
+            if (totalVendorsEl) {
+                totalVendorsEl.textContent = data.totalVendors.toLocaleString();
+            }
+        }
+        
+        // Update deployment percentage and related elements
+        if (data.deployedAssetsPercentage !== undefined) {
+            const deploymentEl = document.querySelector('.deployment-value');
+            if (deploymentEl) {
+                deploymentEl.textContent = data.deployedAssetsPercentage + '%';
+            }
+            
+            // Update progress bar
+            const progressFill = document.querySelector('.progress-fill');
+            if (progressFill) {
+                progressFill.style.width = data.deployedAssetsPercentage + '%';
+            }
+            
+            // Update deployment status badge
+            const statusBadge = document.querySelector('.deployment-status .status-badge');
+            if (statusBadge) {
+                if (data.deployedAssetsPercentage >= 80) {
+                    statusBadge.className = 'status-badge success';
+                    statusBadge.innerHTML = '<i class="fas fa-check-circle"></i> Excellent';
+                } else if (data.deployedAssetsPercentage >= 60) {
+                    statusBadge.className = 'status-badge warning';
+                    statusBadge.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Good';
+                } else {
+                    statusBadge.className = 'status-badge danger';
+                    statusBadge.innerHTML = '<i class="fas fa-times-circle"></i> Needs Attention';
+                }
+            }
+        }
+        
+        // Update weekly movement data if available
+        if (data.weeklyBreakdown) {
+            updateWeeklyMovementData(data.weeklyBreakdown);
+        }
+        
+        // Update recent assets count if available
+        if (data.recentAssets) {
+            updateRecentAssetsCount(data.recentAssets);
+        }
+        
+        // Update performance insights
+        updatePerformanceInsights(data);
+        
+        // Update any metric cards that might have hardcoded values
+        updateMetricCards(data);
+        
+        // Show live update indicator
+        showLiveUpdateIndicator();
+    }
+    
+    // Function to update weekly movement data
+    function updateWeeklyMovementData(weeklyData) {
+        if (!weeklyData.months) return;
+        
+        // Update each month's data
+        Object.keys(weeklyData.months).forEach(month => {
+            const monthData = weeklyData.months[month];
+            
+            // Find the month container
+            const monthContainer = document.querySelector(`[data-month="${month}"]`);
+            if (!monthContainer) return;
+            
+            // Update total movements for the month
+            const totalMovements = Object.values(monthData).reduce((sum, week) => 
+                sum + Object.values(week).reduce((weekSum, count) => weekSum + count, 0), 0
+            );
+            
+            const totalMovementsEl = monthContainer.querySelector('.total-movements');
+            if (totalMovementsEl) {
+                totalMovementsEl.textContent = `${totalMovements} movements`;
+            }
+            
+            // Update each week's data
+            Object.keys(monthData).forEach(week => {
+                const weekData = monthData[week];
+                const weekRow = monthContainer.querySelector(`[data-week="${week}"]`);
+                if (!weekRow) return;
+                
+                // Update each status count in the week
+                Object.keys(weekData).forEach(status => {
+                    const count = weekData[status];
+                    const statusCell = weekRow.querySelector(`[data-status="${status}"]`);
+                    if (statusCell) {
+                        const countEl = statusCell.querySelector('.week-count');
+                        if (countEl) {
+                            if (count > 0) {
+                                countEl.textContent = count;
+                                countEl.className = 'movement-count week-count';
+                            } else {
+                                countEl.textContent = '—';
+                                countEl.className = 'no-movement week-count';
+                            }
+                        }
+                        
+                        // Update week total
+                        const weekTotal = Object.values(weekData).reduce((sum, c) => sum + c, 0);
+                        const weekBadge = weekRow.querySelector('.week-badge');
+                        if (weekBadge) {
+                            weekBadge.textContent = weekTotal;
+                        }
+                    }
+                });
+            });
+            
+            // Update header totals
+            const statuses = weeklyData.statuses || ['Deployed', 'Disposed', 'New Arrival', 'Returned', 'Transferred'];
+            statuses.forEach(status => {
+                const totalForStatus = Object.values(monthData).reduce((sum, week) => 
+                    sum + (week[status] || 0), 0
+                );
+                
+                const headerCell = monthContainer.querySelector(`[data-header-status="${status}"]`);
+                if (headerCell) {
+                    const totalEl = headerCell.querySelector('.header-total');
+                    if (totalEl) {
+                        totalEl.textContent = totalForStatus;
+                    }
+                }
+            });
+        });
+        
+        // Trigger visual update
+        const weeklyTable = document.querySelector('.weekly-table-container');
+        if (weeklyTable) {
+            weeklyTable.style.opacity = '0.7';
+            setTimeout(() => {
+                weeklyTable.style.opacity = '1';
+            }, 500);
+        }
+    }
+    
+    // Function to update recent assets count
+    function updateRecentAssetsCount(recentAssets) {
+        const recentAssetsCount = document.querySelector('.recent-assets-count .badge');
+        if (recentAssetsCount && recentAssets.length !== undefined) {
+            recentAssetsCount.textContent = recentAssets.length;
+        }
+    }
+    
+    // Function to update performance insights
+    function updatePerformanceInsights(data) {
+        // Update Asset Utilization
+        if (data.deployedAssetsPercentage !== undefined) {
+            const assetUtilizationText = document.getElementById('assetUtilizationText');
+            if (assetUtilizationText) {
+                assetUtilizationText.textContent = `${data.deployedAssetsPercentage}% of assets are currently deployed and active`;
+            }
+        }
+        
+        // Update Asset Health (problematic assets)
+        if (data.totalAssets !== undefined) {
+            // Calculate problematic percentage
+            const problematicCount = data.problematicAssets || 0;
+            const problematicPercentage = data.totalAssets > 0 ? 
+                Math.round((problematicCount / data.totalAssets) * 100) : 0;
+            
+            const assetHealthText = document.getElementById('assetHealthText');
+            if (assetHealthText) {
+                assetHealthText.textContent = `${problematicPercentage}% of assets are currently problematic`;
+            }
+        }
+    }
+    
+    // Function to update metric cards with fresh data
+    function updateMetricCards(data) {
+        // Update any metric cards that might have hardcoded values
+        const metricCards = document.querySelectorAll('.metric-card');
+        metricCards.forEach(card => {
+            const valueEl = card.querySelector('.metric-value');
+            const labelEl = card.querySelector('.metric-label');
+            
+            if (valueEl && labelEl) {
+                const label = labelEl.textContent.toLowerCase();
+                
+                // Update based on label content
+                if (label.includes('total assets') && data.totalAssets !== undefined) {
+                    valueEl.textContent = data.totalAssets.toLocaleString();
+                } else if (label.includes('users') && data.totalUsers !== undefined) {
+                    valueEl.textContent = data.totalUsers.toLocaleString();
+                } else if (label.includes('departments') && data.totalDepartments !== undefined) {
+                    valueEl.textContent = data.totalDepartments.toLocaleString();
+                } else if (label.includes('vendors') && data.totalVendors !== undefined) {
+                    valueEl.textContent = data.totalVendors.toLocaleString();
+                } else if (label.includes('deployed') && data.deployedAssetsPercentage !== undefined) {
+                    valueEl.textContent = data.deployedAssetsPercentage + '%';
+                }
+            }
+        });
+        
+        // Update any other dynamic content
+        updateDynamicContent(data);
+    }
+    
+    // Function to update any other dynamic content
+    function updateDynamicContent(data) {
+        // Update any other elements that might contain dynamic data
+        const dynamicElements = document.querySelectorAll('[data-dynamic]');
+        dynamicElements.forEach(el => {
+            const key = el.getAttribute('data-dynamic');
+            if (data[key] !== undefined) {
+                el.textContent = data[key];
+            }
+        });
+    }
+    
+    // Function to show live update indicator
+    function showLiveUpdateIndicator() {
+        const indicator = document.getElementById('liveIndicator');
+        if (indicator) {
+            indicator.style.opacity = '1';
+            indicator.style.transform = 'scale(1)';
+            indicator.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Data Refreshed';
+            
+            // Add success checkmark after update
+            setTimeout(() => {
+                indicator.innerHTML = '<i class="fas fa-check-circle text-success"></i> Data Updated';
+                indicator.style.background = 'rgba(16, 185, 129, 0.1)';
+                indicator.style.color = '#059669';
+            }, 1000);
+            
+            setTimeout(() => {
+                indicator.style.opacity = '0.7';
+                indicator.style.transform = 'scale(0.95)';
+                indicator.innerHTML = '<i class="fas fa-circle text-success"></i> Live';
+                indicator.style.background = 'rgba(255, 255, 255, 0.95)';
+                indicator.style.color = '#059669';
+            }, 4000);
+        }
+        
+        // Show notification
+        showRefreshNotification();
+    }
+    
+    // Function to show refresh notification
+    function showRefreshNotification() {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.id = 'refreshNotification';
+        notification.innerHTML = `
+            <div class="notification-content">
+                <i class="fas fa-check-circle text-success"></i>
+                <span>Dashboard data refreshed successfully</span>
+                <small>${new Date().toLocaleTimeString()}</small>
+            </div>
+        `;
+        notification.style.cssText = `
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 1001;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            min-width: 250px;
+        `;
+        
+        // Add styles for notification content
+        const style = document.createElement('style');
+        style.textContent = `
+            .notification-content {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .notification-content small {
+                display: block;
+                font-size: 11px;
+                opacity: 0.8;
+                margin-top: 2px;
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Add to page
+        document.body.appendChild(notification);
+        
+        // Animate in
+        setTimeout(() => {
+            notification.style.transform = 'translateX(0)';
+        }, 100);
+        
+        // Remove after 4 seconds
+        setTimeout(() => {
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 4000);
+    }
+    
+    // Update timestamps immediately
+    updateTimestamps();
+    
+    // Update timestamps every minute
+    setInterval(updateTimestamps, 60000);
+    
+    // Soft refresh every 30 seconds - updates all data without page reload
+    setInterval(fetchLiveData, 30000);
+    
+    // Also fetch data immediately on page load
+    setTimeout(fetchLiveData, 2000);
+    
+    // Add visual indicator for live updates
+    addLiveUpdateIndicator();
+}
+
+// Add visual indicator for live updates
+function addLiveUpdateIndicator() {
+    // Create live indicator element
+    const liveIndicator = document.createElement('div');
+    liveIndicator.id = 'liveIndicator';
+    liveIndicator.innerHTML = '<i class="fas fa-circle text-success"></i> Live';
+    liveIndicator.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.95);
+        padding: 8px 12px;
+        border-radius: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        font-size: 12px;
+        font-weight: 500;
+        color: #059669;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.3s ease;
+    `;
+    
+    // Add pulsing animation to the dot
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        #liveIndicator i {
+            animation: pulse 2s infinite;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Add to page
+    document.body.appendChild(liveIndicator);
+    
+    // Hide indicator after 5 seconds
+    setTimeout(() => {
+        liveIndicator.style.opacity = '0.7';
+        liveIndicator.style.transform = 'scale(0.95)';
+    }, 5000);
+}
 </script>
 @endpush

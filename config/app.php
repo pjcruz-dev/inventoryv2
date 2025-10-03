@@ -123,4 +123,16 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Deployment Target
+    |--------------------------------------------------------------------------
+    |
+    | This value determines the target deployment percentage for assets.
+    | It can be configured via the DEPLOYMENT_TARGET environment variable.
+    |
+    */
+
+    'deployment_target' => env('DEPLOYMENT_TARGET', 80),
+
 ];

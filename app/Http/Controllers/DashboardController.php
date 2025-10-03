@@ -32,6 +32,11 @@ class DashboardController extends Controller
         if (auth()->user()->hasRole('User') && !auth()->user()->hasAnyRole(['Admin', 'Super Admin', 'Manager', 'IT Support'])) {
             return redirect()->route('assets.index');
         }
+        
+        // Check if this is a live data request
+        if ($request->get('live') == '1' && $request->ajax()) {
+            return $this->getLiveData($request);
+        }
         // Get filter parameters
         $filterMonth = $request->get('month');
         $filterYear = $request->get('year');
@@ -101,6 +106,9 @@ class DashboardController extends Controller
         $deployedAssets = $deployedAssetsQuery->count();
         $deployedAssetsPercentage = $totalAssets > 0 ? round(($deployedAssets / $totalAssets) * 100, 1) : 0;
         
+        // Deployment target (configurable)
+        $deploymentTarget = config('app.deployment_target', 80);
+        
         // Get data for the three dashboard sections with filters
         $weeklyBreakdown = $this->getWeeklyBreakdown($filterMonth, $filterYear);
         $monthlyRollup = $this->getMonthlyRollup($filterMonth, $filterYear);
@@ -116,6 +124,7 @@ class DashboardController extends Controller
             'totalVendors',
             'recentAssets',
             'deployedAssetsPercentage',
+            'deploymentTarget',
             'weeklyBreakdown',
             'monthlyRollup',
             'chartData',
@@ -166,6 +175,16 @@ class DashboardController extends Controller
     private function getWeeklyBreakdown($filterMonth = null, $filterYear = null)
     {
         $statuses = ['Deployed', 'Disposed', 'New Arrival', 'Returned', 'Transferred'];
+        
+        // Map display names to database values
+        $statusMapping = [
+            'Deployed' => 'deployed',
+            'Disposed' => 'disposed', 
+            'New Arrival' => 'new_arrival',
+            'Returned' => 'returned',
+            'Transferred' => 'transferred'
+        ];
+        
         $months = [];
         
         if ($filterMonth && $filterYear) {
@@ -188,15 +207,18 @@ class DashboardController extends Controller
                 
                 $weekData = [];
                 foreach ($statuses as $status) {
-                    // Get unique asset IDs that changed to this movement during this week
+                    // Get database value for this status
+                    $statusDb = $statusMapping[$status] ?? strtolower(str_replace(' ', '_', $status));
+                    
+                    // Get unique asset IDs that changed to this status during this week
                     $timelineAssetIds = \App\Models\AssetTimeline::where('action', 'updated')
-                        ->whereJsonContains('new_values->movement', $status)
+                        ->whereJsonContains('new_values->status', $statusDb)
                         ->whereBetween('performed_at', [$weekStart, $weekEnd])
                         ->distinct('asset_id')
                         ->pluck('asset_id');
                     
-                    // Get asset IDs created with this movement during this week
-                    $createdAssetIds = \App\Models\Asset::where('movement', $status)
+                    // Get asset IDs created with this status during this week
+                    $createdAssetIds = \App\Models\Asset::where('status', $statusDb)
                         ->whereBetween('created_at', [$weekStart, $weekEnd])
                         ->pluck('id');
                     
@@ -210,7 +232,7 @@ class DashboardController extends Controller
             $months[$monthName] = $monthData;
         } else {
             // Get last 3 months (default behavior)
-            for ($i = 2; $i >= 0; $i--) {
+            for ($i = 0; $i < 3; $i++) {
                 $date = now()->subMonths($i);
                 $monthName = $date->format('F Y');
                 $monthData = [];
@@ -231,7 +253,7 @@ class DashboardController extends Controller
                     foreach ($statuses as $status) {
                         // Get unique asset IDs that changed to this movement during this week
                         $timelineAssetIds = \App\Models\AssetTimeline::where('action', 'updated')
-                            ->whereJsonContains('new_values->movement', $status)
+                            ->whereJsonContains('new_values->status', $status)
                             ->whereBetween('performed_at', [$weekStart, $weekEnd])
                             ->distinct('asset_id')
                             ->pluck('asset_id');
@@ -278,7 +300,7 @@ class DashboardController extends Controller
             foreach ($statuses as $status) {
                 // Get unique asset IDs that changed to this movement during this month
                 $timelineAssetIds = \App\Models\AssetTimeline::where('action', 'updated')
-                    ->whereJsonContains('new_values->movement', $status)
+                    ->whereJsonContains('new_values->status', $status)
                     ->whereBetween('performed_at', [$startOfMonth, $endOfMonth])
                     ->distinct('asset_id')
                     ->pluck('asset_id');
@@ -310,7 +332,7 @@ class DashboardController extends Controller
             $months[$monthName] = $monthDataWithPercentages;
         } else {
             // Get last 3 months (default behavior)
-            for ($i = 2; $i >= 0; $i--) {
+            for ($i = 0; $i < 3; $i++) {
                 $date = now()->subMonths($i);
                 $monthName = $date->format('F');
                 
@@ -323,7 +345,7 @@ class DashboardController extends Controller
                 foreach ($statuses as $status) {
                     // Get unique asset IDs that changed to this movement during this month
                     $timelineAssetIds = \App\Models\AssetTimeline::where('action', 'updated')
-                        ->whereJsonContains('new_values->movement', $status)
+                        ->whereJsonContains('new_values->status', $status)
                         ->whereBetween('performed_at', [$startOfMonth, $endOfMonth])
                         ->distinct('asset_id')
                         ->pluck('asset_id');
@@ -401,7 +423,7 @@ class DashboardController extends Controller
             
             // Monthly totals by status (last 3 months)
             $monthlyTotals = [];
-            for ($i = 2; $i >= 0; $i--) {
+            for ($i = 0; $i < 3; $i++) {
                 $trendDate = $date->copy()->subMonths($i);
                 $monthName = $trendDate->format('F');
                 
@@ -435,7 +457,7 @@ class DashboardController extends Controller
             
             // Monthly totals by status (for bar chart)
             $monthlyTotals = [];
-            for ($i = 2; $i >= 0; $i--) {
+            for ($i = 0; $i < 3; $i++) {
                 $date = now()->subMonths($i);
                 $monthName = $date->format('F');
                 
@@ -490,7 +512,7 @@ class DashboardController extends Controller
         // Use the exact same logic as the dashboard count to ensure consistency
         // Get unique asset IDs that changed to this movement during this week
         $timelineAssetIds = \App\Models\AssetTimeline::where('action', 'updated')
-            ->whereJsonContains('new_values->movement', $status)
+            ->whereJsonContains('new_values->status', $status)
             ->whereBetween('performed_at', [$weekStart, $weekEnd])
             ->distinct('asset_id')
             ->pluck('asset_id');
@@ -510,5 +532,69 @@ class DashboardController extends Controller
             ->get();
         
         return view('dashboard.asset-movements', compact('assets', 'week', 'status', 'month', 'year', 'weekStart', 'weekEnd'));
+    }
+    
+    /**
+     * Get live data for AJAX requests
+     */
+    private function getLiveData(Request $request)
+    {
+        // Get filter parameters
+        $filterMonth = $request->get('month');
+        $filterYear = $request->get('year');
+        $filterEntity = $request->get('entity');
+        
+        // Get basic statistics with entity filter
+        $assetQuery = Asset::query();
+        $userQuery = User::query();
+        
+        if ($filterEntity) {
+            $assetQuery->where('entity', $filterEntity);
+            $userQuery->where('entity', $filterEntity);
+        }
+        
+        $totalAssets = $assetQuery->count();
+        $totalUsers = $userQuery->count();
+        $totalDepartments = \App\Models\Department::count();
+        $totalVendors = \App\Models\Vendor::count();
+        
+        // Get deployed assets percentage
+        $deployedAssetsQuery = Asset::whereIn('status', ['deployed', 'active', 'assigned', 'in_use']);
+        if ($filterEntity) {
+            $deployedAssetsQuery->where('entity', $filterEntity);
+        }
+        $deployedAssets = $deployedAssetsQuery->count();
+        $deployedAssetsPercentage = $totalAssets > 0 ? round(($deployedAssets / $totalAssets) * 100, 1) : 0;
+        
+        // Get problematic assets count
+        $problematicAssetsQuery = Asset::where('status', 'problematic');
+        if ($filterEntity) {
+            $problematicAssetsQuery->where('entity', $filterEntity);
+        }
+        $problematicAssets = $problematicAssetsQuery->count();
+        
+        // Get recent assets
+        $recentAssetsQuery = Asset::with(['category', 'assignedUser', 'vendor'])
+            ->orderBy('created_at', 'desc')
+            ->limit(5);
+        if ($filterEntity) {
+            $recentAssetsQuery->where('entity', $filterEntity);
+        }
+        $recentAssets = $recentAssetsQuery->get();
+        
+        // Get weekly breakdown for live updates
+        $weeklyBreakdown = $this->getWeeklyBreakdown($filterMonth, $filterYear);
+        
+        return response()->json([
+            'totalAssets' => $totalAssets,
+            'totalUsers' => $totalUsers,
+            'totalDepartments' => $totalDepartments,
+            'totalVendors' => $totalVendors,
+            'deployedAssetsPercentage' => $deployedAssetsPercentage,
+            'problematicAssets' => $problematicAssets,
+            'recentAssets' => $recentAssets,
+            'weeklyBreakdown' => $weeklyBreakdown,
+            'lastUpdated' => now()->format('M d, Y \a\t g:i A')
+        ]);
     }
 }
