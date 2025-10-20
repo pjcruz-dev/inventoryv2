@@ -78,6 +78,7 @@ Route::middleware('auth')->group(function () {
     Route::post('assets/generate-tag', [AssetController::class, 'generateUniqueTag'])->name('assets.generate-tag');
     Route::post('assets/check-tag-uniqueness', [AssetController::class, 'checkAssetTagUniqueness'])->name('assets.check-tag-uniqueness');
     Route::get('assets/{asset}/vendor', [AssetController::class, 'getAssetVendor'])->name('assets.get-vendor');
+    Route::get('assets/export/comprehensive', [AssetController::class, 'exportComprehensive'])->name('assets.export.comprehensive');
     
     // Asset Categories
     Route::resource('asset-categories', AssetCategoryController::class);

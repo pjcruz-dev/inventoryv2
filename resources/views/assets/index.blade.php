@@ -266,6 +266,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         <a href="{{ route('assets.print-employee-assets') }}" class="btn btn-light btn-sm" target="_blank" style="color: #667eea;">
                             <i class="fas fa-print me-1"></i>Employee Assets Report
                         </a>
+                        <a href="{{ route('assets.export.comprehensive', request()->query()) }}" class="btn btn-light btn-sm" style="color: #667eea;">
+                            <i class="fas fa-file-excel me-1"></i>Export Assets with Users & Vendors
+                        </a>
                         <a href="{{ route('assets.create') }}" class="btn btn-light btn-sm" style="color: #667eea;">
                             <i class="fas fa-plus me-1"></i>Add New Asset
                         </a>
@@ -292,16 +295,21 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
     <div class="card-body">
         @if($assets->count() > 0)
-            <!-- Print All Assets Section - Only for non-User roles -->
+            <!-- Export and Print Section - Only for non-User roles -->
             @if(!auth()->user()->hasRole('User') || auth()->user()->hasAnyRole(['Admin', 'Super Admin', 'Manager', 'IT Support']))
             <div class="mb-3">
-                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#printAllModal">
-                    <i class="fas fa-print me-1"></i>Print All Assets ({{ $assets->total() }})
-                </button>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{{ route('assets.export.comprehensive', request()->query()) }}" class="btn btn-success">
+                        <i class="fas fa-file-excel me-1"></i>Export Assets with Users & Vendors ({{ $assets->total() }} assets)
+                    </a>
+                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#printAllModal">
+                        <i class="fas fa-print me-1"></i>Print All Assets ({{ $assets->total() }})
+                    </button>
+                </div>
                 @if($assets->total() < 200)
-                    <small class="text-muted ms-2">
+                    <small class="text-muted mt-2 d-block">
                         <i class="fas fa-info-circle"></i>
-                        Filters are active. <a href="{{ route('assets.index') }}" class="text-decoration-none">Clear filters</a> to print all 200 assets.
+                        Filters are active. <a href="{{ route('assets.index') }}" class="text-decoration-none">Clear filters</a> to export/print all assets.
                     </small>
                 @endif
             </div>
