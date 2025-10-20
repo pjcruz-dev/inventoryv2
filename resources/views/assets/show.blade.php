@@ -186,6 +186,55 @@
     </div>
     
     <div class="col-lg-4">
+        <!-- Assignee Information -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-user me-2"></i>Assignee Information
+                </h6>
+            </div>
+            <div class="card-body">
+                @if($asset->assignedUser)
+                    <div class="row mb-2">
+                        <div class="col-sm-5"><strong>Assigned To:</strong></div>
+                        <div class="col-sm-7">
+                            <a href="{{ route('users.show', $asset->assignedUser) }}" class="text-decoration-none">
+                                <i class="fas fa-user me-1"></i>
+                                {{ $asset->assignedUser->first_name }} {{ $asset->assignedUser->last_name }}
+                            </a>
+                        </div>
+                    </div>
+                    @if($asset->assignedUser->department)
+                    <div class="row mb-2">
+                        <div class="col-sm-5"><strong>Department:</strong></div>
+                        <div class="col-sm-7">{{ $asset->assignedUser->department->name }}</div>
+                    </div>
+                    @endif
+                    @if($asset->assigned_date)
+                    <div class="row mb-2">
+                        <div class="col-sm-5"><strong>Assigned Date:</strong></div>
+                        <div class="col-sm-7">{{ $asset->assigned_date->format('M d, Y') }}</div>
+                    </div>
+                    @endif
+                    @if($asset->location)
+                    <div class="row mb-2">
+                        <div class="col-sm-5"><strong>Location:</strong></div>
+                        <div class="col-sm-7">
+                            <i class="fas fa-map-marker-alt me-1"></i>
+                            {{ $asset->location }}
+                        </div>
+                    </div>
+                    @endif
+                @else
+                    <div class="text-center text-muted">
+                        <i class="fas fa-user-slash fa-2x mb-2"></i>
+                        <p class="mb-0">No assignee</p>
+                        <small>Asset is available for assignment</small>
+                    </div>
+                @endif
+            </div>
+        </div>
+
         <!-- Quick Actions -->
         <div class="card">
             <div class="card-header">
@@ -199,11 +248,11 @@
                     </a>
                     
                     @if($asset->assigned_to)
-                        <button class="btn btn-outline-warning" onclick="unassignAsset({{ $asset->id }})">
-                            <i class="fas fa-user-times me-2"></i>Unassign User
-                        </button>
                         <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#reassignModal">
                             <i class="fas fa-exchange-alt me-2"></i>Reassign User
+                        </button>
+                        <button class="btn btn-outline-danger" onclick="returnAsset({{ $asset->id }})">
+                            <i class="fas fa-undo me-2"></i>Return Asset
                         </button>
                     @else
                         <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#assignModal">
@@ -326,8 +375,9 @@
                         <input type="date" class="form-control" id="assigned_date" name="assigned_date" value="{{ date('Y-m-d') }}" required>
                     </div>
                     <div class="mb-3">
-                        <label for="notes" class="form-label">Notes (Optional)</label>
-                        <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Any additional notes about this assignment..."></textarea>
+                        <label for="notes" class="form-label">Assignment Notes (Optional)</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Enter assignment details, location, purpose, or any specific instructions for this asset assignment..."></textarea>
+                        <small class="form-text text-muted">Include details like: location, purpose, special instructions, or asset condition notes</small>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -378,8 +428,9 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="reassign_notes" class="form-label">Notes (Optional)</label>
-                        <textarea class="form-control" id="reassign_notes" name="notes" rows="3" placeholder="Reason for reassignment or additional notes..."></textarea>
+                        <label for="reassign_notes" class="form-label">Reassignment Notes (Optional)</label>
+                        <textarea class="form-control" id="reassign_notes" name="notes" rows="3" placeholder="Enter reason for reassignment, new location, purpose, or any specific instructions for this asset reassignment..."></textarea>
+                        <small class="form-text text-muted">Include details like: reason for reassignment, new location, purpose, or special instructions</small>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -459,8 +510,8 @@
 </style>
 
 <script>
-    function unassignAsset(assetId) {
-        if (confirm('Are you sure you want to unassign this user from the asset?')) {
+    function returnAsset(assetId) {
+        if (confirm('Are you sure you want to return this asset? This will unassign the current user and mark the asset as available.')) {
             fetch(`/assets/${assetId}/unassign`, {
                 method: 'POST',
                 headers: {
@@ -473,15 +524,16 @@
                 if (data.success) {
                     location.reload();
                 } else {
-                    alert('Error unassigning user: ' + (data.message || 'Unknown error'));
+                    alert('Error returning asset: ' + (data.message || 'Unknown error'));
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error unassigning user');
+                alert('Error returning asset');
             });
         }
     }
+    
     
     function printAssetLabel() {
         // Create a simple print view for asset label

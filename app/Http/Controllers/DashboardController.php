@@ -94,7 +94,7 @@ class DashboardController extends Controller
         
         // Calculate deployed/active assets percentage with entity filter
         // Consider assets as "deployed" if they are active, assigned, or deployed
-        $deployedAssetsQuery = Asset::whereIn('status', ['deployed', 'active', 'assigned', 'in_use']);
+        $deployedAssetsQuery = Asset::whereIn('status', ['Active', 'Pending Confirmation']);
         if ($filterEntity) {
             $deployedAssetsQuery->where('entity', $filterEntity);
         }
@@ -165,7 +165,7 @@ class DashboardController extends Controller
      */
     private function getWeeklyBreakdown($filterMonth = null, $filterYear = null)
     {
-        $statuses = ['Deployed', 'Disposed', 'New Arrival', 'Returned', 'Transferred'];
+        $statuses = ['Return', 'New Arrival', 'Deployed'];
         $months = [];
         
         if ($filterMonth && $filterYear) {
@@ -209,8 +209,8 @@ class DashboardController extends Controller
             
             $months[$monthName] = $monthData;
         } else {
-            // Get last 3 months (default behavior)
-            for ($i = 2; $i >= 0; $i--) {
+            // Get last 3 months (default behavior) - show latest month first
+            for ($i = 0; $i < 3; $i++) {
                 $date = now()->subMonths($i);
                 $monthName = $date->format('F Y');
                 $monthData = [];
@@ -260,7 +260,7 @@ class DashboardController extends Controller
      */
     private function getMonthlyRollup($filterMonth = null, $filterYear = null)
     {
-        $statuses = ['Deployed', 'Disposed', 'New Arrival', 'Returned', 'Transferred'];
+        $statuses = ['Return', 'New Arrival', 'Deployed'];
         $months = [];
         
         if ($filterMonth && $filterYear) {
@@ -309,8 +309,8 @@ class DashboardController extends Controller
             
             $months[$monthName] = $monthDataWithPercentages;
         } else {
-            // Get last 3 months (default behavior)
-            for ($i = 2; $i >= 0; $i--) {
+            // Get last 3 months (default behavior) - show latest month first
+            for ($i = 0; $i < 3; $i++) {
                 $date = now()->subMonths($i);
                 $monthName = $date->format('F');
                 
@@ -363,7 +363,7 @@ class DashboardController extends Controller
      */
     private function getChartData($filterMonth = null, $filterYear = null)
     {
-        $statuses = ['deployed', 'problematic', 'pending_confirm', 'returned', 'disposed', 'new_arrived'];
+        $statuses = ['Available', 'Maintenance', 'Pending Confirmation', 'Active', 'For Disposal'];
         
         // Current status distribution (for pie chart)
         $currentDistribution = [];
@@ -388,7 +388,7 @@ class DashboardController extends Controller
                 $trendDate = $date->copy()->subMonths($i);
                 $monthName = $trendDate->format('M Y');
                 
-                $count = Asset::where('status', 'problematic')
+                $count = Asset::where('status', 'Maintenance')
                     ->whereYear('created_at', $trendDate->year)
                     ->whereMonth('created_at', $trendDate->month)
                     ->count();
@@ -422,7 +422,7 @@ class DashboardController extends Controller
                 $date = now()->subMonths($i);
                 $monthName = $date->format('M Y');
                 
-                $count = Asset::where('status', 'problematic')
+                $count = Asset::where('status', 'Maintenance')
                     ->whereYear('created_at', $date->year)
                     ->whereMonth('created_at', $date->month)
                     ->count();
@@ -451,11 +451,59 @@ class DashboardController extends Controller
             }
         }
         
+        // Add weekly data for the chart
+        $weeklyData = $this->getWeeklyChartData();
+        
         return [
             'currentDistribution' => $currentDistribution,
             'problematicTrend' => $problematicTrend,
             'monthlyTotals' => $monthlyTotals,
-            'statuses' => $statuses
+            'statuses' => $statuses,
+            'weeklyData' => $weeklyData
+        ];
+    }
+
+    /**
+     * Get weekly chart data for the dashboard
+     */
+    private function getWeeklyChartData()
+    {
+        $weeks = [];
+        $deployedData = [];
+        $maintenanceData = [];
+        $pendingData = [];
+        
+        // Get last 8 weeks of data
+        for ($i = 7; $i >= 0; $i--) {
+            $startDate = now()->subWeeks($i)->startOfWeek();
+            $endDate = now()->subWeeks($i)->endOfWeek();
+            
+            $weekLabel = $startDate->format('M d') . ' - ' . $endDate->format('M d');
+            $weeks[] = $weekLabel;
+            
+            // Count assets by status for this week
+            $deployed = Asset::where('status', 'Active')
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->count();
+                
+            $maintenance = Asset::where('status', 'Maintenance')
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->count();
+                
+            $pending = Asset::where('status', 'Pending Confirmation')
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->count();
+            
+            $deployedData[] = $deployed;
+            $maintenanceData[] = $maintenance;
+            $pendingData[] = $pending;
+        }
+        
+        return [
+            'weeks' => $weeks,
+            'deployed' => $deployedData,
+            'maintenance' => $maintenanceData,
+            'pending' => $pendingData
         ];
     }
 

@@ -183,10 +183,10 @@
                                         @php
                                             $statusColors = [
                                                 'Active' => 'success',
-                                                'Assigned' => 'primary',
-                                                'Pending Confirmation' => 'warning',
                                                 'Available' => 'secondary',
-                                                'Inactive' => 'danger'
+                                                'Maintenance' => 'warning',
+                                                'Pending Confirmation' => 'primary',
+                                                'For Disposal' => 'danger'
                                             ];
                                         @endphp
                                         <span class="badge bg-{{ $statusColors[$asset->status] ?? 'secondary' }}">

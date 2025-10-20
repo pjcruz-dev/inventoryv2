@@ -64,7 +64,9 @@ class AssetConfirmationController extends Controller
         // Check if already processed
         if (!$confirmation->isPending()) {
             $status = $confirmation->isConfirmed() ? 'confirmed' : 'declined';
-            $statusDate = $confirmation->confirmed_at ? $confirmation->confirmed_at->format('F j, Y \a\t g:i A') : 'Unknown';
+            $statusDate = $confirmation->isConfirmed() 
+                ? ($confirmation->confirmed_at ? $confirmation->confirmed_at->format('F j, Y \a\t g:i A') : 'Unknown')
+                : ($confirmation->declined_at ? $confirmation->declined_at->format('F j, Y \a\t g:i A') : 'Unknown');
             
             if ($confirmation->isConfirmed()) {
                 $message = "This email was already confirmed on {$statusDate}.";
@@ -146,15 +148,6 @@ class AssetConfirmationController extends Controller
             'status' => 'Active',
             'movement' => 'Deployed'
         ]);
-
-        // Update related AssetAssignment status from 'pending' to 'confirmed'
-        \App\Models\AssetAssignment::where('asset_id', $confirmation->asset_id)
-            ->where('user_id', $confirmation->user_id)
-            ->where('status', 'pending')
-            ->update([
-                'status' => 'confirmed',
-                'return_date' => null // Clear return date as asset is now assigned
-            ]);
 
         // Create enhanced audit log using ActivityLogService
         $activityLogService = app(\App\Services\ActivityLogService::class);
@@ -242,7 +235,9 @@ class AssetConfirmationController extends Controller
         // Check if already processed
         if (!$confirmation->isPending()) {
             $status = $confirmation->isConfirmed() ? 'confirmed' : 'declined';
-            $statusDate = $confirmation->confirmed_at ? $confirmation->confirmed_at->format('F j, Y \a\t g:i A') : 'Unknown';
+            $statusDate = $confirmation->isConfirmed() 
+                ? ($confirmation->confirmed_at ? $confirmation->confirmed_at->format('F j, Y \a\t g:i A') : 'Unknown')
+                : ($confirmation->declined_at ? $confirmation->declined_at->format('F j, Y \a\t g:i A') : 'Unknown');
             
             if ($confirmation->isConfirmed()) {
                 $message = "This email was already confirmed on {$statusDate}.";
@@ -319,21 +314,14 @@ class AssetConfirmationController extends Controller
             'action_timestamp' => now()
         ]);
 
-        // Update related AssetAssignment status from 'pending' to 'declined'
-        \App\Models\AssetAssignment::where('asset_id', $confirmation->asset_id)
-            ->where('user_id', $confirmation->user_id)
-            ->where('status', 'pending')
-            ->update([
-                'status' => 'declined',
-                'return_date' => now() // Set return date as assignment is rejected
-            ]);
+        // AssetAssignment model removed - no longer needed
 
         // Update asset status back to Available and unassign
         $confirmation->asset->update([
             'assigned_to' => null,
             'assigned_date' => null,
             'status' => 'Available',
-            'movement' => 'Returned'
+            'movement' => 'Return'
         ]);
 
         // Create audit log
@@ -588,21 +576,14 @@ class AssetConfirmationController extends Controller
             'action_timestamp' => now()
         ]);
 
-        // Update related AssetAssignment status from 'pending' to 'declined'
-        \App\Models\AssetAssignment::where('asset_id', $confirmation->asset_id)
-            ->where('user_id', $confirmation->user_id)
-            ->where('status', 'pending')
-            ->update([
-                'status' => 'declined',
-                'return_date' => now() // Set return date as assignment is rejected
-            ]);
+        // AssetAssignment model removed - no longer needed
 
         // Update asset status back to Available and unassign
         $confirmation->asset->update([
             'assigned_to' => null,
             'assigned_date' => null,
             'status' => 'Available',
-            'movement' => 'Returned'
+            'movement' => 'Return'
         ]);
 
         // Create enhanced audit log

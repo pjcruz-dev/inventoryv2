@@ -19,6 +19,7 @@ class AssetAssignmentConfirmation extends Model
         'status',
         'assigned_at',
         'confirmed_at',
+        'declined_at',
         'notes',
         'last_reminder_sent_at',
         'reminder_count'
@@ -27,6 +28,7 @@ class AssetAssignmentConfirmation extends Model
     protected $casts = [
         'assigned_at' => 'datetime',
         'confirmed_at' => 'datetime',
+        'declined_at' => 'datetime',
         'last_reminder_sent_at' => 'datetime',
         'reminder_count' => 'integer',
         'follow_up_required' => 'boolean',
@@ -128,7 +130,7 @@ class AssetAssignmentConfirmation extends Model
     {
         $updateData = [
             'status' => 'declined',
-            'confirmed_at' => now()
+            'declined_at' => now()
         ];
 
         // Handle enhanced decline data

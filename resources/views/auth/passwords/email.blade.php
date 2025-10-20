@@ -21,13 +21,13 @@
                             <label for="email" class="col-md-4 col-form-label text-md-end">{{ __('Email Address') }}</label>
 
                             <div class="col-md-6">
-                                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
+                                <input id="email" type="email" class="form-control @if(isset($errors) && $errors->has('email')) is-invalid @endif" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
 
-                                @error('email')
+                                @if(isset($errors) && $errors->has('email'))
                                     <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
+                                        <strong>{{ $errors->first('email') }}</strong>
                                     </span>
-                                @enderror
+                                @endif
                             </div>
                         </div>
 
@@ -36,6 +36,9 @@
                                 <button type="submit" class="btn btn-primary">
                                     {{ __('Send Password Reset Link') }}
                                 </button>
+                                <a href="{{ route('login') }}" class="btn btn-outline-secondary ms-2">
+                                    {{ __('Back to Login') }}
+                                </a>
                             </div>
                         </div>
                     </form>

@@ -11,7 +11,6 @@ use App\Models\Peripheral;
 use App\Models\User;
 use App\Models\Department;
 use App\Models\Vendor;
-use App\Models\AssetAssignment;
 use App\Models\Maintenance;
 use App\Models\Disposal;
 use App\Models\AssetCategory;
@@ -181,7 +180,6 @@ class ReportController extends Controller
             'total_users' => User::count(),
             'total_departments' => Department::count(),
             'total_vendors' => Vendor::count(),
-            'active_assignments' => AssetAssignment::where('status', 'active')->count(),
             'pending_maintenance' => Maintenance::where('status', 'pending')->count(),
             'total_value' => Asset::sum('cost'),
             'reports_generated' => $this->getReportsGeneratedCount()

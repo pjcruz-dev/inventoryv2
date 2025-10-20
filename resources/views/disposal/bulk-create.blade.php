@@ -72,21 +72,11 @@
                                             <td>
                                                 <select name="disposal[{{ $index }}][disposal_type]" class="form-select disposal-input" disabled>
                                                     <option value="">Select Type</option>
+                                                    <option value="Damaged">Damaged</option>
+                                                    <option value="Recycled">Recycled</option>
                                                     <option value="Sold">Sold</option>
                                                     <option value="Donated">Donated</option>
-                                                    <option value="Recycled">Recycled</option>
-                                                    <option value="Destroyed">Destroyed</option>
                                                     <option value="Lost">Lost</option>
-                                                    <option value="Stolen">Stolen</option>
-                                                    <option value="Trade-in">Trade-in</option>
-                                                    <option value="Return to Vendor">Return to Vendor</option>
-                                                    <option value="Upgrade Replacement">Upgrade Replacement</option>
-                                                    <option value="Damaged Beyond Repair">Damaged Beyond Repair</option>
-                                                    <option value="End of Life">End of Life</option>
-                                                    <option value="Security Risk">Security Risk</option>
-                                                    <option value="Theft/Loss">Theft/Loss</option>
-                                                    <option value="Obsolete Technology">Obsolete Technology</option>
-                                                    <option value="Cost of Repair Exceeds Value">Cost of Repair Exceeds Value</option>
                                                 </select>
                                                 @error("disposal.{$index}.disposal_type")
                                                     <div class="text-danger small">{{ $message }}</div>
@@ -233,7 +223,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const disposalValue = e.target.closest('tr').querySelector('input[name*="[disposal_value]"]');
             const disposalType = e.target.value;
             
-            if (['Donated', 'Recycled', 'Destroyed', 'Lost', 'Stolen'].includes(disposalType)) {
+            if (['Donated', 'Recycled', 'Damaged', 'Lost'].includes(disposalType)) {
                 disposalValue.value = '';
                 disposalValue.placeholder = 'N/A for ' + disposalType.toLowerCase();
             } else {

@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Asset;
 use App\Models\Maintenance;
-use App\Models\AssetAssignment;
 use App\Models\User;
 use App\Models\AuditLog;
 use Illuminate\Support\Facades\Mail;
@@ -93,40 +92,6 @@ class AutomationService
         }
 
         Log::info("Checked {count} assets for warranty expiry", ['count' => $expiringAssets->count()]);
-    }
-
-    /**
-     * Check for assignment expiry
-     */
-    public function checkAssignmentExpiry()
-    {
-        $expiringAssignments = AssetAssignment::where('status', 'active')
-            ->whereNotNull('end_date')
-            ->where('end_date', '<=', now()->addDays(7))
-            ->where('end_date', '>', now())
-            ->get();
-
-        foreach ($expiringAssignments as $assignment) {
-            // Log assignment expiry warning
-            AuditLog::create([
-                'user_id' => null, // System action
-                'action' => 'assignment_expiring',
-                'model_type' => 'App\Models\AssetAssignment',
-                'model_id' => $assignment->id,
-                'ip_address' => '127.0.0.1',
-                'user_agent' => 'System Automation',
-                'details' => [
-                    'assignment_id' => $assignment->id,
-                    'asset_id' => $assignment->asset_id,
-                    'user_id' => $assignment->user_id,
-                    'end_date' => $assignment->end_date,
-                    'days_remaining' => now()->diffInDays($assignment->end_date, false)
-                ],
-                'timestamp' => now()
-            ]);
-        }
-
-        Log::info("Checked {count} assignments for expiry", ['count' => $expiringAssignments->count()]);
     }
 
     /**
@@ -306,7 +271,6 @@ class AutomationService
             'total_assets' => Asset::count(),
             'active_assets' => Asset::where('status', 'active')->count(),
             'total_users' => User::count(),
-            'active_assignments' => AssetAssignment::where('status', 'active')->count(),
             'pending_maintenance' => Maintenance::where('status', 'pending')->count(),
             'overdue_maintenance' => Maintenance::where('status', 'overdue')->count(),
             'total_audit_logs' => AuditLog::count(),

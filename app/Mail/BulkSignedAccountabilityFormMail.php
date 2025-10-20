@@ -60,57 +60,8 @@ class BulkSignedAccountabilityFormMail extends Mailable
     {
         $attachments = [];
         
-        foreach ($this->assets as $asset) {
-            $assignment = $asset->currentAssignment;
-            if ($assignment && $assignment->signed_form_path) {
-                // Try different path constructions
-                $filePath1 = storage_path('app/public/' . $assignment->signed_form_path);
-                $filePath2 = storage_path('app/public/public/' . $assignment->signed_form_path);
-                $filePath3 = storage_path('app/' . $assignment->signed_form_path);
-                
-                $filePath = null;
-                if (file_exists($filePath1)) {
-                    $filePath = $filePath1;
-                } elseif (file_exists($filePath2)) {
-                    $filePath = $filePath2;
-                } elseif (file_exists($filePath3)) {
-                    $filePath = $filePath3;
-                } else {
-                    // Try to find any file with the asset tag in the signed_forms directory
-                    $signedFormsDir = storage_path('app/public/signed_forms/');
-                    if (is_dir($signedFormsDir)) {
-                        $files = glob($signedFormsDir . '*' . $asset->asset_tag . '*');
-                        if (!empty($files)) {
-                            $filePath = $files[0]; // Use the first matching file
-                            \Log::info('Found file using glob search', [
-                                'asset_tag' => $asset->asset_tag,
-                                'found_file' => $filePath,
-                                'all_matches' => $files
-                            ]);
-                        } else {
-                            \Log::warning('No files found for asset tag', [
-                                'asset_tag' => $asset->asset_tag,
-                                'search_pattern' => $signedFormsDir . '*' . $asset->asset_tag . '*',
-                                'directory_contents' => array_slice(scandir($signedFormsDir), 2) // Skip . and ..
-                            ]);
-                        }
-                    }
-                }
-                
-                if ($filePath) {
-                    $attachments[] = Attachment::fromPath($filePath)
-                        ->as("signed_accountability_form_{$asset->asset_tag}.pdf");
-                } else {
-                    // Log for debugging
-                    \Log::error('Attachment file not found', [
-                        'asset_tag' => $asset->asset_tag,
-                        'signed_form_path' => $assignment->signed_form_path,
-                        'tried_paths' => [$filePath1, $filePath2, $filePath3],
-                        'signed_forms_dir' => $signedFormsDir ?? 'not found'
-                    ]);
-                }
-            }
-        }
+        // Note: Attachment functionality simplified after AssetAssignment removal
+        // Signed forms would need to be stored differently to be attached here
         
         return $attachments;
     }

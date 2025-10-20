@@ -90,15 +90,10 @@
                                 <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
                                 <select class="form-select @error('status') is-invalid @enderror" id="status" name="status" required>
                                     <option value="Available" {{ old('status', $asset->status) == 'Available' ? 'selected' : '' }}>Available</option>
-                                    <option value="Assigned" {{ old('status', $asset->status) == 'Assigned' ? 'selected' : '' }}>Assigned</option>
-                                    <option value="Active" {{ old('status', $asset->status) == 'Active' ? 'selected' : '' }}>Active</option>
-                                    <option value="Inactive" {{ old('status', $asset->status) == 'Inactive' ? 'selected' : '' }}>Inactive</option>
-                                    <option value="Under Maintenance" {{ old('status', $asset->status) == 'Under Maintenance' ? 'selected' : '' }}>Under Maintenance</option>
-                                    <option value="Issue Reported" {{ old('status', $asset->status) == 'Issue Reported' ? 'selected' : '' }}>Issue Reported</option>
+                                    <option value="Maintenance" {{ old('status', $asset->status) == 'Maintenance' ? 'selected' : '' }}>Maintenance</option>
                                     <option value="Pending Confirmation" {{ old('status', $asset->status) == 'Pending Confirmation' ? 'selected' : '' }}>Pending Confirmation</option>
-                                    <option value="Retired" {{ old('status', $asset->status) == 'Retired' ? 'selected' : '' }}>Retired</option>
-                                    <option value="Damaged" {{ old('status', $asset->status) == 'Damaged' ? 'selected' : '' }}>Damaged</option>
-                                    <option value="Disposed" {{ old('status', $asset->status) == 'Disposed' ? 'selected' : '' }}>Disposed</option>
+                                    <option value="Active" {{ old('status', $asset->status) == 'Active' ? 'selected' : '' }}>Active</option>
+                                    <option value="For Disposal" {{ old('status', $asset->status) == 'For Disposal' ? 'selected' : '' }}>For Disposal</option>
                                 </select>
                                 @error('status')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -112,11 +107,9 @@
                             <div class="mb-3">
                                 <label for="movement" class="form-label">Movement</label>
                                 <select class="form-select @error('movement') is-invalid @enderror" id="movement" name="movement">
+                                    <option value="Return" {{ old('movement', $asset->movement) == 'Return' ? 'selected' : '' }}>Return</option>
                                     <option value="New Arrival" {{ old('movement', $asset->movement) == 'New Arrival' ? 'selected' : '' }}>New Arrival</option>
                                     <option value="Deployed" {{ old('movement', $asset->movement) == 'Deployed' ? 'selected' : '' }}>Deployed</option>
-                                    <option value="Returned" {{ old('movement', $asset->movement) == 'Returned' ? 'selected' : '' }}>Returned</option>
-                                    <option value="Transferred" {{ old('movement', $asset->movement) == 'Transferred' ? 'selected' : '' }}>Transferred</option>
-                                    <option value="Disposed" {{ old('movement', $asset->movement) == 'Disposed' ? 'selected' : '' }}>Disposed</option>
                                 </select>
                                 @error('movement')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -260,6 +253,19 @@
                                     @endforeach
                                 </select>
                                 @error('assigned_to')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="assigned_date" class="form-label">Assigned Date</label>
+                                <input type="date" class="form-control @error('assigned_date') is-invalid @enderror" 
+                                       id="assigned_date" name="assigned_date" 
+                                       value="{{ old('assigned_date', $asset->assigned_date ? $asset->assigned_date->format('Y-m-d') : '') }}"
+                                       max="{{ date('Y-m-d') }}">
+                                <small class="form-text text-muted">Required when assigning to a user</small>
+                                @error('assigned_date')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -593,13 +599,10 @@ $(document).ready(function() {
         // Define status to movement mapping
          const statusMovementMap = {
              'Active': 'Deployed',
-             'Inactive': 'Returned',
-             'Under Maintenance': 'Deployed',
-             'Issue Reported': 'Deployed',
-             'Pending Confirmation': 'Deployed',
-             'Retired': 'Returned',
-             'Damaged': 'Returned',
-             'Disposed': 'Disposed'
+             'Available': 'Return',
+             'Maintenance': 'Deployed',
+             'Pending Confirmation': 'New Arrival',
+             'For Disposal': 'Return'
          };
         
         // Auto-populate movement if mapping exists
@@ -619,6 +622,28 @@ $(document).ready(function() {
     if (initialCategory) {
         toggleMobileNumberField(initialCategory);
     }
+    
+    // Handle assigned_date field visibility and validation
+    function toggleAssignedDateField() {
+        const assignedTo = document.getElementById('assigned_to');
+        const assignedDateField = document.getElementById('assigned_date');
+        const assignedDateContainer = assignedDateField.closest('.mb-3');
+        
+        if (assignedTo.value) {
+            assignedDateContainer.style.display = 'block';
+            assignedDateField.required = true;
+        } else {
+            assignedDateContainer.style.display = 'block'; // Always show, but make it optional
+            assignedDateField.required = false;
+            assignedDateField.value = '';
+        }
+    }
+    
+    // Add event listener for assigned_to changes
+    document.getElementById('assigned_to').addEventListener('change', toggleAssignedDateField);
+    
+    // Initialize on page load
+    toggleAssignedDateField();
 });
 </script>
 @endsection

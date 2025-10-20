@@ -204,13 +204,13 @@
                                     <div class="col-12 mb-2">
                                         <div class="d-flex justify-content-between">
                                             <span>Total Value:</span>
-                                            <strong>${{ number_format($totalValue, 2) }}</strong>
+                                            <strong>₱{{ number_format($totalValue, 2) }}</strong>
                                         </div>
                                     </div>
                                     <div class="col-12 mb-2">
                                         <div class="d-flex justify-content-between">
                                             <span>Average Value:</span>
-                                            <strong>${{ number_format($avgValue, 2) }}</strong>
+                                            <strong>₱{{ number_format($avgValue, 2) }}</strong>
                                         </div>
                                     </div>
                                     <div class="col-12 mb-2">

@@ -25,6 +25,7 @@ class Asset extends Model
         'lifespan',
         'location',
         'notes',
+        'signed_form_path',
         'status',
         'movement',
         'assigned_to',
@@ -61,8 +62,8 @@ class Asset extends Model
             'lifespan' => 'nullable|integer|min:1|max:50',
             'location' => 'nullable|string|max:255',
             'notes' => 'nullable|string|max:1000',
-            'status' => 'required|in:Available,Active,Inactive,Under Maintenance,Issue Reported,Pending Confirmation,Disposed',
-            'movement' => 'required|in:New Arrival,Deployed,Deployed Tagged,Returned,Disposed',
+            'status' => 'required|in:Available,Maintenance,Pending Confirmation,Active,For Disposal',
+            'movement' => 'required|in:Return,New Arrival,Deployed',
             'assigned_to' => 'nullable|exists:users,id',
             'assigned_date' => 'nullable|date|required_with:assigned_to',
             'department_id' => 'nullable|exists:departments,id'
@@ -91,8 +92,8 @@ class Asset extends Model
             'lifespan' => 'nullable|integer|min:1|max:50',
             'location' => 'nullable|string|max:255',
             'notes' => 'nullable|string|max:1000',
-            'status' => 'required|in:Available,Active,Inactive,Under Maintenance,Issue Reported,Pending Confirmation,Disposed',
-            'movement' => 'required|in:New Arrival,Deployed,Deployed Tagged,Returned,Disposed',
+            'status' => 'required|in:Available,Maintenance,Pending Confirmation,Active,For Disposal',
+            'movement' => 'required|in:Return,New Arrival,Deployed',
             'assigned_to' => 'nullable|exists:users,id',
             'assigned_date' => 'nullable|date|required_with:assigned_to',
             'department_id' => 'nullable|exists:departments,id'
@@ -168,16 +169,6 @@ class Asset extends Model
     public function timeline()
     {
         return $this->hasMany(AssetTimeline::class)->orderBy('performed_at', 'desc');
-    }
-
-    public function assignments()
-    {
-        return $this->hasMany(AssetAssignment::class);
-    }
-
-    public function currentAssignment()
-    {
-        return $this->hasOne(AssetAssignment::class)->latest();
     }
 
     protected static function booted()

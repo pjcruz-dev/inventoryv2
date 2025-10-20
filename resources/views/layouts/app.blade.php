@@ -3899,11 +3899,13 @@
                         {{ config('app.name', 'Laravel') }}
                     </a>
                     <div class="navbar-nav ms-auto">
-                        @if (Route::has('login'))
-                            <a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
-                        @endif
-                        @if (Route::has('register'))
-                            <a class="nav-link" href="{{ route('register') }}">{{ __('Register') }}</a>
+                        @if (!str_contains(request()->path(), 'password/reset') && !str_contains(request()->path(), 'password/email'))
+                            @if (Route::has('login'))
+                                <a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
+                            @endif
+                            @if (Route::has('register'))
+                                <a class="nav-link" href="{{ route('register') }}">{{ __('Register') }}</a>
+                            @endif
                         @endif
                     </div>
                 </div>
@@ -3996,15 +3998,6 @@
                                 <a class="nav-link {{ request()->routeIs('asset-categories.*') ? 'active' : '' }}" href="{{ route('asset-categories.index') }}">
                                     <i class="fas fa-tags"></i>
                                     Asset Categories
-                                </a>
-                            </li>
-                            @endcan
-                            
-                            @can('view_asset_assignments')
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('asset-assignments.*') ? 'active' : '' }}" href="{{ route('asset-assignments.index') }}">
-                                    <i class="fas fa-user-check"></i>
-                                    Asset Assignments
                                 </a>
                             </li>
                             @endcan
@@ -4219,7 +4212,7 @@
                                             // Build breadcrumbs based on route
                                             if ($currentRoute === 'dashboard') {
                                                 // Dashboard - no additional breadcrumbs
-                                            } elseif (isset($routeSegments[0]) && in_array($routeSegments[0], ['assets', 'users', 'asset-categories', 'departments', 'vendors', 'monitors', 'computers', 'printers', 'peripherals', 'asset-assignments', 'asset-assignment-confirmations', 'maintenance', 'disposal', 'transfers', 'accountability'])) {
+                                            } elseif (isset($routeSegments[0]) && in_array($routeSegments[0], ['assets', 'users', 'asset-categories', 'departments', 'vendors', 'monitors', 'computers', 'printers', 'peripherals', 'asset-assignment-confirmations', 'maintenance', 'disposal', 'transfers', 'accountability'])) {
                                                 $moduleName = ucfirst(str_replace('-', ' ', $routeSegments[0]));
                                                 
                                                 // Add module index breadcrumb
@@ -4355,7 +4348,7 @@
                                             <i class="fas fa-user"></i>
                                         </div>
                                         <div class="user-info">
-                                            <div class="user-name">{{ Auth::user()->first_name ?? Auth::user()->name ?? 'User' }}</div>
+                                            <div class="user-name">{{ Auth::user() ? (Auth::user()->first_name ?? Auth::user()->name ?? 'User') : 'User' }}</div>
                                         </div>
                                         <i class="fas fa-chevron-down ms-1"></i>
                                     </div>
@@ -4400,16 +4393,6 @@
         <!-- Mobile Sidebar Backdrop -->
         <div class="sidebar-backdrop d-md-none" id="sidebarBackdrop"></div>
     @endguest
-    
-    <!-- Dark Mode Toggle Button -->
-    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
-        <svg class="moon-icon" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
-        </svg>
-        <svg class="sun-icon" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
-        </svg>
-    </button>
     
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
@@ -4460,87 +4443,6 @@
         // Initialize dropdowns when DOM is ready
         document.addEventListener('DOMContentLoaded', function () {
             initializeDropdowns();
-        });
-    </script>
-    
-    <!-- Dark Mode Toggle Script -->
-    <script>
-        // Dark mode functionality
-        const themeToggle = document.getElementById('themeToggle');
-        const htmlElement = document.documentElement;
-        
-        // Check for saved theme preference or default to 'light'
-        const currentTheme = localStorage.getItem('theme') || 'light';
-        htmlElement.setAttribute('data-theme', currentTheme);
-        
-        // Update toggle button state
-        function updateToggleButton(theme) {
-            const moonIcon = themeToggle.querySelector('.moon-icon');
-            const sunIcon = themeToggle.querySelector('.sun-icon');
-            
-            if (theme === 'dark') {
-                moonIcon.style.display = 'none';
-                sunIcon.style.display = 'block';
-                themeToggle.setAttribute('aria-label', 'Switch to light mode');
-            } else {
-                moonIcon.style.display = 'block';
-                sunIcon.style.display = 'none';
-                themeToggle.setAttribute('aria-label', 'Switch to dark mode');
-            }
-        }
-        
-        // Initialize button state
-        updateToggleButton(currentTheme);
-        
-        // Theme toggle event listener
-        themeToggle.addEventListener('click', function() {
-            const currentTheme = htmlElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            
-            htmlElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateToggleButton(newTheme);
-            
-            // Add a subtle animation feedback
-            themeToggle.style.transform = 'scale(0.95)';
-            setTimeout(() => {
-                themeToggle.style.transform = 'scale(1)';
-            }, 150);
-        });
-        
-        // Keyboard accessibility
-        themeToggle.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                themeToggle.click();
-            }
-        });
-        
-        // System theme preference detection
-        if (window.matchMedia) {
-            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-            
-            // Only apply system preference if no saved preference exists
-            if (!localStorage.getItem('theme')) {
-                const systemTheme = mediaQuery.matches ? 'dark' : 'light';
-                htmlElement.setAttribute('data-theme', systemTheme);
-                updateToggleButton(systemTheme);
-            }
-            
-            // Listen for system theme changes
-            mediaQuery.addEventListener('change', function(e) {
-                // Only apply if no manual preference is saved
-                if (!localStorage.getItem('theme')) {
-                    const systemTheme = e.matches ? 'dark' : 'light';
-                    htmlElement.setAttribute('data-theme', systemTheme);
-                    updateToggleButton(systemTheme);
-                }
-            });
-        }
-        
-        // Smooth transition on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            document.body.style.transition = 'background-color 0.3s ease, color 0.3s ease';
         });
     </script>
     
@@ -5267,9 +5169,9 @@
                                         <i class="fas fa-user"></i>
                                     </div>
                                     <div class="user-details">
-                                        <div class="user-name-large">{{ Auth::user()->first_name ?? Auth::user()->name ?? 'User' }}</div>
-                                        <div class="user-email">{{ Auth::user()->email }}</div>
-                                        <div class="user-role-badge">{{ Auth::user()->roles->first()->name ?? 'User' }}</div>
+                                        <div class="user-name-large">{{ Auth::user() ? (Auth::user()->first_name ?? Auth::user()->name ?? 'User') : 'User' }}</div>
+                                        <div class="user-email">{{ Auth::user() ? Auth::user()->email : 'N/A' }}</div>
+                                        <div class="user-role-badge">{{ Auth::user() ? (Auth::user()->roles->first()->name ?? 'User') : 'User' }}</div>
                                     </div>
                                 </div>
                             </div>

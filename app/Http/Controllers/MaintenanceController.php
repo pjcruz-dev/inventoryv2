@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Maintenance;
 use App\Models\Asset;
 use App\Models\Vendor;
+use App\Models\User;
+use App\Mail\MaintenanceProgressNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 class MaintenanceController extends Controller
 {
@@ -67,9 +70,8 @@ class MaintenanceController extends Controller
      */
     public function create()
     {
-
-        $assets = Asset::whereIn('status', ['Available', 'Assigned', 'Issue Reported'])
-                      ->where('status', '!=', 'Under Maintenance')
+        $assets = Asset::where('status', 'Maintenance')
+                      ->where('movement', 'Return')
                       ->orderBy('name')
                       ->get();
         $vendors = Vendor::orderBy('name')->get();
@@ -82,8 +84,8 @@ class MaintenanceController extends Controller
      */
     public function bulkCreate()
     {
-        $assets = Asset::whereIn('status', ['Available', 'Assigned', 'Issue Reported'])
-                      ->where('status', '!=', 'Under Maintenance')
+        $assets = Asset::where('status', 'Maintenance')
+                      ->where('movement', 'Return')
                       ->orderBy('name')
                       ->get();
         $vendors = Vendor::orderBy('name')->get();
@@ -126,11 +128,13 @@ class MaintenanceController extends Controller
 
         \DB::beginTransaction();
         try {
+            $maintenanceRecords = [];
             foreach ($selectedAssets as $index => $assetId) {
                 $maintenanceData = $request->input("maintenance.{$index}");
                 
                 // Create maintenance record
                 $maintenance = Maintenance::create($maintenanceData);
+                $maintenanceRecords[] = $maintenance;
 
                 // Update asset status to Under Maintenance
                 $asset = Asset::find($assetId);
@@ -144,7 +148,35 @@ class MaintenanceController extends Controller
 
             \DB::commit();
 
-            $message = "Successfully created {$created} maintenance records.";
+            // Send email notifications for all created maintenance records
+            try {
+                $processedBy = Auth::user();
+                foreach ($maintenanceRecords as $maintenance) {
+                    $asset = $maintenance->asset;
+                    $assignedUser = $asset->assigned_to ? User::find($asset->assigned_to) : null;
+                    
+                    // Collect unique email addresses to prevent duplicates
+                    $emailRecipients = collect();
+                    
+                    // Always send to the user who created the maintenance record
+                    $emailRecipients->push($processedBy->email);
+                    
+                    // If there's an assigned user and they're different from the processor, add them too
+                    if ($assignedUser && $assignedUser->id !== $processedBy->id) {
+                        $emailRecipients->push($assignedUser->email);
+                    }
+                    
+                    // Send to unique recipients only
+                    foreach ($emailRecipients->unique() as $email) {
+                        Mail::to($email)->send(new MaintenanceProgressNotification($maintenance, $assignedUser, $processedBy, 'created'));
+                    }
+                }
+            } catch (\Exception $e) {
+                // Log the error but don't fail the request
+                \Log::error('Failed to send bulk maintenance creation notification emails: ' . $e->getMessage());
+            }
+
+            $message = "Successfully created {$created} maintenance records. Email notifications sent.";
             if (!empty($errors)) {
                 $message .= " " . count($errors) . " records were skipped due to errors.";
                 return redirect()->route('maintenance.index')
@@ -205,8 +237,34 @@ class MaintenanceController extends Controller
             ['status' => 'Under Maintenance', 'movement' => 'Transferred']
         );
 
+        // Send email notification
+        try {
+            $assignedUser = $asset->assigned_to ? User::find($asset->assigned_to) : null;
+            $processedBy = Auth::user();
+            
+            // Collect unique email addresses to prevent duplicates
+            $emailRecipients = collect();
+            
+            // Always send to the user who created the maintenance record
+            $emailRecipients->push($processedBy->email);
+            
+            // If there's an assigned user and they're different from the processor, add them too
+            if ($assignedUser && $assignedUser->id !== $processedBy->id) {
+                $emailRecipients->push($assignedUser->email);
+            }
+            
+            
+            // Send to unique recipients only
+            foreach ($emailRecipients->unique() as $email) {
+                Mail::to($email)->send(new MaintenanceProgressNotification($maintenance, $assignedUser, $processedBy, 'created'));
+            }
+        } catch (\Exception $e) {
+            // Log the error but don't fail the request
+            \Log::error('Failed to send maintenance creation notification email: ' . $e->getMessage());
+        }
+
         return redirect()->route('maintenance.index')
-                        ->with('success', 'Maintenance record created successfully. Asset status updated to Under Maintenance.');
+                        ->with('success', 'Maintenance record created successfully. Asset status updated to Under Maintenance. Email notification sent.');
     }
 
     /**
@@ -225,11 +283,12 @@ class MaintenanceController extends Controller
      */
     public function edit(Maintenance $maintenance)
     {
-
-        $assets = Asset::whereIn('status', ['Available', 'Assigned', 'Issue Reported'])
-                      ->where('status', '!=', 'Under Maintenance')
-                      ->orderBy('name')
-                      ->get();
+        // Get assets that are available for maintenance, plus the current asset
+        $assets = Asset::where(function($query) use ($maintenance) {
+            $query->whereIn('status', ['Available', 'Assigned', 'Issue Reported', 'Maintenance', 'Under Maintenance'])
+                  ->orWhere('id', $maintenance->asset_id); // Always include the current asset
+        })->orderBy('name')->get();
+        
         $vendors = Vendor::orderBy('name')->get();
         
         return view('maintenance.edit', compact('maintenance', 'assets', 'vendors'));
@@ -265,8 +324,8 @@ class MaintenanceController extends Controller
             $oldAssetMovement = $asset->movement;
             
             $asset->update([
-                'status' => 'Under Maintenance',
-                'movement' => 'Transferred'
+                'status' => 'Maintenance',
+                'movement' => 'Deployed'
             ]);
             
             // Create timeline entry
@@ -276,7 +335,7 @@ class MaintenanceController extends Controller
                 null,
                 "Maintenance started: {$request->issue_reported}",
                 ['status' => $oldAssetStatus, 'movement' => $oldAssetMovement],
-                ['status' => 'Under Maintenance', 'movement' => 'Transferred']
+                ['status' => 'Maintenance', 'movement' => 'Deployed']
             );
             
         } elseif ($request->status === 'Completed' && $oldStatus !== 'Completed') {
@@ -285,8 +344,8 @@ class MaintenanceController extends Controller
             $oldAssetMovement = $asset->movement;
             
             // Determine appropriate status based on assignment
-            $newStatus = $asset->assigned_to ? 'Assigned' : 'Available';
-            $newMovement = $asset->assigned_to ? 'Deployed Tagged' : 'Returned';
+            $newStatus = $asset->assigned_to ? 'Active' : 'Available';
+            $newMovement = 'Deployed';
             
             $asset->update([
                 'status' => $newStatus,
@@ -304,8 +363,33 @@ class MaintenanceController extends Controller
             );
         }
 
+        // Send email notification for maintenance update
+        try {
+            $assignedUser = $asset->assigned_to ? User::find($asset->assigned_to) : null;
+            $processedBy = Auth::user();
+            
+            // Collect unique email addresses to prevent duplicates
+            $emailRecipients = collect();
+            
+            // Always send to the user who updated the maintenance record
+            $emailRecipients->push($processedBy->email);
+            
+            // If there's an assigned user and they're different from the processor, add them too
+            if ($assignedUser && $assignedUser->id !== $processedBy->id) {
+                $emailRecipients->push($assignedUser->email);
+            }
+            
+            // Send to unique recipients only
+            foreach ($emailRecipients->unique() as $email) {
+                Mail::to($email)->send(new MaintenanceProgressNotification($maintenance, $assignedUser, $processedBy, 'updated'));
+            }
+        } catch (\Exception $e) {
+            // Log the error but don't fail the request
+            \Log::error('Failed to send maintenance update notification email: ' . $e->getMessage());
+        }
+
         return redirect()->route('maintenance.index')
-                        ->with('success', 'Maintenance record updated successfully.');
+                        ->with('success', 'Maintenance record updated successfully. Email notification sent.');
     }
 
     /**

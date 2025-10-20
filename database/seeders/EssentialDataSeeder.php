@@ -2,18 +2,17 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class DatabaseSeeder extends Seeder
+class EssentialDataSeeder extends Seeder
 {
     /**
-     * Seed the application's database.
+     * Run the database seeds for essential data only.
      */
     public function run(): void
     {
-        // Seed only essential data for admin functionality
+        $this->command->info('🌱 Seeding essential data only...');
+        
         $this->call([
             // Core system data required for admin access
             RoleSeeder::class,
@@ -29,12 +28,9 @@ class DatabaseSeeder extends Seeder
             
             // Admin user data
             UserSeeder::class,
-            
-            // Comprehensive sample data (optional - comment out for production)
-            ComprehensiveDataSeeder::class,
         ]);
         
-        $this->command->info('\n=== Essential Database Seeding Completed! ===');
+        $this->command->info('✅ Essential data seeding completed!');
         $this->command->info('✓ Roles and permissions configured');
         $this->command->info('✓ Admin user created with full access');
         $this->command->info('✓ Core system functionality ready');

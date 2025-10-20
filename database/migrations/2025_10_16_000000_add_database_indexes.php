@@ -12,51 +12,63 @@ return new class extends Migration
     public function up(): void
     {
         // Add indexes to assets table for better performance
-        Schema::table('assets', function (Blueprint $table) {
-            $table->index(['category_id', 'status']);
-            $table->index(['vendor_id', 'status']);
-            $table->index(['assigned_to', 'status']);
-            $table->index(['entity', 'status']);
-            $table->index(['movement', 'created_at']);
-            $table->index(['purchase_date', 'warranty_end']);
-            $table->index(['created_at', 'updated_at']);
-        });
+        if (Schema::hasTable('assets')) {
+            Schema::table('assets', function (Blueprint $table) {
+                $table->index(['category_id', 'status']);
+                $table->index(['vendor_id', 'status']);
+                $table->index(['assigned_to', 'status']);
+                $table->index(['entity', 'status']);
+                $table->index(['movement', 'created_at']);
+                $table->index(['purchase_date', 'warranty_end']);
+                $table->index(['created_at', 'updated_at']);
+            });
+        }
 
         // Add indexes to users table
-        Schema::table('users', function (Blueprint $table) {
-            $table->index(['department_id', 'status']);
-            $table->index(['entity', 'status']);
-            $table->index(['created_at', 'updated_at']);
-        });
+        if (Schema::hasTable('users')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->index(['department_id', 'status']);
+                $table->index(['entity', 'status']);
+                $table->index(['created_at', 'updated_at']);
+            });
+        }
 
         // Add indexes to logs table for better query performance
-        Schema::table('logs', function (Blueprint $table) {
-            $table->index(['user_id', 'created_at']);
-            $table->index(['asset_id', 'created_at']);
-            $table->index(['event_type', 'created_at']);
-            $table->index(['category', 'created_at']);
-        });
+        if (Schema::hasTable('logs')) {
+            Schema::table('logs', function (Blueprint $table) {
+                $table->index(['user_id', 'created_at']);
+                $table->index(['asset_id', 'created_at']);
+                $table->index(['event_type', 'created_at']);
+                $table->index(['category', 'created_at']);
+            });
+        }
 
         // Add indexes to asset_timeline table
-        Schema::table('asset_timeline', function (Blueprint $table) {
-            $table->index(['asset_id', 'performed_at']);
-            $table->index(['performed_by', 'performed_at']);
-            $table->index(['action', 'performed_at']);
-        });
+        if (Schema::hasTable('asset_timeline')) {
+            Schema::table('asset_timeline', function (Blueprint $table) {
+                $table->index(['asset_id', 'performed_at']);
+                $table->index(['performed_by', 'performed_at']);
+                $table->index(['action', 'performed_at']);
+            });
+        }
 
-        // Add indexes to asset_assignments table
-        Schema::table('asset_assignments', function (Blueprint $table) {
-            $table->index(['asset_id', 'status']);
-            $table->index(['user_id', 'status']);
-            $table->index(['assigned_date', 'status']);
-        });
+        // Add indexes to asset_assignments table (if exists)
+        if (Schema::hasTable('asset_assignments')) {
+            Schema::table('asset_assignments', function (Blueprint $table) {
+                $table->index(['asset_id', 'status']);
+                $table->index(['user_id', 'status']);
+                $table->index(['assigned_date', 'status']);
+            });
+        }
 
         // Add indexes to asset_assignment_confirmations table
-        Schema::table('asset_assignment_confirmations', function (Blueprint $table) {
-            $table->index(['asset_id', 'status']);
-            $table->index(['user_id', 'status']);
-            $table->index(['created_at', 'status']);
-        });
+        if (Schema::hasTable('asset_assignment_confirmations')) {
+            Schema::table('asset_assignment_confirmations', function (Blueprint $table) {
+                $table->index(['asset_id', 'status']);
+                $table->index(['user_id', 'status']);
+                $table->index(['created_at', 'status']);
+            });
+        }
     }
 
     /**

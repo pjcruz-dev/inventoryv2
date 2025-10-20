@@ -116,7 +116,7 @@
                                     <th>User</th>
                                     <th>Assigned At</th>
                                     <th>Status</th>
-                                    <th>Confirmed At</th>
+                                    <th>Processed At</th>
                                     <th>Reminders</th>
                                     <th>Actions</th>
                                 </tr>
@@ -176,12 +176,16 @@
                                             @endswitch
                                         </td>
                                         <td>
-                                            @if($confirmation->confirmed_at)
+                                            @if($confirmation->status == 'confirmed' && $confirmation->confirmed_at)
                                                 <span class="badge bg-success">
                                                     {{ $confirmation->confirmed_at->format('M d, Y') }}
                                                 </span>
+                                            @elseif($confirmation->status == 'declined' && $confirmation->declined_at)
+                                                <span class="badge bg-danger">
+                                                    {{ $confirmation->declined_at->format('M d, Y') }}
+                                                </span>
                                             @else
-                                                <span class="text-muted">Not confirmed</span>
+                                                <span class="text-muted">Not processed</span>
                                             @endif
                                         </td>
                                         <td>

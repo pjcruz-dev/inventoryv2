@@ -9,6 +9,7 @@ use App\Models\Vendor;
 use App\Models\User;
 use App\Models\AssetAssignmentConfirmation;
 use App\Mail\AssetAssignmentConfirmation as AssetAssignmentConfirmationMail;
+use App\Mail\MaintenanceNotification;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -39,6 +40,23 @@ class AssetController extends Controller
         
         // Filter assets based on user role
         $user = auth()->user();
+        
+        // Temporarily comment out filtering to show all assets for testing
+        // Exclude assets with Maintenance/For Disposal status and Return movement
+        // $query->where(function($q) {
+        //     $q->where('status', '!=', 'Maintenance')
+        //       ->orWhere(function($subQ) {
+        //           $subQ->where('status', 'Maintenance')
+        //                ->where('movement', '!=', 'Return');
+        //       });
+        // })
+        // ->where(function($q) {
+        //     $q->where('status', '!=', 'For Disposal')
+        //       ->orWhere(function($subQ) {
+        //           $subQ->where('status', 'For Disposal')
+        //                ->where('movement', '!=', 'Return');
+        //       });
+        // });
         
         // If user has only 'User' role, show only their assigned assets
         if ($user->hasRole('User') && !$user->hasAnyRole(['Admin', 'Super Admin', 'Manager', 'IT Support'])) {
@@ -116,12 +134,17 @@ class AssetController extends Controller
         // Set status and movement based on assignment
         if (!empty($validated['assigned_to'])) {
             // If asset is being assigned during creation
-            $validated['status'] = 'Pending Confirmation';
+            $validated['status'] = 'Active';
             $validated['movement'] = 'Deployed';
             $validated['assigned_date'] = now();
         } else {
-            // Default for unassigned assets
+            // Default for unassigned assets - ensure movement is always set
             $validated['status'] = 'Available';
+            $validated['movement'] = 'New Arrival';
+        }
+        
+        // Ensure movement is always set to New Arrival for new assets if not already set
+        if (empty($validated['movement'])) {
             $validated['movement'] = 'New Arrival';
         }
 
@@ -132,17 +155,6 @@ class AssetController extends Controller
 
         $asset = Asset::create($validated);
         
-        // Create AssetAssignment record if asset is assigned during creation
-        if (!empty($validated['assigned_to'])) {
-            \App\Models\AssetAssignment::create([
-                'asset_id' => $asset->id,
-                'user_id' => $validated['assigned_to'],
-                'assigned_by' => auth()->id(),
-                'assigned_date' => $validated['assigned_date'],
-                'status' => 'pending',
-                'notes' => 'Asset assigned during creation'
-            ]);
-        }
         return redirect()->route('assets.index')->with('success', 'Asset created successfully.');
     }
     
@@ -172,7 +184,7 @@ class AssetController extends Controller
         
         // Set status and movement based on assignment
         if (!empty($validated['assigned_to'])) {
-            $validated['status'] = 'Pending Confirmation';
+            $validated['status'] = 'Active';
             $validated['movement'] = 'Deployed';
             $validated['assigned_date'] = now();
         } else {
@@ -197,18 +209,6 @@ class AssetController extends Controller
             
             $asset = Asset::create($validated);
             $createdAssets[] = $asset;
-            
-            // Create AssetAssignment record if asset is assigned during creation
-            if (!empty($validated['assigned_to'])) {
-                \App\Models\AssetAssignment::create([
-                    'asset_id' => $asset->id,
-                    'user_id' => $validated['assigned_to'],
-                    'assigned_by' => auth()->id(),
-                    'assigned_date' => $validated['assigned_date'],
-                    'status' => 'pending',
-                    'notes' => 'Asset assigned during bulk creation'
-                ]);
-            }
         }
         
         $message = count($createdAssets) . ' assets created successfully.';
@@ -340,7 +340,7 @@ class AssetController extends Controller
         
         // Set status and movement based on assignment
         if (!empty($validated['assigned_to'])) {
-            $validated['status'] = 'Pending Confirmation';
+            $validated['status'] = 'Active';
             $validated['movement'] = 'Deployed';
             $validated['assigned_date'] = now();
         } else {
@@ -365,18 +365,6 @@ class AssetController extends Controller
             
             $asset = Asset::create($validated);
             $createdAssets[] = $asset;
-            
-            // Create AssetAssignment record if asset is assigned during creation
-            if (!empty($validated['assigned_to'])) {
-                \App\Models\AssetAssignment::create([
-                    'asset_id' => $asset->id,
-                    'user_id' => $validated['assigned_to'],
-                    'assigned_by' => auth()->id(),
-                    'assigned_date' => $validated['assigned_date'],
-                    'status' => 'pending',
-                    'notes' => 'Asset assigned during bulk creation with serial'
-                ]);
-            }
         }
         
         $message = count($createdAssets) . ' assets created successfully with serial numbers.';
@@ -454,7 +442,17 @@ class AssetController extends Controller
         $validated = $request->validate($rules);
 
         $asset->update($validated);
-        return redirect()->route('assets.index')->with('success', 'Asset updated successfully.');
+        
+        // Log the update for debugging
+        \Log::info('Asset updated successfully', [
+            'asset_id' => $asset->id,
+            'asset_tag' => $asset->asset_tag,
+            'updated_by' => auth()->user()->email
+        ]);
+        
+        return redirect()->route('assets.index')
+            ->with('success', 'Asset updated successfully.')
+            ->with('asset_updated', true);
     }
 
     /**
@@ -489,22 +487,40 @@ class AssetController extends Controller
 
         $user = User::find($validated['assigned_to']);
         
-        // Update asset status to Pending Confirmation
+        // Update asset status to Pending Confirmation and movement to New Arrival
         $asset->update([
             'assigned_to' => $validated['assigned_to'],
             'assigned_date' => $validated['assigned_date'],
-            'status' => 'Pending Confirmation'
+            'status' => 'Pending Confirmation',
+            'movement' => 'New Arrival'
         ]);
 
-        // Create AssetAssignment record (this will automatically create confirmation via model boot method)
-        \App\Models\AssetAssignment::create([
+        // Create AssetAssignmentConfirmation record
+        $confirmation = AssetAssignmentConfirmation::create([
             'asset_id' => $asset->id,
             'user_id' => $validated['assigned_to'],
-            'assigned_by' => auth()->id(),
-            'assigned_date' => $validated['assigned_date'],
+            'confirmation_token' => AssetAssignmentConfirmation::generateToken(),
             'status' => 'pending',
-            'notes' => $validated['notes']
+            'assigned_at' => $validated['assigned_date'],
+            'notes' => $validated['notes'],
+            'reminder_count' => 0
         ]);
+
+        // Send confirmation email
+        try {
+            Mail::to($user->email)->send(new AssetAssignmentConfirmationMail(
+                $asset,
+                $user,
+                $confirmation->confirmation_token,
+                false
+            ));
+        } catch (\Exception $e) {
+            \Log::error('Failed to send assignment confirmation email', [
+                'asset_id' => $asset->id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+        }
 
         // Create enhanced audit log
         $this->activityLogService->logActivity(
@@ -536,12 +552,12 @@ class AssetController extends Controller
         
         $previousUser = $asset->assignedUser;
         
-        // Update asset status to Active and movement to Returned
+        // Update asset status to Available and movement to Return
         $asset->update([
             'assigned_to' => null,
             'assigned_date' => null,
             'status' => 'Available',
-            'movement' => 'Returned'
+            'movement' => 'Return'
         ]);
 
         // Mark any pending confirmations as completed (asset returned)
@@ -557,7 +573,7 @@ class AssetController extends Controller
         $this->activityLogService->logActivity(
             $asset,
             'returned',
-            'Asset returned from ' . ($previousUser ? $previousUser->first_name . ' ' . $previousUser->last_name : 'unknown user') . '. Status updated to Active, movement to Returned.',
+            'Asset returned from ' . ($previousUser ? $previousUser->first_name . ' ' . $previousUser->last_name : 'unknown user') . '. Status updated to Available, movement to Return.',
             $asset->getOriginal(), // old values
             $asset->getAttributes(), // new values
             [
@@ -566,14 +582,14 @@ class AssetController extends Controller
                 'previous_status' => $asset->getOriginal('status'),
                 'new_status' => 'Available',
                 'previous_movement' => $asset->getOriginal('movement'),
-                'new_movement' => 'Returned',
+                'new_movement' => 'Return',
                 'return_processed_by' => auth()->user()->first_name . ' ' . auth()->user()->last_name
             ]
         );
 
         return response()->json([
             'success' => true,
-            'message' => 'Asset returned successfully. Status updated to Active.'
+            'message' => 'Asset returned successfully. Status updated to Available.'
         ]);
     }
 
@@ -602,14 +618,6 @@ class AssetController extends Controller
                 'notes' => 'Asset reassigned - previous confirmation automatically completed'
             ]);
         
-        // Mark any existing pending assignments as completed
-        \App\Models\AssetAssignment::where('asset_id', $asset->id)
-            ->where('status', 'pending')
-            ->update([
-                'status' => 'confirmed',
-                'return_date' => now()
-            ]);
-        
         // Update asset status to Pending Confirmation for new assignment
         $asset->update([
             'assigned_to' => $validated['new_assigned_to'],
@@ -617,15 +625,32 @@ class AssetController extends Controller
             'status' => 'Pending Confirmation'
         ]);
 
-        // Create new AssetAssignment record (this will automatically create confirmation via model boot method)
-        \App\Models\AssetAssignment::create([
+        // Create new AssetAssignmentConfirmation record for the new user
+        $confirmation = AssetAssignmentConfirmation::create([
             'asset_id' => $asset->id,
             'user_id' => $validated['new_assigned_to'],
-            'assigned_by' => auth()->id(),
-            'assigned_date' => $validated['assigned_date'],
+            'confirmation_token' => AssetAssignmentConfirmation::generateToken(),
             'status' => 'pending',
-            'notes' => $validated['notes']
+            'assigned_at' => $validated['assigned_date'],
+            'notes' => $validated['notes'],
+            'reminder_count' => 0
         ]);
+
+        // Send confirmation email to new user
+        try {
+            Mail::to($newUser->email)->send(new AssetAssignmentConfirmationMail(
+                $asset,
+                $newUser,
+                $confirmation->confirmation_token,
+                false
+            ));
+        } catch (\Exception $e) {
+            \Log::error('Failed to send reassignment confirmation email', [
+                'asset_id' => $asset->id,
+                'user_id' => $newUser->id,
+                'error' => $e->getMessage()
+            ]);
+        }
 
         // Create audit log for reassignment
         \App\Models\Log::create([
@@ -854,6 +879,102 @@ class AssetController extends Controller
                 'phone' => $asset->vendor->phone,
                 'email' => $asset->vendor->email
             ] : null
+        ]);
+    }
+
+    /**
+     * Send asset to maintenance
+     */
+    public function sendToMaintenance(Asset $asset)
+    {
+        $this->authorize('maintenance', $asset);
+        
+        // Update asset status to Maintenance and movement to Return while retaining assigned user
+        $asset->update([
+            'status' => 'Maintenance',
+            'movement' => 'Return'
+        ]);
+
+        // Create enhanced audit log
+        $this->activityLogService->logActivity(
+            $asset,
+            'maintenance_sent',
+            'Asset sent to maintenance. Status changed to Maintenance, movement to Return.',
+            $asset->getOriginal(), // old values
+            $asset->getAttributes(), // new values
+            [
+                'previous_status' => $asset->getOriginal('status'),
+                'new_status' => 'Maintenance',
+                'previous_movement' => $asset->getOriginal('movement'),
+                'new_movement' => 'Return',
+                'assigned_user_retained' => $asset->assigned_to ? true : false,
+                'maintenance_processed_by' => auth()->user()->first_name . ' ' . auth()->user()->last_name
+            ]
+        );
+
+        // Send email notification
+        try {
+            $assignedUser = $asset->assigned_to ? User::find($asset->assigned_to) : null;
+            $processedBy = auth()->user();
+            
+            // Collect unique email addresses to prevent duplicates
+            $emailRecipients = collect();
+            
+            // Always send to the user who processed the maintenance
+            $emailRecipients->push($processedBy->email);
+            
+            // If there's an assigned user and they're different from the processor, add them too
+            if ($assignedUser && $assignedUser->id !== $processedBy->id) {
+                $emailRecipients->push($assignedUser->email);
+            }
+            
+            // Send to unique recipients only
+            foreach ($emailRecipients->unique() as $email) {
+                Mail::to($email)->send(new MaintenanceNotification($asset, $assignedUser, $processedBy));
+            }
+        } catch (\Exception $e) {
+            // Log the error but don't fail the request
+            \Log::error('Failed to send maintenance notification email: ' . $e->getMessage());
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Asset sent to maintenance successfully. Status updated to Maintenance. Email notification sent.'
+        ]);
+    }
+
+    /**
+     * Send asset to disposal
+     */
+    public function sendToDisposal(Asset $asset)
+    {
+        $this->authorize('dispose', $asset);
+        
+        // Update asset status to For Disposal and movement to Return
+        $asset->update([
+            'status' => 'For Disposal',
+            'movement' => 'Return'
+        ]);
+
+        // Create enhanced audit log
+        $this->activityLogService->logActivity(
+            $asset,
+            'disposal_sent',
+            'Asset sent to disposal. Status changed to For Disposal, movement to Return.',
+            $asset->getOriginal(), // old values
+            $asset->getAttributes(), // new values
+            [
+                'previous_status' => $asset->getOriginal('status'),
+                'new_status' => 'For Disposal',
+                'previous_movement' => $asset->getOriginal('movement'),
+                'new_movement' => 'Return',
+                'disposal_processed_by' => auth()->user()->first_name . ' ' . auth()->user()->last_name
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Asset sent to disposal successfully. Status updated to For Disposal.'
         ]);
     }
 }
