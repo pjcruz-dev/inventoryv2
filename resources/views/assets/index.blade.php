@@ -3,6 +3,12 @@
 @section('title', 'Assets')
 @section('page-title', auth()->user()->hasRole('User') && !auth()->user()->hasAnyRole(['Admin', 'Super Admin', 'Manager', 'IT Support']) ? 'My Assets' : 'Assets Management')
 
+@if(session('asset_updated'))
+    <div class="alert alert-info">
+        Debug: Asset update session detected. Success message: {{ session('success') }}
+    </div>
+@endif
+
 @section('page-actions')
     <div class="d-flex gap-2">
         <!-- Buttons moved to header for better alignment -->
@@ -64,6 +70,190 @@ document.addEventListener('DOMContentLoaded', function() {
 @endsection
 
 @section('content')
+<script>
+// Global functions for asset maintenance and disposal
+let currentAssetId = null;
+
+function sendToMaintenance(assetId, assetTag, assetName, assignedUser, status, movement) {
+    console.log('sendToMaintenance called with:', assetId, assetTag, assetName);
+    currentAssetId = assetId;
+    
+    // Check if modal elements exist
+    const maintenanceDetails = document.getElementById('maintenanceAssetDetails');
+    const maintenanceModal = document.getElementById('maintenanceModal');
+    
+    if (!maintenanceDetails) {
+        console.error('maintenanceAssetDetails element not found');
+        alert('Modal elements not found. Please refresh the page.');
+        return;
+    }
+    
+    if (!maintenanceModal) {
+        console.error('maintenanceModal element not found');
+        alert('Modal elements not found. Please refresh the page.');
+        return;
+    }
+    
+    // Populate asset details in modal
+    maintenanceDetails.innerHTML = `
+        <div class="row">
+            <div class="col-6"><strong>Asset Tag:</strong> ${assetTag}</div>
+            <div class="col-6"><strong>Name:</strong> ${assetName}</div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-6"><strong>Assigned User:</strong> ${assignedUser || 'None'}</div>
+            <div class="col-6"><strong>Current Status:</strong> <span class="badge bg-primary">${status}</span></div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-6"><strong>Current Movement:</strong> <span class="badge bg-info">${movement}</span></div>
+        </div>
+    `;
+    
+    // Show the modal
+    try {
+        const modal = new bootstrap.Modal(maintenanceModal);
+        modal.show();
+        console.log('Maintenance modal shown successfully');
+    } catch (error) {
+        console.error('Error showing maintenance modal:', error);
+        alert('Error opening modal: ' + error.message);
+    }
+}
+
+function sendToDisposal(assetId, assetTag, assetName, assignedUser, status, movement) {
+    console.log('sendToDisposal called with:', assetId, assetTag, assetName);
+    currentAssetId = assetId;
+    
+    // Check if modal elements exist
+    const disposalDetails = document.getElementById('disposalAssetDetails');
+    const disposalModal = document.getElementById('disposalModal');
+    
+    if (!disposalDetails) {
+        console.error('disposalAssetDetails element not found');
+        alert('Modal elements not found. Please refresh the page.');
+        return;
+    }
+    
+    if (!disposalModal) {
+        console.error('disposalModal element not found');
+        alert('Modal elements not found. Please refresh the page.');
+        return;
+    }
+    
+    // Populate asset details in modal
+    disposalDetails.innerHTML = `
+        <div class="row">
+            <div class="col-6"><strong>Asset Tag:</strong> ${assetTag}</div>
+            <div class="col-6"><strong>Name:</strong> ${assetName}</div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-6"><strong>Assigned User:</strong> ${assignedUser || 'None'}</div>
+            <div class="col-6"><strong>Current Status:</strong> <span class="badge bg-primary">${status}</span></div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-6"><strong>Current Movement:</strong> <span class="badge bg-info">${movement}</span></div>
+        </div>
+    `;
+    
+    // Show the modal
+    try {
+        const modal = new bootstrap.Modal(disposalModal);
+        modal.show();
+        console.log('Disposal modal shown successfully');
+    } catch (error) {
+        console.error('Error showing disposal modal:', error);
+        alert('Error opening modal: ' + error.message);
+    }
+}
+
+// Make functions globally accessible
+window.sendToMaintenance = sendToMaintenance;
+window.sendToDisposal = sendToDisposal;
+
+console.log('Functions defined:', typeof sendToMaintenance, typeof sendToDisposal);
+
+// Handle maintenance and disposal confirmations
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, setting up event listeners');
+    
+    const confirmMaintenanceBtn = document.getElementById('confirmMaintenance');
+    const confirmDisposalBtn = document.getElementById('confirmDisposal');
+    
+    console.log('confirmMaintenanceBtn found:', !!confirmMaintenanceBtn);
+    console.log('confirmDisposalBtn found:', !!confirmDisposalBtn);
+    
+    if (confirmMaintenanceBtn) {
+        confirmMaintenanceBtn.addEventListener('click', function() {
+            console.log('Maintenance confirmation clicked, currentAssetId:', currentAssetId);
+            if (currentAssetId) {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                console.log('CSRF Token:', csrfToken);
+                
+                fetch(`/assets/${currentAssetId}/maintenance`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Maintenance response:', data);
+                    if (data.success) {
+                        // Close modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('maintenanceModal'));
+                        modal.hide();
+                        // Reload page
+                        location.reload();
+                    } else {
+                        alert('Error sending to maintenance: ' + (data.message || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Maintenance error:', error);
+                    alert('Error sending to maintenance');
+                });
+            }
+        });
+    }
+
+    if (confirmDisposalBtn) {
+        confirmDisposalBtn.addEventListener('click', function() {
+            console.log('Disposal confirmation clicked, currentAssetId:', currentAssetId);
+            if (currentAssetId) {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                console.log('CSRF Token:', csrfToken);
+                
+                fetch(`/assets/${currentAssetId}/disposal`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Disposal response:', data);
+                    if (data.success) {
+                        // Close modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('disposalModal'));
+                        modal.hide();
+                        // Reload page
+                        location.reload();
+                    } else {
+                        alert('Error sending to disposal: ' + (data.message || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Disposal error:', error);
+                    alert('Error sending to disposal');
+                });
+            }
+        });
+    }
+});
+</script>
+
 <div class="card">
     <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
         <div class="row align-items-center">
@@ -238,15 +428,14 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="d-flex flex-column gap-1">
                                     <span class="badge badge-enhanced bg-{{ 
                                         $asset->status === 'Active' ? 'success' : 
-                                        ($asset->status === 'Inactive' ? 'danger' : 
-                                        ($asset->status === 'Under Maintenance' ? 'warning' : 
-                                        ($asset->status === 'Issue Reported' ? 'danger' : 
-                                        ($asset->status === 'Pending Confirmation' ? 'info' : 
-                                        ($asset->status === 'Disposed' ? 'dark' : 'secondary')))))
+                                        ($asset->status === 'Available' ? 'info' : 
+                                        ($asset->status === 'Maintenance' ? 'warning' : 
+                                        ($asset->status === 'Pending Confirmation' ? 'primary' : 
+                                        ($asset->status === 'For Disposal' ? 'danger' : 'secondary'))))
                                     }} px-2 py-1">
                                         {{ $asset->status }}
                                     </span>
-                                    <small class="text-muted">{{ str_replace('Deployed Tagged', 'Deployed', $asset->movement ?? 'New Arrival') }}</small>
+                                    <small class="text-muted">{{ $asset->movement ?? 'New Arrival' }}</small>
                                 </div>
                             </td>
                             <td>
@@ -286,6 +475,18 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     @endcan
+                                    @if($asset->status !== 'Maintenance' && $asset->status !== 'For Disposal')
+                                        @can('maintenance', $asset)
+                                        <button type="button" class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-maintenance" title="Send to Maintenance" onclick="sendToMaintenance({{ $asset->id }}, '{{ $asset->asset_tag }}', '{{ $asset->name }}', '{{ $asset->assignedUser ? $asset->assignedUser->first_name . ' ' . $asset->assignedUser->last_name : 'None' }}', '{{ $asset->status }}', '{{ $asset->movement }}')">
+                                            <i class="fas fa-wrench"></i>
+                                        </button>
+                                        @endcan
+                                        @can('dispose', $asset)
+                                        <button type="button" class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-disposal" title="Send to Disposal" onclick="sendToDisposal({{ $asset->id }}, '{{ $asset->asset_tag }}', '{{ $asset->name }}', '{{ $asset->assignedUser ? $asset->assignedUser->first_name . ' ' . $asset->assignedUser->last_name : 'None' }}', '{{ $asset->status }}', '{{ $asset->movement }}')">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                        @endcan
+                                    @endif
                                     @can('delete_assets')
                                     <form action="{{ route('assets.destroy', $asset->id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this asset? This action cannot be undone.')">
                                         @csrf
@@ -740,6 +941,89 @@ function openBulkPrintModal() {
     </div>
 </div>
 
+<!-- Maintenance Confirmation Modal -->
+<div class="modal fade" id="maintenanceModal" tabindex="-1" aria-labelledby="maintenanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="maintenanceModalLabel">
+                    <i class="fas fa-wrench text-warning me-2"></i>Send to Maintenance
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Warning:</strong> This action will change the asset status and movement.
+                </div>
+                <p>Are you sure you want to send this asset to maintenance?</p>
+                <div class="bg-light p-3 rounded">
+                    <h6 class="mb-2">This will:</h6>
+                    <ul class="mb-0">
+                        <li>Set status to <span class="badge bg-warning">Maintenance</span></li>
+                        <li>Set movement to <span class="badge bg-info">Return</span></li>
+                        <li>Retain the assigned user (if any)</li>
+                        <li>Hide the asset from the main asset list</li>
+                    </ul>
+                </div>
+                <div class="mt-3">
+                    <strong>Asset Details:</strong>
+                    <div id="maintenanceAssetDetails" class="mt-2"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-warning" id="confirmMaintenance">
+                    <i class="fas fa-wrench me-2"></i>Send to Maintenance
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Disposal Confirmation Modal -->
+<div class="modal fade" id="disposalModal" tabindex="-1" aria-labelledby="disposalModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="disposalModalLabel">
+                    <i class="fas fa-trash-alt text-danger me-2"></i>Send to Disposal
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Warning:</strong> This action will change the asset status and movement.
+                </div>
+                <p>Are you sure you want to send this asset to disposal?</p>
+                <div class="bg-light p-3 rounded">
+                    <h6 class="mb-2">This will:</h6>
+                    <ul class="mb-0">
+                        <li>Set status to <span class="badge bg-secondary">For Disposal</span></li>
+                        <li>Set movement to <span class="badge bg-info">Return</span></li>
+                        <li>Hide the asset from the main asset list</li>
+                    </ul>
+                </div>
+                <div class="mt-3">
+                    <strong>Asset Details:</strong>
+                    <div id="disposalAssetDetails" class="mt-2"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDisposal">
+                    <i class="fas fa-trash-alt me-2"></i>Send to Disposal
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('styles')
@@ -791,6 +1075,28 @@ function openBulkPrintModal() {
 
 .action-btn-delete:hover {
     background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: white;
+}
+
+.action-btn-maintenance {
+    background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+    color: white;
+    border-color: #f59e0b;
+}
+
+.action-btn-maintenance:hover {
+    background: linear-gradient(135deg, #d97706 0%, #ea580c 100%);
+    color: white;
+}
+
+.action-btn-disposal {
+    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    color: white;
+    border-color: #6b7280;
+}
+
+.action-btn-disposal:hover {
+    background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
     color: white;
 }
 
@@ -914,4 +1220,71 @@ function openBulkPrintModal() {
     }
 }
 </style>
+
+<script>
+// JavaScript functions for Maintenance and Disposal actions
+let currentAssetId = null;
+
+function sendToMaintenance(assetId) {
+    currentAssetId = assetId;
+    
+    // Get asset details from the table row
+    const row = document.querySelector(`button[onclick="sendToMaintenance(${assetId})"]`).closest('tr');
+    const assetTag = row.cells[1].textContent.trim();
+    const assetName = row.cells[2].textContent.trim();
+    const assignedUser = row.cells[4].textContent.trim();
+    const status = row.cells[5].textContent.trim();
+    const movement = row.cells[6].textContent.trim();
+    
+    // Populate asset details in modal
+    document.getElementById('maintenanceAssetDetails').innerHTML = `
+        <div class="row">
+            <div class="col-6"><strong>Asset Tag:</strong> ${assetTag}</div>
+            <div class="col-6"><strong>Name:</strong> ${assetName}</div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-6"><strong>Assigned User:</strong> ${assignedUser || 'None'}</div>
+            <div class="col-6"><strong>Current Status:</strong> <span class="badge bg-primary">${status}</span></div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-6"><strong>Current Movement:</strong> <span class="badge bg-info">${movement}</span></div>
+        </div>
+    `;
+    
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('maintenanceModal'));
+    modal.show();
+}
+
+function sendToDisposal(assetId) {
+    currentAssetId = assetId;
+    
+    // Get asset details from the table row
+    const row = document.querySelector(`button[onclick="sendToDisposal(${assetId})"]`).closest('tr');
+    const assetTag = row.cells[1].textContent.trim();
+    const assetName = row.cells[2].textContent.trim();
+    const assignedUser = row.cells[4].textContent.trim();
+    const status = row.cells[5].textContent.trim();
+    const movement = row.cells[6].textContent.trim();
+    
+    // Populate asset details in modal
+    document.getElementById('disposalAssetDetails').innerHTML = `
+        <div class="row">
+            <div class="col-6"><strong>Asset Tag:</strong> ${assetTag}</div>
+            <div class="col-6"><strong>Name:</strong> ${assetName}</div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-6"><strong>Assigned User:</strong> ${assignedUser || 'None'}</div>
+            <div class="col-6"><strong>Current Status:</strong> <span class="badge bg-primary">${status}</span></div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-6"><strong>Current Movement:</strong> <span class="badge bg-info">${movement}</span></div>
+        </div>
+    `;
+    
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('disposalModal'));
+    modal.show();
+}
+
 @endpush

@@ -51,23 +51,6 @@
                         </div>
                     @endif
 
-                    <!-- Search Section -->
-                    <div class="mb-3">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <form method="GET" action="{{ route('printers.index') }}">
-                                    <div class="input-group">
-                                        <input type="text" name="search" class="form-control" 
-                                               placeholder="Search by asset tag, name..." 
-                                               value="{{ request('search') }}" style="border-radius: 6px 0 0 6px; border: 2px solid #e9ecef;">
-                                        <button class="btn btn-primary" type="submit" style="border-radius: 0 6px 6px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 2px solid #667eea;">
-                                            <i class="fas fa-search"></i>
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- Printers Table -->
                     <div class="table-responsive">

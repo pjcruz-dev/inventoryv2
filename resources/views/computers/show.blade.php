@@ -179,9 +179,6 @@
                                 </div>
                                 <div>
                                     @if($computer->asset->assignedUser)
-                                        <button type="button" class="btn btn-outline-danger me-2" onclick="unassignAsset({{ $computer->asset->id }})">
-                                            <i class="fas fa-user-times"></i> Unassign User
-                                        </button>
                                         <button type="button" class="btn btn-outline-info me-2" data-bs-toggle="modal" data-bs-target="#reassignModal">
                                             <i class="fas fa-exchange-alt"></i> Reassign User
                                         </button>
@@ -238,8 +235,9 @@
                         <input type="date" class="form-control" id="assigned_date" name="assigned_date" value="{{ date('Y-m-d') }}" required>
                     </div>
                     <div class="mb-3">
-                        <label for="notes" class="form-label">Notes (Optional)</label>
-                        <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Any additional notes about this assignment..."></textarea>
+                        <label for="notes" class="form-label">Assignment Notes (Optional)</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Enter assignment details, location, purpose, or any specific instructions for this computer assignment..."></textarea>
+                        <small class="form-text text-muted">Include details like: location, purpose, special instructions, or computer configuration notes</small>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -299,29 +297,6 @@
 
 @push('scripts')
 <script>
-function unassignAsset(assetId) {
-    if (confirm('Are you sure you want to unassign this user from the computer?')) {
-        fetch(`/assets/${assetId}/unassign`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Error unassigning user: ' + (data.message || 'Unknown error'));
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error unassigning user');
-        });
-    }
-}
 
 function filterUsers() {
     const filter = document.getElementById('userFilter').value.toLowerCase();

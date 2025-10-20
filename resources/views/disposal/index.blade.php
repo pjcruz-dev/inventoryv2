@@ -40,21 +40,11 @@
                                 <div class="col-md-3">
                                     <select name="disposal_type" id="disposal_type" class="form-select" style="border: 2px solid #e9ecef; border-radius: 6px;">
                                         <option value="">All Disposal Types</option>
+                                        <option value="Damaged" {{ request('disposal_type') == 'Damaged' ? 'selected' : '' }}>Damaged</option>
+                                        <option value="Recycled" {{ request('disposal_type') == 'Recycled' ? 'selected' : '' }}>Recycled</option>
                                         <option value="Sold" {{ request('disposal_type') == 'Sold' ? 'selected' : '' }}>Sold</option>
                                         <option value="Donated" {{ request('disposal_type') == 'Donated' ? 'selected' : '' }}>Donated</option>
-                                        <option value="Recycled" {{ request('disposal_type') == 'Recycled' ? 'selected' : '' }}>Recycled</option>
-                                        <option value="Destroyed" {{ request('disposal_type') == 'Destroyed' ? 'selected' : '' }}>Destroyed</option>
                                         <option value="Lost" {{ request('disposal_type') == 'Lost' ? 'selected' : '' }}>Lost</option>
-                                        <option value="Stolen" {{ request('disposal_type') == 'Stolen' ? 'selected' : '' }}>Stolen</option>
-                                        <option value="Trade-in" {{ request('disposal_type') == 'Trade-in' ? 'selected' : '' }}>Trade-in</option>
-                                        <option value="Return to Vendor" {{ request('disposal_type') == 'Return to Vendor' ? 'selected' : '' }}>Return to Vendor</option>
-                                        <option value="Upgrade Replacement" {{ request('disposal_type') == 'Upgrade Replacement' ? 'selected' : '' }}>Upgrade Replacement</option>
-                                        <option value="Damaged Beyond Repair" {{ request('disposal_type') == 'Damaged Beyond Repair' ? 'selected' : '' }}>Damaged Beyond Repair</option>
-                                        <option value="End of Life" {{ request('disposal_type') == 'End of Life' ? 'selected' : '' }}>End of Life</option>
-                                        <option value="Security Risk" {{ request('disposal_type') == 'Security Risk' ? 'selected' : '' }}>Security Risk</option>
-                                        <option value="Theft/Loss" {{ request('disposal_type') == 'Theft/Loss' ? 'selected' : '' }}>Theft/Loss</option>
-                                        <option value="Obsolete Technology" {{ request('disposal_type') == 'Obsolete Technology' ? 'selected' : '' }}>Obsolete Technology</option>
-                                        <option value="Cost of Repair Exceeds Value" {{ request('disposal_type') == 'Cost of Repair Exceeds Value' ? 'selected' : '' }}>Cost of Repair Exceeds Value</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
@@ -128,7 +118,7 @@
                                             <span class="badge bg-info">{{ $disposal->asset->asset_tag }}</span>
                                         </td>
                                         <td>
-                                            <span class="badge {{ $disposal->disposal_type == 'Sold' ? 'bg-success' : ($disposal->disposal_type == 'Donated' ? 'bg-info' : ($disposal->disposal_type == 'Recycled' ? 'bg-warning' : ($disposal->disposal_type == 'Destroyed' ? 'bg-danger' : ($disposal->disposal_type == 'Lost' ? 'bg-secondary' : ($disposal->disposal_type == 'Stolen' ? 'bg-dark' : 'bg-primary'))))) }} text-white" style="font-size: 0.75rem; padding: 0.25rem 0.5rem; font-weight: 500;">
+                                            <span class="badge {{ $disposal->disposal_type == 'Sold' ? 'bg-success' : ($disposal->disposal_type == 'Donated' ? 'bg-info' : ($disposal->disposal_type == 'Recycled' ? 'bg-warning' : ($disposal->disposal_type == 'Damaged' ? 'bg-danger' : ($disposal->disposal_type == 'Lost' ? 'bg-secondary' : 'bg-primary')))) }} text-white" style="font-size: 0.75rem; padding: 0.25rem 0.5rem; font-weight: 500;">
                                                 {{ $disposal->disposal_type }}
                                             </span>
                                         </td>

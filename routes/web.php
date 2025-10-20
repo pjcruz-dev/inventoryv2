@@ -5,7 +5,6 @@ use App\Http\Middleware\SecurityValidationMiddleware;
 use App\Http\Middleware\SecurityHeadersMiddleware;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\AssetCategoryController;
-use App\Http\Controllers\AssetAssignmentController;
 use App\Http\Controllers\AssetAssignmentConfirmationController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\DepartmentController;
@@ -70,6 +69,8 @@ Route::middleware('auth')->group(function () {
     Route::post('assets/{asset}/assign', [AssetController::class, 'assign'])->name('assets.assign')->middleware('prevent.maintenance.edit');
     Route::post('assets/{asset}/unassign', [AssetController::class, 'unassign'])->name('assets.unassign')->middleware('prevent.maintenance.edit');
     Route::post('assets/{asset}/reassign', [AssetController::class, 'reassign'])->name('assets.reassign')->middleware('prevent.maintenance.edit');
+    Route::post('assets/{asset}/maintenance', [AssetController::class, 'sendToMaintenance'])->name('assets.maintenance');
+    Route::post('assets/{asset}/disposal', [AssetController::class, 'sendToDisposal'])->name('assets.disposal');
     Route::get('assets/reports/employee-assets', [AssetController::class, 'printEmployeeAssets'])->name('assets.print-employee-assets');
     Route::get('assets/reports/employee-assets/{user}', [AssetController::class, 'printSingleEmployeeAssets'])->name('assets.print-single-employee-assets');
     Route::post('assets/bulk/print-labels', [AssetController::class, 'bulkPrintLabels'])->name('assets.bulk-print-labels');
@@ -85,15 +86,6 @@ Route::middleware('auth')->group(function () {
     Route::get('asset-categories/download/template', [AssetCategoryController::class, 'downloadTemplate'])->name('asset-categories.download-template');
     Route::get('asset-categories/import/form', [AssetCategoryController::class, 'importForm'])->name('asset-categories.import-form');
     Route::post('asset-categories/import', [AssetCategoryController::class, 'import'])->name('asset-categories.import');
-    
-    // Asset Assignments
-    Route::resource('asset-assignments', AssetAssignmentController::class)->middleware('prevent.maintenance.edit');
-    Route::get('asset-assignments/export', [AssetAssignmentController::class, 'export'])->name('asset-assignments.export');
-    Route::get('asset-assignments/export/excel', [AssetAssignmentController::class, 'exportExcel'])->name('asset-assignments.export.excel');
-    Route::get('asset-assignments/download/template', [AssetAssignmentController::class, 'downloadTemplate'])->name('asset-assignments.download-template');
-    Route::get('asset-assignments/import/form', [AssetAssignmentController::class, 'importForm'])->name('asset-assignments.import-form');
-    Route::post('asset-assignments/import', [AssetAssignmentController::class, 'import'])->name('asset-assignments.import');
-    Route::post('asset-assignments/{assignment}/return', [AssetAssignmentController::class, 'markAsReturned'])->name('asset-assignments.return')->middleware('prevent.maintenance.edit');
     
     // Asset Assignment Confirmations
     Route::resource('asset-assignment-confirmations', AssetAssignmentConfirmationController::class)->middleware('check.permission:view_assignment_confirmations');
@@ -212,7 +204,7 @@ Route::get('/dashboard/asset-movements', [App\Http\Controllers\DashboardControll
 
     // Change Password
     Route::get('/password/change', [ChangePasswordController::class, 'edit'])->name('password.edit');
-    Route::post('/password/change', [ChangePasswordController::class, 'update'])->name('password.change');
+    Route::post('/password/change', [ChangePasswordController::class, 'update'])->name('password.change-password');
 });
 
 // Accountability Form routes

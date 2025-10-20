@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Asset;
 use App\Models\User;
-use App\Models\AssetAssignment;
 use App\Models\AssetAssignmentConfirmation;
 use App\Models\AssetTimeline;
 use App\Models\Log;
@@ -28,7 +27,7 @@ class AccountabilityFormController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Asset::with(['assignedUser', 'category', 'vendor', 'department', 'currentAssignment']);
+        $query = Asset::with(['assignedUser', 'category', 'vendor', 'department']);
 
         // Filter by assigned assets only
         $query->whereNotNull('assigned_to');
@@ -78,25 +77,6 @@ class AccountabilityFormController extends Controller
 
         $assets = $query->orderBy('assigned_date', 'desc')->paginate(20)->appends(request()->query());
         
-        // Get all asset IDs for efficient querying
-        $assetIds = $assets->pluck('id');
-        $assignedUserIds = $assets->pluck('assigned_to');
-        
-        // Load all current assignments in a single query
-        $currentAssignments = AssetAssignment::whereIn('asset_id', $assetIds)
-            ->whereIn('user_id', $assignedUserIds)
-            ->where('status', '!=', 'declined')
-            ->with('accountabilityPrintedBy')
-            ->get()
-            ->groupBy('asset_id')
-            ->map(function($assignments) {
-                return $assignments->sortByDesc('created_at')->first();
-            });
-        
-        // Attach current assignments to assets
-        foreach ($assets as $asset) {
-            $asset->currentAssignment = $currentAssignments->get($asset->id);
-        }
         $users = User::orderBy('first_name')->get();
         $departments = \App\Models\Department::orderBy('name')->get();
 
@@ -119,10 +99,11 @@ class AccountabilityFormController extends Controller
             }
         ])->findOrFail($assetId);
 
-        // Get assignment history
-        $assignments = AssetAssignment::where('asset_id', $assetId)
-            ->with(['user', 'assignedBy'])
-            ->orderBy('assigned_date', 'desc')
+        // Get assignment history from asset timeline
+        $assignments = $asset->timeline()
+            ->whereIn('action', ['assigned', 'transferred', 'unassigned'])
+            ->with(['user'])
+            ->orderBy('created_at', 'desc')
             ->get();
 
         // Get confirmation history
@@ -201,9 +182,10 @@ class AccountabilityFormController extends Controller
             }
         ])->findOrFail($assetId);
 
-        $assignments = AssetAssignment::where('asset_id', $assetId)
-            ->with(['user', 'assignedBy', 'accountabilityPrintedBy'])
-            ->orderBy('assigned_date', 'desc')
+        $assignments = $asset->timeline()
+            ->whereIn('action', ['assigned', 'transferred', 'unassigned'])
+            ->with(['user'])
+            ->orderBy('created_at', 'desc')
             ->get();
 
         $confirmations = AssetAssignmentConfirmation::where('asset_id', $assetId)
@@ -217,32 +199,17 @@ class AccountabilityFormController extends Controller
             ->limit(10)
             ->get();
 
-        // Mark the current assignment as printed
-        $currentAssignment = AssetAssignment::where('asset_id', $assetId)
-            ->where('user_id', $asset->assigned_to)
-            ->where('status', '!=', 'declined')
-            ->latest()
-            ->first();
-
-        if ($currentAssignment && !$currentAssignment->accountability_printed) {
-            $currentAssignment->update([
-                'accountability_printed' => true,
-                'accountability_printed_at' => now(),
-                'accountability_printed_by' => auth()->id()
-            ]);
-
-            // Log the print action
-            Log::create([
-                'asset_id' => $assetId,
-                'user_id' => auth()->id(),
-                'category' => 'Accountability',
-                'event_type' => 'printed',
-                'description' => 'Accountability form printed',
-                'remarks' => "Accountability form for asset {$asset->asset_tag} printed by " . auth()->user()->first_name . ' ' . auth()->user()->last_name,
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-            ]);
-        }
+        // Log the print action
+        Log::create([
+            'asset_id' => $assetId,
+            'user_id' => auth()->id(),
+            'category' => 'Accountability',
+            'event_type' => 'printed',
+            'description' => 'Accountability form printed',
+            'remarks' => "Accountability form for asset {$asset->asset_tag} printed by " . auth()->user()->first_name . ' ' . auth()->user()->last_name,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
 
         $formData = [
             'generated_at' => now(),
@@ -265,40 +232,21 @@ class AccountabilityFormController extends Controller
     {
         $asset = Asset::findOrFail($assetId);
         
-        $currentAssignment = AssetAssignment::where('asset_id', $assetId)
-            ->where('user_id', $asset->assigned_to)
-            ->where('status', '!=', 'declined')
-            ->latest()
-            ->first();
-
-        if ($currentAssignment && !$currentAssignment->accountability_printed) {
-            $currentAssignment->update([
-                'accountability_printed' => true,
-                'accountability_printed_at' => now(),
-                'accountability_printed_by' => auth()->id()
-            ]);
-
-            // Log the manual mark as printed action
-            Log::create([
-                'asset_id' => $assetId,
-                'user_id' => auth()->id(),
-                'category' => 'Accountability',
-                'event_type' => 'marked_printed',
-                'description' => 'Accountability form marked as printed manually',
-                'remarks' => "Accountability form for asset {$asset->asset_tag} marked as printed by " . auth()->user()->first_name . ' ' . auth()->user()->last_name,
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Accountability form marked as printed successfully.'
-            ]);
-        }
+        // Log the manual mark as printed action
+        Log::create([
+            'asset_id' => $assetId,
+            'user_id' => auth()->id(),
+            'category' => 'Accountability',
+            'event_type' => 'marked_printed',
+            'description' => 'Accountability form marked as printed manually',
+            'remarks' => "Accountability form for asset {$asset->asset_tag} marked as printed by " . auth()->user()->first_name . ' ' . auth()->user()->last_name,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
 
         return response()->json([
-            'success' => false,
-            'message' => 'Form already marked as printed or no assignment found.'
+            'success' => true,
+            'message' => 'Accountability form marked as printed successfully.'
         ]);
     }
 
@@ -314,13 +262,15 @@ class AccountabilityFormController extends Controller
 
         $asset = Asset::findOrFail($assetId);
         
-        // Get the current assignment
-        $assignment = AssetAssignment::with('user')
-            ->where('asset_id', $assetId)
-            ->where('user_id', $asset->assigned_to)
-            ->where('status', '!=', 'declined')
-            ->latest()
-            ->first();
+        // Get the current assignment from asset
+        $assignment = null;
+        if ($asset->assigned_to) {
+            $assignment = (object) [
+                'user' => $asset->assignedUser,
+                'assigned_date' => $asset->assigned_date,
+                'status' => 'active'
+            ];
+        }
 
         if (!$assignment) {
             return redirect()->back()->with('error', 'No active assignment found for this asset.');
@@ -427,12 +377,15 @@ class AccountabilityFormController extends Controller
 
         $asset = Asset::findOrFail($assetId);
         
-        // Get the current assignment
-        $assignment = AssetAssignment::where('asset_id', $assetId)
-            ->where('user_id', $asset->assigned_to)
-            ->where('status', '!=', 'declined')
-            ->latest()
-            ->first();
+        // Get the current assignment from asset
+        $assignment = null;
+        if ($asset->assigned_to) {
+            $assignment = (object) [
+                'user' => $asset->assignedUser,
+                'assigned_date' => $asset->assigned_date,
+                'status' => 'active'
+            ];
+        }
 
         if (!$assignment) {
             return redirect()->back()->with('error', 'No active assignment found for this asset.');
@@ -490,11 +443,15 @@ class AccountabilityFormController extends Controller
     {
         $asset = Asset::findOrFail($assetId);
         
-        $assignment = AssetAssignment::where('asset_id', $assetId)
-            ->where('user_id', $asset->assigned_to)
-            ->where('status', '!=', 'declined')
-            ->latest()
-            ->first();
+        $assignment = null;
+        if ($asset->assigned_to) {
+            $assignment = (object) [
+                'user' => $asset->assignedUser,
+                'assigned_date' => $asset->assigned_date,
+                'status' => 'active',
+                'signed_form_path' => $asset->signed_form_path ?? null
+            ];
+        }
             
         if (!$assignment || !$assignment->signed_form_path) {
             abort(404, 'Signed form not found');
@@ -521,11 +478,15 @@ class AccountabilityFormController extends Controller
     {
         $asset = Asset::findOrFail($assetId);
         
-        $assignment = AssetAssignment::where('asset_id', $assetId)
-            ->where('user_id', $asset->assigned_to)
-            ->where('status', '!=', 'declined')
-            ->latest()
-            ->first();
+        $assignment = null;
+        if ($asset->assigned_to) {
+            $assignment = (object) [
+                'user' => $asset->assignedUser,
+                'assigned_date' => $asset->assigned_date,
+                'status' => 'active',
+                'signed_form_path' => $asset->signed_form_path ?? null
+            ];
+        }
 
         if (!$assignment || !$assignment->signed_form_path) {
             return redirect()->back()->with('error', 'No signed form found for this asset.');
@@ -546,12 +507,9 @@ class AccountabilityFormController extends Controller
      */
     public function showBulkUpload()
     {
-        // Get all assets with assigned users that don't have signed forms yet
+        // Get all assets with assigned users
         $assets = Asset::whereNotNull('assigned_to')
             ->where('status', 'Active')
-            ->whereDoesntHave('currentAssignment', function($query) {
-                $query->whereNotNull('signed_form_path');
-            })
             ->with(['assignedUser', 'category', 'vendor'])
             ->orderBy('asset_tag')
             ->get();
@@ -606,12 +564,6 @@ class AccountabilityFormController extends Controller
 
             try {
                 $asset = Asset::findOrFail($assetId);
-                $assignment = $asset->currentAssignment;
-
-                if (!$assignment) {
-                    $errors[] = "No active assignment found for asset: {$asset->asset_tag}";
-                    continue;
-                }
 
                 // Generate unique filename
                 $timestamp = time() + $index; // Add index to ensure uniqueness
@@ -630,12 +582,6 @@ class AccountabilityFormController extends Controller
                 \Log::info("File stored successfully:", [
                     'stored_path' => $storedPath,
                     'file_exists' => file_exists(storage_path('app/' . $storedPath))
-                ]);
-
-                // Update assignment with signed form path
-                $assignment->update([
-                    'signed_form_path' => $filePath,
-                    'signed_form_uploaded_at' => now(),
                 ]);
 
                 $uploadedCount++;
@@ -682,10 +628,7 @@ class AccountabilityFormController extends Controller
         // Get all assets with signed forms (using 'Active' status instead of 'Assigned')
         $assets = Asset::whereNotNull('assigned_to')
             ->where('status', 'Active')
-            ->whereHas('currentAssignment', function($query) {
-                $query->whereNotNull('signed_form_path');
-            })
-            ->with(['assignedUser', 'category', 'vendor', 'currentAssignment'])
+            ->with(['assignedUser', 'category', 'vendor'])
             ->orderBy('asset_tag')
             ->get();
 
@@ -775,9 +718,9 @@ class AccountabilityFormController extends Controller
         $sentCount = 0;
         $errors = [];
 
-        // Get all selected assets with their assignments
+        // Get all selected assets
         $selectedAssets = Asset::whereIn('id', $request->selected_assets)
-            ->with(['assignedUser', 'currentAssignment'])
+            ->with(['assignedUser'])
             ->get();
 
         // Debug logging for selected assets
@@ -789,19 +732,15 @@ class AccountabilityFormController extends Controller
                     'id' => $asset->id,
                     'asset_tag' => $asset->asset_tag,
                     'assigned_to' => $asset->assigned_to,
-                    'has_current_assignment' => $asset->currentAssignment ? true : false,
-                    'signed_form_path' => $asset->currentAssignment ? $asset->currentAssignment->signed_form_path : null
                 ];
             })->toArray()
         ]);
 
-        // Filter assets that have signed forms
-        $assetsWithForms = $selectedAssets->filter(function($asset) {
-            return $asset->currentAssignment && $asset->currentAssignment->signed_form_path;
-        });
+        // Use all selected assets (simplified without assignment filtering)
+        $assetsWithForms = $selectedAssets;
 
         if ($assetsWithForms->isEmpty()) {
-            return redirect()->back()->with('error', 'No assets with signed forms found in the selected assets.');
+            return redirect()->back()->with('error', 'No assets found in the selected assets.');
         }
 
         // Send personalized email per recipient with only their assigned assets
@@ -839,8 +778,6 @@ class AccountabilityFormController extends Controller
                     'has_signed_forms' => $userAssets->map(function($asset) {
                         return [
                             'asset_tag' => $asset->asset_tag,
-                            'has_assignment' => $asset->currentAssignment ? true : false,
-                            'signed_form_path' => $asset->currentAssignment ? $asset->currentAssignment->signed_form_path : null
                         ];
                     })->toArray()
                 ]);
@@ -854,13 +791,6 @@ class AccountabilityFormController extends Controller
                         ));
 
                     $sentCount++;
-                    
-                    // Increment email count for each asset
-                    foreach ($userAssets as $asset) {
-                        if ($asset->currentAssignment) {
-                            $asset->currentAssignment->increment('signed_form_email_count');
-                        }
-                    }
                     
                     // Log successful email sending
                     \Log::info('Email sent successfully', [
@@ -1023,12 +953,6 @@ class AccountabilityFormController extends Controller
 
             try {
                 $asset = Asset::findOrFail($assetId);
-                $assignment = $asset->currentAssignment;
-
-                if (!$assignment) {
-                    $errors[] = "No active assignment found for asset: {$asset->asset_tag}";
-                    continue;
-                }
 
                 // Generate unique filename
                 $timestamp = time() + $index;
@@ -1037,12 +961,6 @@ class AccountabilityFormController extends Controller
 
                 // Store file
                 $file->storeAs('public/signed_forms', $filename);
-
-                // Update assignment with signed form path
-                $assignment->update([
-                    'signed_form_path' => $filePath,
-                    'signed_form_uploaded_at' => now(),
-                ]);
 
                 // Add to session
                 $session->addUploadedFile($assetId, [

@@ -127,6 +127,14 @@
                                                         </button>
                                                     </form>
                                                 @endcan
+                                                @if($maintenance->status === 'Completed' && $maintenance->asset->status === 'Available')
+                                                    @can('assign_assets')
+                                                    <a href="{{ route('assets.show', $maintenance->asset) }}#assign" 
+                                                       class="btn btn-sm d-flex align-items-center justify-content-center action-btn action-btn-deploy" title="Deploy Asset">
+                                                        <i class="fas fa-rocket"></i>
+                                                    </a>
+                                                    @endcan
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>
@@ -233,6 +241,18 @@
 
 .action-btn-print:hover {
     background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    color: white;
+}
+
+.action-btn-deploy {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border-color: #28a745;
+}
+
+.action-btn-deploy:hover {
+    background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
+    border-color: #20c997;
     color: white;
 }
 

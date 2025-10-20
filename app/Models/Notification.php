@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Notification extends Model
 {
     protected $fillable = [
-        'user_id',
         'type',
         'title',
         'message',
@@ -24,11 +23,19 @@ class Notification extends Model
     ];
 
     /**
-     * Get the user that owns the notification
+     * Get the notifiable entity (polymorphic relationship)
+     */
+    public function notifiable()
+    {
+        return $this->morphTo();
+    }
+
+    /**
+     * Get the user that owns the notification (for backward compatibility)
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'notifiable_id')->where('notifiable_type', 'App\Models\User');
     }
 
     /**

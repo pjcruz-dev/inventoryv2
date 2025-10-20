@@ -70,7 +70,7 @@ class DisposalController extends Controller
         $disposals = $query->orderBy('disposal_date', 'desc')->paginate(15)->appends(request()->query());
         
         // Get filter options
-        $disposalTypes = ['Sale', 'Donation', 'Recycling', 'Destruction', 'Trade-in', 'Return to Vendor'];
+        $disposalTypes = ['Damaged', 'Recycled', 'Sold', 'Donated', 'Lost'];
         
         return view('disposal.index', compact('disposals', 'disposalTypes'));
     }
@@ -82,8 +82,8 @@ class DisposalController extends Controller
     {
         // Permission is checked by middleware
 
-        $assets = Asset::whereIn('status', ['Available', 'Retired', 'Damaged'])
-                      ->where('status', '!=', 'Disposed') // Exclude already disposed assets
+        $assets = Asset::where('status', 'For Disposal')
+                      ->where('movement', 'Return')
                       ->orderBy('name')
                       ->get();
         
@@ -95,8 +95,8 @@ class DisposalController extends Controller
      */
     public function bulkCreate()
     {
-        $assets = Asset::whereIn('status', ['Available', 'Retired', 'Damaged'])
-                      ->where('status', '!=', 'Disposed')
+        $assets = Asset::where('status', 'For Disposal')
+                      ->where('movement', 'Return')
                       ->orderBy('name')
                       ->get();
         
@@ -146,8 +146,8 @@ class DisposalController extends Controller
                 $oldAssetMovement = $asset->movement;
                 
                 $asset->update([
-                    'status' => 'Disposed',
-                    'movement' => 'Disposed',
+                    'status' => 'For Disposal',
+                    'movement' => 'Deployed',
                     'assigned_to' => null
                 ]);
                 
@@ -158,7 +158,7 @@ class DisposalController extends Controller
                     null,
                     "Asset disposed: {$disposalData['disposal_type']} - {$disposalData['remarks']}",
                     ['status' => $oldAssetStatus, 'movement' => $oldAssetMovement],
-                    ['status' => 'Disposed', 'movement' => 'Disposed']
+                    ['status' => 'For Disposal', 'movement' => 'Deployed']
                 );
 
                 $created++;
@@ -196,7 +196,7 @@ class DisposalController extends Controller
         $request->validate([
             'asset_id' => 'required|exists:assets,id',
             'disposal_date' => 'required|date',
-            'disposal_type' => 'required|in:Sold,Donated,Recycled,Destroyed,Lost,Stolen,Trade-in,Return to Vendor,Upgrade Replacement,Damaged Beyond Repair,End of Life,Security Risk,Theft/Loss,Obsolete Technology,Cost of Repair Exceeds Value,Recycling,Donation',
+            'disposal_type' => 'required|in:Damaged,Recycled,Sold,Donated,Lost',
             'disposal_value' => 'nullable|numeric|min:0|max:999999.99',
             'remarks' => 'nullable|string|max:1000',
         ]);
@@ -209,8 +209,8 @@ class DisposalController extends Controller
         $oldAssetMovement = $asset->movement;
         
         $asset->update([
-            'status' => 'Disposed',
-            'movement' => 'Disposed',
+            'status' => 'For Disposal',
+            'movement' => 'Deployed',
             'assigned_to' => null // Remove any assignment
         ]);
         
@@ -220,8 +220,8 @@ class DisposalController extends Controller
             null,
             null,
             "Asset disposed: {$request->disposal_type} - {$request->remarks}",
-            ['status' => $oldAssetStatus, 'movement' => $oldAssetMovement],
-            ['status' => 'Disposed', 'movement' => 'Disposed']
+                    ['status' => $oldAssetStatus, 'movement' => $oldAssetMovement],
+                    ['status' => 'For Disposal', 'movement' => 'Deployed']
         );
 
         return redirect()->route('disposal.index')
@@ -267,7 +267,7 @@ class DisposalController extends Controller
         $request->validate([
             'asset_id' => 'required|exists:assets,id',
             'disposal_date' => 'required|date',
-            'disposal_type' => 'required|in:Sold,Donated,Recycled,Destroyed,Lost,Stolen,Trade-in,Return to Vendor,Upgrade Replacement,Damaged Beyond Repair,End of Life,Security Risk,Theft/Loss,Obsolete Technology,Cost of Repair Exceeds Value,Recycling,Donation',
+            'disposal_type' => 'required|in:Damaged,Recycled,Sold,Donated,Lost',
             'disposal_value' => 'nullable|numeric|min:0|max:999999.99',
             'remarks' => 'nullable|string|max:1000',
         ]);
@@ -281,8 +281,8 @@ class DisposalController extends Controller
             $oldAssetMovement = $asset->movement;
             
             $asset->update([
-                'status' => 'Disposed',
-                'movement' => 'Disposed',
+                'status' => 'For Disposal',
+                'movement' => 'Deployed',
                 'assigned_to' => null
             ]);
             
@@ -292,8 +292,8 @@ class DisposalController extends Controller
                 null,
                 null,
                 "Asset disposal updated: {$request->disposal_type} - {$request->remarks}",
-                ['status' => $oldAssetStatus, 'movement' => $oldAssetMovement],
-                ['status' => 'Disposed', 'movement' => 'Disposed']
+                    ['status' => $oldAssetStatus, 'movement' => $oldAssetMovement],
+                    ['status' => 'For Disposal', 'movement' => 'Deployed']
             );
         }
 
@@ -310,13 +310,13 @@ class DisposalController extends Controller
 
         // Revert asset status from disposed
         $asset = Asset::find($disposal->asset_id);
-        if ($asset->status === 'Disposed') {
+        if ($asset->status === 'For Disposal') {
             $oldAssetStatus = $asset->status;
             $oldAssetMovement = $asset->movement;
             
             // Determine appropriate status based on assignment
-            $newStatus = $asset->assigned_to ? 'Assigned' : 'Available';
-            $newMovement = $asset->assigned_to ? 'Deployed Tagged' : 'Returned';
+            $newStatus = $asset->assigned_to ? 'Active' : 'Available';
+            $newMovement = 'Deployed';
             
             $asset->update([
                 'status' => $newStatus,

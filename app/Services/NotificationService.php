@@ -25,7 +25,8 @@ class NotificationService
 
             // Create notification record
             $notification = Notification::create([
-                'user_id' => $userId,
+                'notifiable_type' => 'App\Models\User',
+                'notifiable_id' => $userId,
                 'type' => $type,
                 'title' => $title,
                 'message' => $message,
@@ -143,9 +144,9 @@ class NotificationService
         ];
 
         // Send to asset owner if assigned
-        if ($asset->currentAssignment && $asset->currentAssignment->user) {
+        if ($asset->assigned_to) {
             return $this->sendNotification(
-                $asset->currentAssignment->user_id,
+                $asset->assigned_to,
                 'warranty_expiry',
                 $title,
                 $message,
@@ -156,36 +157,6 @@ class NotificationService
         // Send to all admins if no specific owner
         $adminIds = User::role(['admin', 'super-admin'])->pluck('id')->toArray();
         return $this->sendBulkNotifications($adminIds, 'warranty_expiry', $title, $message, $data);
-    }
-
-    /**
-     * Send assignment expiry warning
-     */
-    public function sendAssignmentExpiryWarning($assignmentId)
-    {
-        $assignment = \App\Models\AssetAssignment::with(['asset', 'user'])->find($assignmentId);
-        
-        if (!$assignment) {
-            return false;
-        }
-
-        $title = "Assignment Expiry Warning: {$assignment->asset->name}";
-        $message = "Your assignment for asset '{$assignment->asset->name}' will expire on {$assignment->end_date->format('M d, Y')}.";
-        
-        $data = [
-            'assignment_id' => $assignment->id,
-            'asset_id' => $assignment->asset_id,
-            'end_date' => $assignment->end_date,
-            'days_remaining' => now()->diffInDays($assignment->end_date, false)
-        ];
-
-        return $this->sendNotification(
-            $assignment->user_id,
-            'assignment_expiry',
-            $title,
-            $message,
-            $data
-        );
     }
 
     /**
@@ -248,7 +219,8 @@ class NotificationService
     public function markAsRead($notificationId, $userId)
     {
         $notification = Notification::where('id', $notificationId)
-            ->where('user_id', $userId)
+            ->where('notifiable_type', 'App\Models\User')
+            ->where('notifiable_id', $userId)
             ->first();
 
         if ($notification && !$notification->read_at) {
@@ -280,7 +252,8 @@ class NotificationService
      */
     public function markAllAsRead($userId)
     {
-        $updated = Notification::where('user_id', $userId)
+        $updated = Notification::where('notifiable_type', 'App\Models\User')
+            ->where('notifiable_id', $userId)
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
 
@@ -308,7 +281,8 @@ class NotificationService
      */
     public function getUnreadNotifications($userId, $limit = 10)
     {
-        return Notification::where('user_id', $userId)
+        return Notification::where('notifiable_type', 'App\Models\User')
+            ->where('notifiable_id', $userId)
             ->whereNull('read_at')
             ->orderBy('created_at', 'desc')
             ->limit($limit)
@@ -320,7 +294,8 @@ class NotificationService
      */
     public function getNotificationCount($userId)
     {
-        return Notification::where('user_id', $userId)
+        return Notification::where('notifiable_type', 'App\Models\User')
+            ->where('notifiable_id', $userId)
             ->whereNull('read_at')
             ->count();
     }

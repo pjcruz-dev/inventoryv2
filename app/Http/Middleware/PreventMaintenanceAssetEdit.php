@@ -21,10 +21,10 @@ class PreventMaintenanceAssetEdit
         if ($request->routeIs('assets.edit') || $request->routeIs('assets.update')) {
             $asset = $request->route('asset');
             
-            if ($asset && in_array($asset->status, ['Under Maintenance', 'Disposed'])) {
-                $statusMessage = $asset->status === 'Under Maintenance' 
+            if ($asset && in_array($asset->status, ['Maintenance', 'For Disposal'])) {
+                $statusMessage = $asset->status === 'Maintenance' 
                     ? 'under maintenance' 
-                    : 'disposed';
+                    : 'for disposal';
                 
                 return redirect()->back()
                     ->with('error', "Cannot edit asset that is currently {$statusMessage}. Please complete or cancel the maintenance first, or restore the asset from disposal.");
@@ -32,17 +32,17 @@ class PreventMaintenanceAssetEdit
         }
         
         // Check if this is an asset assignment request
-        if ($request->routeIs('assets.assign') || $request->routeIs('asset-assignments.*')) {
+        if ($request->routeIs('assets.assign')) {
             $asset = $request->route('asset');
             
             if (!$asset && $request->input('asset_id')) {
                 $asset = Asset::find($request->input('asset_id'));
             }
             
-            if ($asset && in_array($asset->status, ['Under Maintenance', 'Disposed'])) {
-                $statusMessage = $asset->status === 'Under Maintenance' 
+            if ($asset && in_array($asset->status, ['Maintenance', 'For Disposal'])) {
+                $statusMessage = $asset->status === 'Maintenance' 
                     ? 'under maintenance' 
-                    : 'disposed';
+                    : 'for disposal';
                 
                 return redirect()->back()
                     ->with('error', "Cannot assign asset that is currently {$statusMessage}. Please complete or cancel the maintenance first, or restore the asset from disposal.");

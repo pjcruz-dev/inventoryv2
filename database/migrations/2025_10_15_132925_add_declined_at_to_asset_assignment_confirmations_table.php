@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('asset_assignments', function (Blueprint $table) {
-            $table->integer('signed_form_email_count')->default(0)->after('signed_form_email_sent_at');
+        Schema::table('asset_assignment_confirmations', function (Blueprint $table) {
+            $table->timestamp('declined_at')->nullable()->after('confirmed_at');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('asset_assignments', function (Blueprint $table) {
-            $table->dropColumn('signed_form_email_count');
+        Schema::table('asset_assignment_confirmations', function (Blueprint $table) {
+            $table->dropColumn('declined_at');
         });
     }
 };

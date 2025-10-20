@@ -113,7 +113,7 @@
                             <dt class="col-sm-4">Budget:</dt>
                             <dd class="col-sm-8">
                                 @if($department->budget)
-                                    <strong class="text-success">${{ number_format($department->budget, 2) }}</strong>
+                                    <strong class="text-success">₱{{ number_format($department->budget, 2) }}</strong>
                                     <small class="text-muted">annually</small>
                                 @else
                                     <span class="text-muted">Not specified</span>
@@ -516,7 +516,7 @@
                     <div class="col-6">
                         <h4 class="text-warning mb-0">
                             @if($department->budget)
-                                ${{ number_format($department->budget / 1000, 0) }}K
+                                ₱{{ number_format($department->budget / 1000, 0) }}K
                             @else
                                 N/A
                             @endif

@@ -26,8 +26,8 @@ class SystemHealthPermissionsSeeder extends Seeder
         }
 
         // Assign permissions to roles
-        $adminRole = Role::where('name', 'admin')->first();
-        $superAdminRole = Role::where('name', 'super-admin')->first();
+        $adminRole = Role::where('name', 'Admin')->first();
+        $superAdminRole = Role::where('name', 'Super Admin')->first();
 
         if ($adminRole) {
             $adminRole->givePermissionTo($permissions);

@@ -152,15 +152,10 @@
                                 <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
                                 <select class="form-select @error('status') is-invalid @enderror" id="status" name="status" required>
                                     <option value="Available" {{ old('status') == 'Available' ? 'selected' : '' }}>Available</option>
-                                    <option value="Assigned" {{ old('status') == 'Assigned' ? 'selected' : '' }}>Assigned</option>
-                                    <option value="Active" {{ old('status') == 'Active' ? 'selected' : '' }}>Active</option>
-                                    <option value="Inactive" {{ old('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
-                                    <option value="Under Maintenance" {{ old('status') == 'Under Maintenance' ? 'selected' : '' }}>Under Maintenance</option>
-                                    <option value="Issue Reported" {{ old('status') == 'Issue Reported' ? 'selected' : '' }}>Issue Reported</option>
+                                    <option value="Maintenance" {{ old('status') == 'Maintenance' ? 'selected' : '' }}>Maintenance</option>
                                     <option value="Pending Confirmation" {{ old('status') == 'Pending Confirmation' ? 'selected' : '' }}>Pending Confirmation</option>
-                                    <option value="Retired" {{ old('status') == 'Retired' ? 'selected' : '' }}>Retired</option>
-                                    <option value="Damaged" {{ old('status') == 'Damaged' ? 'selected' : '' }}>Damaged</option>
-                                    <option value="Disposed" {{ old('status') == 'Disposed' ? 'selected' : '' }}>Disposed</option>
+                                    <option value="Active" {{ old('status') == 'Active' ? 'selected' : '' }}>Active</option>
+                                    <option value="For Disposal" {{ old('status') == 'For Disposal' ? 'selected' : '' }}>For Disposal</option>
                                 </select>
                                 @error('status')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -173,13 +168,12 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="movement" class="form-label">Movement</label>
-                                <select class="form-select @error('movement') is-invalid @enderror" id="movement" name="movement">
-                                    <option value="New Arrival" {{ old('movement') == 'New Arrival' ? 'selected' : '' }}>New Arrival</option>
+                                <select class="form-select @error('movement') is-invalid @enderror" id="movement" name="movement" readonly>
+                                    <option value="Return" {{ old('movement') == 'Return' ? 'selected' : '' }}>Return</option>
+                                    <option value="New Arrival" {{ old('movement', 'New Arrival') == 'New Arrival' ? 'selected' : '' }}>New Arrival</option>
                                     <option value="Deployed" {{ old('movement') == 'Deployed' ? 'selected' : '' }}>Deployed</option>
-                                    <option value="Returned" {{ old('movement') == 'Returned' ? 'selected' : '' }}>Returned</option>
-                                    <option value="Transferred" {{ old('movement') == 'Transferred' ? 'selected' : '' }}>Transferred</option>
-                                    <option value="Disposed" {{ old('movement') == 'Disposed' ? 'selected' : '' }}>Disposed</option>
                                 </select>
+                                <small class="form-text text-muted">Automatically set to "New Arrival" for new assets</small>
                                 @error('movement')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -392,6 +386,32 @@
 @section('scripts')
 <script>
 $(document).ready(function() {
+    // Set movement to "New Arrival" automatically for new assets
+    $('#movement').val('New Arrival');
+    
+    // Add styling to show it's read-only but still submittable
+    $('#movement').css({
+        'background-color': '#f8f9fa',
+        'cursor': 'not-allowed'
+    });
+    
+    // Prevent user from changing the value but allow form submission
+    $('#movement').on('mousedown', function(e) {
+        e.preventDefault();
+        return false;
+    });
+    
+    // Prevent keyboard changes but allow form submission
+    $('#movement').on('keydown', function(e) {
+        e.preventDefault();
+        return false;
+    });
+    
+    // Ensure the value is set before form submission
+    $('form').on('submit', function() {
+        $('#movement').val('New Arrival');
+    });
+    
     // Category search functionality
     const categorySearch = $('#categorySearchCreate');
     const categoryValue = $('#categoryValueCreate');

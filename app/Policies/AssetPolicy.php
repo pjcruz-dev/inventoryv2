@@ -15,7 +15,7 @@ class AssetPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('view_assets') || $user->hasRole('Admin');
+        return $user->hasPermissionTo('view_assets') || $user->hasRole(['Admin', 'Super Admin']);
     }
 
     /**
@@ -23,7 +23,7 @@ class AssetPolicy
      */
     public function view(User $user, Asset $asset): bool
     {
-        return $user->hasPermissionTo('view_assets') || $user->hasRole('Admin');
+        return $user->hasPermissionTo('view_assets') || $user->hasRole(['Admin', 'Super Admin']);
     }
 
     /**
@@ -31,7 +31,7 @@ class AssetPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermissionTo('create_assets') || $user->hasRole('Admin');
+        return $user->hasPermissionTo('create_assets') || $user->hasRole(['Admin', 'Super Admin']);
     }
 
     /**
@@ -39,7 +39,7 @@ class AssetPolicy
      */
     public function update(User $user, Asset $asset): bool
     {
-        return $user->hasPermissionTo('edit_assets') || $user->hasRole('Admin');
+        return $user->hasPermissionTo('edit_assets') || $user->hasRole(['Admin', 'Super Admin']);
     }
 
     /**
@@ -47,7 +47,7 @@ class AssetPolicy
      */
     public function delete(User $user, Asset $asset): bool
     {
-        return $user->hasPermissionTo('delete_assets') || $user->hasRole('Admin');
+        return $user->hasPermissionTo('delete_assets') || $user->hasRole(['Admin', 'Super Admin']);
     }
 
     /**
@@ -55,7 +55,7 @@ class AssetPolicy
      */
     public function assign(User $user, Asset $asset): bool
     {
-        return $user->hasPermissionTo('assign_assets') || $user->hasRole('Admin');
+        return $user->hasPermissionTo('assign_assets') || $user->hasRole(['Admin', 'Super Admin']);
     }
 
     /**
@@ -63,7 +63,7 @@ class AssetPolicy
      */
     public function unassign(User $user, Asset $asset): bool
     {
-        return $user->hasPermissionTo('assign_assets') || $user->hasRole('Admin');
+        return $user->hasPermissionTo('assign_assets') || $user->hasRole(['Admin', 'Super Admin']);
     }
 
     /**
@@ -71,6 +71,22 @@ class AssetPolicy
      */
     public function reassign(User $user, Asset $asset): bool
     {
-        return $user->hasPermissionTo('assign_assets') || $user->hasRole('Admin');
+        return $user->hasPermissionTo('assign_assets') || $user->hasRole(['Admin', 'Super Admin']);
+    }
+
+    /**
+     * Determine whether the user can send assets to maintenance.
+     */
+    public function maintenance(User $user, Asset $asset): bool
+    {
+        return $user->hasPermissionTo('manage_maintenance') || $user->hasRole(['Admin', 'Super Admin']);
+    }
+
+    /**
+     * Determine whether the user can send assets to disposal.
+     */
+    public function dispose(User $user, Asset $asset): bool
+    {
+        return $user->hasPermissionTo('manage_disposals') || $user->hasRole(['Admin', 'Super Admin']);
     }
 }

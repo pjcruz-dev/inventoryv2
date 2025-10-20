@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Asset;
 use App\Models\User;
 use App\Models\AssetCategory;
-use App\Models\AssetAssignment;
 use App\Models\AssetAssignmentConfirmation;
 use App\Models\Department;
 use App\Models\Vendor;
@@ -137,30 +136,6 @@ class GlobalSearchController extends Controller
                     'url' => route('vendors.show', $vendor->id),
                     'icon' => 'fas fa-truck',
                     'category' => 'Vendors'
-                ];
-            }
-
-            // Search Asset Assignments
-            $assignments = AssetAssignment::whereHas('asset', function($q) use ($searchTerm) {
-                $q->where('asset_tag', 'like', $searchTerm)
-                  ->orWhere('name', 'like', $searchTerm);
-            })
-            ->orWhereHas('user', function($q) use ($searchTerm) {
-                $q->where('first_name', 'like', $searchTerm)
-                  ->orWhere('last_name', 'like', $searchTerm);
-            })
-            ->with(['asset', 'user'])
-            ->limit(5)
-            ->get();
-
-            foreach ($assignments as $assignment) {
-                $results[] = [
-                    'type' => 'assignment',
-                    'title' => $assignment->asset->asset_tag . ' → ' . $assignment->user->first_name . ' ' . $assignment->user->last_name,
-                    'description' => 'Assignment • ' . ($assignment->status ?? 'Unknown Status') . ' • ' . ($assignment->assigned_at ? $assignment->assigned_at->format('M d, Y') : 'No Date'),
-                    'url' => route('asset-assignments.show', $assignment->id),
-                    'icon' => 'fas fa-hand-holding',
-                    'category' => 'Assignments'
                 ];
             }
 

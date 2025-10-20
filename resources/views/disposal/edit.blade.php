@@ -57,21 +57,11 @@
                                     <select class="form-select @error('disposal_type') is-invalid @enderror" 
                                             id="disposal_type" name="disposal_type" required>
                                         <option value="">Select Disposal Type</option>
+                        <option value="Damaged" {{ old('disposal_type', $disposal->disposal_type) == 'Damaged' ? 'selected' : '' }}>Damaged</option>
+                        <option value="Recycled" {{ old('disposal_type', $disposal->disposal_type) == 'Recycled' ? 'selected' : '' }}>Recycled</option>
                         <option value="Sold" {{ old('disposal_type', $disposal->disposal_type) == 'Sold' ? 'selected' : '' }}>Sold</option>
                         <option value="Donated" {{ old('disposal_type', $disposal->disposal_type) == 'Donated' ? 'selected' : '' }}>Donated</option>
-                        <option value="Recycled" {{ old('disposal_type', $disposal->disposal_type) == 'Recycled' ? 'selected' : '' }}>Recycled</option>
-                        <option value="Destroyed" {{ old('disposal_type', $disposal->disposal_type) == 'Destroyed' ? 'selected' : '' }}>Destroyed</option>
                         <option value="Lost" {{ old('disposal_type', $disposal->disposal_type) == 'Lost' ? 'selected' : '' }}>Lost</option>
-                        <option value="Stolen" {{ old('disposal_type', $disposal->disposal_type) == 'Stolen' ? 'selected' : '' }}>Stolen</option>
-                        <option value="Trade-in" {{ old('disposal_type', $disposal->disposal_type) == 'Trade-in' ? 'selected' : '' }}>Trade-in</option>
-                        <option value="Return to Vendor" {{ old('disposal_type', $disposal->disposal_type) == 'Return to Vendor' ? 'selected' : '' }}>Return to Vendor</option>
-                        <option value="Upgrade Replacement" {{ old('disposal_type', $disposal->disposal_type) == 'Upgrade Replacement' ? 'selected' : '' }}>Upgrade Replacement</option>
-                        <option value="Damaged Beyond Repair" {{ old('disposal_type', $disposal->disposal_type) == 'Damaged Beyond Repair' ? 'selected' : '' }}>Damaged Beyond Repair</option>
-                        <option value="End of Life" {{ old('disposal_type', $disposal->disposal_type) == 'End of Life' ? 'selected' : '' }}>End of Life</option>
-                        <option value="Security Risk" {{ old('disposal_type', $disposal->disposal_type) == 'Security Risk' ? 'selected' : '' }}>Security Risk</option>
-                        <option value="Theft/Loss" {{ old('disposal_type', $disposal->disposal_type) == 'Theft/Loss' ? 'selected' : '' }}>Theft/Loss</option>
-                        <option value="Obsolete Technology" {{ old('disposal_type', $disposal->disposal_type) == 'Obsolete Technology' ? 'selected' : '' }}>Obsolete Technology</option>
-                        <option value="Cost of Repair Exceeds Value" {{ old('disposal_type', $disposal->disposal_type) == 'Cost of Repair Exceeds Value' ? 'selected' : '' }}>Cost of Repair Exceeds Value</option>
                                     </select>
                                     @error('disposal_type')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -188,7 +178,7 @@
         const disposalType = this.value;
         
         // Auto-clear disposal value for certain types
-        if (['Donated', 'Recycled', 'Destroyed', 'Lost', 'Stolen'].includes(disposalType)) {
+        if (['Donated', 'Recycled', 'Damaged', 'Lost'].includes(disposalType)) {
             if (disposalValue.value && !confirm('Changing to ' + disposalType + ' will typically have no monetary value. Continue?')) {
                 return;
             }
