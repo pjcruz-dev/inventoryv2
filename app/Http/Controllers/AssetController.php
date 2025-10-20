@@ -977,4 +977,18 @@ class AssetController extends Controller
             'message' => 'Asset sent to disposal successfully. Status updated to For Disposal.'
         ]);
     }
+
+    /**
+     * Export comprehensive asset data to Excel
+     */
+    public function exportComprehensive(Request $request)
+    {
+        $this->authorize('viewAny', Asset::class);
+        
+        $filters = $request->only(['search', 'category', 'status', 'movement', 'assignment']);
+        
+        $fileName = 'comprehensive_assets_export_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
+        
+        return (new \App\Exports\ComprehensiveAssetExport($filters))->download($fileName);
+    }
 }
