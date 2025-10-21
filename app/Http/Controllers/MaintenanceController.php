@@ -56,13 +56,43 @@ class MaintenanceController extends Controller
         if ($request->filled('end_date')) {
             $query->whereDate('end_date', '<=', $request->end_date);
         }
+        
+        // Vendor filter
+        if ($request->filled('vendor_id')) {
+            $query->where('vendor_id', $request->vendor_id);
+        }
+        
+        // Asset filter
+        if ($request->filled('asset_id')) {
+            $query->where('asset_id', $request->asset_id);
+        }
+        
+        // Cost range filter
+        if ($request->filled('cost_min')) {
+            $query->where('cost', '>=', $request->cost_min);
+        }
+        
+        if ($request->filled('cost_max')) {
+            $query->where('cost', '<=', $request->cost_max);
+        }
+        
+        // Sorting
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        
+        $allowedSortFields = ['start_date', 'end_date', 'status', 'cost', 'created_at'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        }
 
-        $maintenances = $query->orderBy('created_at', 'desc')->paginate(15)->appends(request()->query());
+        $maintenances = $query->paginate(15)->withQueryString();
         
         // Get filter options
         $statuses = ['Scheduled', 'In Progress', 'Completed', 'On Hold', 'Cancelled'];
+        $vendors = Vendor::orderBy('name')->get();
+        $assets = Asset::where('status', 'Maintenance')->orderBy('name')->get();
         
-        return view('maintenance.index', compact('maintenances', 'statuses'));
+        return view('maintenance.index', compact('maintenances', 'statuses', 'vendors', 'assets'));
     }
 
     /**

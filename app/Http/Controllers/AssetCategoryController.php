@@ -38,7 +38,34 @@ class AssetCategoryController extends Controller
             });
         }
         
-        $categories = $query->orderBy('name')->paginate(10)->appends(request()->query());
+        // Filter by asset count
+        if ($request->filled('has_assets')) {
+            if ($request->has_assets === 'yes') {
+                $query->has('assets');
+            } elseif ($request->has_assets === 'no') {
+                $query->doesntHave('assets');
+            }
+        }
+        
+        // Date range filters
+        if ($request->filled('created_from')) {
+            $query->where('created_at', '>=', $request->created_from);
+        }
+        
+        if ($request->filled('created_to')) {
+            $query->where('created_at', '<=', $request->created_to . ' 23:59:59');
+        }
+        
+        // Sorting
+        $sortBy = $request->get('sort_by', 'name');
+        $sortOrder = $request->get('sort_order', 'asc');
+        
+        $allowedSortFields = ['name', 'created_at'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        }
+        
+        $categories = $query->paginate(15)->withQueryString();
         
         // Log activity
         Log::info('Asset categories viewed', [

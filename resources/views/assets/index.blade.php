@@ -279,21 +279,283 @@ document.addEventListener('DOMContentLoaded', function() {
         <!-- Search Section -->
         <div class="mt-3">
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-8">
                     <form method="GET" action="{{ route('assets.index') }}" id="searchForm">
                         <div class="input-group">
-                            <input type="text" name="search" class="form-control" placeholder="Search assets..." value="{{ request('search') }}" style="border-radius: 6px 0 0 6px; border: 2px solid #e9ecef;">
-                            <button class="btn btn-primary" type="submit" style="border-radius: 0 6px 6px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 2px solid #667eea;">
-                                <i class="fas fa-search"></i>
+                            <input type="text" name="search" class="form-control" placeholder="Search assets by name, tag, serial, model, location..." value="{{ request('search') }}" style="border-radius: 6px 0 0 6px; border: 2px solid #e9ecef;">
+                            <button class="btn btn-primary" type="submit" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 2px solid #667eea;">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                            <button type="button" class="btn {{ request()->hasAny(['category_id', 'status', 'movement', 'vendor_id', 'assigned_to', 'location', 'purchase_date_from', 'purchase_date_to', 'cost_min', 'cost_max']) ? 'btn-primary' : 'btn-outline-primary' }}" id="toggleAdvancedSearch" style="border-radius: 0 6px 6px 0; {{ !request()->hasAny(['category_id', 'status', 'movement', 'vendor_id', 'assigned_to', 'location', 'purchase_date_from', 'purchase_date_to', 'cost_min', 'cost_max']) ? 'color: white; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 2px solid #667eea;' : '' }}">
+                                <i class="fas fa-filter"></i> {{ request()->hasAny(['category_id', 'status', 'movement', 'vendor_id', 'assigned_to', 'location', 'purchase_date_from', 'purchase_date_to', 'cost_min', 'cost_max']) ? 'Hide Filters' : 'Advanced' }}
                             </button>
                         </div>
                     </form>
+                </div>
+                <div class="col-md-4 text-end">
+                    @php
+                        $activeFilters = 0;
+                        $filterParams = ['category_id', 'status', 'movement', 'vendor_id', 'assigned_to', 'location', 'purchase_date_from', 'purchase_date_to', 'cost_min', 'cost_max'];
+                        foreach($filterParams as $param) {
+                            if(request()->filled($param)) $activeFilters++;
+                        }
+                    @endphp
+                    @if($activeFilters > 0 || request()->filled('search'))
+                        <span class="badge bg-primary me-2" style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
+                            <i class="fas fa-filter me-1"></i>{{ $activeFilters + (request()->filled('search') ? 1 : 0) }} Active Filter{{ ($activeFilters + (request()->filled('search') ? 1 : 0)) > 1 ? 's' : '' }}
+                        </span>
+                        <a href="{{ route('assets.index') }}" class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-times"></i> Clear All
+                        </a>
+                    @endif
+                </div>
+            </div>
+            
+            <!-- Advanced Search Panel -->
+            <div id="advancedSearchPanel" class="mt-3" style="display: {{ request()->hasAny(['category_id', 'status', 'movement', 'vendor_id', 'assigned_to', 'location', 'purchase_date_from', 'purchase_date_to', 'cost_min', 'cost_max']) ? 'block' : 'none' }};">
+                <div class="card" style="border: 2px solid #667eea; border-radius: 12px;">
+                    <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 10px 10px 0 0;">
+                        <h6 class="mb-0 text-white"><i class="fas fa-sliders-h me-2"></i>Advanced Search Filters</h6>
+                    </div>
+                    <div class="card-body">
+                        <form method="GET" action="{{ route('assets.index') }}" id="advancedSearchForm">
+                            <!-- Keep simple search value if it exists -->
+                            @if(request('search'))
+                                <input type="hidden" name="search" value="{{ request('search') }}">
+                            @endif
+                            
+                            <div class="row g-3">
+                                <!-- Category Filter -->
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold">Category</label>
+                                    <select name="category_id" class="form-select">
+                                        <option value="">All Categories</option>
+                                        @foreach($categories as $category)
+                                            <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                                                {{ $category->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                
+                                <!-- Status Filter -->
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold">Status</label>
+                                    <select name="status" class="form-select">
+                                        <option value="">All Statuses</option>
+                                        @foreach($statuses as $status)
+                                            <option value="{{ $status }}" {{ request('status') == $status ? 'selected' : '' }}>
+                                                {{ $status }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                
+                                <!-- Movement Filter -->
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold">Movement</label>
+                                    <select name="movement" class="form-select">
+                                        <option value="">All Movements</option>
+                                        @foreach($movements as $movement)
+                                            <option value="{{ $movement }}" {{ request('movement') == $movement ? 'selected' : '' }}>
+                                                {{ $movement }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                
+                                <!-- Vendor Filter -->
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold">Vendor</label>
+                                    <select name="vendor_id" class="form-select">
+                                        <option value="">All Vendors</option>
+                                        @foreach($vendors as $vendor)
+                                            <option value="{{ $vendor->id }}" {{ request('vendor_id') == $vendor->id ? 'selected' : '' }}>
+                                                {{ $vendor->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                
+                                <!-- Assigned To Filter -->
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Assigned To</label>
+                                    <select name="assigned_to" class="form-select">
+                                        <option value="">All Users</option>
+                                        <option value="assigned" {{ request('assigned_to') == 'assigned' ? 'selected' : '' }}>Any Assigned User</option>
+                                        <option value="unassigned" {{ request('assigned_to') == 'unassigned' ? 'selected' : '' }}>Unassigned</option>
+                                        <optgroup label="Specific Users">
+                                            @foreach($users as $user)
+                                                <option value="{{ $user->id }}" {{ request('assigned_to') == $user->id ? 'selected' : '' }}>
+                                                    {{ $user->first_name }} {{ $user->last_name }} ({{ $user->employee_id }})
+                                                </option>
+                                            @endforeach
+                                        </optgroup>
+                                    </select>
+                                </div>
+                                
+                                <!-- Location Filter -->
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Location</label>
+                                    <input type="text" name="location" class="form-control" list="locationList" placeholder="Enter or select location" value="{{ request('location') }}">
+                                    <datalist id="locationList">
+                                        @foreach($locations as $location)
+                                            <option value="{{ $location }}">
+                                        @endforeach
+                                    </datalist>
+                                </div>
+                                
+                                <!-- Sort By -->
+                                <div class="col-md-2">
+                                    <label class="form-label fw-semibold">Sort By</label>
+                                    <select name="sort_by" class="form-select">
+                                        <option value="created_at" {{ request('sort_by') == 'created_at' ? 'selected' : '' }}>Date Created</option>
+                                        <option value="asset_tag" {{ request('sort_by') == 'asset_tag' ? 'selected' : '' }}>Asset Tag</option>
+                                        <option value="name" {{ request('sort_by') == 'name' ? 'selected' : '' }}>Name</option>
+                                        <option value="status" {{ request('sort_by') == 'status' ? 'selected' : '' }}>Status</option>
+                                        <option value="cost" {{ request('sort_by') == 'cost' ? 'selected' : '' }}>Cost</option>
+                                        <option value="purchase_date" {{ request('sort_by') == 'purchase_date' ? 'selected' : '' }}>Purchase Date</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Sort Order -->
+                                <div class="col-md-2">
+                                    <label class="form-label fw-semibold">Order</label>
+                                    <select name="sort_order" class="form-select">
+                                        <option value="asc" {{ request('sort_order') == 'asc' ? 'selected' : '' }}>Ascending</option>
+                                        <option value="desc" {{ request('sort_order', 'desc') == 'desc' ? 'selected' : '' }}>Descending</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Date and Cost Range Filters -->
+                            <div class="row g-3 mt-2">
+                                <div class="col-md-12">
+                                    <h6 class="text-muted mb-2"><i class="fas fa-calendar-alt me-2"></i>Date & Cost Ranges</h6>
+                                </div>
+                                
+                                <!-- Purchase Date Range -->
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold">Purchase From</label>
+                                    <input type="date" name="purchase_date_from" class="form-control" value="{{ request('purchase_date_from') }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold">Purchase To</label>
+                                    <input type="date" name="purchase_date_to" class="form-control" value="{{ request('purchase_date_to') }}">
+                                </div>
+                                
+                                <!-- Cost Range -->
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold">Min Cost (₱)</label>
+                                    <input type="number" name="cost_min" class="form-control" placeholder="0.00" step="0.01" value="{{ request('cost_min') }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold">Max Cost (₱)</label>
+                                    <input type="number" name="cost_max" class="form-control" placeholder="999999.99" step="0.01" value="{{ request('cost_max') }}">
+                                </div>
+                            </div>
+                            
+                            <!-- Action Buttons -->
+                            <div class="row mt-3">
+                                <div class="col-12 text-end">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('advancedSearchForm').reset(); window.location.href='{{ route('assets.index') }}';">
+                                        <i class="fas fa-redo me-1"></i>Reset All
+                                    </button>
+                                    <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                                        <i class="fas fa-search me-1"></i>Apply Filters
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
         
     </div>
     <div class="card-body">
+        <!-- Active Filters Summary -->
+        @if(request()->hasAny(['search', 'category_id', 'status', 'movement', 'vendor_id', 'assigned_to', 'location', 'purchase_date_from', 'purchase_date_to', 'cost_min', 'cost_max']))
+        <div class="alert alert-info alert-dismissible fade show" role="alert" style="background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%); border: 2px solid #3b82f6; border-radius: 12px;">
+            <div class="d-flex align-items-start">
+                <div class="flex-grow-1">
+                    <h6 class="alert-heading mb-2"><i class="fas fa-info-circle me-2"></i>Active Filters</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        @if(request('search'))
+                        <span class="badge bg-primary" style="padding: 0.5rem 0.75rem;">
+                            <i class="fas fa-search me-1"></i>Search: "{{ request('search') }}"
+                        </span>
+                        @endif
+                        
+                        @if(request('category_id'))
+                        <span class="badge bg-info" style="padding: 0.5rem 0.75rem;">
+                            <i class="fas fa-folder me-1"></i>Category: {{ $categories->find(request('category_id'))->name ?? 'Unknown' }}
+                        </span>
+                        @endif
+                        
+                        @if(request('status'))
+                        <span class="badge bg-success" style="padding: 0.5rem 0.75rem;">
+                            <i class="fas fa-toggle-on me-1"></i>Status: {{ request('status') }}
+                        </span>
+                        @endif
+                        
+                        @if(request('movement'))
+                        <span class="badge bg-warning text-dark" style="padding: 0.5rem 0.75rem;">
+                            <i class="fas fa-arrows-alt me-1"></i>Movement: {{ request('movement') }}
+                        </span>
+                        @endif
+                        
+                        @if(request('vendor_id'))
+                        <span class="badge bg-secondary" style="padding: 0.5rem 0.75rem;">
+                            <i class="fas fa-store me-1"></i>Vendor: {{ $vendors->find(request('vendor_id'))->name ?? 'Unknown' }}
+                        </span>
+                        @endif
+                        
+                        @if(request('assigned_to'))
+                        <span class="badge bg-purple" style="padding: 0.5rem 0.75rem; background-color: #8b5cf6;">
+                            <i class="fas fa-user me-1"></i>Assigned: 
+                            @if(request('assigned_to') == 'assigned')
+                                Any Assigned User
+                            @elseif(request('assigned_to') == 'unassigned')
+                                Unassigned
+                            @else
+                                {{ $users->find(request('assigned_to'))->first_name ?? '' }} {{ $users->find(request('assigned_to'))->last_name ?? '' }}
+                            @endif
+                        </span>
+                        @endif
+                        
+                        @if(request('location'))
+                        <span class="badge bg-dark" style="padding: 0.5rem 0.75rem;">
+                            <i class="fas fa-map-marker-alt me-1"></i>Location: {{ request('location') }}
+                        </span>
+                        @endif
+                        
+                        @if(request('purchase_date_from') || request('purchase_date_to'))
+                        <span class="badge bg-teal" style="padding: 0.5rem 0.75rem; background-color: #14b8a6;">
+                            <i class="fas fa-calendar me-1"></i>Purchase: 
+                            {{ request('purchase_date_from') ? date('M d, Y', strtotime(request('purchase_date_from'))) : 'Any' }}
+                            to 
+                            {{ request('purchase_date_to') ? date('M d, Y', strtotime(request('purchase_date_to'))) : 'Any' }}
+                        </span>
+                        @endif
+                        
+                        @if(request('cost_min') || request('cost_max'))
+                        <span class="badge bg-orange" style="padding: 0.5rem 0.75rem; background-color: #f97316;">
+                            <i class="fas fa-dollar-sign me-1"></i>Cost: 
+                            ₱{{ request('cost_min') ? number_format(request('cost_min'), 2) : '0.00' }}
+                            to 
+                            ₱{{ request('cost_max') ? number_format(request('cost_max'), 2) : '∞' }}
+                        </span>
+                        @endif
+                    </div>
+                </div>
+                <a href="{{ route('assets.index') }}" class="btn btn-sm btn-outline-danger ms-3" title="Clear all filters">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
+        </div>
+        @endif
+        
         @if($assets->count() > 0)
             <!-- Export and Print Section - Only for non-User roles -->
             @if(!auth()->user()->hasRole('User') || auth()->user()->hasAnyRole(['Admin', 'Super Admin', 'Manager', 'IT Support']))
@@ -559,17 +821,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             setupSearchLoading() {
-                const searchForm = document.querySelector('form[method="GET"]');
-                const searchInput = document.querySelector('input[name="search"]');
-                const searchBtn = document.querySelector('button[type="submit"]');
-                
-                if (searchForm && searchInput && searchBtn) {
-                    searchForm.addEventListener('submit', (e) => {
-                        this.showSkeletonLoading();
-                        searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Searching...';
-                        searchBtn.disabled = true;
-                    });
-                }
+                // Removed event listener that was interfering with form submission
+                // Form now submits normally without JavaScript interference
             }
             
             setupBulkOperations() {
@@ -585,21 +838,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
         setupFormLoading() {
-            // Only target main search form, not action button forms
-            const searchForm = document.querySelector('form[method="GET"]');
-            if (searchForm) {
-                searchForm.addEventListener('submit', (e) => {
-                    const submitBtn = searchForm.querySelector('button[type="submit"]');
-                    if (submitBtn && !submitBtn.disabled) {
-                        this.showButtonLoading(submitBtn);
-                        
-                        // Reset button state after search completes
-                        setTimeout(() => {
-                            this.hideButtonLoading(submitBtn);
-                        }, 1000);
-                    }
-                });
-            }
+            // Form loading is now handled by setupSearchLoading()
+            // This function is kept for compatibility but does nothing
         }
             
             showSkeletonLoading() {
@@ -697,6 +937,32 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         $(document).ready(function() {
+            // Toggle Advanced Search Panel
+            $('#toggleAdvancedSearch').on('click', function() {
+                const panel = $('#advancedSearchPanel');
+                const button = $(this);
+                
+                panel.slideToggle(300, function() {
+                    if (panel.is(':visible')) {
+                        button.html('<i class="fas fa-filter"></i> Hide Filters');
+                        button.removeClass('btn-outline-primary').addClass('btn-primary');
+                        button.css({
+                            'color': 'white',
+                            'background': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            'border': '2px solid #667eea'
+                        });
+                    } else {
+                        button.html('<i class="fas fa-filter"></i> Advanced');
+                        button.removeClass('btn-primary').addClass('btn-outline-primary');
+                        button.css({
+                            'color': 'white',
+                            'background': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            'border': '2px solid #667eea'
+                        });
+                    }
+                });
+            });
+            
             // Initialize loading manager
             window.assetLoadingManager = new AssetLoadingManager();
             

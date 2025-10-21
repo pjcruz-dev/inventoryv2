@@ -30,11 +30,12 @@ class DepartmentController extends Controller
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('code', 'like', "%{$search}%")
                   ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('location', 'like', "%{$search}%")
                   ->orWhereHas('manager', function($managerQuery) use ($search) {
                       $managerQuery->where('first_name', 'like', "%{$search}%")
-                                   ->orWhere('last_name', 'like', "%{$search}%")
-                                   ->orWhere('email', 'like', "%{$search}%");
+                                   ->orWhere('last_name', 'like', "%{$search}%");
                   })
                   ->orWhereHas('parent', function($parentQuery) use ($search) {
                       $parentQuery->where('name', 'like', "%{$search}%");
@@ -42,9 +43,52 @@ class DepartmentController extends Controller
             });
         }
         
-        $departments = $query->paginate(10)->appends(request()->query());
+        // Status filter
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
         
-        return view('departments.index', compact('departments'));
+        // Parent department filter
+        if ($request->filled('parent_id')) {
+            if ($request->parent_id === 'root') {
+                $query->whereNull('parent_id');
+            } else {
+                $query->where('parent_id', $request->parent_id);
+            }
+        }
+        
+        // Manager filter
+        if ($request->filled('has_manager')) {
+            if ($request->has_manager === 'yes') {
+                $query->whereNotNull('manager_id');
+            } else {
+                $query->whereNull('manager_id');
+            }
+        }
+        
+        // Budget range
+        if ($request->filled('budget_min')) {
+            $query->where('budget', '>=', $request->budget_min);
+        }
+        
+        if ($request->filled('budget_max')) {
+            $query->where('budget', '<=', $request->budget_max);
+        }
+        
+        // Sorting
+        $sortBy = $request->get('sort_by', 'name');
+        $sortOrder = $request->get('sort_order', 'asc');
+        
+        $allowedSortFields = ['name', 'code', 'status', 'budget', 'created_at'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        }
+        
+        $departments = $query->paginate(15)->withQueryString();
+        $managers = User::where('status', 1)->orderBy('first_name')->get();
+        $parentDepartments = Department::whereNull('parent_id')->orderBy('name')->get();
+        
+        return view('departments.index', compact('departments', 'managers', 'parentDepartments'));
     }
 
     /**

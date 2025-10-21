@@ -29,21 +29,62 @@ class PrinterController extends Controller
             $search = $request->search;
             $query->whereHas('asset', function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('asset_tag', 'like', "%{$search}%");
+                  ->orWhere('asset_tag', 'like', "%{$search}%")
+                  ->orWhere('serial_number', 'like', "%{$search}%");
             })->orWhere('type', 'like', "%{$search}%");
         }
         
-        if ($request->has('type') && $request->type) {
+        // Type filter
+        if ($request->filled('type')) {
             $query->where('type', $request->type);
         }
         
-        if ($request->has('color_support') && $request->color_support !== '') {
+        // Color support filter
+        if ($request->filled('color_support')) {
             $query->where('color_support', $request->color_support);
         }
         
-        $printers = $query->paginate(10)->appends(request()->query());
+        // Duplex filter
+        if ($request->filled('duplex')) {
+            $query->where('duplex', $request->duplex);
+        }
         
-        return view('printers.index', compact('printers'));
+        // Assignment filter
+        if ($request->filled('assigned')) {
+            if ($request->assigned === 'yes') {
+                $query->whereHas('asset', function($q) {
+                    $q->whereNotNull('assigned_to');
+                });
+            } elseif ($request->assigned === 'no') {
+                $query->whereHas('asset', function($q) {
+                    $q->whereNull('assigned_to');
+                });
+            }
+        }
+        
+        // Status filter
+        if ($request->filled('status')) {
+            $query->whereHas('asset', function($q) use ($request) {
+                $q->where('status', $request->status);
+            });
+        }
+        
+        // Sorting
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        
+        $allowedSortFields = ['type', 'color_support', 'duplex', 'created_at'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        }
+        
+        $printers = $query->paginate(15)->withQueryString();
+        
+        // Get filter data
+        $printerTypes = Printer::select('type')->distinct()->pluck('type');
+        $statuses = Asset::select('status')->distinct()->pluck('status');
+        
+        return view('printers.index', compact('printers', 'printerTypes', 'statuses'));
     }
 
     /**

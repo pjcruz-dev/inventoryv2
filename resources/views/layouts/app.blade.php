@@ -5009,14 +5009,22 @@
             window.mobileNavigationManager = new MobileNavigationManager();
             new TouchInteractionManager();
             
-            // Add loading states to forms
+            // Add loading states to forms (excluding GET forms like search)
             const forms = document.querySelectorAll('form');
             forms.forEach(form => {
                 form.addEventListener('submit', (e) => {
+                    // Skip GET forms (search forms) to prevent interference
+                    if (form.method.toLowerCase() === 'get') {
+                        return;
+                    }
+                    
                     const submitBtn = form.querySelector('button[type="submit"]');
                     if (submitBtn) {
-                        submitBtn.disabled = true;
-                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+                        // Use setTimeout to allow form to submit first
+                        setTimeout(() => {
+                            submitBtn.disabled = true;
+                            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+                        }, 0);
                     }
                 });
             });

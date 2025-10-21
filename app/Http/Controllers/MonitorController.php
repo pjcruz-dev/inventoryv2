@@ -29,19 +29,66 @@ class MonitorController extends Controller
             $search = $request->search;
             $query->whereHas('asset', function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('asset_tag', 'like', "%{$search}%");
+                  ->orWhere('asset_tag', 'like', "%{$search}%")
+                  ->orWhere('serial_number', 'like', "%{$search}%");
             })->orWhere('size', 'like', "%{$search}%")
               ->orWhere('resolution', 'like', "%{$search}%")
               ->orWhere('panel_type', 'like', "%{$search}%");
         }
         
-        if ($request->has('panel_type') && $request->panel_type) {
+        // Panel type filter
+        if ($request->filled('panel_type')) {
             $query->where('panel_type', $request->panel_type);
         }
         
-        $monitors = $query->paginate(10)->appends(request()->query());
+        // Size filter
+        if ($request->filled('size')) {
+            $query->where('size', 'like', "%{$request->size}%");
+        }
         
-        return view('monitors.index', compact('monitors'));
+        // Resolution filter
+        if ($request->filled('resolution')) {
+            $query->where('resolution', $request->resolution);
+        }
+        
+        // Assignment filter
+        if ($request->filled('assigned')) {
+            if ($request->assigned === 'yes') {
+                $query->whereHas('asset', function($q) {
+                    $q->whereNotNull('assigned_to');
+                });
+            } elseif ($request->assigned === 'no') {
+                $query->whereHas('asset', function($q) {
+                    $q->whereNull('assigned_to');
+                });
+            }
+        }
+        
+        // Status filter
+        if ($request->filled('status')) {
+            $query->whereHas('asset', function($q) use ($request) {
+                $q->where('status', $request->status);
+            });
+        }
+        
+        // Sorting
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        
+        $allowedSortFields = ['size', 'resolution', 'panel_type', 'created_at'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        }
+        
+        $monitors = $query->paginate(15)->withQueryString();
+        
+        // Get filter data
+        $panelTypes = Monitor::select('panel_type')->distinct()->pluck('panel_type');
+        $sizes = Monitor::select('size')->distinct()->orderBy('size')->pluck('size');
+        $resolutions = Monitor::select('resolution')->distinct()->pluck('resolution');
+        $statuses = Asset::select('status')->distinct()->pluck('status');
+        
+        return view('monitors.index', compact('monitors', 'panelTypes', 'sizes', 'resolutions', 'statuses'));
     }
 
     /**

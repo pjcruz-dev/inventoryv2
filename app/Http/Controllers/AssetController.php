@@ -63,7 +63,7 @@ class AssetController extends Controller
             $query->where('assigned_to', $user->id);
         }
         
-        // Search functionality
+        // Simple Search functionality
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -71,6 +71,8 @@ class AssetController extends Controller
                   ->orWhere('asset_tag', 'like', "%{$search}%")
                   ->orWhere('serial_number', 'like', "%{$search}%")
                   ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('model', 'like', "%{$search}%")
+                  ->orWhere('location', 'like', "%{$search}%")
                   ->orWhereHas('category', function($categoryQuery) use ($search) {
                       $categoryQuery->where('name', 'like', "%{$search}%");
                   })
@@ -79,15 +81,91 @@ class AssetController extends Controller
                   })
                   ->orWhereHas('assignedUser', function($userQuery) use ($search) {
                       $userQuery->where('first_name', 'like', "%{$search}%")
-                               ->orWhere('last_name', 'like', "%{$search}%");
+                               ->orWhere('last_name', 'like', "%{$search}%")
+                               ->orWhere('employee_id', 'like', "%{$search}%");
                   });
             });
         }
         
+        // Advanced Search Filters
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+        
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        
+        if ($request->filled('movement')) {
+            $query->where('movement', $request->movement);
+        }
+        
+        if ($request->filled('vendor_id')) {
+            $query->where('vendor_id', $request->vendor_id);
+        }
+        
+        if ($request->filled('assigned_to')) {
+            if ($request->assigned_to === 'unassigned') {
+                $query->whereNull('assigned_to');
+            } elseif ($request->assigned_to === 'assigned') {
+                $query->whereNotNull('assigned_to');
+            } else {
+                $query->where('assigned_to', $request->assigned_to);
+            }
+        }
+        
+        if ($request->filled('location')) {
+            $query->where('location', 'like', "%{$request->location}%");
+        }
+        
+        // Date Range Filters
+        if ($request->filled('purchase_date_from')) {
+            $query->where('purchase_date', '>=', $request->purchase_date_from);
+        }
+        
+        if ($request->filled('purchase_date_to')) {
+            $query->where('purchase_date', '<=', $request->purchase_date_to);
+        }
+        
+        if ($request->filled('assigned_date_from')) {
+            $query->where('assigned_date', '>=', $request->assigned_date_from);
+        }
+        
+        if ($request->filled('assigned_date_to')) {
+            $query->where('assigned_date', '<=', $request->assigned_date_to);
+        }
+        
+        // Cost Range Filters
+        if ($request->filled('cost_min')) {
+            $query->where('cost', '>=', $request->cost_min);
+        }
+        
+        if ($request->filled('cost_max')) {
+            $query->where('cost', '<=', $request->cost_max);
+        }
+        
+        // Sorting
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        
+        $allowedSortFields = ['asset_tag', 'name', 'status', 'cost', 'purchase_date', 'assigned_date', 'created_at'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        }
         
         $assets = $query->paginate(15)->withQueryString();
         
-        return view('assets.index', compact('assets'));
+        // Get data for advanced search filters
+        $categories = AssetCategory::orderBy('name')->get();
+        $vendors = Vendor::orderBy('name')->get();
+        $users = User::where('status', 1)->orderBy('first_name')->get();
+        
+        // Get unique statuses and movements from database
+        $statuses = Asset::select('status')->distinct()->whereNotNull('status')->pluck('status');
+        $movements = Asset::select('movement')->distinct()->whereNotNull('movement')->pluck('movement');
+        $locations = Asset::select('location')->distinct()->whereNotNull('location')->orderBy('location')->pluck('location');
+        
+        return view('assets.index', compact('assets', 'categories', 'vendors', 'users', 'statuses', 'movements', 'locations'));
     }
 
     /**
