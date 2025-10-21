@@ -32,9 +32,33 @@ class PermissionController extends Controller
             });
         }
         
-        $permissions = $query->paginate(10)->withQueryString();
+        // Guard name filter
+        if ($request->filled('guard_name')) {
+            $query->where('guard_name', $request->guard_name);
+        }
         
-        return view('permissions.index', compact('permissions'));
+        // Filter by role assignment
+        if ($request->filled('has_roles')) {
+            if ($request->has_roles === 'yes') {
+                $query->has('roles');
+            } elseif ($request->has_roles === 'no') {
+                $query->doesntHave('roles');
+            }
+        }
+        
+        // Sorting
+        $sortBy = $request->get('sort_by', 'name');
+        $sortOrder = $request->get('sort_order', 'asc');
+        
+        $allowedSortFields = ['name', 'guard_name', 'created_at'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        }
+        
+        $permissions = $query->paginate(15)->withQueryString();
+        $guardNames = ['web', 'api'];
+        
+        return view('permissions.index', compact('permissions', 'guardNames'));
     }
 
     /**

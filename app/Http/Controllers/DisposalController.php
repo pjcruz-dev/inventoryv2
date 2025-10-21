@@ -66,13 +66,34 @@ class DisposalController extends Controller
         if ($request->filled('max_value')) {
             $query->where('disposal_value', '<=', $request->max_value);
         }
+        
+        // Asset filter
+        if ($request->filled('asset_id')) {
+            $query->where('asset_id', $request->asset_id);
+        }
+        
+        // Approved by filter
+        if ($request->filled('approved_by')) {
+            $query->where('approved_by', $request->approved_by);
+        }
+        
+        // Sorting
+        $sortBy = $request->get('sort_by', 'disposal_date');
+        $sortOrder = $request->get('sort_order', 'desc');
+        
+        $allowedSortFields = ['disposal_date', 'disposal_type', 'disposal_value', 'created_at'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        }
 
-        $disposals = $query->orderBy('disposal_date', 'desc')->paginate(15)->appends(request()->query());
+        $disposals = $query->paginate(15)->withQueryString();
         
         // Get filter options
         $disposalTypes = ['Damaged', 'Recycled', 'Sold', 'Donated', 'Lost'];
+        $assets = Asset::where('status', 'For Disposal')->orderBy('name')->get();
+        $approvers = User::where('status', 1)->orderBy('first_name')->get();
         
-        return view('disposal.index', compact('disposals', 'disposalTypes'));
+        return view('disposal.index', compact('disposals', 'disposalTypes', 'assets', 'approvers'));
     }
 
     /**

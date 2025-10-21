@@ -29,19 +29,67 @@ class ComputerController extends Controller
             $search = $request->search;
             $query->whereHas('asset', function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('asset_tag', 'like', "%{$search}%");
+                  ->orWhere('asset_tag', 'like', "%{$search}%")
+                  ->orWhere('serial_number', 'like', "%{$search}%");
             })->orWhere('processor', 'like', "%{$search}%")
+              ->orWhere('memory', 'like', "%{$search}%")
+              ->orWhere('storage', 'like', "%{$search}%")
               ->orWhere('operating_system', 'like', "%{$search}%")
               ->orWhere('computer_type', 'like', "%{$search}%");
         }
         
-        if ($request->has('type') && $request->type) {
-            $query->where('computer_type', $request->type);
+        // Computer type filter
+        if ($request->filled('computer_type')) {
+            $query->where('computer_type', $request->computer_type);
         }
         
-        $computers = $query->paginate(10)->appends(request()->query());
+        // Operating system filter
+        if ($request->filled('operating_system')) {
+            $query->where('operating_system', 'like', "%{$request->operating_system}%");
+        }
         
-        return view('computers.index', compact('computers'));
+        // Processor filter
+        if ($request->filled('processor')) {
+            $query->where('processor', 'like', "%{$request->processor}%");
+        }
+        
+        // Assignment filter
+        if ($request->filled('assigned')) {
+            if ($request->assigned === 'yes') {
+                $query->whereHas('asset', function($q) {
+                    $q->whereNotNull('assigned_to');
+                });
+            } elseif ($request->assigned === 'no') {
+                $query->whereHas('asset', function($q) {
+                    $q->whereNull('assigned_to');
+                });
+            }
+        }
+        
+        // Status filter
+        if ($request->filled('status')) {
+            $query->whereHas('asset', function($q) use ($request) {
+                $q->where('status', $request->status);
+            });
+        }
+        
+        // Sorting
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        
+        $allowedSortFields = ['computer_type', 'processor', 'operating_system', 'created_at'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        }
+        
+        $computers = $query->paginate(15)->withQueryString();
+        
+        // Get filter data
+        $computerTypes = Computer::select('computer_type')->distinct()->pluck('computer_type');
+        $operatingSystems = Computer::select('operating_system')->distinct()->pluck('operating_system');
+        $statuses = Asset::select('status')->distinct()->pluck('status');
+        
+        return view('computers.index', compact('computers', 'computerTypes', 'operatingSystems', 'statuses'));
     }
 
     /**

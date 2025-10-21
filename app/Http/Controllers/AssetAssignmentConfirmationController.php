@@ -49,7 +49,49 @@ class AssetAssignmentConfirmationController extends Controller
             $query->where('status', $request->status);
         }
         
-        $confirmations = $query->orderBy('created_at', 'desc')->paginate(15)->appends(request()->query());
+        // User filter
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+        
+        // Asset filter
+        if ($request->filled('asset_id')) {
+            $query->where('asset_id', $request->asset_id);
+        }
+        
+        // Date range filter
+        if ($request->filled('assigned_from')) {
+            $query->where('assigned_at', '>=', $request->assigned_from);
+        }
+        
+        if ($request->filled('assigned_to')) {
+            $query->where('assigned_at', '<=', $request->assigned_to . ' 23:59:59');
+        }
+        
+        // Reminder count filter
+        if ($request->filled('reminder_count')) {
+            if ($request->reminder_count === '0') {
+                $query->where('reminder_count', 0);
+            } elseif ($request->reminder_count === '1+') {
+                $query->where('reminder_count', '>', 0);
+            }
+        }
+        
+        // Sorting
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        
+        $allowedSortFields = ['assigned_at', 'status', 'reminder_count', 'created_at', 'confirmed_at'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        }
+        
+        $confirmations = $query->paginate(15)->withQueryString();
+        
+        // Get filter data
+        $statuses = ['pending', 'confirmed', 'declined'];
+        $users = User::where('status', 1)->orderBy('first_name')->get();
+        $assets = Asset::orderBy('name')->get();
         
         // Log activity
         Log::info('Asset assignment confirmations index accessed', [
@@ -58,7 +100,7 @@ class AssetAssignmentConfirmationController extends Controller
             'status_filter' => $request->status
         ]);
         
-        return view('asset-assignment-confirmations.index', compact('confirmations'));
+        return view('asset-assignment-confirmations.index', compact('confirmations', 'statuses', 'users', 'assets'));
     }
 
     /**

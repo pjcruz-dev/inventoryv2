@@ -61,14 +61,31 @@ class PeripheralController extends Controller
             });
         }
         
-        $peripherals = $query->paginate(10)->appends($request->query());
+        // Status filter
+        if ($request->filled('status')) {
+            $query->whereHas('asset', function($q) use ($request) {
+                $q->where('status', $request->status);
+            });
+        }
+        
+        // Sorting
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        
+        $allowedSortFields = ['type', 'interface', 'created_at'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        }
+        
+        $peripherals = $query->paginate(15)->withQueryString();
         
         // Get filter options
         $types = Peripheral::distinct()->pluck('type')->filter()->sort()->values();
         $interfaces = Peripheral::distinct()->pluck('interface')->filter()->sort()->values();
         $departments = \App\Models\Department::whereHas('assets.peripheral')->pluck('name')->sort()->values();
+        $statuses = Asset::select('status')->distinct()->pluck('status');
         
-        return view('peripherals.index', compact('peripherals', 'types', 'interfaces', 'departments'));
+        return view('peripherals.index', compact('peripherals', 'types', 'interfaces', 'departments', 'statuses'));
     }
 
     /**

@@ -57,11 +57,35 @@ class UserController extends Controller
             $query->where('entity', $request->entity);
         }
         
-        $users = $query->orderBy('first_name')->paginate(15)->appends(request()->query());
+        // Role filter
+        if ($request->filled('role_id')) {
+            $query->where('role_id', $request->role_id);
+        }
+        
+        // Date range filters
+        if ($request->filled('created_from')) {
+            $query->where('created_at', '>=', $request->created_from);
+        }
+        
+        if ($request->filled('created_to')) {
+            $query->where('created_at', '<=', $request->created_to . ' 23:59:59');
+        }
+        
+        // Sorting
+        $sortBy = $request->get('sort_by', 'first_name');
+        $sortOrder = $request->get('sort_order', 'asc');
+        
+        $allowedSortFields = ['first_name', 'last_name', 'email', 'employee_id', 'created_at', 'status'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        }
+        
+        $users = $query->paginate(15)->withQueryString();
         $departments = Department::orderBy('name')->get();
+        $roles = Role::orderBy('name')->get();
         $entities = User::distinct()->pluck('entity')->filter()->sort()->values();
         
-        return view('users.index', compact('users', 'departments', 'entities'));
+        return view('users.index', compact('users', 'departments', 'roles', 'entities'));
     }
 
     /**

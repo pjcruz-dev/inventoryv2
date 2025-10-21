@@ -33,7 +33,25 @@ class RoleController extends Controller
             });
         }
         
-        $roles = $query->paginate(10)->withQueryString();
+        // Filter by permission count
+        if ($request->filled('has_permissions')) {
+            if ($request->has_permissions === 'yes') {
+                $query->has('permissions');
+            } elseif ($request->has_permissions === 'no') {
+                $query->doesntHave('permissions');
+            }
+        }
+        
+        // Sorting
+        $sortBy = $request->get('sort_by', 'name');
+        $sortOrder = $request->get('sort_order', 'asc');
+        
+        $allowedSortFields = ['name', 'created_at'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        }
+        
+        $roles = $query->paginate(15)->withQueryString();
         
         return view('roles.index', compact('roles'));
     }
