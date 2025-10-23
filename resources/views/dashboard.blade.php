@@ -2259,7 +2259,7 @@
                                             </div>
                                             <div class="decline-detail">
                                                 <i class="fas fa-calendar"></i>
-                                                {{ $decline->declined_at->format('M d, Y') }}
+                                                {{ $decline->declined_at ? $decline->declined_at->format('M d, Y') : 'N/A' }}
                                             </div>
                                         </div>
                                         <div class="decline-reason-preview">
