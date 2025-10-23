@@ -733,7 +733,7 @@
                         </div>
                         <div class="info-row">
                             <span class="label">Confirmation Date:</span>
-                            <span class="value">{{ $confirmation->confirmed_at->format('F j, Y \a\t g:i A') }}</span>
+                            <span class="value">{{ $confirmation->confirmed_at ? $confirmation->confirmed_at->format('F j, Y \a\t g:i A') : 'N/A' }}</span>
                         </div>
                     </div>
                 @else
@@ -761,7 +761,7 @@
                             </div>
                             <div class="info-row">
                                 <span class="label">Decline Date:</span>
-                                <span class="value">{{ $confirmation->confirmed_at->format('F j, Y \a\t g:i A') }}</span>
+                                <span class="value">{{ $confirmation->declined_at ? $confirmation->declined_at->format('F j, Y \a\t g:i A') : 'N/A' }}</span>
                             </div>
                         </div>
 
@@ -840,25 +840,6 @@
                     @endif
                 </div>
 
-                <!-- Resend Email Section -->
-                <div class="resend-section" role="region" aria-labelledby="resend-heading" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 15px; padding: 25px; margin: 25px 0; border-left: 4px solid #6c757d;">
-                    <h5 id="resend-heading"><i class="fas fa-envelope me-2" aria-hidden="true"></i>Need Another Copy?</h5>
-                    <p class="text-muted mb-3">If you need to resend the confirmation email or share it with someone else:</p>
-                    <div class="resend-controls">
-                        <button type="button" class="btn btn-outline-primary" id="resendEmailBtn" 
-                                onclick="resendConfirmationEmail()" 
-                                aria-describedby="resend-help"
-                                style="border-radius: 25px; padding: 10px 20px; font-weight: 600;">
-                            <i class="fas fa-paper-plane me-2" aria-hidden="true"></i>
-                            Resend Confirmation Email
-                        </button>
-                        <div id="resend-status" class="mt-2" role="status" aria-live="polite"></div>
-                        <small id="resend-help" class="form-text text-muted d-block mt-2">
-                            You can resend this email up to 3 times per hour for security purposes.
-                        </small>
-                    </div>
-                </div>
-
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle me-2"></i>
                     <strong>Need Help?</strong> If you have any questions about your asset or need technical support, 
@@ -876,42 +857,5 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function resendConfirmationEmail() {
-            const btn = document.getElementById('resendEmailBtn');
-            const status = document.getElementById('resend-status');
-            
-            // Disable button and show loading state
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2" aria-hidden="true"></i>Sending...';
-            
-            // Simulate API call (replace with actual endpoint)
-            fetch('/resend-confirmation/{{ $confirmation->id }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    status.innerHTML = '<div class="alert alert-success alert-sm"><i class="fas fa-check me-2"></i>Email sent successfully!</div>';
-                } else {
-                    status.innerHTML = '<div class="alert alert-warning alert-sm"><i class="fas fa-exclamation-triangle me-2"></i>' + (data.message || 'Failed to send email. Please try again.') + '</div>';
-                }
-            })
-            .catch(error => {
-                status.innerHTML = '<div class="alert alert-danger alert-sm"><i class="fas fa-times me-2"></i>An error occurred. Please try again later.</div>';
-            })
-            .finally(() => {
-                // Re-enable button after 3 seconds
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-paper-plane me-2" aria-hidden="true"></i>Resend Confirmation Email';
-                }, 3000);
-            });
-        }
-    </script>
 </body>
 </html>

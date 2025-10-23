@@ -102,7 +102,7 @@ class AccountabilityFormController extends Controller
         // Get assignment history from asset timeline
         $assignments = $asset->timeline()
             ->whereIn('action', ['assigned', 'transferred', 'unassigned'])
-            ->with(['user'])
+            ->with(['fromUser', 'toUser', 'performedBy'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -184,7 +184,7 @@ class AccountabilityFormController extends Controller
 
         $assignments = $asset->timeline()
             ->whereIn('action', ['assigned', 'transferred', 'unassigned'])
-            ->with(['user'])
+            ->with(['fromUser', 'toUser', 'performedBy'])
             ->orderBy('created_at', 'desc')
             ->get();
 

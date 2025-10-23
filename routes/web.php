@@ -69,6 +69,7 @@ Route::middleware('auth')->group(function () {
     Route::post('assets/{asset}/assign', [AssetController::class, 'assign'])->name('assets.assign')->middleware('prevent.maintenance.edit');
     Route::post('assets/{asset}/unassign', [AssetController::class, 'unassign'])->name('assets.unassign')->middleware('prevent.maintenance.edit');
     Route::post('assets/{asset}/reassign', [AssetController::class, 'reassign'])->name('assets.reassign')->middleware('prevent.maintenance.edit');
+    Route::post('assets/bulk-assign', [AssetController::class, 'bulkAssign'])->name('assets.bulk-assign')->middleware('prevent.maintenance.edit');
     Route::post('assets/{asset}/maintenance', [AssetController::class, 'sendToMaintenance'])->name('assets.maintenance');
     Route::post('assets/{asset}/disposal', [AssetController::class, 'sendToDisposal'])->name('assets.disposal');
     Route::get('assets/reports/employee-assets', [AssetController::class, 'printEmployeeAssets'])->name('assets.print-employee-assets');
@@ -234,6 +235,11 @@ Route::prefix('accountability')->name('accountability.')->middleware(['auth'])->
         Route::get('/session-status/{sessionId}', [App\Http\Controllers\AccountabilityFormController::class, 'getSessionStatus'])->name('session-status')->middleware('check.permission:print_accountability_forms');
         Route::get('/resume-upload/{sessionId}', [App\Http\Controllers\AccountabilityFormController::class, 'resumeBulkUpload'])->name('resume-upload')->middleware('check.permission:print_accountability_forms');
 });
+
+// Asset Assignment Decline Export Route
+Route::get('asset-assignments/export-declines', [AssetConfirmationController::class, 'exportDeclines'])
+    ->name('asset-assignments.export-declines')
+    ->middleware('auth', 'check.permission:view_assignment_confirmations');
 
 // Asset Confirmation routes (public - no auth required)
 Route::prefix('asset-confirmation')->name('asset-confirmation.')->group(function () {

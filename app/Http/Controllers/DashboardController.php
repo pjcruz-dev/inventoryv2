@@ -7,6 +7,7 @@ use App\Models\Asset;
 use App\Models\User;
 use App\Models\Department;
 use App\Models\Vendor;
+use App\Models\AssetAssignmentConfirmation;
 
 class DashboardController extends Controller
 {
@@ -109,6 +110,9 @@ class DashboardController extends Controller
         // Get entities for filter dropdown
         $entities = Asset::distinct()->pluck('entity')->filter()->sort()->values();
         
+        // Get declined assets data for the new widget
+        $declinedAssets = $this->getDeclinedAssetsData();
+        
         return view('dashboard', compact(
             'totalAssets',
             'totalUsers', 
@@ -123,7 +127,8 @@ class DashboardController extends Controller
             'assetsGrowth',
             'usersGrowth',
             'departmentsGrowth',
-            'vendorsGrowth'
+            'vendorsGrowth',
+            'declinedAssets'
         ));
     }
     
@@ -558,5 +563,74 @@ class DashboardController extends Controller
             ->get();
         
         return view('dashboard.asset-movements', compact('assets', 'week', 'status', 'month', 'year', 'weekStart', 'weekEnd'));
+    }
+
+    /**
+     * Get declined assets data for dashboard widget
+     */
+    private function getDeclinedAssetsData()
+    {
+        // Get all declined confirmations with asset, user, and relationships
+        $declinedConfirmations = AssetAssignmentConfirmation::where('status', 'declined')
+            ->with(['asset.category', 'user.department'])
+            ->orderBy('declined_at', 'desc')
+            ->get();
+
+        // Calculate statistics
+        $totalDeclined = $declinedConfirmations->count();
+        
+        // Count by severity
+        $highSeverity = $declinedConfirmations->where('decline_severity', 'high')->count();
+        $mediumSeverity = $declinedConfirmations->where('decline_severity', 'medium')->count();
+        $lowSeverity = $declinedConfirmations->where('decline_severity', 'low')->count();
+        
+        // Count requiring follow-up
+        $requiresFollowUp = $declinedConfirmations->where('follow_up_required', true)->count();
+        
+        // Get pending (unresolved) high-severity declines (declined in last 7 days and not reassigned)
+        $pendingHighSeverity = $declinedConfirmations
+            ->where('decline_severity', 'high')
+            ->where('follow_up_required', true)
+            ->filter(function ($confirmation) {
+                // Check if declined within last 7 days and asset is still available (not reassigned)
+                return $confirmation->declined_at >= now()->subDays(7) 
+                    && $confirmation->asset->status === 'Available';
+            });
+
+        // Get recent declined assets (last 5)
+        $recentDeclined = $declinedConfirmations->take(5);
+
+        // Group by decline category
+        $byCategory = $declinedConfirmations->groupBy('decline_category')->map(function ($group) {
+            return $group->count();
+        });
+
+        // Calculate decline trend (last 30 days)
+        $declineTrend = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $dayName = $date->format('M d');
+            
+            $count = AssetAssignmentConfirmation::where('status', 'declined')
+                ->whereDate('declined_at', $date->toDateString())
+                ->count();
+            
+            $declineTrend[] = [
+                'date' => $dayName,
+                'count' => $count
+            ];
+        }
+
+        return [
+            'total' => $totalDeclined,
+            'high_severity' => $highSeverity,
+            'medium_severity' => $mediumSeverity,
+            'low_severity' => $lowSeverity,
+            'requires_follow_up' => $requiresFollowUp,
+            'pending_high_severity' => $pendingHighSeverity,
+            'recent' => $recentDeclined,
+            'by_category' => $byCategory,
+            'trend' => $declineTrend
+        ];
     }
 }

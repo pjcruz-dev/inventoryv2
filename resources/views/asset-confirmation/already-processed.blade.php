@@ -167,7 +167,7 @@
                 
                 <div class="detail-row">
                     <span class="detail-label">Category:</span>
-                    <span class="detail-value">{{ $confirmation->asset->assetCategory->category_name ?? 'N/A' }}</span>
+                    <span class="detail-value">{{ $confirmation->asset->category->name ?? 'N/A' }}</span>
                 </div>
                 
                 <div class="detail-row">
@@ -194,10 +194,15 @@
                     </span>
                 </div>
                 
-                @if($confirmation->confirmed_at)
+                @if($status === 'confirmed' && $confirmation->confirmed_at)
                 <div class="detail-row">
-                    <span class="detail-label">Processed Date:</span>
+                    <span class="detail-label">Confirmed Date:</span>
                     <span class="detail-value">{{ $confirmation->confirmed_at->format('F j, Y \a\t g:i A') }}</span>
+                </div>
+                @elseif($status === 'declined' && $confirmation->declined_at)
+                <div class="detail-row">
+                    <span class="detail-label">Declined Date:</span>
+                    <span class="detail-value">{{ $confirmation->declined_at->format('F j, Y \a\t g:i A') }}</span>
                 </div>
                 @endif
                 

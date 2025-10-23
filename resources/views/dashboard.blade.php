@@ -3,7 +3,8 @@
 @section('title', 'Dashboard')
 
 @section('styles')
-<!-- Dashboard styles are now loaded in the main layout with high priority -->
+<style>
+/* Dashboard Styles - Updated {{ date('Y-m-d H:i:s') }} */
 
 /* Enhanced Dashboard Cards */
 .dashboard-card {
@@ -249,6 +250,522 @@
     position: relative;
     height: 300px;
     margin-top: 1rem;
+}
+
+/* Declined Assets Widget */
+.declined-assets-widget {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 1px solid #e9ecef;
+    position: relative;
+    overflow: hidden;
+}
+
+.declined-assets-widget::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #dc3545 0%, #fd7e14 50%, #ffc107 100%);
+}
+
+.widget-icon.declined {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+    font-size: 1.75rem;
+    margin-right: 1rem;
+    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.25);
+    animation: pulse-red 2s ease-in-out infinite;
+}
+
+@keyframes pulse-red {
+    0%, 100% { box-shadow: 0 6px 20px rgba(220, 53, 69, 0.25); }
+    50% { box-shadow: 0 6px 30px rgba(220, 53, 69, 0.4); }
+}
+
+.decline-stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 2px solid transparent;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.decline-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.decline-stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.decline-stat-card:hover::before {
+    width: 8px;
+}
+
+.decline-stat-card.high-severity::before {
+    background: linear-gradient(180deg, #dc3545 0%, #c82333 100%);
+}
+
+.decline-stat-card.high-severity:hover {
+    border-color: rgba(220, 53, 69, 0.2);
+    background: linear-gradient(135deg, #ffffff 0%, #fff5f5 100%);
+}
+
+.decline-stat-card.medium-severity::before {
+    background: linear-gradient(180deg, #ffc107 0%, #ff9800 100%);
+}
+
+.decline-stat-card.medium-severity:hover {
+    border-color: rgba(255, 193, 7, 0.2);
+    background: linear-gradient(135deg, #ffffff 0%, #fffbf0 100%);
+}
+
+.decline-stat-card.low-severity::before {
+    background: linear-gradient(180deg, #17a2b8 0%, #138496 100%);
+}
+
+.decline-stat-card.low-severity:hover {
+    border-color: rgba(23, 162, 184, 0.2);
+    background: linear-gradient(135deg, #ffffff 0%, #f0fbfd 100%);
+}
+
+.decline-stat-card.follow-up-required::before {
+    background: linear-gradient(180deg, #6f42c1 0%, #5a32a3 100%);
+}
+
+.decline-stat-card.follow-up-required:hover {
+    border-color: rgba(111, 66, 193, 0.2);
+    background: linear-gradient(135deg, #ffffff 0%, #f8f5fc 100%);
+}
+
+.decline-stat-card .stat-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.decline-stat-card:hover .stat-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.decline-stat-card.high-severity .stat-icon {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.15) 0%, rgba(220, 53, 69, 0.05) 100%);
+    color: #dc3545;
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.2);
+}
+
+.decline-stat-card.medium-severity .stat-icon {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 193, 7, 0.05) 100%);
+    color: #ff9800;
+    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.2);
+}
+
+.decline-stat-card.low-severity .stat-icon {
+    background: linear-gradient(135deg, rgba(23, 162, 184, 0.15) 0%, rgba(23, 162, 184, 0.05) 100%);
+    color: #17a2b8;
+    box-shadow: 0 4px 15px rgba(23, 162, 184, 0.2);
+}
+
+.decline-stat-card.follow-up-required .stat-icon {
+    background: linear-gradient(135deg, rgba(111, 66, 193, 0.15) 0%, rgba(111, 66, 193, 0.05) 100%);
+    color: #6f42c1;
+    box-shadow: 0 4px 15px rgba(111, 66, 193, 0.2);
+}
+
+.decline-stat-card .stat-details {
+    flex: 1;
+}
+
+.decline-stat-card .stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1a202c;
+    line-height: 1;
+    margin-bottom: 0.4rem;
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.decline-stat-card .stat-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    line-height: 1.4;
+}
+
+.decline-stat-card .stat-alert {
+    font-size: 0.7rem;
+    color: #dc3545;
+    font-weight: 700;
+    margin-top: 0.5rem;
+    padding: 0.25rem 0.6rem;
+    background: rgba(220, 53, 69, 0.1);
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    animation: pulse-alert 2s ease-in-out infinite;
+}
+
+@keyframes pulse-alert {
+    0%, 100% { background: rgba(220, 53, 69, 0.1); }
+    50% { background: rgba(220, 53, 69, 0.2); }
+}
+
+.decline-trend-section, .recent-declines-section {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    border: 1px solid #f0f0f0;
+    transition: all 0.3s ease;
+}
+
+.decline-trend-section:hover, .recent-declines-section:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border-color: #e0e0e0;
+}
+
+.decline-trend-section h6, .recent-declines-section h6 {
+    font-weight: 700;
+    color: #2c3e50;
+    font-size: 1rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.decline-trend-section h6::before {
+    content: '📈';
+    font-size: 1.2rem;
+}
+
+.recent-declines-section h6::before {
+    content: '📋';
+    font-size: 1.2rem;
+}
+
+.decline-trend-section {
+    height: 370px;
+}
+
+.decline-trend-section canvas {
+    max-height: 250px !important;
+}
+
+.recent-declines-section {
+    height: 370px;
+}
+
+.recent-declines-list {
+    max-height: 260px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.recent-declines-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.recent-declines-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.recent-declines-list::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+}
+
+.recent-declines-list::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #5568d3 0%, #63398d 100%);
+}
+
+.decline-item {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border-radius: 14px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.decline-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.decline-item:hover {
+    transform: translateX(5px);
+    background: white;
+    border-color: #667eea;
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+}
+
+.decline-item:hover::before {
+    opacity: 1;
+}
+
+.decline-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.decline-asset-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.asset-tag-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.4rem 0.9rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s ease;
+}
+
+.decline-item:hover .asset-tag-badge {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.asset-name {
+    font-weight: 700;
+    color: #2c3e50;
+    font-size: 0.85rem;
+    line-height: 1.3;
+}
+
+.severity-badge {
+    padding: 0.35rem 0.75rem;
+    border-radius: 16px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.decline-item:hover .severity-badge {
+    transform: scale(1.05);
+}
+
+.severity-badge.severity-high {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+    animation: pulse-high 2s ease-in-out infinite;
+}
+
+.severity-badge.severity-high::before {
+    content: '🔴';
+    font-size: 0.8rem;
+}
+
+@keyframes pulse-high {
+    0%, 100% { box-shadow: 0 2px 6px rgba(220, 53, 69, 0.3); }
+    50% { box-shadow: 0 4px 12px rgba(220, 53, 69, 0.5); }
+}
+
+.severity-badge.severity-medium {
+    background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+    color: #2c3e50;
+}
+
+.severity-badge.severity-medium::before {
+    content: '🟡';
+    font-size: 0.8rem;
+}
+
+.severity-badge.severity-low {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
+}
+
+.severity-badge.severity-low::before {
+    content: '🔵';
+    font-size: 0.8rem;
+}
+
+.decline-item-details {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.decline-detail {
+    font-size: 0.75rem;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 500;
+}
+
+.decline-detail i {
+    color: #667eea;
+    font-size: 0.85rem;
+}
+
+.decline-reason-preview {
+    font-size: 0.8rem;
+    color: #495057;
+    padding: 0.75rem;
+    background: linear-gradient(135deg, #fff5f5 0%, #fff 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    border: 1px solid #ffe0e0;
+    margin-top: 0.75rem;
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+.decline-reason-preview i {
+    margin-top: 0.15rem;
+    color: #dc3545;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.category-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.category-item {
+    display: grid;
+    grid-template-columns: 200px 1fr 70px;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: white;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    border: 1px solid #f0f0f0;
+}
+
+.category-item:hover {
+    transform: translateX(3px);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border-color: #e0e0e0;
+}
+
+.category-label {
+    font-weight: 700;
+    color: #2c3e50;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.category-label::before {
+    content: '📊';
+    font-size: 1rem;
+}
+
+.category-bar-wrapper {
+    background: linear-gradient(135deg, #f0f0f0 0%, #e9ecef 100%);
+    height: 28px;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    position: relative;
+}
+
+.category-bar {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    height: 100%;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.category-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    to { left: 100%; }
+}
+
+.category-count {
+    font-weight: 800;
+    color: #2c3e50;
+    text-align: center;
+    font-size: 1.1rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 /* Recent Assets */
@@ -1630,6 +2147,159 @@
             </div>
         </div>
     </div>
+
+    <!-- Declined Assets Widget -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="dashboard-card declined-assets-widget">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div class="d-flex align-items-center">
+                        <div class="widget-icon declined">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0 fw-semibold">Declined Asset Assignments</h5>
+                            <small class="text-muted">Monitor and manage declined confirmations</small>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{{ route('asset-assignment-confirmations.index') }}?status=declined" 
+                           class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-list me-1"></i> View All
+                        </a>
+                        <a href="{{ route('asset-assignments.export-declines') }}" 
+                           class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-file-export me-1"></i> Export Report
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Statistics Row -->
+                <div class="row mb-4">
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="decline-stat-card high-severity">
+                            <div class="stat-icon">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                            <div class="stat-details">
+                                <div class="stat-value">{{ $declinedAssets['high_severity'] }}</div>
+                                <div class="stat-label">High Severity</div>
+                                @if($declinedAssets['pending_high_severity']->count() > 0)
+                                    <div class="stat-alert">
+                                        <i class="fas fa-clock"></i> {{ $declinedAssets['pending_high_severity']->count() }} pending
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="decline-stat-card medium-severity">
+                            <div class="stat-icon">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="stat-details">
+                                <div class="stat-value">{{ $declinedAssets['medium_severity'] }}</div>
+                                <div class="stat-label">Medium Severity</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="decline-stat-card low-severity">
+                            <div class="stat-icon">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
+                            <div class="stat-details">
+                                <div class="stat-value">{{ $declinedAssets['low_severity'] }}</div>
+                                <div class="stat-label">Low Severity</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="decline-stat-card follow-up-required">
+                            <div class="stat-icon">
+                                <i class="fas fa-tasks"></i>
+                            </div>
+                            <div class="stat-details">
+                                <div class="stat-value">{{ $declinedAssets['requires_follow_up'] }}</div>
+                                <div class="stat-label">Requires Follow-up</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Decline Trend Chart & Recent Declines -->
+                <div class="row">
+                    <div class="col-lg-7 mb-3">
+                        <div class="decline-trend-section">
+                            <h6 class="mb-3 fw-semibold">7-Day Decline Trend</h6>
+                            <div style="position: relative; height: 250px;">
+                                <canvas id="declineTrendChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5 mb-3">
+                        <div class="recent-declines-section">
+                            <h6 class="mb-3 fw-semibold">Recent Declined Assets</h6>
+                            <div class="recent-declines-list">
+                                @forelse($declinedAssets['recent'] as $decline)
+                                    <div class="decline-item">
+                                        <div class="decline-item-header">
+                                            <div class="decline-asset-info">
+                                                <span class="asset-tag-badge">{{ $decline->asset->asset_tag }}</span>
+                                                <span class="asset-name">{{ $decline->asset->asset_name }}</span>
+                                            </div>
+                                            <span class="severity-badge severity-{{ $decline->decline_severity }}">
+                                                {{ strtoupper($decline->decline_severity ?? 'N/A') }}
+                                            </span>
+                                        </div>
+                                        <div class="decline-item-details">
+                                            <div class="decline-detail">
+                                                <i class="fas fa-user"></i>
+                                                {{ $decline->user->first_name }} {{ $decline->user->last_name }}
+                                            </div>
+                                            <div class="decline-detail">
+                                                <i class="fas fa-calendar"></i>
+                                                {{ $decline->declined_at->format('M d, Y') }}
+                                            </div>
+                                        </div>
+                                        <div class="decline-reason-preview">
+                                            <i class="fas fa-comment-alt"></i>
+                                            {{ $decline->getFormattedDeclineReason() }}
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="text-center text-muted py-4">
+                                        <i class="fas fa-check-circle fa-2x mb-2"></i>
+                                        <p class="mb-0">No recent declined assets</p>
+                                    </div>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category Breakdown -->
+                @if($declinedAssets['by_category']->count() > 0)
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6 class="mb-3 fw-semibold">Decline Reasons Breakdown</h6>
+                            <div class="category-breakdown">
+                                @foreach($declinedAssets['by_category'] as $category => $count)
+                                    <div class="category-item">
+                                        <div class="category-label">{{ ucwords(str_replace('_', ' ', $category)) }}</div>
+                                        <div class="category-bar-wrapper">
+                                            <div class="category-bar" style="width: {{ ($count / $declinedAssets['total']) * 100 }}%"></div>
+                                        </div>
+                                        <div class="category-count">{{ $count }}</div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -1794,6 +2464,97 @@ document.addEventListener('DOMContentLoaded', function() {
         // Make chart responsive
         window.addEventListener('resize', function() {
             weeklyMovementChart.resize();
+        });
+    }
+
+    // Initialize Decline Trend Chart
+    const declineTrendCanvas = document.getElementById('declineTrendChart');
+    if (declineTrendCanvas) {
+        const declineTrendData = @json($declinedAssets['trend']);
+        
+        const labels = declineTrendData.map(item => item.date);
+        const counts = declineTrendData.map(item => item.count);
+        
+        const declineTrendChart = new Chart(declineTrendCanvas, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Declined Assets',
+                    data: counts,
+                    borderColor: '#dc3545',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    pointBackgroundColor: '#dc3545',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#dc3545',
+                    pointHoverBorderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                return ' Declined: ' + context.parsed.y;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 11
+                            }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0,0,0,0.05)'
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+        
+        // Make chart responsive
+        window.addEventListener('resize', function() {
+            declineTrendChart.resize();
         });
     }
 });
