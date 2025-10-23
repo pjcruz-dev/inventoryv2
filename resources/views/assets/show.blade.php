@@ -583,5 +583,27 @@
             }
         }
     }
+    
+    // Prevent double submission of assign form
+    document.getElementById('assignForm').addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        if (submitBtn.disabled) {
+            e.preventDefault();
+            return false;
+        }
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Assigning...';
+    });
+    
+    // Prevent double submission of reassign form
+    document.getElementById('reassignForm').addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        if (submitBtn.disabled) {
+            e.preventDefault();
+            return false;
+        }
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Reassigning...';
+    });
 </script>
 @endsection

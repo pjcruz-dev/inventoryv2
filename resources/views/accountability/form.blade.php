@@ -170,12 +170,12 @@
                                 <tbody>
                                     @foreach($formData['assignments'] as $assignment)
                                         <tr>
-                                            <td>{{ $assignment->assigned_date->format('M d, Y g:i A') }}</td>
-                                            <td>{{ $assignment->user->first_name }} {{ $assignment->user->last_name }}</td>
-                                            <td>{{ $assignment->assignedBy->first_name ?? 'System' }} {{ $assignment->assignedBy->last_name ?? '' }}</td>
+                                            <td>{{ $assignment->performed_at->format('M d, Y g:i A') }}</td>
+                                            <td>{{ $assignment->toUser ? $assignment->toUser->first_name . ' ' . $assignment->toUser->last_name : 'N/A' }}</td>
+                                            <td>{{ $assignment->performedBy ? $assignment->performedBy->first_name . ' ' . $assignment->performedBy->last_name : 'System' }}</td>
                                             <td>
-                                                <span class="badge bg-{{ $assignment->status == 'confirmed' ? 'success' : ($assignment->status == 'declined' ? 'danger' : 'warning') }}">
-                                                    {{ ucfirst($assignment->status) }}
+                                                <span class="badge bg-{{ $assignment->action == 'assigned' ? 'success' : ($assignment->action == 'unassigned' ? 'danger' : 'warning') }}">
+                                                    {{ ucfirst($assignment->action) }}
                                                 </span>
                                             </td>
                                             <td>{{ $assignment->notes ?? 'N/A' }}</td>

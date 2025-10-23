@@ -10,6 +10,8 @@ use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\AssetConfirmationNotification;
+use App\Exports\DeclinedAssetsExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AssetConfirmationController extends Controller
 {
@@ -25,7 +27,7 @@ class AssetConfirmationController extends Controller
     public function show($token)
     {
         $confirmation = AssetAssignmentConfirmation::where('confirmation_token', $token)
-            ->with(['asset.assetCategory', 'user'])
+            ->with(['asset.category', 'user'])
             ->first();
 
         if (!$confirmation) {
@@ -36,9 +38,20 @@ class AssetConfirmationController extends Controller
 
         if (!$confirmation->isPending()) {
             $status = $confirmation->isConfirmed() ? 'confirmed' : 'declined';
+            $statusDate = $confirmation->isConfirmed() 
+                ? ($confirmation->confirmed_at ? $confirmation->confirmed_at->format('F j, Y \a\t g:i A') : 'Unknown')
+                : ($confirmation->declined_at ? $confirmation->declined_at->format('F j, Y \a\t g:i A') : 'Unknown');
+            
+            if ($confirmation->isConfirmed()) {
+                $message = "This asset assignment was already confirmed on {$statusDate}.";
+            } else {
+                $message = "This asset assignment was declined on {$statusDate}.";
+            }
+            
             return view('asset-confirmation.already-processed', [
                 'confirmation' => $confirmation,
-                'status' => $status
+                'status' => $status,
+                'message' => $message
             ]);
         }
 
@@ -217,175 +230,13 @@ class AssetConfirmationController extends Controller
     }
 
     /**
-     * Decline asset assignment
+     * Decline asset assignment - Redirect to decline form to collect detailed reasons
      */
     public function decline($token)
     {
-        $confirmation = AssetAssignmentConfirmation::where('confirmation_token', $token)
-            ->with(['asset', 'user'])
-            ->first();
-
-        // Validate token exists
-        if (!$confirmation) {
-            return view('asset-confirmation.invalid', [
-                'message' => 'Invalid confirmation token. The link may have expired or been used already.'
-            ]);
-        }
-
-        // Check if already processed
-        if (!$confirmation->isPending()) {
-            $status = $confirmation->isConfirmed() ? 'confirmed' : 'declined';
-            $statusDate = $confirmation->isConfirmed() 
-                ? ($confirmation->confirmed_at ? $confirmation->confirmed_at->format('F j, Y \a\t g:i A') : 'Unknown')
-                : ($confirmation->declined_at ? $confirmation->declined_at->format('F j, Y \a\t g:i A') : 'Unknown');
-            
-            if ($confirmation->isConfirmed()) {
-                $message = "This email was already confirmed on {$statusDate}.";
-            } else {
-                $message = "This request was declined on {$statusDate}.";
-            }
-            
-            return view('asset-confirmation.already-processed', [
-                'confirmation' => $confirmation,
-                'status' => $status,
-                'message' => $message
-            ]);
-        }
-
-        // Log the decline attempt
-        \Log::info('Asset decline attempt', [
-            'confirmation_id' => $confirmation->id,
-            'asset_tag' => $confirmation->asset->asset_tag,
-            'user_email' => $confirmation->user->email,
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent()
-        ]);
-
-        // Mark confirmation as declined
-        $confirmation->markAsDeclined();
-
-        // Create timeline entry for decline
-        \App\Models\AssetTimeline::create([
-            'asset_id' => $confirmation->asset_id,
-            'action' => 'declined',
-            'from_user_id' => $confirmation->user_id,
-            'to_user_id' => null,
-            'from_department_id' => $confirmation->asset->department_id,
-            'to_department_id' => null,
-            'notes' => 'Asset assignment declined by user via email confirmation',
-            'old_values' => null,
-            'new_values' => [
-                'confirmation_id' => $confirmation->id,
-                'confirmation_token' => $confirmation->confirmation_token,
-                'declined_at' => now()->toISOString(),
-                'user_email' => $confirmation->user->email,
-                'user_name' => $confirmation->user->first_name . ' ' . $confirmation->user->last_name
-            ],
-            'performed_by' => $confirmation->user_id, // Use the actual user who confirmed/declined
-            'performed_at' => now()
-        ]);
-
-        // Create activity log entry for decline
-        \App\Models\Log::create([
-            'loggable_type' => 'App\Models\AssetAssignmentConfirmation',
-            'loggable_id' => $confirmation->id,
-            'category' => 'asset_assignment_confirmation',
-            'event_type' => 'declined',
-            'description' => 'Asset assignment declined by user via email confirmation',
-            'user_id' => $confirmation->user_id,
-            'role_id' => $confirmation->user->role_id ?? null,
-            'asset_id' => $confirmation->asset_id,
-            'department_id' => $confirmation->asset->department_id,
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-            'remarks' => 'Asset assignment declined by user via email confirmation',
-            'action_details' => [
-                'confirmation_id' => $confirmation->id,
-                'confirmation_token' => $confirmation->confirmation_token,
-                'declined_at' => now()->toISOString(),
-                'user_email' => $confirmation->user->email,
-                'user_name' => $confirmation->user->first_name . ' ' . $confirmation->user->last_name,
-                'asset_name' => $confirmation->asset->name,
-                'asset_tag' => $confirmation->asset->asset_tag
-            ],
-            'session_id' => request()->hasSession() ? request()->session()->getId() : null,
-            'request_method' => request()->method(),
-            'request_url' => request()->fullUrl(),
-            'action_timestamp' => now()
-        ]);
-
-        // AssetAssignment model removed - no longer needed
-
-        // Update asset status back to Available and unassign
-        $confirmation->asset->update([
-            'assigned_to' => null,
-            'assigned_date' => null,
-            'status' => 'Available',
-            'movement' => 'Return'
-        ]);
-
-        // Create audit log
-        Log::create([
-            'category' => 'Asset',
-            'asset_id' => $confirmation->asset->id,
-            'user_id' => $confirmation->user->id,
-            'role_id' => $confirmation->user->role_id ?? 1,
-            'department_id' => $confirmation->user->department_id,
-            'event_type' => 'declined',
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-            'remarks' => 'Asset assignment declined by user: ' . $confirmation->user->first_name . ' ' . $confirmation->user->last_name . '. Asset returned to available status.',
-            'created_at' => now()
-        ]);
-
-        // Create notification for the user
-        $notificationData = [
-            'type' => 'asset_declined',
-            'title' => 'Asset Assignment Declined',
-            'message' => "You have declined the assignment of asset {$confirmation->asset->asset_tag} ({$confirmation->asset->asset_name}).",
-            'data' => [
-                'asset_tag' => $confirmation->asset->asset_tag,
-                'asset_name' => $confirmation->asset->asset_name,
-                'confirmation_id' => $confirmation->id,
-                'declined_at' => now()->toISOString()
-            ]
-        ];
-        
-        Notification::create(array_merge($notificationData, [
-            'notifiable_type' => 'App\Models\User',
-            'notifiable_id' => $confirmation->user_id
-        ]));
-        
-        // Create identical notification for super administrator
-        $this->notifySuperAdmin($notificationData);
-
-        // Send notification email to admin
-        try {
-            Mail::to(config('mail.notification_recipient', 'ict.department@midc.ph'))->send(new AssetConfirmationNotification(
-                $confirmation,
-                'declined',
-                [
-                    'confirmation_id' => $confirmation->id,
-                    'declined_at' => now()->toISOString(),
-                    'user_email' => $confirmation->user->email,
-                    'user_name' => $confirmation->user->first_name . ' ' . $confirmation->user->last_name,
-                    'asset_name' => $confirmation->asset->name,
-                    'asset_tag' => $confirmation->asset->asset_tag,
-                    'decline_reason' => $confirmation->getFormattedDeclineReason(),
-                    'decline_category' => $confirmation->decline_category ?? null,
-                    'decline_severity' => $confirmation->decline_severity ?? null,
-                    'follow_up_required' => $confirmation->follow_up_required ?? false
-                ]
-            ));
-        } catch (\Exception $e) {
-            // Log error but don't fail the decline
-            \Log::error('Failed to send decline notification email: ' . $e->getMessage());
-        }
-
-        return view('asset-confirmation.success', [
-            'confirmation' => $confirmation,
-            'action' => 'declined'
-        ]);
+        // Redirect to the detailed decline form instead of directly declining
+        // This ensures we always collect decline reasons, severity, and other details
+        return redirect()->route('asset-confirmation.decline-form', $token);
     }
 
     /**
@@ -451,7 +302,7 @@ class AssetConfirmationController extends Controller
     public function showDeclineForm($token)
     {
         $confirmation = AssetAssignmentConfirmation::where('confirmation_token', $token)
-            ->with(['asset.assetCategory', 'user'])
+            ->with(['asset.category', 'user'])
             ->first();
 
         if (!$confirmation || !$confirmation->isPending()) {
@@ -695,5 +546,17 @@ class AssetConfirmationController extends Controller
                 'notifiable_id' => $superAdmin->id
             ]));
         }
+    }
+
+    /**
+     * Export declined assets report to Excel
+     */
+    public function exportDeclines(Request $request)
+    {
+        $filters = $request->only(['severity', 'date_from', 'date_to', 'follow_up_required', 'category']);
+        
+        $filename = 'declined_assets_report_' . now()->format('Y-m-d_His') . '.xlsx';
+        
+        return Excel::download(new DeclinedAssetsExport($filters), $filename);
     }
 }

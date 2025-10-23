@@ -9,6 +9,7 @@ use App\Models\Vendor;
 use App\Models\User;
 use App\Models\AssetAssignmentConfirmation;
 use App\Mail\AssetAssignmentConfirmation as AssetAssignmentConfirmationMail;
+use App\Mail\BulkAssetAssignmentConfirmation;
 use App\Mail\MaintenanceNotification;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Gate;
@@ -565,6 +566,19 @@ class AssetController extends Controller
 
         $user = User::find($validated['assigned_to']);
         
+        // Check if a pending confirmation already exists for this asset within the last minute
+        // This prevents duplicate submissions
+        $recentConfirmation = AssetAssignmentConfirmation::where('asset_id', $asset->id)
+            ->where('user_id', $validated['assigned_to'])
+            ->where('status', 'pending')
+            ->where('created_at', '>', now()->subMinute())
+            ->first();
+
+        if ($recentConfirmation) {
+            return redirect()->route('assets.show', $asset)
+                ->with('info', 'Assignment confirmation already exists for this user.');
+        }
+        
         // Update asset status to Pending Confirmation and movement to New Arrival
         $asset->update([
             'assigned_to' => $validated['assigned_to'],
@@ -584,13 +598,24 @@ class AssetController extends Controller
             'reminder_count' => 0
         ]);
 
-        // Send confirmation email
+        // Reload asset with all relationships for email
+        $asset->load(['computer', 'monitor', 'printer', 'peripheral', 'category', 'vendor']);
+
+        // Prepare asset data for consolidated email (same format as bulk)
+        $assetsData = [
+            [
+                'asset' => $asset,
+                'confirmation_token' => $confirmation->confirmation_token
+            ]
+        ];
+
+        // Send consolidated confirmation email
         try {
-            Mail::to($user->email)->send(new AssetAssignmentConfirmationMail(
-                $asset,
+            Mail::to($user->email)->send(new BulkAssetAssignmentConfirmation(
+                $assetsData,
                 $user,
-                $confirmation->confirmation_token,
-                false
+                $validated['assigned_date'],
+                $validated['notes']
             ));
         } catch (\Exception $e) {
             \Log::error('Failed to send assignment confirmation email', [
@@ -672,6 +697,159 @@ class AssetController extends Controller
     }
 
     /**
+     * Bulk assign multiple assets to a user.
+     */
+    public function bulkAssign(Request $request)
+    {
+        $validated = $request->validate([
+            'asset_ids' => 'required|array|min:1',
+            'asset_ids.*' => 'exists:assets,id',
+            'assigned_to' => 'required|exists:users,id',
+            'assigned_date' => 'required|date',
+            'notes' => 'nullable|string|max:1000'
+        ]);
+
+        $user = User::find($validated['assigned_to']);
+        $assetIds = $validated['asset_ids'];
+        
+        // Get assets and check authorization for each
+        $assets = Asset::whereIn('id', $assetIds)->get();
+        
+        // Check if user can assign assets
+        foreach ($assets as $asset) {
+            if (!auth()->user()->can('assign', $asset)) {
+                return back()->with('error', 'You do not have permission to assign asset: ' . $asset->asset_tag);
+            }
+        }
+        
+        $successCount = 0;
+        $errorMessages = [];
+        $assignedAssetsData = []; // Collect all successfully assigned assets for single email
+        
+        foreach ($assets as $asset) {
+            try {
+                // Skip if asset is in maintenance or for disposal with Return movement
+                if (($asset->status === 'Maintenance' || $asset->status === 'For Disposal') && $asset->movement === 'Return') {
+                    $errorMessages[] = "Asset {$asset->asset_tag} cannot be assigned (currently in {$asset->status})";
+                    continue;
+                }
+
+                // Check if a pending confirmation already exists for this asset within the last minute
+                // This prevents duplicate submissions
+                $recentConfirmation = AssetAssignmentConfirmation::where('asset_id', $asset->id)
+                    ->where('user_id', $validated['assigned_to'])
+                    ->where('status', 'pending')
+                    ->where('created_at', '>', now()->subMinute())
+                    ->first();
+
+                if ($recentConfirmation) {
+                    $errorMessages[] = "Assignment confirmation for {$asset->asset_tag} already exists";
+                    continue;
+                }
+
+                $previousUser = $asset->assignedUser;
+
+                // Mark any existing pending confirmations as completed if reassigning
+                if ($asset->assigned_to) {
+                    AssetAssignmentConfirmation::where('asset_id', $asset->id)
+                        ->where('status', 'pending')
+                        ->update([
+                            'status' => 'confirmed',
+                            'confirmed_at' => now(),
+                            'notes' => 'Asset reassigned - previous confirmation automatically completed'
+                        ]);
+                }
+
+                // Update asset
+                $asset->update([
+                    'assigned_to' => $validated['assigned_to'],
+                    'assigned_date' => $validated['assigned_date'],
+                    'status' => 'Pending Confirmation',
+                    'movement' => 'New Arrival'
+                ]);
+
+                // Create AssetAssignmentConfirmation record
+                $confirmation = AssetAssignmentConfirmation::create([
+                    'asset_id' => $asset->id,
+                    'user_id' => $validated['assigned_to'],
+                    'confirmation_token' => AssetAssignmentConfirmation::generateToken(),
+                    'status' => 'pending',
+                    'assigned_at' => $validated['assigned_date'],
+                    'notes' => $validated['notes'],
+                    'reminder_count' => 0
+                ]);
+
+                // Reload asset with all relationships for email
+                $asset->load(['computer', 'monitor', 'printer', 'peripheral', 'category', 'vendor']);
+
+                // Add to collection for bulk email
+                $assignedAssetsData[] = [
+                    'asset' => $asset,
+                    'confirmation_token' => $confirmation->confirmation_token
+                ];
+
+                // Create enhanced audit log
+                $this->activityLogService->logActivity(
+                    $asset,
+                    $previousUser ? 'reassigned' : 'assigned',
+                    'Asset ' . ($previousUser ? 'reassigned to ' : 'assigned to ') . $user->first_name . ' ' . $user->last_name . ' via bulk assignment. Status changed to Pending Confirmation.',
+                    $asset->getOriginal(),
+                    $asset->getAttributes(),
+                    [
+                        'assigned_user_id' => $validated['assigned_to'],
+                        'assigned_user_name' => $user->first_name . ' ' . $user->last_name,
+                        'assigned_date' => $validated['assigned_date'],
+                        'assignment_notes' => $validated['notes'],
+                        'previous_user_id' => $previousUser ? $previousUser->id : null,
+                        'previous_user_name' => $previousUser ? $previousUser->first_name . ' ' . $previousUser->last_name : null,
+                        'bulk_assignment' => true
+                    ]
+                );
+                
+                $successCount++;
+                
+            } catch (\Exception $e) {
+                $errorMessages[] = "Failed to assign asset {$asset->asset_tag}: " . $e->getMessage();
+                \Log::error('Bulk assignment error', [
+                    'asset_id' => $asset->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+        
+        // Send ONE consolidated email with all assigned assets
+        if (count($assignedAssetsData) > 0) {
+            try {
+                Mail::to($user->email)->send(new BulkAssetAssignmentConfirmation(
+                    $assignedAssetsData,
+                    $user,
+                    $validated['assigned_date'],
+                    $validated['notes']
+                ));
+            } catch (\Exception $e) {
+                \Log::error('Failed to send bulk assignment confirmation email', [
+                    'user_id' => $user->id,
+                    'asset_count' => count($assignedAssetsData),
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+        
+        $message = "{$successCount} asset(s) assigned successfully to {$user->first_name} {$user->last_name}.";
+        
+        if (count($assignedAssetsData) > 0) {
+            $message .= " A confirmation email with all asset details has been sent.";
+        }
+        
+        if (count($errorMessages) > 0) {
+            $message .= " Errors: " . implode(', ', $errorMessages);
+            return redirect()->route('assets.index')->with('warning', $message);
+        }
+        
+        return redirect()->route('assets.index')->with('success', $message);
+    }
+
+    /**
      * Reassign an asset from one user to another.
      */
     public function reassign(Request $request, Asset $asset)
@@ -686,6 +864,19 @@ class AssetController extends Controller
 
         $previousUser = $asset->assignedUser;
         $newUser = User::find($validated['new_assigned_to']);
+        
+        // Check if a pending confirmation already exists for this asset within the last minute
+        // This prevents duplicate submissions
+        $recentConfirmation = AssetAssignmentConfirmation::where('asset_id', $asset->id)
+            ->where('user_id', $validated['new_assigned_to'])
+            ->where('status', 'pending')
+            ->where('created_at', '>', now()->subMinute())
+            ->first();
+
+        if ($recentConfirmation) {
+            return redirect()->route('assets.show', $asset)
+                ->with('info', 'Assignment confirmation already exists for this user.');
+        }
         
         // Mark any existing pending confirmations as completed
         AssetAssignmentConfirmation::where('asset_id', $asset->id)
@@ -714,13 +905,24 @@ class AssetController extends Controller
             'reminder_count' => 0
         ]);
 
-        // Send confirmation email to new user
+        // Reload asset with all relationships for email
+        $asset->load(['computer', 'monitor', 'printer', 'peripheral', 'category', 'vendor']);
+
+        // Prepare asset data for consolidated email (same format as bulk)
+        $assetsData = [
+            [
+                'asset' => $asset,
+                'confirmation_token' => $confirmation->confirmation_token
+            ]
+        ];
+
+        // Send consolidated confirmation email to new user
         try {
-            Mail::to($newUser->email)->send(new AssetAssignmentConfirmationMail(
-                $asset,
+            Mail::to($newUser->email)->send(new BulkAssetAssignmentConfirmation(
+                $assetsData,
                 $newUser,
-                $confirmation->confirmation_token,
-                false
+                $validated['assigned_date'],
+                $validated['notes']
             ));
         } catch (\Exception $e) {
             \Log::error('Failed to send reassignment confirmation email', [

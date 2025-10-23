@@ -538,7 +538,7 @@
                                 <i class="fas fa-layer-group" aria-hidden="true"></i>
                                 Category
                             </div>
-                            <div class="detail-value">{{ $confirmation->asset->assetCategory->category_name ?? 'N/A' }}</div>
+                            <div class="detail-value">{{ $confirmation->asset->category->name ?? 'N/A' }}</div>
                         </div>
                         
                         <div class="detail-item">
@@ -624,17 +624,6 @@
                 </div>
 
                 <!-- Resend Section -->
-                <div class="resend-section">
-                    <p class="mb-3">
-                        <i class="fas fa-envelope" aria-hidden="true"></i>
-                        Didn't receive the confirmation email or need to resend it?
-                    </p>
-                    <a href="#" class="btn-resend" onclick="resendConfirmation(event)">
-                        <i class="fas fa-paper-plane" aria-hidden="true"></i>
-                        Resend Confirmation Email
-                    </a>
-                </div>
-
                 <!-- Processing overlay -->
                 <div id="processingOverlay" class="processing-overlay" style="display: none;">
                     <div class="processing-content">
@@ -914,44 +903,6 @@
             }, 500);
             
             return false; // Prevent immediate navigation
-        }
-        
-        // Resend confirmation functionality
-        async function resendConfirmation(event) {
-            event.preventDefault();
-            const button = event.target.closest('.btn-resend');
-            
-            // Add loading state
-            button.classList.add('btn-loading');
-            button.setAttribute('aria-disabled', 'true');
-            
-            try {
-                // Simulate API call (replace with actual endpoint)
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                
-                showToast('Confirmation email has been resent successfully!', 'success');
-                
-                // Disable resend button for 60 seconds
-                let countdown = 60;
-                const originalText = button.innerHTML;
-                const updateButton = () => {
-                    if (countdown > 0) {
-                        button.innerHTML = `<i class="fas fa-clock" aria-hidden="true"></i> Resend in ${countdown}s`;
-                        countdown--;
-                        setTimeout(updateButton, 1000);
-                    } else {
-                        button.innerHTML = originalText;
-                        button.classList.remove('btn-loading');
-                        button.removeAttribute('aria-disabled');
-                    }
-                };
-                updateButton();
-                
-            } catch (error) {
-                showToast('Failed to resend confirmation email. Please try again.', 'error');
-                button.classList.remove('btn-loading');
-                button.removeAttribute('aria-disabled');
-            }
         }
         
         // Re-enable elements when page is shown (back button)

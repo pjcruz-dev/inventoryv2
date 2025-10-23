@@ -586,6 +586,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         <span id="selectedCount">0</span> asset(s) selected
                     </div>
                     <div>
+                        <button type="button" class="btn btn-success btn-sm me-2" onclick="openBulkAssignModal()">
+                            <i class="fas fa-user-plus me-1"></i>Bulk Assign
+                        </button>
                         <button type="button" class="btn btn-primary btn-sm me-2" onclick="openBulkPrintModal()">
                             <i class="fas fa-print me-1"></i>Print Labels
                         </button>
@@ -1086,6 +1089,62 @@ function openBulkPrintModal() {
     // Show the modal
     $('#bulkPrintModal').modal('show');
 }
+
+// Open bulk assign modal with selected assets
+function openBulkAssignModal() {
+    const selectedAssets = $('.asset-checkbox:checked');
+    if (selectedAssets.length === 0) {
+        alert('Please select at least one asset to assign.');
+        return;
+    }
+    
+    const selectedCount = selectedAssets.length;
+    
+    // Update count message
+    $('#bulkAssignCount').text(`You will assign ${selectedCount} asset${selectedCount > 1 ? 's' : ''} to a user.`);
+    
+    // Clear previous asset IDs and list
+    $('#bulkAssignAssetIds').empty();
+    $('#selectedAssetsList').empty();
+    
+    // Build asset list display
+    let assetListHtml = '<div class="list-group">';
+    
+    selectedAssets.each(function() {
+        const assetId = $(this).val();
+        const row = $(this).closest('tr');
+        const assetTag = row.find('td:eq(1)').text().trim();
+        const assetName = row.find('td:eq(2) .fw-semibold').text().trim();
+        const status = row.find('td:eq(4) .badge').first().text().trim();
+        
+        // Add hidden input
+        $('#bulkAssignAssetIds').append(
+            '<input type="hidden" name="asset_ids[]" value="' + assetId + '">'
+        );
+        
+        // Add to visual list
+        assetListHtml += `
+            <div class="list-group-item d-flex justify-content-between align-items-start">
+                <div class="ms-2 me-auto">
+                    <div class="fw-bold text-primary">${assetTag}</div>
+                    <small class="text-muted">${assetName}</small>
+                </div>
+                <span class="badge bg-info rounded-pill">${status}</span>
+            </div>
+        `;
+    });
+    
+    assetListHtml += '</div>';
+    $('#selectedAssetsList').html(assetListHtml);
+    
+    // Reset form fields
+    $('#bulk_assigned_to').val('');
+    $('#bulk_assigned_date').val('{{ date("Y-m-d") }}');
+    $('#bulk_notes').val('');
+    
+    // Show the modal
+    $('#bulkAssignModal').modal('show');
+}
 </script>
 
 <!-- Bulk Print Selected Assets Modal -->
@@ -1253,6 +1312,98 @@ function openBulkPrintModal() {
                     <i class="fas fa-wrench me-2"></i>Send to Maintenance
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Assignment Modal -->
+<div class="modal fade" id="bulkAssignModal" tabindex="-1" aria-labelledby="bulkAssignModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <h5 class="modal-title text-white" id="bulkAssignModalLabel">
+                    <i class="fas fa-user-plus me-2"></i>Bulk Assign Assets
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ route('assets.bulk-assign') }}" id="bulkAssignForm">
+                @csrf
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <span id="bulkAssignCount">You will assign selected assets to a user.</span>
+                    </div>
+                    
+                    <!-- Hidden inputs for selected asset IDs -->
+                    <div id="bulkAssignAssetIds"></div>
+                    
+                    <!-- Selected Assets Preview -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-boxes me-2"></i>Selected Assets
+                        </label>
+                        <div id="selectedAssetsList" class="border rounded p-3" style="max-height: 200px; overflow-y: auto; background-color: #f8f9fa;">
+                            <!-- Asset list will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <!-- Assign To User -->
+                    <div class="mb-3">
+                        <label for="bulk_assigned_to" class="form-label fw-bold">
+                            <i class="fas fa-user me-2"></i>Assign To <span class="text-danger">*</span>
+                        </label>
+                        <select name="assigned_to" id="bulk_assigned_to" class="form-select" required>
+                            <option value="">Select User</option>
+                            @php
+                                $activeUsers = \App\Models\User::where('status', 1)->orderBy('first_name')->get();
+                            @endphp
+                            @foreach($activeUsers as $activeUser)
+                                <option value="{{ $activeUser->id }}">
+                                    {{ $activeUser->first_name }} {{ $activeUser->last_name }} ({{ $activeUser->employee_id }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    
+                    <!-- Assignment Date -->
+                    <div class="mb-3">
+                        <label for="bulk_assigned_date" class="form-label fw-bold">
+                            <i class="fas fa-calendar me-2"></i>Assignment Date <span class="text-danger">*</span>
+                        </label>
+                        <input type="date" 
+                               name="assigned_date" 
+                               id="bulk_assigned_date" 
+                               class="form-control" 
+                               value="{{ date('Y-m-d') }}" 
+                               required>
+                    </div>
+                    
+                    <!-- Notes -->
+                    <div class="mb-3">
+                        <label for="bulk_notes" class="form-label fw-bold">
+                            <i class="fas fa-sticky-note me-2"></i>Notes (Optional)
+                        </label>
+                        <textarea name="notes" 
+                                  id="bulk_notes" 
+                                  class="form-control" 
+                                  rows="3" 
+                                  placeholder="Add any notes about this bulk assignment..."></textarea>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Note:</strong> All selected assets will be assigned to the same user. Assignment confirmation emails will be sent for each asset.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-user-plus me-1"></i>Assign Assets
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -1560,5 +1711,16 @@ function sendToDisposal(assetId) {
     const modal = new bootstrap.Modal(document.getElementById('disposalModal'));
     modal.show();
 }
+
+// Prevent double submission of bulk assign form
+document.getElementById('bulkAssignForm').addEventListener('submit', function(e) {
+    const submitBtn = this.querySelector('button[type="submit"]');
+    if (submitBtn.disabled) {
+        e.preventDefault();
+        return false;
+    }
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Assigning...';
+});
 
 @endpush
