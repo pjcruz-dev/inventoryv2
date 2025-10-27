@@ -362,11 +362,11 @@
                 @csrf
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="assigned_to" class="form-label">Select User</label>
+                        <label for="assigned_to" class="form-label">Searchable Select User</label>
                         <select class="form-select" id="assigned_to" name="assigned_to" required>
                             <option value="">Choose a user...</option>
                             @foreach(\App\Models\User::where('status', 1)->orderBy('first_name')->get() as $user)
-                                <option value="{{ $user->id }}">{{ $user->first_name }} {{ $user->last_name }} ({{ $user->department->name ?? 'No Department' }})</option>
+                                <option value="{{ $user->id }}">{{ $user->first_name }} {{ $user->last_name }} - {{ $user->department->name ?? 'No Department' }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -582,6 +582,19 @@
                 option.style.display = 'none';
             }
         }
+    }
+    
+    // Initialize searchable dropdown when assign modal is shown
+    const assignModal = document.getElementById('assignModal');
+    if (assignModal) {
+        assignModal.addEventListener('shown.bs.modal', function() {
+            const selectElement = document.getElementById('assigned_to');
+            if (selectElement && !selectElement.dataset.searchableDropdown) {
+                SearchableDropdown.init(selectElement, {
+                    placeholder: 'Search for a user...'
+                });
+            }
+        });
     }
     
     // Prevent double submission of assign form
