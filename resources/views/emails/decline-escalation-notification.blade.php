@@ -1,9 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Escalation: Unresolved Declined Assets</title>
+    <!--[if mso]>
+    <noscript>
+        <xml>
+            <o:OfficeDocumentSettings>
+                <o:PixelsPerInch>96</o:PixelsPerInch>
+            </o:OfficeDocumentSettings>
+        </xml>
+    </noscript>
+    <![endif]-->
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -170,18 +180,37 @@
             display: inline-block;
             padding: 14px 30px;
             text-decoration: none;
-            border-radius: 6px;
             font-weight: bold;
             text-align: center;
-            transition: all 0.3s ease;
+            border: none;
+            mso-padding-alt: 14px 30px;
+            mso-border-insideh: 0;
+            mso-border-insidev: 0;
         }
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-color: #667eea;
             color: white;
         }
         .btn-secondary {
-            background: #6c757d;
+            background-color: #6c757d;
             color: white;
+        }
+        
+        /* MSO (Microsoft Outlook) specific styles */
+        @media screen and (-webkit-min-device-pixel-ratio: 0) {
+            .btn {
+                display: inline-block !important;
+            }
+        }
+        
+        /* Fix for Outlook 2016+ */
+        [owa] .btn {
+            display: inline-block !important;
+        }
+        
+        /* Fallback for older Outlook versions */
+        .btn[class="btn"] {
+            display: inline-block !important;
         }
         .footer {
             background: #343a40;
@@ -309,12 +338,49 @@
             </ul>
 
             <div class="action-buttons">
-                <a href="{{ url('/asset-assignment-confirmations?status=declined&severity=high') }}" class="btn btn-primary">
-                    📊 View All Declined Assets
-                </a>
-                <a href="{{ route('asset-assignments.export-declines', ['severity' => 'high', 'follow_up_required' => true]) }}" class="btn btn-secondary">
-                    📥 Download Detailed Report
-                </a>
+                <!-- Outlook-compatible button layout -->
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="text-align: center; margin: 20px 0;">
+                    <tr>
+                        <td align="center" style="padding: 10px;">
+                            <!--[if mso]>
+                            <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" 
+                                         href="{{ url('/asset-assignment-confirmations?status=declined&severity=high') }}" 
+                                         style="height:48px;v-text-anchor:middle;width:250px;" 
+                                         arcsize="10%" 
+                                         stroke="f" 
+                                         fillcolor="#667eea">
+                                <w:anchorlock/>
+                                <center style="color:#ffffff;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;">📊 View All Declined Assets</center>
+                            </v:roundrect>
+                            <![endif]-->
+                            <!--[if !mso]><!-->
+                            <a href="{{ url('/asset-assignment-confirmations?status=declined&severity=high') }}" class="btn btn-primary" style="display:inline-block;background-color:#667eea;color:#ffffff;text-decoration:none;padding:14px 30px;font-weight:bold;">
+                                📊 View All Declined Assets
+                            </a>
+                            <!--<![endif]-->
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="center" style="padding: 10px;">
+                            <!--[if mso]>
+                            <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" 
+                                         href="{{ route('asset-assignments.export-declines', ['severity' => 'high', 'follow_up_required' => true]) }}" 
+                                         style="height:48px;v-text-anchor:middle;width:250px;" 
+                                         arcsize="10%" 
+                                         stroke="f" 
+                                         fillcolor="#6c757d">
+                                <w:anchorlock/>
+                                <center style="color:#ffffff;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;">📥 Download Detailed Report</center>
+                            </v:roundrect>
+                            <![endif]-->
+                            <!--[if !mso]><!-->
+                            <a href="{{ route('asset-assignments.export-declines', ['severity' => 'high', 'follow_up_required' => true]) }}" class="btn btn-secondary" style="display:inline-block;background-color:#6c757d;color:#ffffff;text-decoration:none;padding:14px 30px;font-weight:bold;">
+                                📥 Download Detailed Report
+                            </a>
+                            <!--<![endif]-->
+                        </td>
+                    </tr>
+                </table>
             </div>
 
             <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 6px; border-left: 4px solid #667eea;">
