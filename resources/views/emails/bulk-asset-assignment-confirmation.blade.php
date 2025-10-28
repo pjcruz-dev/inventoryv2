@@ -1,9 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Asset Assignment Confirmation</title>
+    <!--[if mso]>
+    <noscript>
+        <xml>
+            <o:OfficeDocumentSettings>
+                <o:PixelsPerInch>96</o:PixelsPerInch>
+            </o:OfficeDocumentSettings>
+        </xml>
+    </noscript>
+    <![endif]-->
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -16,9 +26,7 @@
         }
         .email-container {
             background-color: #ffffff;
-            border-radius: 8px;
             padding: 30px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -77,19 +85,45 @@
             padding-top: 10px;
             border-top: 1px solid #ddd;
         }
+        /* Outlook-compatible button styles */
         .confirm-button {
             display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background-color: #667eea;
+            color: #ffffff !important;
             padding: 12px 30px;
             text-decoration: none;
-            border-radius: 5px;
             font-weight: bold;
-            margin: 20px 0;
             text-align: center;
+            border: none;
+            mso-padding-alt: 12px 30px;
+            mso-border-insideh: 0;
+            mso-border-insidev: 0;
         }
         .confirm-button:hover {
             opacity: 0.9;
+        }
+        
+        /* Button container for Outlook */
+        .button-container {
+            text-align: center;
+            padding: 20px 0;
+        }
+        
+        /* MSO (Microsoft Outlook) specific styles */
+        @media screen and (-webkit-min-device-pixel-ratio: 0) {
+            .confirm-button {
+                display: inline-block !important;
+            }
+        }
+        
+        /* Fix for Outlook 2016+ */
+        [owa] .confirm-button {
+            display: inline-block !important;
+        }
+        
+        /* Fallback for older Outlook versions */
+        .confirm-button[class="confirm-button"] {
+            display: inline-block !important;
         }
         .instructions {
             background-color: #fff3cd;
@@ -265,11 +299,30 @@
                         </div>
                     @endif
 
-                    {{-- Individual Confirm Button --}}
-                    <div style="margin-top: 15px; text-align: center;">
-                        <a href="{{ route('asset-confirmation.show', $token) }}" class="confirm-button">
-                            ✓ Confirm Receipt of {{ $asset->asset_tag }}
-                        </a>
+                    {{-- Individual Confirm Button (Outlook-compatible) --}}
+                    <div class="button-container">
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="text-align: center;">
+                            <tr>
+                                <td align="center">
+                                    <!--[if mso]>
+                                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" 
+                                                 href="{{ route('asset-confirmation.show', $token) }}" 
+                                                 style="height:44px;v-text-anchor:middle;width:300px;" 
+                                                 arcsize="10%" 
+                                                 stroke="f" 
+                                                 fillcolor="#667eea">
+                                        <w:anchorlock/>
+                                        <center style="color:#ffffff;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;">✓ Confirm Receipt of {{ $asset->asset_tag }}</center>
+                                    </v:roundrect>
+                                    <![endif]-->
+                                    <!--[if !mso]><!-->
+                                    <a href="{{ route('asset-confirmation.show', $token) }}" class="confirm-button" style="display:inline-block;background-color:#667eea;color:#ffffff;text-decoration:none;padding:12px 30px;font-weight:bold;">
+                                        ✓ Confirm Receipt of {{ $asset->asset_tag }}
+                                    </a>
+                                    <!--<![endif]-->
+                                </td>
+                            </tr>
+                        </table>
                     </div>
                 </div>
             @endforeach
